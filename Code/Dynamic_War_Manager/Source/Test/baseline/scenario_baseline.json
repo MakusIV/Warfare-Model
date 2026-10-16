@@ -500243,7 +500243,7 @@
     "Blue-Flight/f0": {
      "ammunition": 523,
      "destroyed": false,
-     "fuel": 0.026102,
+     "fuel": 0.262879,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
@@ -500284,8 +500284,8 @@
    "counts": {
     "damage_events": 0,
     "destroyed_events": 0,
-    "engagements": 1,
-    "fuel_events": 3,
+    "engagements": 0,
+    "fuel_events": 1,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
@@ -500293,82 +500293,19 @@
     "salvos": 0
    },
    "damage_events": [],
-   "engagements": [
-    [
-     {
-      "block_id": "Blue-Flight",
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Blue-Flight:Strike",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Blue",
-      "temper": 0.621554,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Red-Site",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Red",
-      "temper": 0.18481,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     }
-    ]
-   ],
-   "force_outcomes": {
-    "Blue-Flight": [
-     "held"
-    ],
-    "Red-Site": [
-     "held"
-    ]
-   },
+   "engagements": [],
+   "force_outcomes": {},
    "fuel": {
     "Blue-Flight/f0": [
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.156612,
-      "fuel_before": 0.28,
-      "regime": "nominal",
-      "time": 774.879258
-     },
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.033223,
-      "fuel_before": 0.156612,
-      "regime": "nominal",
-      "time": 1501.328563
-     },
      {
       "amount": 0.007121,
       "distance": 11180.339887,
       "distance_covered": 11180.339887,
       "exhausted": false,
-      "fuel_after": 0.026102,
-      "fuel_before": 0.033223,
+      "fuel_after": 0.262879,
+      "fuel_before": 0.27,
       "regime": "nominal",
-      "time": 1543.254838
+      "time": 41.926275
      }
     ]
    },
@@ -501476,6 +501413,173 @@
     "t_start": 0.0
    }
   },
+  "S26-BINGO/S26-BINGO-0/reserve_off": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.026102,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 3,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Strike",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.621554,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.18481,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.156612,
+      "fuel_before": 0.28,
+      "regime": "nominal",
+      "time": 774.879258
+     },
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.033223,
+      "fuel_before": 0.156612,
+      "regime": "nominal",
+      "time": 1501.328563
+     },
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.026102,
+      "fuel_before": 0.033223,
+      "regime": "nominal",
+      "time": 1543.254838
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-0",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
   "S26-BINGO/S26-BINGO-0/reverse_off": {
    "actual_etas": {
     "Blue-Flight:Strike": [
@@ -502191,9 +502295,610 @@
     "t_start": 0.0
    }
   },
-  "S26-BINGO/S26-BINGO-1/bingo": {
+  "S26-BINGO/S26-BINGO-0/transfer_continue": {
    "actual_etas": {
-    "Blue-Flight:Strike": [
+    "Blue-Flight:Transport": [
+     0.0,
+     1200.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Site/ifv0": {
+     "test:marker": 28
+    }
+   },
+   "ammunition_events": [
+    [
+     872.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     884.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     896.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     908.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     920.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     932.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     944.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     956.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     968.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     980.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     992.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1004.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1016.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1028.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1040.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1052.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1064.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1076.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1088.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1100.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1112.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1124.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1136.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1148.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1160.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1172.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1184.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1196.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.006842,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 476,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 472,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 28,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 28,
+    "salvos": 28
+   },
+   "damage_events": [
+    [
+     887.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     899.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     911.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     923.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     935.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     947.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     959.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     971.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     983.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     995.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1007.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1019.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1031.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1043.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1055.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1067.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1079.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1091.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1103.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1115.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1127.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1139.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1151.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1163.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1175.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1187.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1199.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1211.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": 0.242735,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Transport",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.280657,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.40209,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.263158,
+      "distance": 300000.0,
+      "distance_covered": 300000.0,
+      "exhausted": false,
+      "fuel_after": 0.006842,
+      "fuel_before": 0.27,
+      "regime": "max",
+      "time": 1200.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "off_scene",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-0",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-0/transfer_return": {
+   "actual_etas": {
+    "Blue-Flight:Transport": [
      0.0,
      null
     ]
@@ -502213,7 +502918,7 @@
     "Blue-Flight/f0": {
      "ammunition": 523,
      "destroyed": false,
-     "fuel": 0.026102,
+     "fuel": 0.142879,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
@@ -502254,8 +502959,8 @@
    "counts": {
     "damage_events": 0,
     "destroyed_events": 0,
-    "engagements": 1,
-    "fuel_events": 3,
+    "engagements": 0,
+    "fuel_events": 1,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
@@ -502263,82 +502968,123 @@
     "salvos": 0
    },
    "damage_events": [],
-   "engagements": [
-    [
-     {
-      "block_id": "Blue-Flight",
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Blue-Flight:Strike",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Blue",
-      "temper": 0.230229,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Red-Site",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Red",
-      "temper": 0.880744,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     }
-    ]
-   ],
-   "force_outcomes": {
-    "Blue-Flight": [
-     "held"
-    ],
-    "Red-Site": [
-     "held"
-    ]
-   },
+   "engagements": [],
+   "force_outcomes": {},
    "fuel": {
     "Blue-Flight/f0": [
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.156612,
-      "fuel_before": 0.28,
-      "regime": "nominal",
-      "time": 774.879258
-     },
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.033223,
-      "fuel_before": 0.156612,
-      "regime": "nominal",
-      "time": 1501.328563
-     },
      {
       "amount": 0.007121,
       "distance": 11180.339887,
       "distance_covered": 11180.339887,
       "exhausted": false,
-      "fuel_after": 0.026102,
-      "fuel_before": 0.033223,
+      "fuel_after": 0.142879,
+      "fuel_before": 0.15,
       "regime": "nominal",
-      "time": 1543.254838
+      "time": 41.926275
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-0",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-1/bingo": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.262879,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.262879,
+      "fuel_before": 0.27,
+      "regime": "nominal",
+      "time": 41.926275
      }
     ]
    },
@@ -503446,6 +504192,173 @@
     "t_start": 0.0
    }
   },
+  "S26-BINGO/S26-BINGO-1/reserve_off": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.026102,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 3,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Strike",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.230229,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.880744,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.156612,
+      "fuel_before": 0.28,
+      "regime": "nominal",
+      "time": 774.879258
+     },
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.033223,
+      "fuel_before": 0.156612,
+      "regime": "nominal",
+      "time": 1501.328563
+     },
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.026102,
+      "fuel_before": 0.033223,
+      "regime": "nominal",
+      "time": 1543.254838
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-1",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
   "S26-BINGO/S26-BINGO-1/reverse_off": {
    "actual_etas": {
     "Blue-Flight:Strike": [
@@ -504161,9 +505074,610 @@
     "t_start": 0.0
    }
   },
-  "S26-BINGO/S26-BINGO-2/bingo": {
+  "S26-BINGO/S26-BINGO-1/transfer_continue": {
    "actual_etas": {
-    "Blue-Flight:Strike": [
+    "Blue-Flight:Transport": [
+     0.0,
+     1200.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Site/ifv0": {
+     "test:marker": 28
+    }
+   },
+   "ammunition_events": [
+    [
+     872.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     884.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     896.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     908.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     920.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     932.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     944.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     956.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     968.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     980.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     992.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1004.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1016.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1028.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1040.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1052.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1064.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1076.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1088.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1100.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1112.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1124.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1136.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1148.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1160.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1172.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1184.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1196.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.006842,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 476,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 472,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 28,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 28,
+    "salvos": 28
+   },
+   "damage_events": [
+    [
+     887.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     899.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     911.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     923.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     935.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     947.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     959.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     971.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     983.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     995.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1007.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1019.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1031.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1043.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1055.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1067.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1079.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1091.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1103.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1115.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1127.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1139.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1151.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1163.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1175.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1187.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1199.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1211.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": 0.286282,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Transport",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.447325,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.076721,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.263158,
+      "distance": 300000.0,
+      "distance_covered": 300000.0,
+      "exhausted": false,
+      "fuel_after": 0.006842,
+      "fuel_before": 0.27,
+      "regime": "max",
+      "time": 1200.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "off_scene",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-1",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-1/transfer_return": {
+   "actual_etas": {
+    "Blue-Flight:Transport": [
      0.0,
      null
     ]
@@ -504183,7 +505697,7 @@
     "Blue-Flight/f0": {
      "ammunition": 523,
      "destroyed": false,
-     "fuel": 0.026102,
+     "fuel": 0.142879,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
@@ -504224,8 +505738,8 @@
    "counts": {
     "damage_events": 0,
     "destroyed_events": 0,
-    "engagements": 1,
-    "fuel_events": 3,
+    "engagements": 0,
+    "fuel_events": 1,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
@@ -504233,82 +505747,123 @@
     "salvos": 0
    },
    "damage_events": [],
-   "engagements": [
-    [
-     {
-      "block_id": "Blue-Flight",
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Blue-Flight:Strike",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Blue",
-      "temper": 0.333213,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Red-Site",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Red",
-      "temper": 0.746393,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     }
-    ]
-   ],
-   "force_outcomes": {
-    "Blue-Flight": [
-     "held"
-    ],
-    "Red-Site": [
-     "held"
-    ]
-   },
+   "engagements": [],
+   "force_outcomes": {},
    "fuel": {
     "Blue-Flight/f0": [
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.156612,
-      "fuel_before": 0.28,
-      "regime": "nominal",
-      "time": 774.879258
-     },
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.033223,
-      "fuel_before": 0.156612,
-      "regime": "nominal",
-      "time": 1501.328563
-     },
      {
       "amount": 0.007121,
       "distance": 11180.339887,
       "distance_covered": 11180.339887,
       "exhausted": false,
-      "fuel_after": 0.026102,
-      "fuel_before": 0.033223,
+      "fuel_after": 0.142879,
+      "fuel_before": 0.15,
       "regime": "nominal",
-      "time": 1543.254838
+      "time": 41.926275
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-1",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-2/bingo": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.262879,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.262879,
+      "fuel_before": 0.27,
+      "regime": "nominal",
+      "time": 41.926275
      }
     ]
    },
@@ -505416,6 +506971,173 @@
     "t_start": 0.0
    }
   },
+  "S26-BINGO/S26-BINGO-2/reserve_off": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.026102,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 3,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Strike",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.333213,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.746393,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.156612,
+      "fuel_before": 0.28,
+      "regime": "nominal",
+      "time": 774.879258
+     },
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.033223,
+      "fuel_before": 0.156612,
+      "regime": "nominal",
+      "time": 1501.328563
+     },
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.026102,
+      "fuel_before": 0.033223,
+      "regime": "nominal",
+      "time": 1543.254838
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-2",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
   "S26-BINGO/S26-BINGO-2/reverse_off": {
    "actual_etas": {
     "Blue-Flight:Strike": [
@@ -506131,9 +507853,610 @@
     "t_start": 0.0
    }
   },
-  "S26-BINGO/S26-BINGO-3/bingo": {
+  "S26-BINGO/S26-BINGO-2/transfer_continue": {
    "actual_etas": {
-    "Blue-Flight:Strike": [
+    "Blue-Flight:Transport": [
+     0.0,
+     1200.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Site/ifv0": {
+     "test:marker": 28
+    }
+   },
+   "ammunition_events": [
+    [
+     872.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     884.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     896.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     908.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     920.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     932.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     944.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     956.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     968.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     980.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     992.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1004.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1016.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1028.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1040.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1052.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1064.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1076.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1088.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1100.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1112.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1124.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1136.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1148.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1160.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1172.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1184.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1196.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.006842,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 476,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 472,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 28,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 28,
+    "salvos": 28
+   },
+   "damage_events": [
+    [
+     887.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     899.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     911.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     923.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     935.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     947.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     959.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     971.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     983.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     995.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1007.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1019.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1031.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1043.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1055.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1067.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1079.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1091.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1103.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1115.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1127.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1139.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1151.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1163.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1175.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1187.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1199.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1211.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": 0.25958,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Transport",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.343947,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.670778,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.263158,
+      "distance": 300000.0,
+      "distance_covered": 300000.0,
+      "exhausted": false,
+      "fuel_after": 0.006842,
+      "fuel_before": 0.27,
+      "regime": "max",
+      "time": 1200.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "off_scene",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-2",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-2/transfer_return": {
+   "actual_etas": {
+    "Blue-Flight:Transport": [
      0.0,
      null
     ]
@@ -506153,7 +508476,7 @@
     "Blue-Flight/f0": {
      "ammunition": 523,
      "destroyed": false,
-     "fuel": 0.026102,
+     "fuel": 0.142879,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
@@ -506194,8 +508517,8 @@
    "counts": {
     "damage_events": 0,
     "destroyed_events": 0,
-    "engagements": 1,
-    "fuel_events": 3,
+    "engagements": 0,
+    "fuel_events": 1,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
@@ -506203,82 +508526,123 @@
     "salvos": 0
    },
    "damage_events": [],
-   "engagements": [
-    [
-     {
-      "block_id": "Blue-Flight",
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Blue-Flight:Strike",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Blue",
-      "temper": 0.718337,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Red-Site",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Red",
-      "temper": 0.158457,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     }
-    ]
-   ],
-   "force_outcomes": {
-    "Blue-Flight": [
-     "held"
-    ],
-    "Red-Site": [
-     "held"
-    ]
-   },
+   "engagements": [],
+   "force_outcomes": {},
    "fuel": {
     "Blue-Flight/f0": [
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.156612,
-      "fuel_before": 0.28,
-      "regime": "nominal",
-      "time": 774.879258
-     },
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.033223,
-      "fuel_before": 0.156612,
-      "regime": "nominal",
-      "time": 1501.328563
-     },
      {
       "amount": 0.007121,
       "distance": 11180.339887,
       "distance_covered": 11180.339887,
       "exhausted": false,
-      "fuel_after": 0.026102,
-      "fuel_before": 0.033223,
+      "fuel_after": 0.142879,
+      "fuel_before": 0.15,
       "regime": "nominal",
-      "time": 1543.254838
+      "time": 41.926275
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-2",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-3/bingo": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.262879,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.262879,
+      "fuel_before": 0.27,
+      "regime": "nominal",
+      "time": 41.926275
      }
     ]
    },
@@ -507338,6 +509702,173 @@
     "t_start": 0.0
    }
   },
+  "S26-BINGO/S26-BINGO-3/reserve_off": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.026102,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 3,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Strike",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.718337,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.158457,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.156612,
+      "fuel_before": 0.28,
+      "regime": "nominal",
+      "time": 774.879258
+     },
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.033223,
+      "fuel_before": 0.156612,
+      "regime": "nominal",
+      "time": 1501.328563
+     },
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.026102,
+      "fuel_before": 0.033223,
+      "regime": "nominal",
+      "time": 1543.254838
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-3",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
   "S26-BINGO/S26-BINGO-3/reverse_off": {
    "actual_etas": {
     "Blue-Flight:Strike": [
@@ -508037,9 +510568,610 @@
     "t_start": 0.0
    }
   },
-  "S26-BINGO/S26-BINGO-4/bingo": {
+  "S26-BINGO/S26-BINGO-3/transfer_continue": {
    "actual_etas": {
-    "Blue-Flight:Strike": [
+    "Blue-Flight:Transport": [
+     0.0,
+     1200.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Site/ifv0": {
+     "test:marker": 28
+    }
+   },
+   "ammunition_events": [
+    [
+     872.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     884.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     896.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     908.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     920.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     932.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     944.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     956.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     968.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     980.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     992.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1004.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1016.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1028.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1040.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1052.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1064.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1076.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1088.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1100.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1112.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1124.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1136.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1148.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1160.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1172.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1184.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1196.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.006842,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 476,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 472,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 28,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 28,
+    "salvos": 28
+   },
+   "damage_events": [
+    [
+     887.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     899.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     911.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     923.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     935.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     947.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     959.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     971.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     983.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     995.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1007.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1019.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1031.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1043.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1055.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1067.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1079.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1091.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1103.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1115.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1127.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1139.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1151.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1163.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1175.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1187.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1199.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1211.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": 0.26105,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Transport",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.349585,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.676661,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.263158,
+      "distance": 300000.0,
+      "distance_covered": 300000.0,
+      "exhausted": false,
+      "fuel_after": 0.006842,
+      "fuel_before": 0.27,
+      "regime": "max",
+      "time": 1200.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "off_scene",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-3",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-3/transfer_return": {
+   "actual_etas": {
+    "Blue-Flight:Transport": [
      0.0,
      null
     ]
@@ -508059,7 +511191,7 @@
     "Blue-Flight/f0": {
      "ammunition": 523,
      "destroyed": false,
-     "fuel": 0.026102,
+     "fuel": 0.142879,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
@@ -508100,8 +511232,8 @@
    "counts": {
     "damage_events": 0,
     "destroyed_events": 0,
-    "engagements": 1,
-    "fuel_events": 3,
+    "engagements": 0,
+    "fuel_events": 1,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
@@ -508109,82 +511241,123 @@
     "salvos": 0
    },
    "damage_events": [],
-   "engagements": [
-    [
-     {
-      "block_id": "Blue-Flight",
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Blue-Flight:Strike",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Blue",
-      "temper": 0.735296,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Red-Site",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Red",
-      "temper": 0.229593,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     }
-    ]
-   ],
-   "force_outcomes": {
-    "Blue-Flight": [
-     "held"
-    ],
-    "Red-Site": [
-     "held"
-    ]
-   },
+   "engagements": [],
+   "force_outcomes": {},
    "fuel": {
     "Blue-Flight/f0": [
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.156612,
-      "fuel_before": 0.28,
-      "regime": "nominal",
-      "time": 774.879258
-     },
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.033223,
-      "fuel_before": 0.156612,
-      "regime": "nominal",
-      "time": 1501.328563
-     },
      {
       "amount": 0.007121,
       "distance": 11180.339887,
       "distance_covered": 11180.339887,
       "exhausted": false,
-      "fuel_after": 0.026102,
-      "fuel_before": 0.033223,
+      "fuel_after": 0.142879,
+      "fuel_before": 0.15,
       "regime": "nominal",
-      "time": 1543.254838
+      "time": 41.926275
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-3",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-4/bingo": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.262879,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.262879,
+      "fuel_before": 0.27,
+      "regime": "nominal",
+      "time": 41.926275
      }
     ]
    },
@@ -509276,6 +512449,173 @@
     "t_start": 0.0
    }
   },
+  "S26-BINGO/S26-BINGO-4/reserve_off": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.026102,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 3,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Strike",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.735296,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.229593,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.156612,
+      "fuel_before": 0.28,
+      "regime": "nominal",
+      "time": 774.879258
+     },
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.033223,
+      "fuel_before": 0.156612,
+      "regime": "nominal",
+      "time": 1501.328563
+     },
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.026102,
+      "fuel_before": 0.033223,
+      "regime": "nominal",
+      "time": 1543.254838
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-4",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
   "S26-BINGO/S26-BINGO-4/reverse_off": {
    "actual_etas": {
     "Blue-Flight:Strike": [
@@ -509975,9 +513315,562 @@
     "t_start": 0.0
    }
   },
-  "S26-BINGO/S26-BINGO-5/bingo": {
+  "S26-BINGO/S26-BINGO-4/transfer_continue": {
    "actual_etas": {
-    "Blue-Flight:Strike": [
+    "Blue-Flight:Transport": [
+     0.0,
+     1200.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Site/ifv0": {
+     "test:marker": 25
+    }
+   },
+   "ammunition_events": [
+    [
+     908.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     920.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     932.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     944.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     956.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     968.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     980.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     992.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1004.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1016.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1028.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1040.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1052.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1064.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1076.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1088.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1100.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1112.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1124.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1136.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1148.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1160.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1172.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1184.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1196.326212,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.006842,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 479,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 475,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 25,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 25,
+    "salvos": 25
+   },
+   "damage_events": [
+    [
+     923.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     935.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     947.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     959.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     971.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     983.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     995.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1007.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1019.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1031.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1043.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1055.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1067.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1079.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1091.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1103.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1115.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1127.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1139.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1151.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1163.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1175.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1187.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1199.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1211.326212,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": 0.271515,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Transport",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.390007,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.607926,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.263158,
+      "distance": 300000.0,
+      "distance_covered": 300000.0,
+      "exhausted": false,
+      "fuel_after": 0.006842,
+      "fuel_before": 0.27,
+      "regime": "max",
+      "time": 1200.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "off_scene",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-4",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-4/transfer_return": {
+   "actual_etas": {
+    "Blue-Flight:Transport": [
      0.0,
      null
     ]
@@ -509997,7 +513890,7 @@
     "Blue-Flight/f0": {
      "ammunition": 523,
      "destroyed": false,
-     "fuel": 0.026102,
+     "fuel": 0.142879,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
@@ -510038,8 +513931,8 @@
    "counts": {
     "damage_events": 0,
     "destroyed_events": 0,
-    "engagements": 1,
-    "fuel_events": 3,
+    "engagements": 0,
+    "fuel_events": 1,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
@@ -510047,82 +513940,123 @@
     "salvos": 0
    },
    "damage_events": [],
-   "engagements": [
-    [
-     {
-      "block_id": "Blue-Flight",
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Blue-Flight:Strike",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Blue",
-      "temper": 0.833605,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Red-Site",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Red",
-      "temper": 0.424391,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     }
-    ]
-   ],
-   "force_outcomes": {
-    "Blue-Flight": [
-     "held"
-    ],
-    "Red-Site": [
-     "held"
-    ]
-   },
+   "engagements": [],
+   "force_outcomes": {},
    "fuel": {
     "Blue-Flight/f0": [
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.156612,
-      "fuel_before": 0.28,
-      "regime": "nominal",
-      "time": 774.879258
-     },
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.033223,
-      "fuel_before": 0.156612,
-      "regime": "nominal",
-      "time": 1501.328563
-     },
      {
       "amount": 0.007121,
       "distance": 11180.339887,
       "distance_covered": 11180.339887,
       "exhausted": false,
-      "fuel_after": 0.026102,
-      "fuel_before": 0.033223,
+      "fuel_after": 0.142879,
+      "fuel_before": 0.15,
       "regime": "nominal",
-      "time": 1543.254838
+      "time": 41.926275
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-4",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-5/bingo": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.262879,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.262879,
+      "fuel_before": 0.27,
+      "regime": "nominal",
+      "time": 41.926275
      }
     ]
    },
@@ -511230,6 +515164,173 @@
     "t_start": 0.0
    }
   },
+  "S26-BINGO/S26-BINGO-5/reserve_off": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.026102,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 3,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Strike",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.833605,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.424391,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.156612,
+      "fuel_before": 0.28,
+      "regime": "nominal",
+      "time": 774.879258
+     },
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.033223,
+      "fuel_before": 0.156612,
+      "regime": "nominal",
+      "time": 1501.328563
+     },
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.026102,
+      "fuel_before": 0.033223,
+      "regime": "nominal",
+      "time": 1543.254838
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-5",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
   "S26-BINGO/S26-BINGO-5/reverse_off": {
    "actual_etas": {
     "Blue-Flight:Strike": [
@@ -511945,9 +516046,610 @@
     "t_start": 0.0
    }
   },
-  "S26-BINGO/S26-BINGO-6/bingo": {
+  "S26-BINGO/S26-BINGO-5/transfer_continue": {
    "actual_etas": {
-    "Blue-Flight:Strike": [
+    "Blue-Flight:Transport": [
+     0.0,
+     1200.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Site/ifv0": {
+     "test:marker": 28
+    }
+   },
+   "ammunition_events": [
+    [
+     872.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     884.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     896.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     908.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     920.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     932.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     944.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     956.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     968.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     980.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     992.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1004.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1016.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1028.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1040.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1052.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1064.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1076.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1088.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1100.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1112.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1124.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1136.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1148.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1160.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1172.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1184.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1196.254921,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.006842,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 476,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 472,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 28,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 28,
+    "salvos": 28
+   },
+   "damage_events": [
+    [
+     887.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     899.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     911.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     923.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     935.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     947.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     959.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     971.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     983.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     995.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1007.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1019.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1031.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1043.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1055.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1067.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1079.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1091.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1103.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1115.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1127.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1139.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1151.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1163.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1175.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1187.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1199.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1211.254921,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": 0.331506,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Transport",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.614791,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.905122,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.263158,
+      "distance": 300000.0,
+      "distance_covered": 300000.0,
+      "exhausted": false,
+      "fuel_after": 0.006842,
+      "fuel_before": 0.27,
+      "regime": "max",
+      "time": 1200.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "off_scene",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-5",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-5/transfer_return": {
+   "actual_etas": {
+    "Blue-Flight:Transport": [
      0.0,
      null
     ]
@@ -511967,7 +516669,7 @@
     "Blue-Flight/f0": {
      "ammunition": 523,
      "destroyed": false,
-     "fuel": 0.026102,
+     "fuel": 0.142879,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
@@ -512008,8 +516710,8 @@
    "counts": {
     "damage_events": 0,
     "destroyed_events": 0,
-    "engagements": 1,
-    "fuel_events": 3,
+    "engagements": 0,
+    "fuel_events": 1,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
@@ -512017,82 +516719,123 @@
     "salvos": 0
    },
    "damage_events": [],
-   "engagements": [
-    [
-     {
-      "block_id": "Blue-Flight",
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Blue-Flight:Strike",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Blue",
-      "temper": 0.943074,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Red-Site",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Red",
-      "temper": 0.214466,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     }
-    ]
-   ],
-   "force_outcomes": {
-    "Blue-Flight": [
-     "held"
-    ],
-    "Red-Site": [
-     "held"
-    ]
-   },
+   "engagements": [],
+   "force_outcomes": {},
    "fuel": {
     "Blue-Flight/f0": [
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.156612,
-      "fuel_before": 0.28,
-      "regime": "nominal",
-      "time": 774.879258
-     },
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.033223,
-      "fuel_before": 0.156612,
-      "regime": "nominal",
-      "time": 1501.328563
-     },
      {
       "amount": 0.007121,
       "distance": 11180.339887,
       "distance_covered": 11180.339887,
       "exhausted": false,
-      "fuel_after": 0.026102,
-      "fuel_before": 0.033223,
+      "fuel_after": 0.142879,
+      "fuel_before": 0.15,
       "regime": "nominal",
-      "time": 1543.254838
+      "time": 41.926275
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-5",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-6/bingo": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.262879,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.262879,
+      "fuel_before": 0.27,
+      "regime": "nominal",
+      "time": 41.926275
      }
     ]
    },
@@ -513136,6 +517879,173 @@
     "t_start": 0.0
    }
   },
+  "S26-BINGO/S26-BINGO-6/reserve_off": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.026102,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 3,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Strike",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.943074,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.214466,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.156612,
+      "fuel_before": 0.28,
+      "regime": "nominal",
+      "time": 774.879258
+     },
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.033223,
+      "fuel_before": 0.156612,
+      "regime": "nominal",
+      "time": 1501.328563
+     },
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.026102,
+      "fuel_before": 0.033223,
+      "regime": "nominal",
+      "time": 1543.254838
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-6",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
   "S26-BINGO/S26-BINGO-6/reverse_off": {
    "actual_etas": {
     "Blue-Flight:Strike": [
@@ -513819,9 +518729,562 @@
     "t_start": 0.0
    }
   },
-  "S26-BINGO/S26-BINGO-7/bingo": {
+  "S26-BINGO/S26-BINGO-6/transfer_continue": {
    "actual_etas": {
-    "Blue-Flight:Strike": [
+    "Blue-Flight:Transport": [
+     0.0,
+     1200.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Site/ifv0": {
+     "test:marker": 25
+    }
+   },
+   "ammunition_events": [
+    [
+     902.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     914.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     926.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     938.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     950.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     962.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     974.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     986.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     998.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1010.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1022.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1034.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1046.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1058.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1070.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1082.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1094.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1106.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1118.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1130.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1142.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1154.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1166.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1178.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1190.343495,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.006842,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 479,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 475,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 25,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 25,
+    "salvos": 25
+   },
+   "damage_events": [
+    [
+     917.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     929.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     941.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     953.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     965.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     977.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     989.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1001.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1013.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1025.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1037.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1049.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1061.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1073.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1085.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1097.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1109.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1121.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1133.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1145.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1157.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1169.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1181.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1193.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1205.343495,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": 0.409034,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Transport",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.83114,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.494284,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.263158,
+      "distance": 300000.0,
+      "distance_covered": 300000.0,
+      "exhausted": false,
+      "fuel_after": 0.006842,
+      "fuel_before": 0.27,
+      "regime": "max",
+      "time": 1200.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "off_scene",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-6",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-6/transfer_return": {
+   "actual_etas": {
+    "Blue-Flight:Transport": [
      0.0,
      null
     ]
@@ -513841,7 +519304,7 @@
     "Blue-Flight/f0": {
      "ammunition": 523,
      "destroyed": false,
-     "fuel": 0.026102,
+     "fuel": 0.142879,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
@@ -513882,8 +519345,8 @@
    "counts": {
     "damage_events": 0,
     "destroyed_events": 0,
-    "engagements": 1,
-    "fuel_events": 3,
+    "engagements": 0,
+    "fuel_events": 1,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
@@ -513891,82 +519354,123 @@
     "salvos": 0
    },
    "damage_events": [],
-   "engagements": [
-    [
-     {
-      "block_id": "Blue-Flight",
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Blue-Flight:Strike",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Blue",
-      "temper": 0.809211,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": null,
-      "committed": 1,
-      "erosion": 0.0,
-      "force_id": "Red-Site",
-      "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
-      "morale": null,
-      "outcome": "held",
-      "side": "Red",
-      "temper": 0.191969,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 0.0
-     }
-    ]
-   ],
-   "force_outcomes": {
-    "Blue-Flight": [
-     "held"
-    ],
-    "Red-Site": [
-     "held"
-    ]
-   },
+   "engagements": [],
+   "force_outcomes": {},
    "fuel": {
     "Blue-Flight/f0": [
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.156612,
-      "fuel_before": 0.28,
-      "regime": "nominal",
-      "time": 774.879258
-     },
-     {
-      "amount": 0.123388,
-      "distance": 193719.814607,
-      "distance_covered": 193719.814607,
-      "exhausted": false,
-      "fuel_after": 0.033223,
-      "fuel_before": 0.156612,
-      "regime": "nominal",
-      "time": 1501.328563
-     },
      {
       "amount": 0.007121,
       "distance": 11180.339887,
       "distance_covered": 11180.339887,
       "exhausted": false,
-      "fuel_after": 0.026102,
-      "fuel_before": 0.033223,
+      "fuel_after": 0.142879,
+      "fuel_before": 0.15,
       "regime": "nominal",
-      "time": 1543.254838
+      "time": 41.926275
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-6",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-7/bingo": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.262879,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.262879,
+      "fuel_before": 0.27,
+      "regime": "nominal",
+      "time": 41.926275
      }
     ]
    },
@@ -515074,6 +520578,173 @@
     "t_start": 0.0
    }
   },
+  "S26-BINGO/S26-BINGO-7/reserve_off": {
+   "actual_etas": {
+    "Blue-Flight:Strike": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.026102,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 3,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Strike",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.809211,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.191969,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.156612,
+      "fuel_before": 0.28,
+      "regime": "nominal",
+      "time": 774.879258
+     },
+     {
+      "amount": 0.123388,
+      "distance": 193719.814607,
+      "distance_covered": 193719.814607,
+      "exhausted": false,
+      "fuel_after": 0.033223,
+      "fuel_before": 0.156612,
+      "regime": "nominal",
+      "time": 1501.328563
+     },
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.026102,
+      "fuel_before": 0.033223,
+      "regime": "nominal",
+      "time": 1543.254838
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-7",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
   "S26-BINGO/S26-BINGO-7/reverse_off": {
    "actual_etas": {
     "Blue-Flight:Strike": [
@@ -515778,6 +521449,711 @@
    "postures": {
     "Blue-Base/depot0": "Defense",
     "Blue-Flight/f0": "off_scene",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-7",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-7/transfer_continue": {
+   "actual_etas": {
+    "Blue-Flight:Transport": [
+     0.0,
+     1200.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Site/ifv0": {
+     "test:marker": 28
+    }
+   },
+   "ammunition_events": [
+    [
+     873.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     885.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     897.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     909.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     921.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     933.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     945.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     957.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     969.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     981.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     993.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1005.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1017.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1029.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1041.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1053.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1065.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1077.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1089.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1101.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1113.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1125.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1137.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1149.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1161.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1173.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1185.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ],
+    [
+     1197.706124,
+     "Red-Site/ifv0",
+     "test:marker",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.006842,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 476,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 472,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 28,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 28,
+    "salvos": 28
+   },
+   "damage_events": [
+    [
+     888.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     900.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     912.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     924.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     936.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     948.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     960.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     972.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     984.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     996.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1008.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1020.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1032.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1044.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1056.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1068.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1080.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1092.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1104.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1116.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1128.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1140.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1152.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1164.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1176.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1188.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1200.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     1212.706124,
+     "Blue-Flight/f0",
+     "Red-Site/ifv0",
+     "test:marker",
+     "miss",
+     100,
+     100,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Flight",
+      "breakpoint": 0.266189,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Blue-Flight:Transport",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Blue",
+      "temper": 0.36938,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 1,
+      "erosion": 0.0,
+      "force_id": "Red-Site",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.748131,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Flight": [
+     "held"
+    ],
+    "Red-Site": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.263158,
+      "distance": 300000.0,
+      "distance_covered": 300000.0,
+      "exhausted": false,
+      "fuel_after": 0.006842,
+      "fuel_before": 0.27,
+      "regime": "max",
+      "time": 1200.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "off_scene",
+    "Red-Site/ifv0": "Defense"
+   },
+   "session": {
+    "order_t_end": 3600.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S26-BINGO-7",
+    "t_end": 3600.0,
+    "t_start": 0.0
+   }
+  },
+  "S26-BINGO/S26-BINGO-7/transfer_return": {
+   "actual_etas": {
+    "Blue-Flight:Transport": [
+     0.0,
+     null
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Flight/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.142879,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Site/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Flight",
+     "Blue-Base"
+    ],
+    "forces_b": [
+     "Red-Site"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Flight/f0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Flight/f0": [
+     {
+      "amount": 0.007121,
+      "distance": 11180.339887,
+      "distance_covered": 11180.339887,
+      "exhausted": false,
+      "fuel_after": 0.142879,
+      "fuel_before": 0.15,
+      "regime": "nominal",
+      "time": 41.926275
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Flight/f0": "parking_cold",
     "Red-Site/ifv0": "Defense"
    },
    "session": {

@@ -1660,7 +1660,9 @@ k = 0..7), **24 nuove** (`reserve_off`, `transfer_continue`, `transfer_return` x
 aereo esistente fuori da S26 e' sotto il nuovo minimo (rotta intera + riserva di disimpegno): nessuno cambia.
 Il campo `crew_recovered` e' nell'esito per asset, che la fotografia non registra: nessuna esecuzione cambia
 per il campo (neppure gli aerei FUEL_EXHAUSTED di S24-GLIDE, S26 'no_base'/'bingo_off'). Fotografia del
-repository NON rigenerata.
+repository NON rigenerata. **Verifica 2026-10-16** (osboxes): `--compare` ripetuto, stessi numeri (794: 762
+identiche, 8 cambiate, 24 nuove); le 8 'reserve_off' identiche alle vecchie 'bingo'. Approvato dall'utente, fotografia
+installata (794 esecuzioni).
 
 ### Il cambio
 
