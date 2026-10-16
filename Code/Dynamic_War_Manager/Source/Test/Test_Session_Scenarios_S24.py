@@ -510,14 +510,17 @@ class TestS24OrbitExhaustion(F.LoggerSilencer, unittest.TestCase):
                 cls.runs[variant].append((outcome, legs, scenario.force(CAP).assets[cls.MIG]))
 
     def _mig_events(self, outcome):
-        return [event for event in outcome.fuel_events if event.asset_id == self.MIG]
+        """Eventi di carburante dei TRATTI del MiG (senza l'evento istantaneo d'ingaggio del G3, verificato a parte)."""
+        return [event for event in outcome.fuel_events
+                if event.asset_id == self.MIG and event.regime != FM.ENGAGEMENT_REGIME]
 
     def test_fuel_events_are_per_leg(self):
         """'full': tre FuelEvent (avvicinamento, orbita FERMA, rientro); l'orbita consuma 1500 s alla
         crociera del MiG (al regime di crociera anche se la CAP ha combattuto). 'per_leg_off': uno solo,
         sulla distanza della sola rotta (225 km), senza consumo dell'orbita. (Al regime di combattimento
         della contabilita' quell'evento puo' risultare esaurito anche se a crociera il carburante basta:
-        limite noto della F6-A, il vincolo del movimento e' calcolato a monte alla crociera.)"""
+        limite noto della F6-A, il vincolo del movimento e' calcolato a monte alla crociera; dal G3 i tratti sono
+        alla crociera e il combattimento e' nell'evento istantaneo d'ingaggio, escluso da `_mig_events`.)"""
         for outcome, _, mig in self.runs['full']:
             approach, orbit, exit_leg = self._mig_events(outcome)
             self.assertEqual([e.stationary for e in (approach, orbit, exit_leg)], [False, True, False])
@@ -525,7 +528,15 @@ class TestS24OrbitExhaustion(F.LoggerSilencer, unittest.TestCase):
             self.assertEqual((orbit.distance, orbit.regime), (0.0, FM.HOLD_REGIME))
             expected = FM.cruise_speed(mig) * ORBIT_DURATION / mig.fuel_autonomy()
             self.assertAlmostEqual(orbit.amount, expected, delta=1e-12)
-            self.assertAlmostEqual(orbit.fuel_before, approach.fuel_after, delta=1e-12)
+            # Contatore concatenato su TUTTI gli eventi del MiG, in ordine (G3: l'evento d'ingaggio, se la CAP ha
+            # combattuto, sta fra i tratti, prima di quello in cui cade).
+            every = [event for event in outcome.fuel_events if event.asset_id == self.MIG]
+            for before, after in zip(every, every[1:]):
+                self.assertAlmostEqual(after.fuel_before, before.fuel_after, delta=1e-12)
+            charges = [event for event in every if event.regime == FM.ENGAGEMENT_REGIME]
+            self.assertLessEqual(len(charges), 1)
+            self.assertAlmostEqual(orbit.fuel_before, approach.fuel_after - sum(e.amount for e in charges
+                                                                                 if e.time < orbit.time), delta=1e-12)
 
         for outcome, legs, _ in self.runs['per_leg_off']:
             event, = self._mig_events(outcome)

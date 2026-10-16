@@ -274,25 +274,82 @@ class TestEndToEnd(_Base):
             self.assertEqual(asset.ammunition, 20 - consumed.get(asset_id, 0), asset_id)
 
     def test_fuel_events_only_for_moving_assets(self):
-        self.assertEqual(sorted(e.asset_id for e in self.outcome.fuel_events), ['bn1', 'bn2', 'bs1'])
+        """Un evento di movimento per aereo (G3: piu' gli eventi istantanei d'ingaggio degli stessi aerei)."""
+        moving = [e.asset_id for e in self.outcome.fuel_events if e.regime != FM.ENGAGEMENT_REGIME]
+        self.assertEqual(sorted(moving), ['bn1', 'bn2', 'bs1'])
+        self.assertTrue({e.asset_id for e in self.outcome.fuel_events} <= {'bn1', 'bn2', 'bs1'})
 
     def test_fuel_distance_time_and_application(self):
+        consumed = self.outcome.fuel_consumed()
+
         for event in self.outcome.fuel_events:
-            self.assertAlmostEqual(event.distance, 40_000.0, places=6)
-            self.assertAlmostEqual(event.time, 200.0, places=6)
-            self.assertAlmostEqual(self.assets[event.asset_id].fuel, 1.0 - event.amount)
+            if event.regime != FM.ENGAGEMENT_REGIME:
+                self.assertAlmostEqual(event.distance, 40_000.0, places=6)
+                self.assertAlmostEqual(event.time, 200.0, places=6)
+
+            self.assertAlmostEqual(self.assets[event.asset_id].fuel, 1.0 - consumed[event.asset_id])
+
+    @staticmethod
+    def _fought(outcome):
+        fought = set()
+        for event in outcome.ammunition_events:
+            fought.add(event.asset_id)
+        for event in outcome.damage_events:
+            fought.add(event.target_id)
+        return fought
 
     def test_regime_is_combat_only_for_assets_that_fought(self):
-        fought = set()
-        for event in self.outcome.ammunition_events:
-            fought.add(event.asset_id)
-        for event in self.outcome.damage_events:
-            fought.add(event.target_id)
+        """G3 spento: la regola della F6-A, tutto il movimento di chi ha combattuto al regime 'max'."""
+        with patch.object(SS, 'G3_ENGAGEMENT_FUEL', False):
+            outcome, _, _ = self._run()
 
-        for event in self.outcome.fuel_events:
+        fought = self._fought(outcome)
+        self.assertTrue(fought & {'bn1', 'bn2', 'bs1'})
+
+        for event in outcome.fuel_events:
             expected = SS.COMBAT_REGIME if event.asset_id in fought else SS.CRUISE_REGIME
             self.assertEqual(event.regime, expected, event.asset_id)
             self.assertAlmostEqual(event.amount, 40_000.0 / AUTONOMY[expected])
+
+    def test_g3_movement_at_cruise_plus_one_engagement_charge(self):
+        """G3: movimento sempre alla crociera; chi ha combattuto consuma in piu' la riserva di disimpegno (ripiego
+        'max': 200 m/s x 300 s / 500 km = 0,12) all'istante della sua prima salva, prima del tratto."""
+        results = []
+        original = ER.resolve_engagement
+
+        def resolve(*args, **kwargs):
+            results.append(original(*args, **kwargs))
+            return results[-1]
+
+        with patch.object(SS.ER, 'resolve_engagement', side_effect=resolve):
+            outcome, _, _ = self._run()
+
+        self.assertEqual([e for e in outcome.fuel_events], list(self.outcome.fuel_events))
+        salvos = [salvo for result in results if result is not None for salvo in result.salvos]
+        fought = self._fought(outcome) & {'bn1', 'bn2', 'bs1'}
+        self.assertTrue(fought)
+
+        for asset_id in ('bn1', 'bn2', 'bs1'):
+            events = [e for e in outcome.fuel_events if e.asset_id == asset_id]
+            moving = [e for e in events if e.regime != FM.ENGAGEMENT_REGIME]
+            charges = [e for e in events if e.regime == FM.ENGAGEMENT_REGIME]
+            self.assertEqual(len(moving), 1, asset_id)
+            self.assertEqual(moving[0].regime, SS.CRUISE_REGIME, asset_id)
+            self.assertAlmostEqual(moving[0].amount, 40_000.0 / AUTONOMY['nominal'])
+
+            if asset_id not in fought:
+                self.assertEqual(charges, [], asset_id)
+                continue
+
+            first = min(s.t_launch for s in salvos if asset_id in (s.shooter_id, s.target_id))
+            self.assertEqual(len(charges), 1, asset_id)
+            self.assertAlmostEqual(charges[0].amount, 200.0 * FM.DISENGAGE_TIME / AUTONOMY['max'])
+            self.assertEqual((charges[0].distance, charges[0].duration, charges[0].t_start),
+                             (0.0, 0.0, charges[0].time))
+            self.assertLess(charges[0].time, moving[0].time)
+            self.assertEqual(events, [charges[0], moving[0]], asset_id)
+            self.assertAlmostEqual(moving[0].fuel_before, charges[0].fuel_after)
+            self.assertAlmostEqual(charges[0].time, first)
 
     def test_declared_interval(self):
         self.assertEqual((self.outcome.t_start, self.outcome.t_end), (0.0, 3600.0))
@@ -1687,3 +1744,106 @@ class TestReserveBingo(_Base):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+# ── G3: CONSUMO DI CARBURANTE IN INGAGGIO ──────────────────────────────────────
+
+def _aircraft_fire(shooter, target):
+    """Spara solo l'aereo: i veicoli rossi non rispondono (consumo d'ingaggio isolato dal danno)."""
+    return SPEC if type(shooter).__name__ == 'Aircraft' else None
+
+
+class TestEngagementFuel(_Base):
+    """G3 (`G3_ENGAGEMENT_FUEL`, attivo): l'aereo in volo che partecipa a un ingaggio consuma la riserva di
+    disimpegno (aerei di test: ripiego 'max', 200 m/s x 300 s / 500 km = 0,12) all'istante della prima
+    partecipazione; il movimento resta alla crociera; terra e mare invariati."""
+
+    CHARGE = 200.0 * FM.DISENGAGE_TIME / AUTONOMY['max']
+
+    def _single(self, fuel=1.0, parked=False, fire=_aircraft_fire):
+        """Un aereo blu su 40 km (200 s) sopra un veicolo rosso fermo (e, a richiesta, un aereo rosso parcheggiato
+        senza missione accanto al veicolo)."""
+        blue = _force('Blue', 'Blue', [_asset(Aircraft, 'b1', 0, -20_000, fuel=fuel, speed=200.0)])
+        reds = [_asset(Vehicle, 'r1', 0, 0)]
+
+        if parked:
+            reds.append(_asset(Aircraft, 'rp1', 300, 0))
+
+        red = _force('Red', 'Red', reds)
+        mission = _air_mission('M-b1', blue, _route([(0, -20_000), (0, 20_000)], 200.0, 'r-b1'), [('b1', 0.0)])
+        outcome = SS.run_session(self._order('S-g3', (mission,)), [blue], [red], fire, reaction_profile_for=_profile)
+        return outcome, blue.assets['b1'], red
+
+    def test_engagement_fuel_is_the_disengagement_reserve(self):
+        asset = _asset(Aircraft, 'x', 0, 0, speed=200.0)
+        self.assertAlmostEqual(FM.engagement_fuel(asset), FM.disengagement_reserve(asset))
+        self.assertAlmostEqual(FM.engagement_fuel(asset), self.CHARGE)
+
+    def test_one_charge_before_the_leg_and_movement_at_cruise(self):
+        outcome, b1, _ = self._single()
+        events = [e for e in outcome.fuel_events if e.asset_id == 'b1']
+        self.assertEqual([e.regime for e in events], [FM.ENGAGEMENT_REGIME, SS.CRUISE_REGIME])
+        charge, leg = events
+        self.assertAlmostEqual(charge.amount, self.CHARGE)
+        self.assertTrue(0.0 < charge.time < leg.time)
+        self.assertAlmostEqual(leg.amount, 40_000.0 / AUTONOMY['nominal'])
+        self.assertAlmostEqual(leg.fuel_before, 1.0 - self.CHARGE)
+        self.assertAlmostEqual(b1.fuel, 1.0 - self.CHARGE - 0.04)
+        self.assertFalse(any(e.asset_id == 'r1' for e in outcome.fuel_events))
+
+    def test_switch_off_is_the_f6a_rule(self):
+        with patch.object(SS, 'G3_ENGAGEMENT_FUEL', False):
+            outcome, b1, _ = self._single()
+
+        events = [e for e in outcome.fuel_events if e.asset_id == 'b1']
+        self.assertEqual([e.regime for e in events], [SS.COMBAT_REGIME])
+        self.assertAlmostEqual(b1.fuel, 1.0 - 40_000.0 / AUTONOMY['max'])
+
+    def test_no_engagement_no_charge(self):
+        outcome, b1, _ = self._single(fire=lambda shooter, target: None)
+        self.assertEqual([e.regime for e in outcome.fuel_events], [SS.CRUISE_REGIME])
+        self.assertAlmostEqual(b1.fuel, 0.96)
+
+    def test_a_parked_aircraft_hit_on_the_ground_does_not_consume(self):
+        """Il bersaglio aereo a terra (senza missione, F4c) colpito sul parcheggio non manovra: nessun consumo."""
+        outcome, _, red = self._single(parked=True)
+        targeted = {e.target_id for e in outcome.damage_events}
+        self.assertIn('rp1', targeted)
+        self.assertFalse(any(e.asset_id == 'rp1' for e in outcome.fuel_events))
+        self.assertEqual(red.assets['rp1'].fuel, 1.0)
+
+    def test_exhaustion_by_the_charge_empties_the_counter_only(self):
+        """Carburante 0,10 < consumo d'ingaggio 0,12: il contatore va a zero all'istante dell'ingaggio, nessun
+        evento dopo (il tratto non e' contabilizzato), ma l'aereo non e' fermato ne' perso (nessun ri-scheduling,
+        G4): esito di rotta completata, nessun `crew_recovered`. Senza basi il bingo alla partenza (soglia 0,04 +
+        0,12) non ha dove rientrare (`BINGO_NO_BASE`)."""
+        outcome, b1, _ = self._single(fuel=0.10)
+        events = [e for e in outcome.fuel_events if e.asset_id == 'b1']
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0].regime, FM.ENGAGEMENT_REGIME)
+        self.assertAlmostEqual(events[0].amount, 0.10)
+        self.assertTrue(events[0].exhausted)
+        self.assertEqual(b1.fuel, 0.0)
+        self.assertFalse(b1.is_destroyed())
+        asset_outcome = outcome.mission_outcomes['M-b1'].asset_outcomes['b1']
+        self.assertEqual(asset_outcome.end_reason, AssetEndReason.ROUTE_COMPLETED)
+        self.assertIsNone(asset_outcome.crew_recovered)
+
+    def test_without_per_leg_fuel_the_charge_precedes_the_single_event(self):
+        with patch.object(SS, 'F6_FUEL_PER_LEG', False):
+            outcome, b1, _ = self._single()
+
+        self.assertEqual([e.regime for e in outcome.fuel_events], [FM.ENGAGEMENT_REGIME, SS.CRUISE_REGIME])
+        self.assertAlmostEqual(b1.fuel, 1.0 - self.CHARGE - 0.04)
+
+    def test_engagement_instants_first_participation(self):
+        """Prima partecipazione: lancio delle salve sparate o ricevute, intercettazioni."""
+        salvo = lambda sid, t, shooter, target: ER.Salvo(salvo_id=sid, t_launch=t, t_impact=t + 5.0, shooter_id=shooter,
+                                                        target_id=target, target_force_id='F', rounds=1, spec=SPEC)
+        result = ER.EngagementResult(
+            t_start=0.0, t_end=100.0, forces=(),
+            salvos=(salvo(0, 30.0, 'a', 'b'), salvo(1, 10.0, 'c', 'a'), salvo(2, 50.0, 'b', 'c')),
+            interception_events=(ER.InterceptionEvent(time=20.0, asset_id='d', interceptions=1),
+                                 ER.InterceptionEvent(time=5.0, asset_id='b', interceptions=1)))
+        self.assertEqual(SS._engagement_instants(result), {'a': 10.0, 'b': 5.0, 'c': 10.0, 'd': 20.0})
+        self.assertEqual(set(SS._engagement_instants(result)), SS._engaged_assets(result))

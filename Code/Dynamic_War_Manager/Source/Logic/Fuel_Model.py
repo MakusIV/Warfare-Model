@@ -101,9 +101,23 @@ resto della rotta fino al LAND, attese comprese, + riserva di disimpegno) e cosa
     F6-B2bis) e le basi entro `ALTERNATE_BASE_MAX_OFFSET` (3000 m, stima dell'utente) dalla rotta programmata
     (lungo la rotta fino al punto piu' vicino, poi diretto) la raggiungibile piu' vicina in percorso; poi i
     passi 3 e 4 del trasferimento.
-Raggiungibile = il residuo basta per il solo percorso alla crociera. Con consumo deterministico (G3 e G4 non
-ci sono ancora) residuo e resto della rotta calano insieme, quindi la soglia scatta all'inizio dei tratti o
-mai: la sessione la valuta una sola volta, alla partenza. Formule e casi nella sezione G2 del codice.
+Raggiungibile = il residuo basta per il solo percorso alla crociera. Con il solo consumo di movimento
+residuo e resto della rotta calano insieme, quindi la soglia scatta all'inizio dei tratti o mai: la sessione
+la valuta una sola volta, alla partenza. Dal G3 un ingaggio abbassa il residuo senza accorciare la rotta,
+quindi dopo un ingaggio la soglia puo' scattare: la rivalutazione dopo l'ingaggio e' il G4 (non ancora
+fatto). Formule e casi nella sezione G2 del codice.
+
+## Consumo in ingaggio (G3, decisioni dell'utente del 2026-10-15)
+
+A ogni ingaggio a cui un aereo partecipa, NELL'ISTANTE dell'ingaggio, l'aereo consuma il carburante di
+`DISENGAGE_TIME` (5 minuti) alla massima spinta militare: la STESSA quantita' della riserva di disimpegno
+del G1 (`engagement_fuel`, che delega a `disengagement_reserve_with_source`, stessa fonte e stesso
+ripiego). `build_engagement_fuel_event` ne fa un `FuelEvent` istantaneo (distanza e durata nulle, regime
+`ENGAGEMENT_REGIME`), limitato al carburante disponibile come ogni evento. Il movimento resta al suo regime
+normale (crociera): sostituisce la regola della F6-A "chi ha combattuto consuma tutto il movimento al
+regime 'max'". Chi partecipa e in quale istante lo decide l'orchestratore (`Session_Simulator`, "Consumo
+in ingaggio"). `engagement_fuel` e' il SOLO punto in cui si calcola il consumo per ingaggio: v. il suo
+docstring per la regola futura sulla durata ammessa dell'emergenza (aerei WW2), non ancora implementata.
 
 ## Cosa NON fa
 - Non integra il consumo nel risolutore d'ingaggio: `Engagement_Resolver` non modella il
@@ -156,7 +170,9 @@ class FuelEvent:
         amount: carburante consumato [frazione del carico pieno], gia' limitato al disponibile.
         fuel_before/fuel_after: carburante [frazione] prima e dopo.
         exhausted: True se dopo l'evento il carburante e' finito (l'asset non si muove piu').
-        regime: regime di Mobile.FUEL_REGIMES usato per il consumo.
+        regime: regime di Mobile.FUEL_REGIMES usato per il consumo; per l'evento ISTANTANEO del consumo in
+            ingaggio (G3, `build_engagement_fuel_event`) l'etichetta `ENGAGEMENT_REGIME`, con distanza e
+            durata nulle.
         provenance: una di Damage_Model.PROVENANCES.
         t_start: istante d'inizio del tratto (F6-A, evento per tratto); None per l'evento per
             distanza di `build_fuel_event` (forma precedente, un evento per asset).
@@ -1014,6 +1030,103 @@ def disengagement_reserve(asset, duration: float = DISENGAGE_TIME) -> Optional[f
     `disengagement_reserve_with_source` per la provenienza."""
     result = disengagement_reserve_with_source(asset, duration)
     return None if result is None else result[0]
+
+
+# ── CONSUMO IN INGAGGIO (G3 del nuovo modello di bingo) ───────────────────────
+#
+# Decisione dell'utente del 2026-10-15: a ogni ingaggio a cui l'aereo partecipa, nell'istante dell'ingaggio,
+# l'aereo consuma il carburante di DISENGAGE_TIME alla massima spinta militare, cioe' la riserva di disimpegno
+# del G1 (stessa formula, stessa fonte, stesso ripiego: nessuna duplicazione). Il consumo e' ISTANTANEO
+# (modello a scatto: i 5 minuti di manovra non sono distribuiti nel tempo ne' lungo la rotta) e si somma al
+# consumo del movimento, che resta al suo regime normale. Nessuna estrazione casuale.
+
+# Etichetta del `FuelEvent.regime` dell'evento d'ingaggio. NON e' una chiave di `Mobile.FUEL_REGIMES` (il
+# consumo non passa da `fuel_for_distance` con questo regime): distingue l'evento d'ingaggio da quelli di
+# movimento nell'esito e nella fotografia. La provenienza della quantita' (consumo militare del registro o
+# ripiego 'max') e' quella di `engagement_fuel_with_source`.
+ENGAGEMENT_REGIME = 'engagement'
+
+
+def engagement_fuel_with_source(asset) -> Optional[Tuple[float, str]]:
+    """(carburante consumato in UN ingaggio [frazione del carico pieno], provenienza), None se non modellato.
+
+    E' l'UNICO punto in cui si calcola il consumo per ingaggio (G3): oggi coincide con la riserva di
+    disimpegno del G1, `disengagement_reserve_with_source(asset, DISENGAGE_TIME)` (5 minuti alla massima
+    spinta militare, `emergency.consume` del registro in kg/h / capacita' del loadout; ripiego sul regime
+    'max' del loadout).
+
+    REGOLA FUTURA, NON IMPLEMENTATA (indicazione dell'utente per il G3): per gli aerei la cui emergenza
+    puo' durare meno di 5 minuti (WW2) il consumo sara' "regime `emergency` per min(DISENGAGE_TIME, durata
+    ammessa dal registro `speed_data['emergency']['time']`), poi regime 'combat' per il resto". Non e' fatta
+    perche' il campo `time` del registro non e' affidabile (unita' ignota: oggi letto come minuti, 60 di
+    emergenza, incompatibile con un postbruciatore; v. l'arretrato della deviazione 17 del Piano). Quando
+    sara' introdotta va deciso anche se la riserva del G1 la segue (oggi le due grandezze coincidono per
+    costruzione).
+    """
+    return disengagement_reserve_with_source(asset, DISENGAGE_TIME)
+
+
+def engagement_fuel(asset) -> Optional[float]:
+    """Carburante consumato in UN ingaggio [frazione del carico pieno] (G3), None se non modellato; v.
+    `engagement_fuel_with_source`."""
+    result = engagement_fuel_with_source(asset)
+    return None if result is None else result[0]
+
+
+def build_engagement_fuel_event(asset, time: float, provenance: str = DM.DERIVED) -> Optional[FuelEvent]:
+    """Consumo di `asset` per un ingaggio all'istante `time` (G3), **senza applicarlo**.
+
+    Evento ISTANTANEO: `t_start` = `time`, distanza e durata nulle, `regime` = `ENGAGEMENT_REGIME`; la
+    quantita' e' `engagement_fuel(asset)` limitata al carburante disponibile (come ogni `FuelEvent`): se non
+    basta, `amount` e' il residuo ed `exhausted` e' True.
+
+    Returns:
+        Il FuelEvent, oppure None (con un log) se l'asset non ha id di dominio, il suo carburante o il consumo
+        per ingaggio non sono modellati, o il serbatoio e' gia' vuoto (dopo l'esaurimento nessun evento, come
+        per i tratti).
+
+    Raises:
+        ValueError: provenance sconosciuta; TypeError: `time` non numerico.
+    """
+    if provenance not in DM.PROVENANCES:
+        raise ValueError(f"provenance must be one of {DM.PROVENANCES}, got {provenance!r}")
+
+    if isinstance(time, bool) or not isinstance(time, (int, float)):
+        raise TypeError(f"time must be a number, got {time!r}")
+
+    asset_id = _domain_id(asset)
+
+    if asset_id is None:
+        logger.warning("build_engagement_fuel_event: asset without domain id, event not built")
+        return None
+
+    fuel_before = getattr(asset, 'fuel', None)
+
+    if fuel_before is None:
+        logger.debug(f"build_engagement_fuel_event: fuel not modelled for asset {asset_id!r}, no event")
+        return None
+
+    fuel_before = float(fuel_before)
+
+    if fuel_before <= _FUEL_EPS:
+        logger.debug(f"build_engagement_fuel_event: asset {asset_id!r} has an empty tank, no event")
+        return None
+
+    required = engagement_fuel(asset)
+
+    if required is None:
+        logger.debug(f"build_engagement_fuel_event: engagement fuel not modelled for asset {asset_id!r}, no event")
+        return None
+
+    amount = min(required, fuel_before)
+    fuel_after = fuel_before - amount
+
+    if fuel_after < _FUEL_EPS:
+        amount, fuel_after = fuel_before, 0.0
+
+    return FuelEvent(time=float(time), asset_id=asset_id, distance=0.0, distance_covered=0.0, amount=amount,
+                     fuel_before=fuel_before, fuel_after=fuel_after, exhausted=fuel_after <= 0.0,
+                     regime=ENGAGEMENT_REGIME, provenance=provenance, t_start=float(time))
 
 
 # ── SOGLIA DI BINGO E ALBERO DI DECISIONE (G2 del nuovo modello di bingo) ────

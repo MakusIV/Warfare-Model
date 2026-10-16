@@ -1739,3 +1739,126 @@ installata (794 esecuzioni).
 - `Test_Mission_Types`: `crew_recovered` (+1).
 - `Test_Session_Simulator.TestReserveBingo` (nuova, 8 test); `TestBingo` gira con il G2 spento.
 - `Test_Session_Scenarios_S26`: riscritto per il G2, 9 varianti, 10 test (+2: soglia dei carburanti di test, discesa immediata; il vecchio test del ritroso ora su `reserve_off`).
+
+## G3: consumo di carburante in ingaggio (decisioni dell'utente del 2026-10-15/16)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` installata (794 esecuzioni, G2).
+**Dopo**: `Session_Simulator.G3_ENGAGEMENT_FUEL = True`. `--compare`, 2026-10-16 su osboxes: **802 esecuzioni**;
+delle 794 della base **372 IDENTICHE**, **422 cambiate**, **8 nuove** (`S26-BINGO/S26-BINGO-k/engagement_fuel_off`,
+k = 0..7). Verificato su tutte le 422 con un confronto chiave per chiave fuori dal repository: le differenze sono
+SOLO nella voce `fuel`, nei conteggi `counts.fuel_events`/`counts.fuel_exhausted` e nel carburante finale
+`assets.*.fuel`; nessuna differenza in ingaggi, salve, danni, munizioni, posture, ETA (i tratti, i contatti e gli
+ingaggi sono calcolati a monte alla crociera e il G3 non li tocca). `counts.fuel_exhausted` cambia in 8 esecuzioni
+sole (S26 'transfer_continue', sotto). Fotografia del repository NON rigenerata.
+
+### Il cambio
+
+1. **Consumo per ingaggio** (`Fuel_Model.engagement_fuel[_with_source]`): il carburante di `DISENGAGE_TIME` (300 s)
+   alla massima spinta militare, cioe' la riserva di disimpegno del G1 (delega a `disengagement_reserve_with_source`:
+   stessa fonte `emergency.consume` in kg/h / capacita' del loadout, stesso ripiego sul regime 'max'). E' l'UNICO
+   punto di calcolo: la regola futura per gli aerei con emergenza piu' breve di 5 minuti (WW2: "emergency per
+   min(300 s, `speed_data['emergency']['time']`), poi 'combat'") e' documentata nel docstring ma NON implementata
+   (campo `time` del registro non affidabile, unita' ignota).
+2. **Evento** (`Fuel_Model.build_engagement_fuel_event`): `FuelEvent` ISTANTANEO, `time` = `t_start` = istante
+   dell'ingaggio, distanza e durata nulle, `regime` = `Fuel_Model.ENGAGEMENT_REGIME` ('engagement', etichetta, non una
+   chiave di `Mobile.FUEL_REGIMES`), limitato al disponibile; nessun evento a serbatoio vuoto.
+3. **Chi e quando** (`Session_Simulator._engagement_instants`): partecipa chi ha combattuto secondo la definizione
+   della F6-A (`_engaged_assets`: tiratore, bersaglio di una salva anche mancata o intercettata, intercettore);
+   istante = il primo fra i lanci delle salve sue o dirette a lui (`Salvo.t_launch`) e le sue intercettazioni. Solo
+   aerei di MISSIONE (dominio 'air') IN VOLO a quell'istante (`grounded`): un aereo colpito sul parcheggio non
+   consuma. Un consumo per esito d'ingaggio (oggi ogni forza e' in una sola componente per sessione: al piu' uno per
+   aereo e per sessione).
+4. **Movimento**: gli aerei consumano SEMPRE alla crociera (prima: tutto al regime 'max' se avevano combattuto).
+   Terra e mare invariati (regola 'max' della F6-A, quantita' identica alla crociera; nessun consumo d'ingaggio).
+5. **Ordine**: il consumo d'ingaggio e' messo fra gli eventi per tratto in ordine di tempo, PRIMA del tratto in cui
+   cade (nessun tratto spezzato); se l'evento MOVEMENT dell'aereo e' gia' passato, applicato subito.
+6. **Esaurimento in ingaggio**: contatore a zero, nessun evento dopo; l'aereo NON e' fermato ne' perso (nessun
+   ri-scheduling: G4), esito per asset, planata/perdita della F6-A e `crew_recovered` invariati.
+7. **Interruttore**: spento, la F6-A esattamente come prima (verificato: le 8 esecuzioni 'engagement_fuel_off' hanno
+   gli eventi e il carburante delle vecchie 'none', 0,736842 con un evento 'max' da 0,2632).
+
+### Differenze della fotografia, esecuzione per esecuzione (per gruppi)
+
+Il saldo per aereo che ha combattuto e' `D/A_max - D/A_nom - R` (D = movimento, A = autonomie del loadout,
+R = consumo d'ingaggio): il G3 consuma PIU' della vecchia sovrastima sulle rotte brevi, MENO sulle lunghe. Per
+l'F-16C 'Strike' (A_nom 1570 km, A_max 1140 km, R ~0,085) il pareggio e' a ~350 km di movimento; quasi tutti gli
+scenari hanno rotte di 40-300 km, quindi quasi tutti gli aerei finiscono con MENO carburante.
+
+- **Meno carburante (rotte brevi)**, 422 esecuzioni meno quelle sotto: ORC-base/interval/seed/twofronts (aerei di
+  test, R = 0,12 di ripiego 'max': -0,08 / -0,05), S1 'with_cas', S2, S3 (436 aerei, -0,049), S4, S6, S7, S9, S9R,
+  S11-S16, S18, S19, S19AD, S21, S21R, S23-CAP 'during', S23-TOT, S24-GLIDE 'glide', S24-ORBIT 'full'/'per_leg_off',
+  VAL-agn/VAL-det: ogni aereo che ha combattuto ha un evento 'engagement' (R fra 0,050 e 0,104 secondo il modello e
+  il loadout) e i tratti 'nominal' al posto di 'max'; differenza del carburante finale fra -0,013 e -0,167 (S11:
+  due sessioni, la seconda parte dal residuo della prima). Gli aerei che non hanno combattuto non cambiano.
+- **Piu' carburante**: S5 (103 aerei, +0,045: rotta di 950 km, oltre il pareggio, 'max' 0,609 contro crociera 0,475 +
+  R 0,089); S22-AIR 'parked' (16 MiG, i soli 'piu'' di S22-AIR): bersagli di salve SUL PARCHEGGIO, prima contati
+  "hanno combattuto" e consumati tutto il volo successivo a 'max', ora a terra all'istante dell'ingaggio, nessun
+  consumo d'ingaggio, volo alla crociera. Gli altri 48 aerei di S22-AIR ('base_area', 'landed', 'parked': gli
+  strike Blue) hanno meno carburante come sopra.
+- **S26-BINGO** (40 cambiate): 'none' 0,7368 -> 0,7237 (evento 'engagement' 0,0852 al primo lancio del marcatore Red,
+  872-889 s, poi il tratto alla crociera 0,1911); 'switch_off' 0,0168 -> 0,0037; 'transfer_continue' 0,0068 -> **0,0**:
+  il trasferimento sotto la soglia del G2 che continua consumando la riserva e' ingaggiato e il consumo d'ingaggio
+  esaurisce il contatore poco prima della fine della rotta (evento del tratto `exhausted`, 0,1848 di 0,1911), ma la
+  rotta e' completata lo stesso (limite G4, sotto); 'no_base'/'bingo_off' finale 0 come prima, cambia la forma
+  degli eventi (evento 'engagement' a ~872 s, tratto esaurito a 942 s: l'esaurimento A MONTE resta a 942 s, 235,5 km).
+  Identiche 'bingo', 'reserve_off', 'reverse_off', 'transfer_return' (rientro dalla partenza, nessun ingaggio).
+- **Identiche**: tutte le unita' senza aerei in combattimento con carburante modellato (ORC-fuel, ORC-nocontact, S8,
+  S10, S17, S20, S22-E1, S22-E3, S23-HOLD, S24-E5, S25-*) e le varianti senza ingaggio aereo (S1 'without_cas',
+  S22-AIR 'airborne'/'no_base', S23-CAP 'after'/'no_wait'/'waits_off', S24-GLIDE 'enemy_base'/'no_base'/'off',
+  S24-ORBIT 'dry': la CAP si esaurisce a 1050 s, prima dell'ingaggio).
+- **Nuove**: 'engagement_fuel_off' x 8 seed (G3 spento, pieno: identica alla vecchia 'none').
+
+### Scelte dove le decisioni lasciavano margine
+
+- "Partecipa" = la definizione esistente di "ha combattuto" della F6-A (tiratore, bersaglio di una salva,
+  intercettore); il solo rilevamento non conta.
+- Istante = il primo lancio di una salva sua o diretta a lui, o la prima intercettazione (non l'inizio della
+  componente d'ingaggio, che e' l'inizio della finestra di contatto e puo' precedere di molto il combattimento).
+- Solo aerei di missione IN VOLO (un aereo colpito a terra non manovra); terra e mare esclusi (nessun dato di consumo
+  per regime nei registri; la loro regola 'max' resta, con quantita' identica alla crociera).
+- Ordine nella contabilita' senza spezzare il tratto: il consumo d'ingaggio precede l'evento del tratto in cui cade.
+  Approssimazione: il consumo e' limitato dal residuo all'INIZIO del tratto, non da quello all'istante (es. S26
+  'no_base': all'istante 872 s il residuo reale e' ~0,011, il consumo prende 0,085 e il tratto risulta esaurito);
+  il carburante finale non cambia (sempre limitato al disponibile).
+- Esaurimento in ingaggio: SOLUZIONE MINIMA, coerente con il limite gia' dichiarato dalla F6-A per il regime 'max':
+  solo il contatore va a zero, nessun ri-scheduling, nessun cambio di esito. Alternativa scartata (decisione di
+  progetto, rimandata al G4): applicare planata/perdita della F6-A all'istante dell'ingaggio, che richiede di
+  troncare tratti e contatti gia' calcolati.
+- Evento istantaneo con durata 0 (non 300 s): "nell'istante dell'ingaggio" del brief; i 5 minuti di manovra non
+  spostano l'aereo nel DES.
+
+### Costanti stimate
+
+- Nessuna costante nuova. Il consumo per ingaggio usa `DISENGAGE_TIME` = 300 s (stima dell'utente, G1) e il dato
+  `emergency.consume` del registro (kg/h dedotti, circa spinta militare, stima non tarata, strada A del G1) o il
+  ripiego 'max' del loadout.
+- S26: nessuna costante di test nuova; la variante 'engagement_fuel_off' usa il pieno come 'none'.
+
+### Limiti noti
+
+- **Nessun ri-scheduling (G4)**: dopo un ingaggio l'aereo prosegue la rotta pianificata anche se e' sotto la soglia
+  di bingo o ha il contatore a zero (S26 'transfer_continue'); l'esaurimento e la perdita della F6-A restano
+  calcolati a monte alla crociera e non si anticipano per il consumo d'ingaggio.
+- Un solo consumo per aereo per sessione, perche' ogni forza e' in una sola componente d'ingaggio per sessione: piu'
+  scontri distinti nel tempo nella stessa componente contano come un ingaggio.
+- Regola WW2 (emergenza piu' breve di 5 minuti, poi 'combat') non implementata; quando lo sara' va deciso se la
+  riserva del G1 la segue.
+- Consumo istantaneo, limitato dal residuo all'inizio del tratto che contiene l'ingaggio (sopra).
+- Terra e mare senza consumo d'ingaggio.
+
+### Test
+
+- `Test_Fuel_Model.TestEngagementFuel` (nuova, 6 test propri + i 7 ereditati da `TestDisengagementReserve`):
+  uguaglianza con la riserva (aereo reale, ripiego, non modellato), evento istantaneo non applicato, aereo reale,
+  limite al disponibile, nessun evento, argomenti fuori dominio.
+- `Test_Session_Simulator.TestEngagementFuel` (nuova, 8 test): un consumo prima del tratto e movimento alla
+  crociera, interruttore spento = F6-A, nessun ingaggio nessun consumo, aereo parcheggiato colpito senza consumo,
+  esaurimento in ingaggio (solo contatore), senza eventi per tratto, `_engagement_instants`. `TestEndToEnd`: i test
+  sul carburante aggiornati al G3 (+1 test sul consumo all'istante del primo lancio; il test del regime 'max' gira
+  con il G3 spento).
+- `Test_Session_Scenarios_S26`: variante 'engagement_fuel_off', nuovo `test_engagement_fuel`,
+  `test_without_bingo_the_route_is_completed` aggiornato ('transfer_continue' a zero se Red spara). Variante
+  registrata nella tabella `UNITS` di `Scenario_Baseline.py` (in coda).
+- `Test_Session_Scenarios_S24.TestS24OrbitExhaustion.test_fuel_events_are_per_leg` e
+  `Test_Session_Scenarios_S10_S18.TestS11SessionBoundary.test_fuel_in_second_session_starts_from_carried_fuel`:
+  adattati all'evento d'ingaggio (tratti filtrati, contatore concatenato; primo evento per asset).

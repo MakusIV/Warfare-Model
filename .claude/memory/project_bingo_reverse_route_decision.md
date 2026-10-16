@@ -50,6 +50,15 @@ Implementata dall'agente `des-developer` (Opus medium). Suite 4245 OK (7 skipped
 - **Perche'**: senza consumo in combattimento, con consumo deterministico, una missione fattibile non va MAI in bingo in volo. Servono
   G3 e G4.
 
+## Regimi di spinta e durata dell'emergenza (precisazione dell'utente 2026-10-16)
+- Regimi della manetta = registro `speed_data`: `sustained` (crociera/normal), `combat` (military), `emergency` (massima spinta
+  possibile, per un tempo limitato dall'asset). Riserva G1 e consumo in ingaggio G3 usano `emergency` (i cui VALORI attuali sono
+  pero' numericamente da spinta militare, strada A).
+- Durata dell'emergenza: per i jet > 5-10 min; per gli aerei WW2 (non ancora nel registro) puo' essere < 5 min. Regola futura:
+  emergency per min(`DISENGAGE_TIME`, `speed_data['emergency']['time']`), poi regime `combat` per il resto. Non implementata finche'
+  `time` del registro non e' corretto (unita' ignota, 60 non plausibile). Il G3 calcola il consumo in ingaggio in un solo punto per
+  poterla aggiungere.
+
 **Piano**:
 - **G0 FATTO**: `96942ca7`, pushato.
 - **G1 FATTO**: `c1c0f576`, pushato. `Fuel_Model.DISENGAGE_TIME`, `disengagement_reserve[_with_source]`, `Aircraft.emergency_fuel_flow`,
@@ -62,7 +71,7 @@ Implementata dall'agente `des-developer` (Opus medium). Suite 4245 OK (7 skipped
     sotto il minimo non decollano. In volo la funzione si attivera' con G4;
   - default comunicati all'utente: senza base raggiungibile l'aereo punta alla base piu' vicina e valgono le regole F6-A; campo
     "equipaggio recuperato" nell'esito; costante 3 km.
-- **G3**: consumo di 5 minuti alla massima spinta a ogni ingaggio, nell'istante dell'ingaggio, al posto della sovrastima attuale
+- **G3 COMMITTATO 2026-10-16 DA APPROVARE** (v. [[project-session-2026-10-16-summary]]). Era: consumo di 5 minuti alla massima spinta a ogni ingaggio, nell'istante dell'ingaggio, al posto della sovrastima attuale
   "tutto il movimento a 'max' se ha combattuto".
 - **G4**: ri-scheduling dopo l'ingaggio (limite noto P2/R4 di `Session_Simulator`: cancellare le finestre future dell'asset e
   ricalcolarle). Prima l'analisi dell'architettura; proposta Opus effort high.

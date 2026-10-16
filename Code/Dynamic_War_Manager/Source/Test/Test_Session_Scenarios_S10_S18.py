@@ -522,10 +522,18 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
         self.assertGreater(checked, 0)
 
     def test_fuel_in_second_session_starts_from_carried_fuel(self):
+        """Il PRIMO evento di carburante di ogni asset nella 2 parte dal residuo della 1 (dal G3 un aereo che combatte
+        ha anche l'evento istantaneo d'ingaggio, quindi gli eventi successivi partono dal residuo gia' ridotto)."""
         checked = 0
 
         for run in self.runs:
+            seen = set()
+
             for event in run['outcome_2'].fuel_events:
+                if event.asset_id in seen:
+                    continue
+
+                seen.add(event.asset_id)
                 self.assertAlmostEqual(event.fuel_before, run['after_1'][event.asset_id][2], places=9)
                 checked += 1
 

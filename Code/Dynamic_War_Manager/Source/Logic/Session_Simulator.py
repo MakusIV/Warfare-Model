@@ -324,8 +324,8 @@ contatti sono calcolati sui tratti reali. Esito (`_fuel_end`, `FuelEnd`):
     canale del danno da combattimento, stato asset `Destroyed`) SENZA un `DamageEvent` nell'esito (non
     e' un colpo: nessun tiratore ne' arma); l'esito per asset e' DESTROYED con motivo FUEL_EXHAUSTED
     e (F6-B1) la postura `destroyed`.
-Un asset il cui consumo cambia per effetto di un ingaggio (regime 'max', sotto) puo' esaurire prima
-del punto calcolato a monte: limite noto, nessun ri-scheduling (v. sotto).
+Un asset il cui consumo cambia per effetto di un ingaggio (regime 'max', o dal G3 consumo d'ingaggio,
+sotto) puo' esaurire prima del punto calcolato a monte: limite noto, nessun ri-scheduling (v. sotto).
 
 **Contabilita' (`F6_FUEL_PER_LEG`).** All'evento MOVEMENT dell'asset (fine dei suoi tratti troncati)
 un `FuelEvent` per tratto che consuma, in ordine, applicato subito (`Fuel_Model.apply_fuel_event`);
@@ -341,11 +341,44 @@ FUEL_FULL in `Asset/Mobile.py`). Tutto il movimento e' consumato al regime scelt
 combattuto e' una sovrastima **pessimistica** del consumo (il tratto di crociera e'
 contato a regime di combattimento), preferita a una ripartizione per intervalli che
 richiederebbe di inventare quando comincia e finisce la manovra di combattimento. Se il
-regime 'max' non e' ricavabile per l'asset si ricade su 'nominal'.
+regime 'max' non e' ricavabile per l'asset si ricade su 'nominal'. Dal G3 (sotto, interruttore
+`G3_ENGAGEMENT_FUEL`) questa regola vale solo per terra e mare (per i quali i due regimi coincidono) e, a
+interruttore spento, per gli aerei.
+
+**Consumo in ingaggio (G3 del nuovo modello di bingo, decisioni dell'utente del 2026-10-15, interruttore
+`G3_ENGAGEMENT_FUEL`, attivo).** Sostituisce, per gli aerei, la sovrastima "tutto il movimento al regime 'max'
+perche' ha combattuto":
+  * il movimento di un aereo e' SEMPRE contabilizzato alla crociera (attese comprese, come prima);
+  * a ogni ingaggio (`resolve_engagement` di una componente connessa) a cui l'aereo PARTECIPA, l'aereo consuma
+    nell'ISTANTE della sua prima partecipazione `Fuel_Model.engagement_fuel(asset)` = il carburante di
+    `Fuel_Model.DISENGAGE_TIME` (5 minuti) alla massima spinta militare, la stessa quantita' della riserva di
+    disimpegno del G1 (`Fuel_Model.build_engagement_fuel_event`: un `FuelEvent` istantaneo, distanza e durata
+    nulle, regime `Fuel_Model.ENGAGEMENT_REGIME`, limitato al disponibile). Oggi ogni forza e' in UNA sola
+    componente per sessione, quindi un aereo consuma al piu' un ingaggio per sessione; il codice conta un
+    consumo per esito d'ingaggio, cosi' resta corretto se un giorno le componenti si spezzassero nel tempo;
+  * PARTECIPA (`_engagement_instants`) = la definizione di "ha combattuto" della F6-A (`_engaged_assets`): ha
+    lanciato una salva, e' stato bersaglio di una salva (anche mancato o intercettato), o ha intercettato;
+    istante = il primo fra il lancio delle salve sue o dirette a lui (`Salvo.t_launch`) e le sue
+    intercettazioni. Il solo rilevamento reciproco senza salve NON e' partecipazione (nessuna manovra
+    decisa dal modello);
+  * solo aerei di MISSIONE (dominio 'air') IN VOLO all'istante: un aereo a terra (`grounded`: parcheggio prima
+    del decollo, dopo l'atterraggio, aerei senza missione) colpito sul parcheggio non consuma;
+  * ordine nella contabilita': i consumi d'ingaggio sono inseriti fra gli eventi per tratto in ordine di tempo,
+    PRIMA del tratto in cui cadono (l'evento di quel tratto, all'istante della sua fine, parte dal residuo gia'
+    ridotto): nessun tratto e' spezzato, la forma "un `FuelEvent` per tratto" della F6-A resta;
+  * ESAURIMENTO in ingaggio (consumo d'ingaggio > residuo, o tratti successivi non piu' coperti): il contatore
+    va a ZERO (mai negativo, `FuelEvent.exhausted`), nessun evento dopo, e l'aereo NON e' fermato ne' perso:
+    i tratti, i contatti e l'ingaggio sono gia' stati calcolati a monte al regime di crociera e non sono
+    ricalcolati (nessun ri-scheduling, G4). E' lo stesso limite gia' dichiarato dalla F6-A per il regime
+    'max' (sotto), ora con una causa diversa; planata/perdita della F6-A, `crew_recovered` ed esito per asset
+    NON cambiano per un esaurimento della sola contabilita'. Il bingo resta valutato alla partenza (G2): dopo
+    l'ingaggio l'aereo puo' essere sotto la soglia e prosegue la rotta (G4).
+Terra e mare non cambiano (nessun consumo d'ingaggio: il registro non ha consumi per regime).
+Spento: la regola della F6-A qui sopra, esattamente come prima.
 
 **Limiti dichiarati:**
 - il vincolo e' calcolato a monte al regime di CROCIERA: per un aereo che combatte la contabilita' al
-  regime 'max' puo' esaurire il carburante prima del punto di troncamento (`FuelEvent.exhausted` con
+  regime 'max' (dal G3: con i consumi d'ingaggio) puo' esaurire il carburante prima del punto di troncamento (`FuelEvent.exhausted` con
   `distance_covered < distance` sull'ultimo tratto) senza che il movimento sia ricalcolato (nessun
   ri-scheduling dopo gli ingaggi, P2/R4); per veicoli e navi i due regimi coincidono e il limite non
   si presenta;
@@ -418,8 +451,9 @@ interruttore `F6_BINGO_DISENGAGE_RESERVE`, attivo).** Sostituisce la regola 1,2 
 il carburante per il resto della rotta pianificata fino al LAND (attese comprese, alla crociera) + la riserva
 di disimpegno (`Fuel_Model.disengagement_reserve`, G1). La funzione di decisione e' GENERALE
 (`Fuel_Model.bingo_decision`, via `Mission_Adapter.mission_bingo_decision`: posizione e residuo qualunque),
-ma con il consumo deterministico di oggi (G3 e G4 non ci sono ancora) residuo e resto della rotta calano
-insieme, quindi la soglia scatta all'inizio dei tratti oppure mai: la sessione la valuta UNA volta, all'inizio
+ma con il solo consumo di movimento residuo e resto della rotta calano insieme, quindi la soglia scatta
+all'inizio dei tratti oppure mai (dal G3 un ingaggio abbassa il residuo e la soglia potrebbe scattare dopo:
+la rivalutazione dopo l'ingaggio e' il G4, non ancora fatto): la sessione la valuta UNA volta, all'inizio
 dei tratti della missione intera (`airborne_legs`, come la F6-B2bis), con il carburante di partenza
 (`_decision_end`). Albero per tipo di missione (`Mission_Adapter.is_transfer_mission`, categoria TRANSPORT):
   * TRASFERIMENTO: se il residuo basta a CONCLUDERE la rotta (senza riserva) l'aereo CONTINUA, consuma la
@@ -566,6 +600,15 @@ F6_BINGO_REVERSE_ROUTE = True
 #     esattamente come prima. Il validatore `Mission_Adapter.check_mission_bingo` lo segue con il parametro
 #     `disengage_reserve`.
 F6_BINGO_DISENGAGE_RESERVE = True
+
+# G3 del nuovo modello di bingo, interruttore dedicato (stessa ragione dei precedenti):
+#   * `G3_ENGAGEMENT_FUEL` (ATTIVO): un aereo IN VOLO che partecipa a un ingaggio consuma, nell'istante della sua
+#     prima partecipazione, il carburante di `Fuel_Model.DISENGAGE_TIME` alla massima spinta militare
+#     (`Fuel_Model.engagement_fuel`, la riserva di disimpegno del G1), con un `FuelEvent` istantaneo; il suo
+#     movimento resta alla crociera (v. "Consumo in ingaggio" nel docstring). Spento: la regola della F6-A,
+#     tutto il movimento di chi ha combattuto al regime 'max', esattamente come prima. Terra e mare non
+#     cambiano in nessun caso.
+G3_ENGAGEMENT_FUEL = True
 
 # Esiti dell'esaurimento del carburante (F6-A, decisioni dell'utente).
 FUEL_HALT = 'halt'      # terra/mare (o aereo ancora a terra): fermo e presente nel punto
@@ -870,6 +913,29 @@ def _engaged_assets(result: ER.EngagementResult) -> set:
         engaged.add(event.asset_id)
 
     return engaged
+
+
+def _engagement_instants(result: ER.EngagementResult) -> Dict[str, float]:
+    """Istante della PRIMA partecipazione di ogni asset all'ingaggio (G3, v. "Consumo in ingaggio").
+
+    Partecipa chi ha combattuto secondo `_engaged_assets` (tiratore, bersaglio di una salva, intercettore);
+    l'istante e' il primo fra il lancio delle salve che ha sparato o che lo hanno avuto per bersaglio
+    (`Salvo.t_launch`) e le sue intercettazioni (`InterceptionEvent.time`). Gli `AmmunitionEvent` hanno lo
+    stesso istante del lancio della salva e non aggiungono nulla."""
+    instants: Dict[str, float] = {}
+
+    def note(asset_id, time):
+        if asset_id is not None and (asset_id not in instants or time < instants[asset_id]):
+            instants[asset_id] = float(time)
+
+    for salvo in result.salvos:
+        note(salvo.shooter_id, salvo.t_launch)
+        note(salvo.target_id, salvo.t_launch)
+
+    for event in result.interception_events:
+        note(event.asset_id, event.time)
+
+    return instants
 
 
 def _build_fuel(asset, distance: float, time: float, regime: str, provenance: str):
@@ -1830,6 +1896,23 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     results: List[Optional[ER.EngagementResult]] = []
     fuel_events: List[FM.FuelEvent] = []
     engaged: set = set()
+    # G3: aerei di missione (i soli che consumano in ingaggio), consumi d'ingaggio in attesa dell'evento
+    # MOVEMENT dell'asset (per metterli in ordine di tempo fra i tratti) e asset gia' contabilizzati.
+    air_assets = {asset_id for asset_id, movement in movement_of.items()
+                  if mission_of[movement.mission_id].domain == 'air'}
+    with_movement = {asset_id for asset_id, _, _ in movements}
+    pending_charges: Dict[str, List[float]] = {}
+    accounted: set = set()
+
+    def charge(asset, time):
+        # G3: consumo istantaneo d'ingaggio, applicato subito (dopo l'esaurimento nessun evento).
+        event = FM.build_engagement_fuel_event(asset, time, provenance=provenance)
+
+        if event is not None:
+            FM.apply_fuel_event(asset, event)
+            fuel_events.append(event)
+
+        return event
 
     while queue:
         time, kind, key, _, payload = heapq.heappop(queue)
@@ -1882,25 +1965,71 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                 # disgiunte: nessun altro ingaggio della sessione legge queste forze.
                 ER.apply_engagement_result(result, *component)
                 engaged |= _engaged_assets(result)
+
+                if G3_ENGAGEMENT_FUEL:
+                    # G3: consumo d'ingaggio degli aerei IN VOLO all'istante della loro prima partecipazione
+                    # (un aereo a terra colpito sul parcheggio non manovra). In attesa dell'evento MOVEMENT
+                    # dell'asset, per l'ordine di tempo fra i tratti; subito se l'asset e' gia' contabilizzato
+                    # o non ha tratti di movimento.
+                    for asset_id, instant in sorted(_engagement_instants(result).items()):
+                        asset = assets_by_id.get(asset_id)
+
+                        if asset is None or asset_id not in air_assets or grounded.at(asset_id, instant):
+                            continue
+
+                        if asset_id in with_movement and asset_id not in accounted:
+                            pending_charges.setdefault(asset_id, []).append(instant)
+                        else:
+                            charge(asset, instant)
         else:
             asset, legs = payload
-            regime = COMBAT_REGIME if key in engaged else CRUISE_REGIME
+            accounted.add(key)
+            g3 = G3_ENGAGEMENT_FUEL and key in air_assets
+            # F6-A: chi ha combattuto consuma il movimento al regime 'max'; G3 (aerei): sempre alla crociera, il
+            # combattimento e' nei consumi d'ingaggio.
+            regime = COMBAT_REGIME if key in engaged and not g3 else CRUISE_REGIME
+            charges = sorted(pending_charges.pop(key, ()))
 
             if F6_FUEL_PER_LEG:
                 # F6-A: un FuelEvent per tratto che consuma (movimento al regime della sessione, soste
-                # nel tempo alla crociera), applicato in ordine; dopo l'esaurimento nessun evento.
+                # nel tempo alla crociera), applicato in ordine; dopo l'esaurimento nessun evento. G3: i
+                # consumi d'ingaggio in ordine di tempo, prima del tratto in cui cadono (v. docstring).
+                steps = []
+
                 for leg in _consuming_legs(key, legs, grounded):
-                    event = _build_leg_fuel(asset, leg, regime, provenance)
+                    while charges and charges[0] < leg.t_end - CS.TIME_EPS:
+                        steps.append((charges.pop(0), None))
 
-                    if event is None:
-                        continue
+                    steps.append((None, leg))
 
-                    FM.apply_fuel_event(asset, event)
-                    fuel_events.append(event)
+                steps.extend((instant, None) for instant in charges)
 
-                    if event.exhausted:
+                for instant, leg in steps:
+                    if leg is None:
+                        event = charge(asset, instant)
+                    else:
+                        event = _build_leg_fuel(asset, leg, regime, provenance)
+
+                        if event is not None:
+                            FM.apply_fuel_event(asset, event)
+                            fuel_events.append(event)
+
+                    if event is not None and event.exhausted:
                         break
 
+                continue
+
+            # Senza eventi per tratto (un solo evento a fine movimento): i consumi d'ingaggio prima di esso.
+            emptied = False
+
+            for instant in charges:
+                event = charge(asset, instant)
+
+                if event is not None and event.exhausted:
+                    emptied = True
+                    break
+
+            if emptied:
                 continue
 
             distance = _legs_distance(legs)

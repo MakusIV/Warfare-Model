@@ -114,6 +114,14 @@ stesso: cambiano tratti, contatti e carburante, nessuna voce nuova. Il nuovo cam
 `AssetMissionOutcome.crew_recovered` (equipaggio recuperato dell'aereo perso per esaurimento) e' nell'esito per
 asset, che la fotografia non registra: non cambia la fotografia di nessuna esecuzione.
 
+## Consumo in ingaggio dopo il G3
+
+Dal G3 (`Session_Simulator.G3_ENGAGEMENT_FUEL`) un aereo in volo che partecipa a un ingaggio ha un `FuelEvent`
+ISTANTANEO in piu' (voce `fuel`, `regime` 'engagement', `distance` e `distance_covered` nulli, all'istante della
+prima partecipazione) e il suo movimento e' sempre alla crociera ('nominal' invece di 'max'). Nessuna voce nuova:
+cambiano la voce `fuel`, i conteggi `counts.fuel_events`/`counts.fuel_exhausted` e il carburante finale
+(`assets.*.fuel`).
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -287,9 +295,11 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     # `F6_BINGO_REVERSE_ROUTE` spento, cioe' il rientro rettilineo della F6-B2.
     # G2 (2026-10-15): soglia con la riserva di disimpegno e albero di decisione; nuove varianti in coda
     # 'reserve_off' (G2 spento: la F6-B2bis), 'transfer_continue' e 'transfer_return' (missione 'Transport').
+    # G3 (2026-10-16): consumo di carburante in ingaggio; nuova variante in coda 'engagement_fuel_off' (G3 spento:
+    # la regola 'max' della F6-A).
     ('S26-BINGO', 'Test_Session_Scenarios_S26', 'TestS26Bingo', None,
      _by_occurrence('bingo', 'none', 'switch_off', 'no_base', 'bingo_off', 'reverse_off', 'reserve_off',
-                    'transfer_continue', 'transfer_return')),
+                    'transfer_continue', 'transfer_return', 'engagement_fuel_off')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

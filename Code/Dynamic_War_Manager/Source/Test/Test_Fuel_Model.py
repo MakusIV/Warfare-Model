@@ -573,6 +573,62 @@ class TestDisengagementReserve(_Base):
         self.assertIsNone(FM.disengagement_reserve(object()))
 
 
+# ── CONSUMO IN INGAGGIO (G3) ──────────────────────────────────────────────────
+
+class TestEngagementFuel(TestDisengagementReserve):
+    """`engagement_fuel` (G3) = la riserva di disimpegno del G1 (stessa fonte, stesso ripiego) e
+    `build_engagement_fuel_event`: evento istantaneo limitato al disponibile. Eredita i test della riserva
+    (setUp e aereo reale): rieseguirli qui non costa nulla e conferma che le due grandezze non divergono."""
+
+    def test_engagement_fuel_is_the_disengagement_reserve(self):
+        aircraft = self._aircraft()
+        self.assertEqual(FM.engagement_fuel_with_source(aircraft), FM.disengagement_reserve_with_source(aircraft))
+        self.assertEqual(FM.engagement_fuel_with_source(aircraft)[1], FM.RESERVE_FROM_MILITARY_FLOW)
+        stub = _MaxSpeedStub(max_speed=500.0, autonomy=1_000_000.0)
+        self.assertEqual(FM.engagement_fuel_with_source(stub), (0.15, FM.RESERVE_FROM_MAX_REGIME))
+        self.assertAlmostEqual(FM.engagement_fuel(stub), 0.15)
+        self.assertIsNone(FM.engagement_fuel(_FuelStub()))
+
+    def test_event_is_instantaneous_and_not_applied(self):
+        stub = _MaxSpeedStub(max_speed=500.0, autonomy=1_000_000.0, fuel=0.8)
+        event = FM.build_engagement_fuel_event(stub, 123.0)
+        self.assertEqual((event.time, event.t_start, event.asset_id, event.distance, event.distance_covered,
+                          event.duration, event.duration_covered, event.stationary, event.regime, event.provenance),
+                         (123.0, 123.0, 'a1', 0.0, 0.0, 0.0, 0.0, False, FM.ENGAGEMENT_REGIME, DM.DERIVED))
+        self.assertAlmostEqual(event.amount, 0.15)
+        self.assertAlmostEqual(event.fuel_after, 0.65)
+        self.assertFalse(event.exhausted)
+        self.assertEqual(stub.fuel, 0.8)
+        FM.apply_fuel_event(stub, event)
+        self.assertAlmostEqual(stub.fuel, 0.65)
+
+    def test_event_on_a_real_aircraft(self):
+        aircraft = self._aircraft()
+        event = FM.build_engagement_fuel_event(aircraft, 10.0, provenance=DM.ESTIMATED)
+        self.assertAlmostEqual(event.amount, FM.disengagement_reserve(aircraft), delta=1e-12)
+        self.assertEqual(event.provenance, DM.ESTIMATED)
+
+    def test_insufficient_fuel_is_clamped_and_exhausts(self):
+        stub = _MaxSpeedStub(max_speed=500.0, autonomy=1_000_000.0, fuel=0.1)
+        event = FM.build_engagement_fuel_event(stub, 0.0)
+        self.assertEqual((event.amount, event.fuel_after, event.exhausted), (0.1, 0.0, True))
+
+    def test_no_event(self):
+        """Serbatoio vuoto, carburante o consumo non modellati, asset senza id: nessun evento."""
+        self.assertIsNone(FM.build_engagement_fuel_event(_MaxSpeedStub(fuel=0.0), 0.0))
+        self.assertIsNone(FM.build_engagement_fuel_event(_FuelStub(), 0.0))
+        self.assertIsNone(FM.build_engagement_fuel_event(_MaxSpeedStub(fuel=None), 0.0))
+        anonymous = _MaxSpeedStub()
+        anonymous.id = None
+        self.assertIsNone(FM.build_engagement_fuel_event(anonymous, 0.0))
+
+    def test_arguments_out_of_domain_raise(self):
+        with self.assertRaises(ValueError):
+            FM.build_engagement_fuel_event(_MaxSpeedStub(), 0.0, provenance='guess')
+        with self.assertRaises(TypeError):
+            FM.build_engagement_fuel_event(_MaxSpeedStub(), '0')
+
+
 # ── SOGLIA DI BINGO E ALBERO DI DECISIONE (G2) ────────────────────────────────
 
 # Rotta a L da una base: 100 km verso est, poi 100 km verso nord (10 m/s: 10000 s per lato).

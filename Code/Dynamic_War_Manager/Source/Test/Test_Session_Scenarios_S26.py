@@ -1,4 +1,5 @@
-"""Scenario S26 del motore di sessioni virtuali: bingo a priori e bingo in volo con rientro (F6-B2, F6-B2bis, G2).
+"""Scenario S26 del motore di sessioni virtuali: bingo a priori e bingo in volo con rientro (F6-B2, F6-B2bis, G2),
+consumo in ingaggio (G3).
 
 Prosegue `Test_Session_Scenarios.py` (S1-S9), `Test_Session_Scenarios_S10_S18.py`, gli S19-S25 con la
 stessa disciplina: si verifica un comportamento QUALITATIVO o STRUTTURALE, mai un numero calibrato.
@@ -44,7 +45,14 @@ le nuove in coda):
   * 'transfer_continue' (G2, 'Transport', `G2_FUEL`): sotto la soglia ma con carburante per la rotta: continua,
     rotta completata consumando la riserva;
   * 'transfer_return' (G2, 'Transport', `DRY_FUEL`, sotto la rotta): ritroso fino al punto di comparsa (lunghezza
-    zero alla partenza) e diretto alla base, come 'bingo'.
+    zero alla partenza) e diretto alla base, come 'bingo';
+  * 'engagement_fuel_off' (G3 spento, pieno): come 'none' con la regola della F6-A (tutto il movimento al regime
+    di combattimento se Red spara).
+
+G3 (`Session_Simulator.G3_ENGAGEMENT_FUEL`, attivo): dove Red spara, l'F-16C (bersaglio delle salve marcatrici)
+consuma la riserva di disimpegno (~0,085) all'istante del primo lancio, e il movimento resta alla crociera; in
+'transfer_continue' (0,27, sotto la soglia) quel consumo esaurisce il contatore poco prima della fine della rotta,
+che e' completata lo stesso (nessun ri-scheduling fino al G4).
 
 Asserzioni: invarianti per replica (istanti, punti, esiti, eventi) e frazioni aggregate con soglie
 DICHIARATE (stime di test, non tarate sul risultato; v. sotto). Istanti e punti attesi del rientro a meta' rotta
@@ -99,17 +107,19 @@ MARKER_SHOT = dataclasses.replace(F.SHOTS['sam'], accuracy=0.0, weapon='test:mar
 MIN_FIRING_FRACTION = 0.5
 
 # Variante -> (carburante, tipo di missione, base Blue, bingo dichiarato, F6_BINGO, F6_BINGO_REVERSE_ROUTE,
-# F6_BINGO_DISENGAGE_RESERVE). Le prime sei con i nomi e l'ordine di prima (nomi stabili nella fotografia).
+# F6_BINGO_DISENGAGE_RESERVE, G3_ENGAGEMENT_FUEL). Le prime sei con i nomi e l'ordine di prima (nomi stabili
+# nella fotografia).
 VARIANTS = {
-    'bingo': (G2_FUEL, 'Strike', True, True, True, True, True),
-    'none': (1.0, 'Strike', True, True, True, True, True),
-    'switch_off': (BINGO_FUEL, 'Strike', True, True, False, True, True),
-    'no_base': (DRY_FUEL, 'Strike', False, True, True, True, True),
-    'bingo_off': (DRY_FUEL, 'Strike', True, False, True, True, True),
-    'reverse_off': (BINGO_FUEL, 'Strike', True, True, True, False, False),
-    'reserve_off': (BINGO_FUEL, 'Strike', True, True, True, True, False),
-    'transfer_continue': (G2_FUEL, 'Transport', True, True, True, True, True),
-    'transfer_return': (DRY_FUEL, 'Transport', True, True, True, True, True),
+    'bingo': (G2_FUEL, 'Strike', True, True, True, True, True, True),
+    'none': (1.0, 'Strike', True, True, True, True, True, True),
+    'switch_off': (BINGO_FUEL, 'Strike', True, True, False, True, True, True),
+    'no_base': (DRY_FUEL, 'Strike', False, True, True, True, True, True),
+    'bingo_off': (DRY_FUEL, 'Strike', True, False, True, True, True, True),
+    'reverse_off': (BINGO_FUEL, 'Strike', True, True, True, False, False, True),
+    'reserve_off': (BINGO_FUEL, 'Strike', True, True, True, True, False, True),
+    'transfer_continue': (G2_FUEL, 'Transport', True, True, True, True, True, True),
+    'transfer_return': (DRY_FUEL, 'Transport', True, True, True, True, True, True),
+    'engagement_fuel_off': (1.0, 'Strike', True, True, True, True, True, False),
 }
 
 
@@ -126,7 +136,7 @@ def _mission_id(variant: str) -> str:
 
 
 def _scenario(variant: str) -> F.Scenario:
-    fuel, mission_type, with_base, bingo, _, _, _ = VARIANTS[variant]
+    fuel, mission_type, with_base, bingo, _, _, _, _ = VARIANTS[variant]
     flight = F.build_force(FLIGHT, 'Blue', [F.Unit('aircraft', 'F-16C Block 52d', 1,
                                                    origin=(*FLIGHT_START, FLIGHT_ALTITUDE), prefix='f',
                                                    loadout='Strike')], mil_category=F.AIR_UNIT)
@@ -161,7 +171,7 @@ def _scenario(variant: str) -> F.Scenario:
 def _validate(scenario: F.Scenario, variant: str):
     """Il validatore di pianificazione sulla missione dello scenario NON ancora eseguito, con la regola della
     variante (gli stessi interruttori dell'esecutore): (esito, errore)."""
-    _, _, _, _, _, reverse, reserve = VARIANTS[variant]
+    _, _, _, _, _, reverse, reserve, _ = VARIANTS[variant]
     mission, = scenario.missions
     bases = MA.air_base_points(scenario.forces_a, 'Blue')
 
@@ -175,11 +185,12 @@ def _validate(scenario: F.Scenario, variant: str):
 def _run(scenario: F.Scenario, session_id: str, variant: str):
     """Esegue lo scenario con gli interruttori della variante, registrando i tratti dati allo scheduler e il
     programma degli aerei a terra."""
-    _, _, _, _, bingo, reverse, reserve = VARIANTS[variant]
+    _, _, _, _, bingo, reverse, reserve, engagement_fuel = VARIANTS[variant]
 
     with patch.object(SS, 'F6_BINGO', SS.F6_BINGO and bingo), \
             patch.object(SS, 'F6_BINGO_REVERSE_ROUTE', SS.F6_BINGO_REVERSE_ROUTE and reverse), \
             patch.object(SS, 'F6_BINGO_DISENGAGE_RESERVE', SS.F6_BINGO_DISENGAGE_RESERVE and reserve), \
+            patch.object(SS, 'G3_ENGAGEMENT_FUEL', SS.G3_ENGAGEMENT_FUEL and engagement_fuel), \
             patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler:
         outcome = scenario.run(session_id)
 
@@ -236,8 +247,8 @@ class TestS26Bingo(F.LoggerSilencer, unittest.TestCase):
     della F6-B2 a interruttori spenti, bingo a priori nel validatore, controlli senza bingo."""
 
     SEEDS = _seeds('S26-BINGO')
-    # Le prime sei con i nomi e l'ordine di prima, le nuove (F6-B2bis: 'reverse_off'; G2: le ultime tre) in coda:
-    # i nomi delle varianti nella fotografia restano stabili.
+    # Le prime sei con i nomi e l'ordine di prima, le nuove (F6-B2bis: 'reverse_off'; G2: le tre seguenti; G3:
+    # 'engagement_fuel_off') in coda: i nomi delle varianti nella fotografia restano stabili.
     VARIANTS = tuple(VARIANTS)
     JET = f'{FLIGHT}/f0'
     # Varianti in cui l'aereo va in bingo e rientra, e quelle che lo fanno alla partenza (G2).
@@ -432,18 +443,62 @@ class TestS26Bingo(F.LoggerSilencer, unittest.TestCase):
                 self.assertAlmostEqual(jet.fuel, left[variant], delta=1e-9)
 
     def test_without_bingo_the_route_is_completed(self):
-        """'none', 'switch_off' e 'transfer_continue' (trasferimento sotto la soglia del G2 che CONTINUA, nessun
-        aborto): rotta completata (COMPLETED, ROUTE_COMPLETED), aereo fuori scena alla fine della rotta come prima;
-        con 0,27-0,28 la sola andata non esaurisce il carburante, nemmeno al regime di combattimento."""
-        for variant in ('none', 'switch_off', 'transfer_continue'):
+        """'none', 'switch_off', 'engagement_fuel_off' e 'transfer_continue' (trasferimento sotto la soglia del G2
+        che CONTINUA, nessun aborto): rotta completata (COMPLETED, ROUTE_COMPLETED), aereo fuori scena alla fine
+        della rotta come prima. Con 0,28 ('switch_off') la sola andata + un consumo d'ingaggio (G3) stanno sotto la
+        soglia del G2 e non esauriscono il carburante. 'transfer_continue' (0,27, sotto la soglia) consuma la
+        riserva: se Red spara, il consumo d'ingaggio la esaurisce e il contatore arriva a ZERO poco prima della
+        fine della rotta (evento del tratto `exhausted`), ma la rotta e' completata lo stesso: il movimento e'
+        calcolato a monte alla crociera e non e' ricalcolato dopo l'ingaggio (limite noto del G3, ri-scheduling
+        nel G4); se Red non spara, carburante residuo positivo."""
+        for variant in ('none', 'switch_off', 'engagement_fuel_off', 'transfer_continue'):
             for outcome, legs, _, jet in self.runs[variant]:
                 mission = self._mission(outcome, variant)
                 self.assertEqual(mission.status, MissionStatus.COMPLETED, variant)
                 self.assertEqual(mission.asset_outcomes[self.JET].end_reason, AssetEndReason.ROUTE_COMPLETED)
                 self.assertAlmostEqual(legs[self.JET][-1].t_end, (FLIGHT_END[0] - FLIGHT_START[0]) / AIR_SPEED,
                                        delta=1e-6)
-                self.assertGreater(jet.fuel, 0.0)
-                self.assertFalse(any(event.exhausted for event in outcome.fuel_events))
+                exhausted = [event for event in outcome.fuel_events if event.exhausted]
+
+                if variant == 'transfer_continue' and _shots_by(outcome, SITE):
+                    self.assertEqual(jet.fuel, 0.0)
+                    self.assertEqual([event.regime for event in exhausted], [SS.CRUISE_REGIME])
+                    self.assertLess(exhausted[0].distance_covered, exhausted[0].distance)
+                    continue
+
+                self.assertGreater(jet.fuel, 0.0, variant)
+                self.assertEqual(exhausted, [], variant)
+
+    def test_engagement_fuel(self):
+        """G3: con il pieno ('none') il movimento e' alla crociera e, se Red spara, l'F-16C (bersaglio delle salve)
+        consuma in piu' la riserva di disimpegno all'istante del primo lancio contro di lui, con un evento
+        istantaneo prima del tratto; se Red non spara, nessun consumo d'ingaggio. 'engagement_fuel_off' (G3 spento):
+        la regola della F6-A, tutto il movimento al regime di combattimento se Red spara."""
+        route, combat, _ = self._threshold()
+        charge = FM.engagement_fuel(self._jet())
+        fired = {}
+
+        for variant in ('none', 'engagement_fuel_off'):
+            for outcome, _, _, jet in self.runs[variant]:
+                shots = _shots_by(outcome, SITE)
+                fired[variant] = fired.get(variant, 0) + bool(shots)
+                events = [event for event in outcome.fuel_events if event.asset_id == self.JET]
+
+                if variant == 'engagement_fuel_off':
+                    self.assertEqual([e.regime for e in events], [SS.COMBAT_REGIME if shots else SS.CRUISE_REGIME])
+                    self.assertAlmostEqual(jet.fuel, 1.0 - (combat if shots else route), delta=1e-9)
+                elif shots:
+                    self.assertEqual([e.regime for e in events], [FM.ENGAGEMENT_REGIME, SS.CRUISE_REGIME])
+                    self.assertAlmostEqual(events[0].time, min(event.time for event in shots), delta=1e-9)
+                    self.assertAlmostEqual(events[0].amount, charge, delta=1e-12)
+                    self.assertAlmostEqual(jet.fuel, 1.0 - route - charge, delta=1e-9)
+                else:
+                    self.assertEqual([e.regime for e in events], [SS.CRUISE_REGIME])
+                    self.assertAlmostEqual(jet.fuel, 1.0 - route, delta=1e-9)
+
+        # Stesso seed, stessa sessione: il G3 cambia solo il carburante, non chi spara.
+        self.assertEqual(fired['none'], fired['engagement_fuel_off'])
+        self.assertGreater(fired['none'], 0)
 
     def test_without_a_base_or_with_bingo_off_the_aircraft_runs_dry(self):
         """'no_base' (in bingo ma senza base a cui tornare) e 'bingo_off': nessun rientro; esaurimento a 235,5 km
