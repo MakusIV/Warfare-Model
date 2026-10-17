@@ -1749,7 +1749,9 @@ k = 0..7). Verificato su tutte le 422 con un confronto chiave per chiave fuori d
 SOLO nella voce `fuel`, nei conteggi `counts.fuel_events`/`counts.fuel_exhausted` e nel carburante finale
 `assets.*.fuel`; nessuna differenza in ingaggi, salve, danni, munizioni, posture, ETA (i tratti, i contatti e gli
 ingaggi sono calcolati a monte alla crociera e il G3 non li tocca). `counts.fuel_exhausted` cambia in 8 esecuzioni
-sole (S26 'transfer_continue', sotto). Fotografia del repository NON rigenerata.
+sole (S26 'transfer_continue', sotto). Fotografia del repository NON rigenerata. **Verifica 2026-10-17** (ProArt
+P16): `--compare` ripetuto, stessi numeri (802: 372 identiche, 422 cambiate solo nelle voci carburante, 8 nuove); le 8
+'engagement_fuel_off' identiche alle vecchie 'none'. Approvato dall'utente, fotografia installata (802 esecuzioni).
 
 ### Il cambio
 
