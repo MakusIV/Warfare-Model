@@ -29,7 +29,7 @@ macchina: `git pull`, interprete della macchina (v. [[feedback-venv]]). Suite e 
      pareggio con la vecchia sovrastima a ~350 km di rotta per F-16C); piu' carburante in S5 (950 km, +0,045) e S22-AIR 'parked';
      S26 'transfer_continue' finisce a 0,0 con rotta completata (limite pre-G4).
 
-## DA FARE ALLA RIPRESA (riproporre all'utente questo piano)
+## DA FARE ALLA RIPRESA — punti 1-3 FATTI 2026-10-17 su ProArt P16 (fotografia 802, `20f0e0db`, decisioni in [[project-bingo-reverse-route-decision]])
 1. **Rifare il `--compare` del G3** sulla nuova macchina (la cattura in scratchpad e' persa): atteso 802 esecuzioni, 372/422/8.
 2. **Chiedere all'utente** (domande gia' formulate, l'utente ha chiuso prima di rispondere):
    - approvazione G3 + installazione fotografia 802;

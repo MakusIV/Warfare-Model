@@ -71,9 +71,13 @@ Implementata dall'agente `des-developer` (Opus medium). Suite 4245 OK (7 skipped
     sotto il minimo non decollano. In volo la funzione si attivera' con G4;
   - default comunicati all'utente: senza base raggiungibile l'aereo punta alla base piu' vicina e valgono le regole F6-A; campo
     "equipaggio recuperato" nell'esito; costante 3 km.
-- **G3 COMMITTATO 2026-10-16 DA APPROVARE** (v. [[project-session-2026-10-16-summary]]). Era: consumo di 5 minuti alla massima spinta a ogni ingaggio, nell'istante dell'ingaggio, al posto della sovrastima attuale
+- **G3 APPROVATO 2026-10-17** (ProArt P16): `--compare` ripetuto 802 = 372/422/8, fotografia 802 installata (`20f0e0db`).
+  DECISO dall'utente 2026-10-17: esaurimento in ingaggio (contatore a zero, l'aereo prosegue) accettato fino al G4; il limite
+  "un solo consumo d'ingaggio per sessione" (tutti gli scontri della forza in una componente) si risolve NEL G4 (prerequisito S27);
+  la regola WW2 futura vale anche per la riserva G1 (stessa quantita'); etichetta 'engagement' in `FuelEvent.regime` confermata.
+  Era COMMITTATO 2026-10-16 da approvare (v. [[project-session-2026-10-16-summary]]): consumo di 5 minuti alla massima spinta a ogni ingaggio, nell'istante dell'ingaggio, al posto della sovrastima attuale
   "tutto il movimento a 'max' se ha combattuto".
-- **G4**: ri-scheduling dopo l'ingaggio (limite noto P2/R4 di `Session_Simulator`: cancellare le finestre future dell'asset e
+- **G4** (PROSSIMO): ri-scheduling dopo l'ingaggio + piu' consumi d'ingaggio per sessione (limite noto P2/R4 di `Session_Simulator`: cancellare le finestre future dell'asset e
   ricalcolarle). Prima l'analisi dell'architettura; proposta Opus effort high.
 - **G5**: S26 riscritto, nuovo S27, Piano §5, `F4_Differenze`, manuale.
 - Agenti: `des-developer` Opus medium per G1-G3.
