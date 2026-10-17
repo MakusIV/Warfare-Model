@@ -77,7 +77,15 @@ Implementata dall'agente `des-developer` (Opus medium). Suite 4245 OK (7 skipped
   la regola WW2 futura vale anche per la riserva G1 (stessa quantita'); etichetta 'engagement' in `FuelEvent.regime` confermata.
   Era COMMITTATO 2026-10-16 da approvare (v. [[project-session-2026-10-16-summary]]): consumo di 5 minuti alla massima spinta a ogni ingaggio, nell'istante dell'ingaggio, al posto della sovrastima attuale
   "tutto il movimento a 'max' se ha combattuto".
-- **G4** (PROSSIMO): ri-scheduling dopo l'ingaggio + piu' consumi d'ingaggio per sessione (limite noto P2/R4 di `Session_Simulator`: cancellare le finestre future dell'asset e
+- **G4 PROPOSTA APPROVATA 2026-10-17**: `Analysis/Document/Proposta_G4_Ri_scheduling.md`. G4a = episodi d'ingaggio
+  (finestre unite se condividono una forza e si sovrappongono entro `EPISODE_GAP` = 300 s; un `resolve_engagement` per
+  episodio; RNG counter = ordinale degli episodi con lo stesso insieme di forze, quindi componenti a 1 episodio identiche;
+  forza occupata fino al t_end del suo esito; contabilita' carburante in un passo finale; un consumo d'ingaggio per
+  episodio; forza DISENGAGED passiva negli episodi successivi; tempra nuova per episodio). G4b = ri-pianificazione a fine
+  episodio (residuo analitico, F6-A se a secco, `bingo_decision(time, fuel)`, ri-scheduling dei contatti futuri). Sonda:
+  con 300 s 40/778 componenti a 2 episodi (S5 x36, Blue-AirWing+CSG x4). Due passi, interruttori `G4_EPISODES`/`G4_REPLAN`,
+  confronti e approvazioni separati, `des-developer` Opus high.
+- **G4** (dettaglio originale): ri-scheduling dopo l'ingaggio + piu' consumi d'ingaggio per sessione (limite noto P2/R4 di `Session_Simulator`: cancellare le finestre future dell'asset e
   ricalcolarle). Prima l'analisi dell'architettura; proposta Opus effort high.
 - **G5**: S26 riscritto, nuovo S27, Piano §5, `F4_Differenze`, manuale.
 - Agenti: `des-developer` Opus medium per G1-G3.
