@@ -1,7 +1,7 @@
 # Warfare-Model Project Memory
 
 ## Start here
-- [Sessione 2026-10-17 (ProArt P16) — G3 approvato (802); G4a+G4b+uscita di scena approvati, fotografia 878, pushato](project_session_2026_10_17_summary.md) — disingaggio -> rientro; senza basi -> ritroso ed esce di scena; G2 alla partenza invariato; prossimo G5 (S27)
+- [Sessione 2026-10-17 (ProArt P16) — CHIUSA, suite 4375 OK, G3 approvato (802); G4a+G4b+uscita di scena approvati, fotografia 878, pushato](project_session_2026_10_17_summary.md) — disingaggio -> rientro; senza basi -> ritroso ed esce di scena; G2 alla partenza invariato; prossimo G5 (S27)
 - [Sessione 2026-10-16 (osboxes) — CHIUSA, G2 approvato (fotografia 794), suite 4321 OK](project_session_2026_10_16_summary.md) — 2026-10-17 ProArt P16: G3 verificato e APPROVATO, fotografia 802 installata (20f0e0db), 4 decisioni prese; prossimo G4 (analisi architettura, proposta Opus high), poi G5
 - [Sessione 2026-10-15 (osboxes) — CHIUSA, F6-B2bis + G1 + G2 committati e pushati, suite 4298 OK](project_session_2026_10_15_summary.md) — 2026-10-16: G2 verificato, approvato, fotografia 794 installata (e5465b31); prossimo G3 (consumo in ingaggio), G4 (ri-scheduling), G5
 - [Bingo: B2bis + nuovo modello G0-G5 (G0-G4 approvati, prossimo G5)](project_bingo_reverse_route_decision.md) — riserva = 5 min a spinta MILITARE (`emergency.consume` kg/h, strada A), soglia = resto rotta + riserva, albero trasferimento (TRANSPORT) / combattimento, basi alternative entro 3 km dalla rotta; G3 consumo in ingaggio + G4 ri-scheduling necessari

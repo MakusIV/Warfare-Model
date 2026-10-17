@@ -1,6 +1,6 @@
 ---
 name: project-session-2026-10-17-summary
-description: "Sessione 2026-10-17 (ProArt P16): G3 approvato (802); G4a+G4b+uscita di scena senza basi APPROVATI insieme, fotografia 878 installata, committati e pushati; G2 alla partenza invariato (F6-A); prossimo G5"
+description: "Sessione 2026-10-17 (ProArt P16) CHIUSA, tutto pushato, suite 4375 OK: G3 approvato (802); G4a+G4b+uscita di scena senza basi APPROVATI insieme, fotografia 878 installata, committati e pushati; G2 alla partenza invariato (F6-A); prossimo G5"
 metadata:
   type: project
 ---
@@ -48,3 +48,5 @@ cambiate in 15 scenari (quasi tutti usano formazioni comparse in volo senza basi
 cattura 878 identica a quella dell'agente; vs fotografia 802 = 637/165/76. **APPROVATI dall'utente G4a+G4b+uscita
 insieme**, fotografia 878 installata, commit e push (incluso f526cc0a). DECISO: alla partenza (G2) restano le regole
 F6-A (nessuna uscita immediata). Prossimo: G5 (S26 riscritto, S27 doppia intercettazione, Piano §5, F4, manuale).
+
+**Sessione CHIUSA 2026-10-17**: working tree pulito (salvo file non tracciati dell'utente), tutto pushato. Riprendere con `git pull` e G5.
