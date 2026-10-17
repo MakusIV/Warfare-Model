@@ -1126,6 +1126,52 @@ def _first_contained(intervals: Sequence[Tuple[float, float]],
     return None
 
 
+def trim_contact_window(window: ContactWindow, t_from: float, legs_a: Sequence[Leg],
+                        legs_b: Sequence[Leg]) -> Optional[ContactWindow]:
+    """La finestra ritagliata a `[t_from, t_end]`, oppure None se il ritaglio la svuota (G4a).
+
+    Serve a `Session_Simulator` (G4a, "forza occupata"): una forza impegnata in un episodio d'ingaggio fino
+    all'istante `t_from` non puo' cominciare un altro contatto prima di allora. Dentro `[t_start, t_end]` la
+    distanza e' entro la portata maggiore per costruzione, quindi la parte rimasta e' ancora UNA finestra; si
+    ricalcolano sui tratti ritagliati, con la stessa regola di `contact_windows`, il massimo avvicinamento
+    (`t_cpa`/`distance_cpa`) e il primo intervallo di rilevamento reciproco. Portate, `first_detector` e `t_end`
+    restano quelli della finestra.
+
+    Args:
+        window: la finestra originale.
+        t_from: istante [s] da cui la finestra puo' cominciare.
+        legs_a/legs_b: i tratti dei due asset (gli stessi dati allo scheduler e al risolutore).
+
+    Returns:
+        `window` stessa se `t_from` non la taglia, None se `t_from` e' alla fine o oltre (nessuna durata
+        residua), altrimenti la finestra ritagliata.
+    """
+    if t_from <= window.t_start + TIME_EPS:
+        return window
+
+    if t_from >= window.t_end - TIME_EPS:
+        return None
+
+    start, end = float(t_from), float(window.t_end)
+    clamped_a, clamped_b = clamp_legs(legs_a, start, end), clamp_legs(legs_b, start, end)
+    cpa = closest_point_of_approach(clamped_a, clamped_b) if clamped_a and clamped_b else None
+    available = [value for value in (window.range_a, window.range_b) if value is not None and value > 0.0]
+    mutual = _first_contained(range_intervals(clamped_a, clamped_b, min(available)), start, end) \
+        if len(available) == 2 and clamped_a and clamped_b else None
+
+    return ContactWindow(asset_a_id=window.asset_a_id,
+                         asset_b_id=window.asset_b_id,
+                         t_start=start,
+                         t_end=end,
+                         t_cpa=cpa.time if cpa else start,
+                         distance_cpa=cpa.distance if cpa else float('inf'),
+                         range_a=window.range_a,
+                         range_b=window.range_b,
+                         t_mutual_start=mutual[0] if mutual else None,
+                         t_mutual_end=mutual[1] if mutual else None,
+                         first_detector=window.first_detector)
+
+
 def _asset_id(asset) -> Optional[str]:
     """Identificativo di dominio di un asset o di un blocco. Mai un id del simulatore."""
     for attribute in ('id', 'name'):
@@ -1339,7 +1385,8 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
                       range_type: str = DEFAULT_DETECTION_RANGE_TYPE,
                       skip_same_side: bool = True,
                       grounded=None,
-                      legs: Optional[Mapping[str, Sequence[Leg]]] = None) -> List[ContactWindow]:
+                      legs: Optional[Mapping[str, Sequence[Leg]]] = None,
+                      only_assets: Optional[Iterable[str]] = None) -> List[ContactWindow]:
     """Tutte le finestre di contatto fra due insiemi di blocchi, in `[t0, t0 + horizon]`.
 
     Mette insieme i tre meccanismi nell'ordine che li rende trattabili: prima la potatura a
@@ -1374,6 +1421,10 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
                   `Mission_Adapter.movement_legs`, cablato dalla F5-B; le attese dalla F5-C); hanno
                   la precedenza su `routes` per quegli
                   asset (v. `_asset_legs`). None = tratti dalle rotte, come prima.
+        only_assets: id di asset (G4b, `Session_Simulator`: gli aerei ri-pianificati dopo un episodio
+                  d'ingaggio): se dato, solo le finestre delle coppie con ALMENO uno dei due asset fra questi,
+                  cioe' esattamente il sottoinsieme delle finestre senza filtro (stessa potatura, stesso
+                  ordine), calcolato senza le altre coppie. None = tutte, come prima.
 
     Returns:
         Lista di `ContactWindow` ordinata per `(t_start, asset_a_id, asset_b_id)`. **L'ordine
@@ -1397,6 +1448,7 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
 
     legs_cache: Dict[int, List[Leg]] = {}
     windows: List[ContactWindow] = []
+    wanted = None if only_assets is None else set(only_assets)
 
     def _legs_for(asset) -> List[Leg]:
         key = id(asset)
@@ -1411,12 +1463,20 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
         assets_b = _operative_assets(_as_block(item_b))
 
         for asset_a in assets_a:
+            wanted_a = wanted is None or _asset_id(asset_a) in wanted
+
+            if not wanted_a and not any(_asset_id(asset_b) in wanted for asset_b in assets_b):
+                continue
+
             legs_a = _legs_for(asset_a)
 
             if not legs_a:
                 continue
 
             for asset_b in assets_b:
+                if not wanted_a and _asset_id(asset_b) not in wanted:
+                    continue
+
                 legs_b = _legs_for(asset_b)
 
                 if not legs_b:

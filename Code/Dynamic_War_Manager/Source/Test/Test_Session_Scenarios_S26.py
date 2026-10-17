@@ -1,5 +1,5 @@
 """Scenario S26 del motore di sessioni virtuali: bingo a priori e bingo in volo con rientro (F6-B2, F6-B2bis, G2),
-consumo in ingaggio (G3).
+consumo in ingaggio (G3), ri-pianificazione dopo l'episodio d'ingaggio (G4b).
 
 Prosegue `Test_Session_Scenarios.py` (S1-S9), `Test_Session_Scenarios_S10_S18.py`, gli S19-S25 con la
 stessa disciplina: si verifica un comportamento QUALITATIVO o STRUTTURALE, mai un numero calibrato.
@@ -47,12 +47,25 @@ le nuove in coda):
   * 'transfer_return' (G2, 'Transport', `DRY_FUEL`, sotto la rotta): ritroso fino al punto di comparsa (lunghezza
     zero alla partenza) e diretto alla base, come 'bingo';
   * 'engagement_fuel_off' (G3 spento, pieno): come 'none' con la regola della F6-A (tutto il movimento al regime
-    di combattimento se Red spara).
+    di combattimento se Red spara);
+  * 'post_engagement_bingo' (G4b, `BINGO_FUEL` 0,28, SOPRA la soglia alla partenza): un secondo sito Red-Near (BMP-2
+    in (100 km, 0), stesso sensore e stesso tiro marcatore) e una base Blue ALTERNATIVA sulla rotta in (180 km,
+    2 km); sensore 'ground' dell'F-16C DICHIARATO di 20 km (`NEAR_JET_GROUND_SENSOR`), cosi' che le finestre dei due
+    siti siano due episodi. Dopo l'episodio con Red-Near (consumo d'ingaggio) l'aereo e' sotto il resto della rotta
+    + la riserva: bingo alla fine dell'episodio, regola di combattimento, la base alternativa (lungo la rotta fino a
+    x = 180 km, poi discesa: ~42 km) batte il ritroso (~145 km); Red-Site non e' mai incontrato;
+  * 'replan_off' (G4b spento, stesso scenario): l'aereo prosegue, incontra Red-Site, consuma due volte e il
+    contatore arriva a zero con la rotta completata (il limite del G3).
 
 G3 (`Session_Simulator.G3_ENGAGEMENT_FUEL`, attivo): dove Red spara, l'F-16C (bersaglio delle salve marcatrici)
-consuma la riserva di disimpegno (~0,085) all'istante del primo lancio, e il movimento resta alla crociera; in
-'transfer_continue' (0,27, sotto la soglia) quel consumo esaurisce il contatore poco prima della fine della rotta,
-che e' completata lo stesso (nessun ri-scheduling fino al G4).
+consuma la riserva di disimpegno (~0,085) all'istante del primo lancio, e il movimento resta alla crociera.
+
+G4b (`Session_Simulator.G4_REPLAN`, attivo): alla fine dell'episodio l'aereo e' ri-pianificato col residuo
+analitico. In 'transfer_continue' (0,27, sotto la soglia) il consumo d'ingaggio rende il residuo insufficiente per
+finire la rotta; l'episodio con Red-Site dura fino all'ultimo impatto (~1211 s), oltre la fine della rotta (1200 s):
+la decisione e' quindi alla fine dei tratti dell'aereo, residuo zero (esaurito in ingaggio, analiticamente a ~1162
+s), regole della F6-A dal punto finale: nessuna base entro la planata (50 km da 5000 m, la base e' a 310 km), perso
+con l'equipaggio recuperato. Prima del G4b la rotta risultava completata con il contatore a 0,0.
 
 Asserzioni: invarianti per replica (istanti, punti, esiti, eventi) e frazioni aggregate con soglie
 DICHIARATE (stime di test, non tarate sul risultato; v. sotto). Istanti e punti attesi del rientro a meta' rotta
@@ -106,20 +119,34 @@ MARKER_SHOT = dataclasses.replace(F.SHOTS['sam'], accuracy=0.0, weapon='test:mar
 # S22-S25: il rilevamento e' un'estrazione per finestra e osservatore, 0,5 = "la regola, non l'eccezione").
 MIN_FIRING_FRACTION = 0.5
 
+# G4b (ri-pianificazione dopo l'episodio): un secondo sito Red PRIMA, a meta' strada fra la partenza e Red-Site, e
+# una base aerea Blue ALTERNATIVA sulla rotta fra i due (entro `Fuel_Model.ALTERNATE_BASE_MAX_OFFSET`), solo nelle
+# varianti 'post_engagement_bingo' e 'replan_off'.
+NEAR_SITE, ALTERNATE_BASE = 'Red-Near', 'Blue-Alternate'
+NEAR_SITE_POSITION = (100_000.0, 0.0)
+ALTERNATE_BASE_POSITION = (180_000.0, 2_000.0)
+# Sensore 'ground' DICHIARATO dell'F-16C in quelle due varianti (valore di test, non un dato): col radar del
+# registro (~95 km sul BMP-2) le finestre dei due siti sarebbero separate da meno di `EPISODE_GAP` e formerebbero un
+# solo episodio; con 20 km le finestre sono quelle del sensore 'air' dei siti (40 km): Red-Near ~[201, 519] s,
+# Red-Site da ~841 s, due episodi.
+NEAR_JET_GROUND_SENSOR = 20_000.0
+
 # Variante -> (carburante, tipo di missione, base Blue, bingo dichiarato, F6_BINGO, F6_BINGO_REVERSE_ROUTE,
-# F6_BINGO_DISENGAGE_RESERVE, G3_ENGAGEMENT_FUEL). Le prime sei con i nomi e l'ordine di prima (nomi stabili
-# nella fotografia).
+# F6_BINGO_DISENGAGE_RESERVE, G3_ENGAGEMENT_FUEL, sito vicino + base alternativa (G4b), G4_REPLAN). Le prime sei
+# con i nomi e l'ordine di prima (nomi stabili nella fotografia).
 VARIANTS = {
-    'bingo': (G2_FUEL, 'Strike', True, True, True, True, True, True),
-    'none': (1.0, 'Strike', True, True, True, True, True, True),
-    'switch_off': (BINGO_FUEL, 'Strike', True, True, False, True, True, True),
-    'no_base': (DRY_FUEL, 'Strike', False, True, True, True, True, True),
-    'bingo_off': (DRY_FUEL, 'Strike', True, False, True, True, True, True),
-    'reverse_off': (BINGO_FUEL, 'Strike', True, True, True, False, False, True),
-    'reserve_off': (BINGO_FUEL, 'Strike', True, True, True, True, False, True),
-    'transfer_continue': (G2_FUEL, 'Transport', True, True, True, True, True, True),
-    'transfer_return': (DRY_FUEL, 'Transport', True, True, True, True, True, True),
-    'engagement_fuel_off': (1.0, 'Strike', True, True, True, True, True, False),
+    'bingo': (G2_FUEL, 'Strike', True, True, True, True, True, True, False, True),
+    'none': (1.0, 'Strike', True, True, True, True, True, True, False, True),
+    'switch_off': (BINGO_FUEL, 'Strike', True, True, False, True, True, True, False, True),
+    'no_base': (DRY_FUEL, 'Strike', False, True, True, True, True, True, False, True),
+    'bingo_off': (DRY_FUEL, 'Strike', True, False, True, True, True, True, False, True),
+    'reverse_off': (BINGO_FUEL, 'Strike', True, True, True, False, False, True, False, True),
+    'reserve_off': (BINGO_FUEL, 'Strike', True, True, True, True, False, True, False, True),
+    'transfer_continue': (G2_FUEL, 'Transport', True, True, True, True, True, True, False, True),
+    'transfer_return': (DRY_FUEL, 'Transport', True, True, True, True, True, True, False, True),
+    'engagement_fuel_off': (1.0, 'Strike', True, True, True, True, True, False, False, True),
+    'post_engagement_bingo': (BINGO_FUEL, 'Strike', True, True, True, True, True, True, True, True),
+    'replan_off': (BINGO_FUEL, 'Strike', True, True, True, True, True, True, True, False),
 }
 
 
@@ -136,10 +163,12 @@ def _mission_id(variant: str) -> str:
 
 
 def _scenario(variant: str) -> F.Scenario:
-    fuel, mission_type, with_base, bingo, _, _, _, _ = VARIANTS[variant]
+    fuel, mission_type, with_base, bingo, _, _, _, _, near, _ = VARIANTS[variant]
     flight = F.build_force(FLIGHT, 'Blue', [F.Unit('aircraft', 'F-16C Block 52d', 1,
                                                    origin=(*FLIGHT_START, FLIGHT_ALTITUDE), prefix='f',
-                                                   loadout='Strike')], mil_category=F.AIR_UNIT)
+                                                   loadout='Strike',
+                                                   sensors={'ground': NEAR_JET_GROUND_SENSOR} if near else None)],
+                           mil_category=F.AIR_UNIT)
 
     for asset in flight.assets.values():
         asset.fuel = fuel
@@ -150,20 +179,26 @@ def _scenario(variant: str) -> F.Scenario:
     if not bingo:
         mission = dataclasses.replace(mission, end_criteria=EndCriteria(bingo=False))
 
-    site = F.build_force(SITE, 'Red', [F.Unit('vehicle', 'BMP-2', 1, origin=SITE_POSITION, prefix='ifv',
-                                              sensors={'air': SITE_SENSOR_RANGE})])
+    sites = [F.build_force(SITE, 'Red', [F.Unit('vehicle', 'BMP-2', 1, origin=SITE_POSITION, prefix='ifv',
+                                                sensors={'air': SITE_SENSOR_RANGE})])]
     blue = [flight]
+    bases = [(BASE, BASE_POSITION)] if with_base else []
 
-    if with_base:
-        base = F.make_force(BASE, 'Blue', F.AIR_UNIT)
-        F.add_assets(base, [F.make_structure(base, f'{BASE}/depot0', BASE_POSITION, category='Farp',
+    if near:
+        sites.insert(0, F.build_force(NEAR_SITE, 'Red', [F.Unit('vehicle', 'BMP-2', 1, origin=NEAR_SITE_POSITION,
+                                                                prefix='ifv', sensors={'air': SITE_SENSOR_RANGE})]))
+        bases.append((ALTERNATE_BASE, ALTERNATE_BASE_POSITION))
+
+    for name, position in bases:
+        base = F.make_force(name, 'Blue', F.AIR_UNIT)
+        F.add_assets(base, [F.make_structure(base, f'{name}/depot0', position, category='Farp',
                                              asset_type='Oil_Tank')])
         blue.append(base)
 
     roles = {asset_id: 'unarmed' for asset_id in flight.assets}
     # Tiro Red SENZA effetto, solo contro aerei in volo: si misura se l'F-16C entra nel raggio del sensore.
-    overrides = {asset_id: {'air': MARKER_SHOT} for asset_id in site.assets}
-    return F.Scenario(forces_a=blue, forces_b=[site], missions=[mission],
+    overrides = {asset_id: {'air': MARKER_SHOT} for site in sites for asset_id in site.assets}
+    return F.Scenario(forces_a=blue, forces_b=sites, missions=[mission],
                       fire_control=F.make_fire_control(roles=roles, overrides=overrides), duration=DURATION,
                       roles=roles)
 
@@ -171,7 +206,7 @@ def _scenario(variant: str) -> F.Scenario:
 def _validate(scenario: F.Scenario, variant: str):
     """Il validatore di pianificazione sulla missione dello scenario NON ancora eseguito, con la regola della
     variante (gli stessi interruttori dell'esecutore): (esito, errore)."""
-    _, _, _, _, _, reverse, reserve, _ = VARIANTS[variant]
+    _, _, _, _, _, reverse, reserve, _, _, _ = VARIANTS[variant]
     mission, = scenario.missions
     bases = MA.air_base_points(scenario.forces_a, 'Blue')
 
@@ -185,12 +220,13 @@ def _validate(scenario: F.Scenario, variant: str):
 def _run(scenario: F.Scenario, session_id: str, variant: str):
     """Esegue lo scenario con gli interruttori della variante, registrando i tratti dati allo scheduler e il
     programma degli aerei a terra."""
-    _, _, _, _, bingo, reverse, reserve, engagement_fuel = VARIANTS[variant]
+    _, _, _, _, bingo, reverse, reserve, engagement_fuel, _, replan = VARIANTS[variant]
 
     with patch.object(SS, 'F6_BINGO', SS.F6_BINGO and bingo), \
             patch.object(SS, 'F6_BINGO_REVERSE_ROUTE', SS.F6_BINGO_REVERSE_ROUTE and reverse), \
             patch.object(SS, 'F6_BINGO_DISENGAGE_RESERVE', SS.F6_BINGO_DISENGAGE_RESERVE and reserve), \
             patch.object(SS, 'G3_ENGAGEMENT_FUEL', SS.G3_ENGAGEMENT_FUEL and engagement_fuel), \
+            patch.object(SS, 'G4_REPLAN', SS.G4_REPLAN and replan), \
             patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler:
         outcome = scenario.run(session_id)
 
@@ -248,7 +284,8 @@ class TestS26Bingo(F.LoggerSilencer, unittest.TestCase):
 
     SEEDS = _seeds('S26-BINGO')
     # Le prime sei con i nomi e l'ordine di prima, le nuove (F6-B2bis: 'reverse_off'; G2: le tre seguenti; G3:
-    # 'engagement_fuel_off') in coda: i nomi delle varianti nella fotografia restano stabili.
+    # 'engagement_fuel_off'; G4b: 'post_engagement_bingo', 'replan_off') in coda: i nomi delle varianti nella
+    # fotografia restano stabili.
     VARIANTS = tuple(VARIANTS)
     JET = f'{FLIGHT}/f0'
     # Varianti in cui l'aereo va in bingo e rientra, e quelle che lo fanno alla partenza (G2).
@@ -443,31 +480,92 @@ class TestS26Bingo(F.LoggerSilencer, unittest.TestCase):
                 self.assertAlmostEqual(jet.fuel, left[variant], delta=1e-9)
 
     def test_without_bingo_the_route_is_completed(self):
-        """'none', 'switch_off', 'engagement_fuel_off' e 'transfer_continue' (trasferimento sotto la soglia del G2
-        che CONTINUA, nessun aborto): rotta completata (COMPLETED, ROUTE_COMPLETED), aereo fuori scena alla fine
-        della rotta come prima. Con 0,28 ('switch_off') la sola andata + un consumo d'ingaggio (G3) stanno sotto la
-        soglia del G2 e non esauriscono il carburante. 'transfer_continue' (0,27, sotto la soglia) consuma la
-        riserva: se Red spara, il consumo d'ingaggio la esaurisce e il contatore arriva a ZERO poco prima della
-        fine della rotta (evento del tratto `exhausted`), ma la rotta e' completata lo stesso: il movimento e'
-        calcolato a monte alla crociera e non e' ricalcolato dopo l'ingaggio (limite noto del G3, ri-scheduling
-        nel G4); se Red non spara, carburante residuo positivo."""
-        for variant in ('none', 'switch_off', 'engagement_fuel_off', 'transfer_continue'):
+        """'none', 'switch_off' e 'engagement_fuel_off': rotta completata (COMPLETED, ROUTE_COMPLETED), aereo fuori
+        scena alla fine della rotta come prima. Con 0,28 ('switch_off') la sola andata + un consumo d'ingaggio (G3)
+        stanno sotto la soglia del G2 e non esauriscono il carburante. 'transfer_continue': v. sotto (G4b)."""
+        for variant in ('none', 'switch_off', 'engagement_fuel_off'):
             for outcome, legs, _, jet in self.runs[variant]:
                 mission = self._mission(outcome, variant)
                 self.assertEqual(mission.status, MissionStatus.COMPLETED, variant)
                 self.assertEqual(mission.asset_outcomes[self.JET].end_reason, AssetEndReason.ROUTE_COMPLETED)
                 self.assertAlmostEqual(legs[self.JET][-1].t_end, (FLIGHT_END[0] - FLIGHT_START[0]) / AIR_SPEED,
                                        delta=1e-6)
-                exhausted = [event for event in outcome.fuel_events if event.exhausted]
-
-                if variant == 'transfer_continue' and _shots_by(outcome, SITE):
-                    self.assertEqual(jet.fuel, 0.0)
-                    self.assertEqual([event.regime for event in exhausted], [SS.CRUISE_REGIME])
-                    self.assertLess(exhausted[0].distance_covered, exhausted[0].distance)
-                    continue
-
                 self.assertGreater(jet.fuel, 0.0, variant)
-                self.assertEqual(exhausted, [], variant)
+                self.assertEqual([event for event in outcome.fuel_events if event.exhausted], [], variant)
+
+    def test_transfer_continue_runs_dry_after_the_engagement(self):
+        """'transfer_continue' (trasferimento sotto la soglia del G2 che alla partenza CONTINUA): se Red spara, il
+        consumo d'ingaggio consuma la riserva e il residuo non basta piu' per la rotta. G4b: l'episodio dura oltre
+        la fine della rotta, la decisione e' alla fine dei tratti dell'aereo con residuo zero (esaurito in
+        ingaggio): regole della F6-A dal punto finale, nessuna base in planata, perso con l'equipaggio recuperato
+        (DESTROYED, FUEL_EXHAUSTED a fine rotta), missione DESTROYED. Non piu' "rotta completata a carburante
+        0,0" (G3). Se Red non spara, la rotta e' completata con carburante positivo."""
+        t_route = (FLIGHT_END[0] - FLIGHT_START[0]) / AIR_SPEED
+
+        for outcome, legs, _, jet in self.runs['transfer_continue']:
+            mission = self._mission(outcome, 'transfer_continue')
+            asset = mission.asset_outcomes[self.JET]
+
+            if not _shots_by(outcome, SITE):
+                self.assertEqual(mission.status, MissionStatus.COMPLETED)
+                self.assertGreater(jet.fuel, 0.0)
+                continue
+
+            self.assertEqual(mission.status, MissionStatus.DESTROYED)
+            self.assertEqual((asset.state, asset.end_reason, asset.crew_recovered),
+                             (AssetState.DESTROYED, AssetEndReason.FUEL_EXHAUSTED, True))
+            self.assertAlmostEqual(asset.end_time, t_route, delta=1e-6)
+            self.assertAlmostEqual(legs[self.JET][-1].t_end, t_route, delta=1e-6)
+            self.assertEqual(jet.fuel, 0.0)
+            self.assertTrue(jet.is_destroyed())
+            self.assertEqual(outcome.postures[self.JET], MA.DESTROYED_POSTURE)
+
+    def test_post_engagement_bingo_lands_on_the_alternate_base(self):
+        """'post_engagement_bingo' (G4b): sopra la soglia alla partenza (nessun bingo al G2); dopo l'episodio con
+        Red-Near il residuo analitico (partenza - crociera fino a fine episodio - consumo d'ingaggio) e' sotto il
+        resto della rotta + la riserva: BINGO a fine episodio, ABORTED(BINGO), rientro sulla base ALTERNATIVA lungo
+        la rotta (piu' breve del ritroso), a terra; Red-Site, piu' avanti, non spara mai. Carburante finale =
+        partenza - consumo d'ingaggio - (rotta fino a x = 180 km + discesa sulla base) alla crociera."""
+        jet = _scenario('post_engagement_bingo').force(FLIGHT).assets[self.JET]
+        charge = FM.engagement_fuel(jet)
+        rate = 1.0 / jet.fuel_autonomy()
+        landing = (*ALTERNATE_BASE_POSITION, 0.0)
+        flown = (ALTERNATE_BASE_POSITION[0] - FLIGHT_START[0]) + math.dist((ALTERNATE_BASE_POSITION[0], 0.0,
+                                                                           FLIGHT_ALTITUDE), landing)
+        t_route = (FLIGHT_END[0] - FLIGHT_START[0]) / AIR_SPEED
+        reserve = FM.disengagement_reserve(jet)
+
+        for outcome, legs, grounded, jet in self.runs['post_engagement_bingo']:
+            near = _shots_by(outcome, NEAR_SITE)
+            self.assertGreater(len(near), 0)
+            self.assertEqual(_shots_by(outcome, SITE), [])
+            mission = self._mission(outcome, 'post_engagement_bingo')
+            asset = mission.asset_outcomes[self.JET]
+            self.assertEqual((mission.status, mission.reason), (MissionStatus.ABORTED, AbortReason.BINGO))
+            self.assertEqual((asset.state, asset.end_reason), (AssetState.OPERATIONAL, AssetEndReason.BINGO))
+            self.assertGreater(asset.end_time, max(event.time for event in near))
+            # Alla decisione: residuo sotto la soglia (resto della rotta + riserva), ricalcolata qui.
+            residual = BINGO_FUEL - charge - AIR_SPEED * asset.end_time * rate
+            rest = AIR_SPEED * (t_route - asset.end_time) * rate
+            self.assertLess(residual, rest + reserve)
+            self.assertGreater(residual, rest)
+            *_, descent, parked = legs[self.JET]
+            self.assertEqual((descent.p_end, parked.p_start, parked.p_end), (landing, landing, landing))
+            self.assertTrue(grounded.at(self.JET, parked.t_start + 1.0))
+            self.assertEqual(outcome.postures[self.JET], MA.PARKED_POSTURE)
+            self.assertAlmostEqual(jet.fuel, BINGO_FUEL - charge - flown * rate, delta=1e-9)
+
+    def test_replan_off_flies_on_to_the_second_site(self):
+        """'replan_off' (G4b spento, lo stesso scenario): nessuna ri-pianificazione, l'aereo prosegue, Red-Site
+        spara, due consumi d'ingaggio, rotta completata con il contatore a zero (il limite del G3)."""
+        for outcome, legs, _, jet in self.runs['replan_off']:
+            self.assertGreater(len(_shots_by(outcome, NEAR_SITE)), 0)
+            self.assertGreater(len(_shots_by(outcome, SITE)), 0)
+            mission = self._mission(outcome, 'replan_off')
+            self.assertEqual(mission.status, MissionStatus.COMPLETED)
+            self.assertEqual([e.regime for e in outcome.fuel_events if e.asset_id == self.JET].count(
+                FM.ENGAGEMENT_REGIME), 2)
+            self.assertEqual(jet.fuel, 0.0)
 
     def test_engagement_fuel(self):
         """G3: con il pieno ('none') il movimento e' alla crociera e, se Red spara, l'F-16C (bersaglio delle salve)

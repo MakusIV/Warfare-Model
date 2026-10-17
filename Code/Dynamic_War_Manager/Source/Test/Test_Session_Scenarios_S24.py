@@ -61,9 +61,16 @@ sparano passano per O a `LATE_CROSSING` = 1400 s, durante l'orbita pianificata. 
   * 'dry': carburante per l'avvicinamento e META' orbita: si esaurisce a 1050 s in O (6000 m, nessuna
     base): perso a 1050 s, NESSUN tiro sui bombardieri; due FuelEvent (avvicinamento, orbita esaurita);
   * 'full': pieno: tre FuelEvent per tratto (avvicinamento, orbita ferma alla crociera, rientro) e la
-    CAP spara sui bombardieri nella maggior parte delle repliche;
-  * 'per_leg_off': 'dry' con `F6_FUEL_PER_LEG` spento: l'orbita non consuma (come la F5-C), nessun
-    esaurimento, un solo FuelEvent per asset, la CAP spara come in 'full'.
+    CAP spara sui bombardieri nella maggior parte delle repliche; dal G4b con l'uscita di scena
+    (`Session_Simulator.G4_OFF_SCENE_EXIT`) i bombardieri disingaggiati (partenza in volo, nessuna base Blue)
+    ripassano a ritroso attraverso l'orbita e la CAP li ingaggia una seconda volta (al piu' due consumi d'ingaggio);
+  * 'per_leg_off': 'dry' con `F6_FUEL_PER_LEG` spento: l'orbita non consuma (come la F5-C), un solo
+    FuelEvent per asset, la CAP spara come in 'full'. Se spara consuma in ingaggio (G3) e il carburante non
+    basta piu' per il rientro: dal G4b il MiG e' in bingo a fine episodio; fino all'uscita di scena (senza basi
+    Red, `BINGO_NO_BASE`) restava sulla rotta e restava a secco sul rientro (~2026 s), dall'uscita di scena lascia
+    l'orbita a fine episodio lungo la rotta a ritroso verso il punto di comparsa e si esaurisce prima di arrivarci
+    (~1540-1610 s); in entrambi i casi e' perso (nessuna base Red). Prima del G4b il rientro era completato con il
+    contatore a zero.
 
 Asserzioni: invarianti per replica (istanti, punti, esiti, eventi) e frazioni aggregate con soglie
 DICHIARATE (stime di test, non tarate sul risultato; v. sotto).
@@ -517,10 +524,11 @@ class TestS24OrbitExhaustion(F.LoggerSilencer, unittest.TestCase):
     def test_fuel_events_are_per_leg(self):
         """'full': tre FuelEvent (avvicinamento, orbita FERMA, rientro); l'orbita consuma 1500 s alla
         crociera del MiG (al regime di crociera anche se la CAP ha combattuto). 'per_leg_off': uno solo,
-        sulla distanza della sola rotta (225 km), senza consumo dell'orbita. (Al regime di combattimento
-        della contabilita' quell'evento puo' risultare esaurito anche se a crociera il carburante basta:
-        limite noto della F6-A, il vincolo del movimento e' calcolato a monte alla crociera; dal G3 i tratti sono
-        alla crociera e il combattimento e' nell'evento istantaneo d'ingaggio, escluso da `_mig_events`.)"""
+        sulla distanza dei tratti di movimento, senza consumo dell'orbita: la rotta intera (225 km) se la CAP non ha
+        combattuto; se ha combattuto (consumo d'ingaggio del G3, escluso da `_mig_events`) il residuo non basta per
+        il rientro e dal G4b il MiG e' in bingo a fine episodio: senza basi Red esce di scena lungo la rotta a
+        ritroso e i tratti finiscono all'esaurimento ricalcolato: l'evento copre l'avvicinamento e il ritroso fino
+        a li' ed e' esaurito, il MiG e' perso (DESTROYED, FUEL_EXHAUSTED)."""
         for outcome, _, mig in self.runs['full']:
             approach, orbit, exit_leg = self._mig_events(outcome)
             self.assertEqual([e.stationary for e in (approach, orbit, exit_leg)], [False, True, False])
@@ -534,15 +542,38 @@ class TestS24OrbitExhaustion(F.LoggerSilencer, unittest.TestCase):
             for before, after in zip(every, every[1:]):
                 self.assertAlmostEqual(after.fuel_before, before.fuel_after, delta=1e-12)
             charges = [event for event in every if event.regime == FM.ENGAGEMENT_REGIME]
-            self.assertLessEqual(len(charges), 1)
+            # Al piu' due episodi: dal G4b (uscita di scena, `Session_Simulator.G4_OFF_SCENE_EXIT`) i bombardieri
+            # disingaggiati (partenza in volo, nessuna base Blue) ripercorrono la rotta a ritroso attraverso l'orbita
+            # e la CAP li ingaggia di nuovo.
+            self.assertLessEqual(len(charges), 2)
             self.assertAlmostEqual(orbit.fuel_before, approach.fuel_after - sum(e.amount for e in charges
                                                                                  if e.time < orbit.time), delta=1e-12)
 
-        for outcome, legs, _ in self.runs['per_leg_off']:
+        exit_end = ORBIT_ARRIVAL + ORBIT_DURATION - CAP_EXIT_X / AIR_SPEED
+
+        for outcome, legs, mig in self.runs['per_leg_off']:
             event, = self._mig_events(outcome)
-            self.assertAlmostEqual(event.distance, -CAP_START_X - CAP_EXIT_X, delta=1e-3)
-            self.assertAlmostEqual(legs[self.MIG][-1].t_end, ORBIT_ARRIVAL + ORBIT_DURATION - CAP_EXIT_X / AIR_SPEED,
-                                   delta=1e-6)
+            charged = any(e.asset_id == self.MIG and e.regime == FM.ENGAGEMENT_REGIME for e in outcome.fuel_events)
+            end = legs[self.MIG][-1].t_end
+
+            if not charged:
+                self.assertAlmostEqual(event.distance, -CAP_START_X - CAP_EXIT_X, delta=1e-3)
+                self.assertAlmostEqual(end, exit_end, delta=1e-6)
+                continue
+
+            # Dal G4b con l'uscita di scena (`Session_Simulator.G4_OFF_SCENE_EXIT`): dopo il consumo d'ingaggio il
+            # MiG e' in bingo a fine episodio, senza basi Red esce di scena lungo la rotta a ritroso verso il punto di
+            # comparsa (x = CAP_START_X) lasciando l'orbita, e si esaurisce prima di arrivarci: l'evento copre
+            # l'avvicinamento e il tratto a ritroso da O fino al punto di esaurimento.
+            self.assertTrue(event.exhausted)
+            self.assertLess(end, ORBIT_ARRIVAL + ORBIT_DURATION)
+            x_end = legs[self.MIG][-1].p_end[0]
+            self.assertTrue(CAP_START_X < x_end < 0.0, x_end)
+            self.assertAlmostEqual(event.distance, -CAP_START_X - x_end, delta=1e-3)
+            asset = outcome.mission_outcomes[self.MISSION].asset_outcomes[self.MIG]
+            self.assertEqual((asset.state, asset.end_reason), (AssetState.DESTROYED, AssetEndReason.FUEL_EXHAUSTED))
+            self.assertAlmostEqual(asset.end_time, end, delta=1e-6)
+            self.assertTrue(mig.is_destroyed())
 
     def test_the_orbit_runs_the_tank_dry(self):
         """'dry': due FuelEvent, l'orbita esaurita a meta' (750 s di 1500); il MiG e' perso in O a 1050 s

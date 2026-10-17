@@ -806,5 +806,152 @@ class TestBingoDecision(_Base):
         self.assertEqual(self._decide(0.105, [EAST], rule=IN_AIR, transfer=True).action, FM.BINGO_CONTINUE)
 
 
+# ── G4b: RESIDUO ANALITICO, ESAURIMENTO DA UN RESIDUO, RIENTRO FORZATO ─────────
+
+class TestFuelAt(_Base):
+    """`fuel_at` (G4b): residuo a un istante qualunque = partenza - tratti fino all'istante (quello in corso in
+    proporzione al tempo) - consumi istantanei fino all'istante; stessa aritmetica della contabilita'. Stub con
+    crociera 10 m/s e autonomia 100 km (0,01 del pieno = 1 km)."""
+
+    def test_legs_and_charges_up_to_the_instant(self):
+        stub = _CruiseStub(fuel=1.0, autonomy=100_000.0)
+        legs = [MOVE, HOLD]       # 0,01 (1 km) in 100 s, poi 300 s fermi = 3 km equivalenti (0,03)
+        self.assertAlmostEqual(FM.fuel_at(stub, legs, 0.0), 1.0, delta=1e-12)
+        self.assertAlmostEqual(FM.fuel_at(stub, legs, 50.0), 0.995, delta=1e-12)
+        self.assertAlmostEqual(FM.fuel_at(stub, legs, 250.0), 1.0 - 0.01 - 0.015, delta=1e-12)
+        self.assertAlmostEqual(FM.fuel_at(stub, legs, 1e9), 0.96, delta=1e-12)
+        charges = [(60.0, 0.2), (300.0, 0.1)]
+        self.assertAlmostEqual(FM.fuel_at(stub, legs, 59.0, charges), 1.0 - 0.0059, delta=1e-12)
+        self.assertAlmostEqual(FM.fuel_at(stub, legs, 60.0, charges), 1.0 - 0.006 - 0.2, delta=1e-12)
+        self.assertAlmostEqual(FM.fuel_at(stub, legs, 1e9, charges), 0.96 - 0.3, delta=1e-12)
+        self.assertEqual(stub.fuel, 1.0)     # nessuna mutazione
+
+    def test_given_fuel_never_negative_and_not_modelled(self):
+        stub = _CruiseStub(fuel=1.0, autonomy=100_000.0)
+        self.assertAlmostEqual(FM.fuel_at(stub, [MOVE], 100.0, fuel=0.5), 0.49, delta=1e-12)
+        self.assertEqual(FM.fuel_at(stub, [MOVE], 100.0, [(10.0, 0.6)], fuel=0.5), 0.0)
+        self.assertIsNone(FM.fuel_at(_CruiseStub(fuel=None), [MOVE], 100.0))
+
+    def test_end_value_is_the_accounting(self):
+        """Coerenza con la contabilita' della sessione: eventi per tratto e consumi istantanei applicati in ordine
+        (il consumo prima del tratto in cui cade), ciascuno limitato al disponibile, nessun evento dopo
+        l'esaurimento: il carburante finale e' `fuel_at` oltre la fine, anche quando il serbatoio si svuota."""
+        for fuel, charges in ((1.0, [(60.0, 0.2)]), (0.3, [(60.0, 0.2), (300.0, 0.2)]), (0.1, [(10.0, 0.25)])):
+            with self.subTest(fuel=fuel, charges=charges):
+                stub = _CruiseStub(fuel=fuel, autonomy=100_000.0)
+                expected = FM.fuel_at(stub, [MOVE, HOLD], 1e9, charges)
+                pending = list(charges)
+
+                for leg in (MOVE, HOLD):
+                    while pending and pending[0][0] < leg.t_end:
+                        instant, amount = pending.pop(0)
+                        event = FM.build_fuel_event(stub, amount * 100_000.0, time=instant)
+                        FM.apply_fuel_event(stub, event)
+
+                    event = FM.build_leg_fuel_event(stub, leg)
+
+                    if event is not None:
+                        FM.apply_fuel_event(stub, event)
+
+                self.assertAlmostEqual(stub.fuel, expected, delta=1e-12)
+
+
+class TestExhaustionFromAResidual(_Base):
+
+    def test_given_fuel_replaces_the_counter(self):
+        """`fuel_exhaustion(..., fuel=)`: esaurimento calcolato dal residuo dato, l'asset non e' mutato."""
+        stub = _CruiseStub(fuel=1.0, autonomy=100_000.0)
+        found = FM.fuel_exhaustion(stub, [MOVE, HOLD], fuel=0.004)
+        self.assertAlmostEqual(found.time, 40.0)
+        self.assertEqual(found.fuel_before, 0.004)
+        self.assertIsNone(FM.fuel_exhaustion(stub, [MOVE, HOLD]))
+        self.assertEqual(stub.fuel, 1.0)
+        self.assertIsNone(FM.fuel_exhaustion(_CruiseStub(fuel=None), [MOVE], fuel=0.5))
+
+
+class TestForcedReturn(_Base):
+    """`bingo_decision(..., forced=True)` (G4b, rientro dopo il disingaggio): nessun controllo di soglia ne'
+    "continua", stesso albero (stub e riserva di `TestBingoDecision`)."""
+
+    _stub = staticmethod(TestBingoDecision._stub)
+    _decide = TestBingoDecision._decide
+
+    def _forced(self, fuel, legs, **kwargs):
+        return FM.bingo_decision(self._stub(fuel), legs, kwargs.pop('bases', ()), kwargs.pop('rule', DEPARTURE),
+                                 reserve=kwargs.pop('reserve', RESERVE), forced=True, **kwargs)
+
+    def test_returns_with_plenty_of_fuel(self):
+        """Pieno, a 30 km: sopra la soglia nessun bingo; forzato, ritroso al DEPARTURE (30 km)."""
+        self.assertIsNone(self._decide(1.0, [EAST], time=3_000.0))
+        decision = self._forced(1.0, [EAST], time=3_000.0)
+        self.assertEqual((decision.action, decision.via, decision.base), (FM.BINGO_DEPARTURE, FM.RETURN_REVERSE,
+                                                                          (0.0, 0.0, 0.0)))
+        self.assertAlmostEqual(decision.return_length, 30 * KM, delta=1e-6)
+        self.assertTrue(decision.returns)
+
+    def test_alternate_base_and_no_continue_for_a_transfer(self):
+        """Forzato: una base alternativa sulla rotta vince se piu' vicina; un trasferimento non "continua" (il
+        chiamante della sessione passa comunque `transfer` False)."""
+        decision = self._forced(1.0, [EAST], bases=[(40 * KM, KM)], time=3_000.0)
+        self.assertEqual((decision.action, decision.base), (FM.BINGO_ALTERNATE, (40 * KM, KM, 0.0)))
+        self.assertNotEqual(self._forced(1.0, [EAST], time=3_000.0, transfer=True).action, FM.BINGO_CONTINUE)
+
+    def test_no_base_and_reserve_not_modelled(self):
+        """Partenza in volo senza basi: NO_BASE anche forzato (nessun rientro); riserva non modellata: il rientro
+        forzato e' deciso comunque, con riserva 0."""
+        self.assertEqual(self._forced(1.0, [EAST], rule=IN_AIR, time=3_000.0).action, FM.BINGO_NO_BASE)
+        stub = _FuelStub(fuel=1.0, autonomy=AUTONOMY_1000)
+        self.assertIsNone(FM.bingo_decision(stub, [EAST], (), DEPARTURE, time=3_000.0))
+        decision = FM.bingo_decision(stub, [EAST], (), DEPARTURE, time=3_000.0, forced=True)
+        self.assertEqual((decision.action, decision.reserve), (FM.BINGO_DEPARTURE, 0.0))
+
+
+
+class TestExitScene(_Base):
+    """`bingo_decision(..., exit_scene=True)` (G4b, decisione dell'utente del 2026-10-17): partenza in volo senza
+    alcuna base del lato, al posto di NO_BASE l'USCITA DI SCENA (`BINGO_EXIT`): ritroso fino al punto di comparsa,
+    senza tratto diretto (stub e riserva di `TestBingoDecision`)."""
+
+    _stub = staticmethod(TestBingoDecision._stub)
+
+    def _exit(self, fuel, legs, bases=(), rule=IN_AIR, forced=True, exit_scene=True, **kwargs):
+        return FM.bingo_decision(self._stub(fuel), legs, bases, rule, reserve=RESERVE, forced=forced,
+                                 exit_scene=exit_scene, **kwargs)
+
+    def test_forced_exit_reverses_to_the_appearance_point(self):
+        """A 50 km sul secondo tratto (nord): ritroso per i vertici della rotta fino al punto di comparsa, 150 km."""
+        decision = self._exit(1.0, [EAST, NORTH], time=15_000.0)
+        self.assertEqual((decision.action, decision.via), (FM.BINGO_EXIT, FM.RETURN_REVERSE))
+        self.assertEqual(decision.route, ((100 * KM, 50 * KM, 0.0), (100 * KM, 0.0, 0.0), (0.0, 0.0, 0.0)))
+        self.assertEqual(decision.base, (0.0, 0.0, 0.0))
+        self.assertAlmostEqual(decision.return_length, 150 * KM, delta=1e-6)
+        self.assertTrue(decision.reachable)
+        self.assertTrue(decision.returns)
+        self.assertTrue(decision.exits)
+        self.assertEqual(self._exit(1.0, [EAST, NORTH], time=15_000.0, exit_scene=False).action, FM.BINGO_NO_BASE)
+
+    def test_bingo_exit_and_insufficient_residual(self):
+        """Non forzato: in bingo (0,05 < 0,1 + 0,01) EXIT; a 30 km con 0,02 il ritroso (0,03) non e' raggiungibile:
+        `reachable` False (all'esaurimento le regole della F6-A). Un trasferimento che puo' concludere continua."""
+        self.assertEqual(self._exit(0.05, [EAST], forced=False).action, FM.BINGO_EXIT)
+        short = self._exit(0.02, [EAST], time=3_000.0)
+        self.assertEqual((short.action, short.reachable), (FM.BINGO_EXIT, False))
+        self.assertEqual(self._exit(0.105, [EAST], forced=False, transfer=True).action, FM.BINGO_CONTINUE)
+
+    def test_no_effect_with_a_base_or_from_a_base(self):
+        """Con una base del lato o partendo da una base (il DEPARTURE c'e' sempre) la decisione non cambia."""
+        cases = [dict(bases=[(50 * KM, 20 * KM)], rule=IN_AIR, fuel=1.0), dict(bases=[(50 * KM, 20 * KM)], rule=IN_AIR,
+                                                                              fuel=0.01),
+                 dict(bases=(), rule=DEPARTURE, fuel=1.0), dict(bases=(), rule=DEPARTURE, fuel=0.01)]
+
+        for case in cases:
+            with self.subTest(**case):
+                on = self._exit(case['fuel'], [EAST], bases=case['bases'], rule=case['rule'], time=3_000.0)
+                off = self._exit(case['fuel'], [EAST], bases=case['bases'], rule=case['rule'], time=3_000.0,
+                                 exit_scene=False)
+                self.assertEqual(on, off)
+                self.assertFalse(on.exits)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -173,10 +173,10 @@ class TestS21ParkedAircraftStrike(_ParkedChecks, F.LoggerSilencer, unittest.Test
             self.assertEqual(sources, {(STRIKE, F.SHOTS['agm'].weapon)}, outcome.session_id)
 
     def test_the_base_does_not_disengage_for_its_parked_aircraft(self):
+        # Ogni episodio: dal G4b (uscita di scena, `Session_Simulator.G4_OFF_SCENE_EXIT`) lo strike disingaggiato
+        # (partenza in volo, nessuna base Blue) puo' ripassare sulla base a ritroso, in un episodio successivo.
         for _, outcome in self.runs + self.control:
-            base = F.force_outcome(outcome, BASE)
-
-            if base is not None:
+            for base in outcome.outcomes_of(BASE):
                 self.assertIn(base.outcome, (ER.HELD, ER.DESTROYED), outcome.session_id)
 
     def test_without_parked_aircraft_the_strike_has_nothing_to_engage(self):

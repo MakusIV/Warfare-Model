@@ -760,6 +760,30 @@ class TestContactWindows(unittest.TestCase):
             self.assertEqual(CS.contact_windows(self.asset_a, [], self.asset_b, self.legs_b,
                                                 range_a=400.0, range_b=200.0), [])
 
+    def test_trim_recomputes_cpa_and_mutual_on_the_rest(self):
+        """G4a (forza occupata): la finestra [6, 14] ritagliata da t = 9 e' [9, 14], CPA ancora a 10 (dentro),
+        reciproca [9, 12]; ritagliata da t = 11 il CPA e' all'inizio (11 s, 100 m) e la reciproca [11, 12]; da
+        t = 13 nessun reciproco; prima dell'inizio invariata; alla fine o oltre None."""
+        window = CS.contact_windows(self.asset_a, self.legs_a, self.asset_b, self.legs_b,
+                                    range_a=400.0, range_b=200.0)[0]
+        self.assertIs(CS.trim_contact_window(window, 5.0, self.legs_a, self.legs_b), window)
+        self.assertIsNone(CS.trim_contact_window(window, 14.0, self.legs_a, self.legs_b))
+        self.assertIsNone(CS.trim_contact_window(window, 20.0, self.legs_a, self.legs_b))
+
+        trimmed = CS.trim_contact_window(window, 9.0, self.legs_a, self.legs_b)
+        self.assertEqual((trimmed.t_start, trimmed.t_end), (9.0, window.t_end))
+        self.assertAlmostEqual(trimmed.t_cpa, 10.0, places=5)
+        self.assertAlmostEqual(trimmed.distance_cpa, 0.0, places=4)
+        self.assertAlmostEqual(trimmed.t_mutual_start, 9.0, places=5)
+        self.assertAlmostEqual(trimmed.t_mutual_end, 12.0, places=5)
+        self.assertEqual((trimmed.range_a, trimmed.range_b, trimmed.first_detector), (400.0, 200.0, 'a'))
+
+        late = CS.trim_contact_window(window, 11.0, self.legs_a, self.legs_b)
+        self.assertAlmostEqual(late.t_cpa, 11.0, places=5)
+        self.assertAlmostEqual(late.distance_cpa, 100.0, places=4)
+        self.assertAlmostEqual(late.t_mutual_start, 11.0, places=5)
+        self.assertIsNone(CS.trim_contact_window(window, 13.0, self.legs_a, self.legs_b).t_mutual_start)
+
     def test_ranges_are_derived_from_the_assets_when_not_given(self):
         asset_a = Vehicle(asset_id='defender', ranges={'air': 400.0})
         asset_b = Aircraft(asset_id='raider', ranges={'ground': 200.0})
@@ -930,6 +954,26 @@ class TestScheduleContacts(unittest.TestCase):
 
         # Fermo a 1000 m dal SAM, fuori portata: nessun contatto, ma nessuna eccezione.
         self.assertEqual(windows, [])
+
+    def test_only_assets_is_the_filtered_subset(self):
+        """`only_assets` (G4b): esattamente le finestre delle coppie con uno degli asset dati, nello stesso
+        ordine; vuoto = nessuna finestra; None = tutte."""
+        second = Vehicle(asset_id='aaa-sam', position=Point3D(0, 200, 0), ranges={'air': 400.0})
+        other = Aircraft(asset_id='other', position=Point3D(50, -1000, 0), ranges={'ground': 200.0},
+                         speed={'max': 100.0})
+        blue = [_BlockStub('blue', 'blue', Point3D(0, -1000, 0), [self.raider, other], detection={'ground': 200.0})]
+        red = [_BlockStub('red', 'red', Point3D(0, 100, 0), [self.sam, second], detection={'air': 400.0})]
+        routes = {'raider': self.route, 'other': _route([(50, -1000), (50, 1000)], speed=100.0)}
+        every = CS.schedule_contacts(blue, red, horizon=30.0, routes=routes)
+        self.assertEqual({w.asset_a_id for w in every}, {'raider', 'other'})
+
+        for wanted in ({'raider'}, {'aaa-sam'}, {'other', 'sam'}):
+            with self.subTest(wanted=wanted):
+                self.assertEqual(CS.schedule_contacts(blue, red, horizon=30.0, routes=routes, only_assets=wanted),
+                                 [w for w in every if w.asset_a_id in wanted or w.asset_b_id in wanted])
+
+        self.assertEqual(CS.schedule_contacts(blue, red, horizon=30.0, routes=routes, only_assets=()), [])
+        self.assertEqual(CS.schedule_contacts(blue, red, horizon=30.0, routes=routes, only_assets=None), every)
 
 
 if __name__ == '__main__':

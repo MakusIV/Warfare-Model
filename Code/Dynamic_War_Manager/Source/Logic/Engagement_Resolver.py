@@ -284,8 +284,9 @@ sulla rotta pianificata, resta presente e bersaglio. Il risolutore riceve `activ
   (difesa di salva, non un ingaggio offensivo: scelta dichiarata);
 * criteri valutati dopo ogni lancio e ogni risoluzione di salva (`_check_activity`, deterministico,
   nessuna estrazione): **winchester** = scorta zero di tutte le armi elencate nello stato ombra (le
-  intercettazioni consumano le stesse voci); **danno** = salute persa / salute all'ingresso nella run
-  >= soglia; **bersaglio distrutto** = tutti i bersagli distrutti, nella run (istante della risoluzione
+  intercettazioni consumano le stesse voci); **danno** = salute persa / salute di riferimento >= soglia
+  (la salute all'ingresso nella run o, dal G4a, `ActivityCriteria.reference_health`: in sessione quella
+  d'inizio sessione); **bersaglio distrutto** = tutti i bersagli distrutti, nella run (istante della risoluzione
   che li distrugge) o fuori (`destroyed_targets`, anche un istante futuro: la fine vale da li');
   **fine nota a monte** (`until`: durata massima, winchester gia' all'inizio, bingo della F6-B2) letta
   come gli altri.
@@ -680,23 +681,30 @@ class ActivityCriteria:
         winchester_weapons: modelli d'arma (voci della scorta per arma) il cui esaurimento chiude
             l'attivita': scatta quando TUTTI sono a scorta zero nello stato ombra. Vuoto = criterio
             non attivo.
-        damage_threshold: frazione di salute persa (rispetto alla salute all'ingresso nella run, che
-            in sessione e' quella d'inizio sessione: un asset sta in una sola run) oltre la quale
-            l'asset chiude l'attivita' (mission kill); None = non attivo.
+        damage_threshold: frazione di salute persa (rispetto a `reference_health` o, se None, alla
+            salute all'ingresso nella run) oltre la quale l'asset chiude l'attivita' (mission kill);
+            None = non attivo.
         target_ids: id degli asset bersaglio della missione; scatta quando sono tutti distrutti.
             Vuoto = non attivo.
         destroyed_targets: `{target_id: istante}` dei bersagli gia' distrutti fuori da questa run
             (in una run gia' risolta, prima della sessione, o persi per carburante a un istante noto
             a monte), anche in un istante futuro rispetto agli eventi della run.
         until: istante dal quale l'asset non lancia piu' (fine di attivita' nota a monte: durata
-            massima, winchester gia' all'inizio, bingo con rientro della F6-B2), None = nessuno. Il motivo
-            lo riporta la sessione.
+            massima, winchester gia' all'inizio, bingo con rientro della F6-B2; dal G4a anche il
+            disingaggio o la fine di attivita' in un episodio precedente della sessione), None = nessuno.
+            Il motivo lo riporta la sessione.
+        reference_health: salute di riferimento della soglia di danno (G4a): None = la salute
+            all'ingresso nella run (comportamento precedente). In sessione, con piu' episodi d'ingaggio
+            per asset (`Session_Simulator.G4_EPISODES`), e' la salute d'inizio SESSIONE, cosi' che il
+            danno subito in episodi diversi si sommi; con un solo episodio coincide con quella
+            d'ingresso.
     """
     winchester_weapons: FrozenSet[str] = frozenset()
     damage_threshold: Optional[float] = None
     target_ids: FrozenSet[str] = frozenset()
     destroyed_targets: Mapping[str, float] = field(default_factory=dict, hash=False)
     until: Optional[float] = None
+    reference_health: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -1530,8 +1538,13 @@ class _EngagementRun:
             self._init_breakpoints()
 
             if self.activity_criteria:
-                self.initial_health = {asset_id: self.shadows[asset_id].health
-                                       for asset_id in self.activity_criteria if asset_id in self.shadows}
+                # Salute di riferimento della soglia di danno: quella dichiarata (G4a, inizio sessione)
+                # o, in mancanza, quella all'ingresso nella run.
+                self.initial_health = {
+                    asset_id: (self.activity_criteria[asset_id].reference_health
+                               if self.activity_criteria[asset_id].reference_health is not None
+                               else self.shadows[asset_id].health)
+                    for asset_id in self.activity_criteria if asset_id in self.shadows}
                 # Bersagli tutti gia' distrutti fuori dalla run: la fine e' nota prima del primo evento.
                 self._check_activity(float('-inf'), targets_only=True)
 

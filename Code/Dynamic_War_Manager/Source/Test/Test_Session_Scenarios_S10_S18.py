@@ -847,8 +847,11 @@ class TestS13ForwardFARPInterdiction(F.LoggerSilencer, unittest.TestCase):
         self.assertGreater(classes['Vehicle'], 0)
 
     def test_every_asset_is_committed(self):
+        # Nel PRIMO episodio: dal G4b (uscita di scena, `Session_Simulator.G4_OFF_SCENE_EXIT`) gli attaccanti
+        # disingaggiati (partenza in volo, nessuna base Blue) ripassano sul FARP a ritroso, in un episodio successivo
+        # con i soli asset ancora operativi.
         for farp, outcome in self.runs:
-            self.assertEqual(F.force_outcome(outcome, 'Red-FARP').committed, len(farp.assets))
+            self.assertEqual(outcome.outcomes_of('Red-FARP')[0].committed, len(farp.assets))
 
 
 # ── S14 — BOMBARDAMENTO STRATEGICO DI UN IMPIANTO PRODUCTION ──────────────────
@@ -946,10 +949,15 @@ class TestS14StrategicBombingOfProduction(F.LoggerSilencer, unittest.TestCase):
         beyond = 0
 
         for _, _, outcome in self.runs:
-            result = F.force_outcome(outcome, 'Red-Plant')
-            self.assertIn(result.outcome, (ER.HELD, ER.DESTROYED))
+            # Ogni episodio: dal G4b (uscita di scena, `Session_Simulator.G4_OFF_SCENE_EXIT`) i bombardieri
+            # disingaggiati (partenza in volo, nessuna base Blue) possono ripassare sull'impianto a ritroso.
+            results = outcome.outcomes_of('Red-Plant')
+            self.assertTrue(results)
 
-            if result.erosion >= erosion:
+            for result in results:
+                self.assertIn(result.outcome, (ER.HELD, ER.DESTROYED))
+
+            if any(result.erosion >= erosion for result in results):
                 beyond += 1
 
         # Non vacuo: in qualche replica le perdite superano la soglia di erosione di default.
@@ -1470,9 +1478,17 @@ class TestS18TransportNetworkInterdiction(F.LoggerSilencer, unittest.TestCase):
         self.assertEqual([node.sub_category for node in nodes], ['Railway', 'Electric', 'Road'])
 
     def test_all_nodes_are_fused_in_one_engagement(self):
+        # Dal G4b (uscita di scena, `Session_Simulator.G4_OFF_SCENE_EXIT`) una forza aerea disingaggiata nel primo
+        # episodio (partenza in volo, nessuna base del lato) ripercorre la rotta a ritroso e puo' incontrare di nuovo
+        # la forza aerea avversaria in un episodio successivo, senza i nodi.
         for _, outcome in self.runs:
-            self.assertEqual(_engagement_ids(outcome),
-                             [('Blue-Package', 'Red-CAP', 'Red-Grid', 'Red-Rail', 'Red-Road')])
+            ids = _engagement_ids(outcome)
+            self.assertEqual(ids[0], ('Blue-Package', 'Red-CAP', 'Red-Grid', 'Red-Rail', 'Red-Road'))
+
+            if len(ids) > 1:
+                self.assertTrue(any(o.outcome == ER.DISENGAGED for o in outcome.engagement_outcomes[0]
+                                    if (o.block_id or o.force_id) in ('Blue-Package', 'Red-CAP')))
+                self.assertTrue(all(set(b) <= {'Blue-Package', 'Red-CAP'} for b in ids[1:]), ids)
 
     def test_every_node_has_its_own_outcome_and_never_disengages(self):
         for reds, outcome in self.runs:

@@ -8,10 +8,11 @@ secondi), risoluzione simultanea".
 Le fasi 3-5 hanno prodotto i pezzi, ma nessuno li aveva mai messi in fila:
 
     SessionOrder ──> Contact_Scheduler.schedule_contacts      (strato 1: QUANDO)
-                 ──> raggruppamento in componenti connesse di forze
+                 ──> raggruppamento in episodi d'ingaggio (G4a; spento: componenti connesse di forze)
                  ──> Engagement_Resolver.resolve_engagement    (strato 2: COME FINISCE)
                  ──> apply_engagement_result                   (strato 3: danno, munizioni)
-                 ──> Fuel_Model.build/apply_fuel_event         (strato 3: carburante)
+                 ──> ri-pianificazione degli aerei dopo l'episodio e nuovi contatti (G4b)
+                 ──> Fuel_Model.build/apply_fuel_event         (strato 3: carburante, passo finale dal G4a)
                  ──> Session_Types.assemble_session_outcome    (porta di uscita)
 
 Questo modulo e' SOLO quella fila: non reimplementa geometria, Pd, latenze, salve, danno o
@@ -19,16 +20,29 @@ consumi. Ogni numero che produce viene da uno dei moduli chiamati.
 
 ## La coda eventi
 
-Due tipi di evento di sessione, in un `heapq` con chiave `(t, tipo, id, sequenza)`:
+Due tipi di evento di sessione, con chiave `(t, tipo, id, sequenza)`:
 
-- **ENGAGEMENT** — uno per componente connessa di forze (v. sotto): le forze legate,
-  direttamente o per tramite di altre, da almeno una `ContactWindow`; istante = inizio
-  della prima finestra fra QUALUNQUE coppia della componente. Risolve l'intera componente
-  con UNA chiamata a `resolve_engagement` (che ha la propria coda interna di
-  lanci/impatti) e ne applica subito l'esito agli asset reali di tutte le sue forze.
+- **ENGAGEMENT** — dal G4a uno per EPISODIO d'ingaggio (v. "Episodi d'ingaggio (G4a)"): le finestre legate
+  perche' condividono una forza (o il dominio di coordinamento) e si sovrappongono entro `EPISODE_GAP`;
+  istante = inizio della prima finestra dell'episodio. Risolve l'episodio con UNA chiamata a
+  `resolve_engagement` (che ha la propria coda interna di lanci/impatti) sulle sole sue finestre e ne applica
+  subito l'esito agli asset reali di tutte le sue forze; gli episodi sono estratti in ordine di tempo (poi
+  `event_id`). Con `G4_EPISODES` spento, uno per componente connessa di forze (v. sotto): le forze legate,
+  direttamente o per tramite di altre, da almeno una `ContactWindow`, con istante = inizio della prima finestra
+  fra QUALUNQUE coppia della componente (un `heapq`, come prima).
 - **MOVEMENT** — uno per asset con rotta schedulabile nella sessione; istante = fine del
   suo movimento dentro la sessione (dalla F6-A troncato all'esaurimento del carburante). Produce e
   applica i `FuelEvent` del tragitto, uno per tratto (v. "Carburante").
+
+Dal G4a la coda e' percorsa in DUE passi: prima tutti gli ENGAGEMENT (episodi, nell'ordine sopra), poi la
+contabilita' del carburante, un `heapq` con gli ingaggi risolti alla loro chiave e i MOVEMENT, cioe' la stessa
+coda di prima ripercorsa nello stesso ordine: stessi `FuelEvent` (per tratto e d'ingaggio) nello stesso ordine.
+E' possibile perche' il risolutore non legge il carburante (nessun accesso a `fuel` in `Engagement_Resolver`,
+fire control e profili di reazione leggono i registri, non il contatore) e il carburante non legge danno ne'
+scorte (`Fuel_Model` legge solo il contatore, il loadout e i registri): spostare il passo non cambia nulla, e
+il G4b conosce i tratti definitivi prima di contabilizzarli. Dal G4b, fra un episodio e il successivo gli aerei
+ri-pianificati cambiano tratti e contatti (v. "Ri-pianificazione dopo l'episodio (G4b)"): gli episodi non ancora
+risolti sono ricostruiti, la contabilita' usa i tratti definitivi.
 
 ## Missioni (Fase 3 del piano della Missione)
 
@@ -66,7 +80,8 @@ nessun cueing del tiro. Perche' la condivisione valga, le forze di uno stesso do
 nella STESSA componente connessa anche quando non hanno nemici in comune
 (`_connected_components`): due missioni dello stesso blocco su fronti disgiunti sono risolte in una
 run, come lo era il blocco prima della F4b. Effetto sull'RNG: la componente unita ha l'`event_id`
-delle sue forze riunite (v. "RNG: uno stream per ingaggio").
+delle sue forze riunite (v. "RNG: uno stream per ingaggio"). Dal G4a (`G4_EPISODES`) sono nello stesso
+EPISODIO solo se le loro finestre si sovrappongono entro `EPISODE_GAP` (v. "Episodi d'ingaggio (G4a)").
 
 Asset del blocco senza missione: fermi per tutta la sessione, nella forza del blocco.
   * blocco senza missioni: entra nel risolutore come prima, l'oggetto blocco con il suo id;
@@ -209,7 +224,8 @@ sessione (in combattimento o per carburante) ha postura `Mission_Adapter.DESTROY
 A parita' d'istante ENGAGEMENT < MOVEMENT, poi l'id (stringa canonica, mai l'ordine di un
 dizionario Python). Le finestre di un asset mobile cadono tutte dentro lo span dei suoi
 tratti, quindi quando il suo MOVEMENT viene estratto ogni ingaggio che lo coinvolge e' gia'
-stato risolto: il regime di consumo (v. sotto) e' noto.
+stato risolto: il regime di consumo (v. sotto) e' noto. Dal G4a la contabilita' del carburante e'
+comunque un passo finale, dopo tutti gli ingaggi (v. "La coda eventi").
 
 ## Forze impegnate su piu' fronti: componenti connesse
 
@@ -239,11 +255,147 @@ Le componenti sono disgiunte: nessuna forza compare in due ingaggi della stessa 
 quindi il limite di `assemble_session_outcome` non puo' piu' presentarsi, e l'ordine di
 risoluzione delle componenti non influenza gli esiti (resta comunque deterministico).
 
-**Deliberatamente conservativa rispetto al tempo:** non si distingue se le finestre di una
+**Deliberatamente conservativa rispetto al tempo (fino al G4a):** non si distingue se le finestre di una
 componente si sovrappongono davvero o sono in sequenza (X contro A al mattino, contro B
-la sera): anche in quel caso {X, A, B} e' risolta con una sola run. E' sempre corretto,
-perche' la coda eventi interna ordina comunque gli eventi nel tempo esatto; un clustering
-per intervalli aggiungerebbe complessita' senza aggiungere correttezza.
+la sera): anche in quel caso {X, A, B} e' risolta con una sola run. La coda eventi interna ordina comunque
+gli eventi nel tempo esatto, ma l'ingaggio dura quanto la sessione: un solo consumo d'ingaggio (G3), un
+disingaggio al mattino che vale anche la sera, nessuna decisione possibile "dopo l'ingaggio". Dal G4a
+(`G4_EPISODES`) la componente e' spezzata nei suoi episodi (sotto); spento, questa regola esattamente come
+prima.
+
+## Episodi d'ingaggio (G4a del nuovo modello di bingo, decisioni dell'utente del 2026-10-17)
+
+Interruttore `G4_EPISODES` (attivo). L'ingaggio diventa un EVENTO NEL TEMPO:
+
+- **Episodio** (`_episodes`): gruppo di finestre di contatto legate, direttamente o per tramite di altre,
+  perche' appartengono a coppie di forze che CONDIVIDONO una forza, o forze dello stesso dominio di
+  coordinamento (`coordination`, come in `_connected_components`), E i loro intervalli si sovrappongono o
+  distano al piu' `EPISODE_GAP` (300 s = `Fuel_Model.DISENGAGE_TIME`: ritrovare il contatto entro i 5 minuti
+  del disimpegno e' lo stesso combattimento). La componente connessa di prima e' l'unione dei suoi episodi; con
+  un intervallo infinito coincidono. Ordine deterministico: inizio della prima finestra, poi `event_id`, poi
+  la prima finestra; le finestre dell'episodio nell'ordine della componente (coppie ordinate, poi l'ordine
+  nella coppia).
+- **Un ENGAGEMENT per episodio**, all'istante della sua prima finestra; `resolve_engagement` sulle sole finestre
+  dell'episodio, con le sole sue forze (`force_a`/`force_b` = le prime due per id, le altre in
+  `extra_forces`, come per la componente); esito applicato SUBITO, quindi un episodio successivo delle
+  stesse forze parte dallo stato gia' consumato (salute e scorte) e i `health_before/after` sono concatenati
+  (`assemble_session_outcome(..., chained=True)`).
+- **Forza occupata** (`_trim_busy`, `Contact_Scheduler.trim_contact_window`): una forza e' impegnata dal primo
+  istante del suo episodio fino al `t_end` del suo esito (salve in volo comprese). Gli episodi sono estratti in
+  ordine di inizio, quindi ogni finestra non ancora risolta comincia non prima dell'episodio appena risolto:
+  quelle delle sue forze che cominciano prima del `t_end` sono RITAGLIATE per partire da li' (CPA e reciproco
+  ricalcolati sui tratti ritagliati), scartate se si svuotano; se qualcosa e' cambiato gli episodi rimasti sono
+  ricostruiti con la stessa regola (un ritaglio puo' solo spostare in avanti un inizio, quindi l'ordine di
+  estrazione resta non decrescente e la storia gia' risolta non cambia). Con l'intervallo di 300 s il caso si
+  presenta solo con salve in volo per piu' di circa 300 s oltre l'ultima finestra (es. missili da crociera).
+  Conseguenza dichiarata: una forza che entra tardi in un episodio lungo e' "occupata" dall'inizio
+  dell'episodio, e un suo contatto in un altro episodio dentro quell'intervallo e' spostato alla fine.
+- **RNG**: `event_id` = quello di prima (`engagement_event_id(*forze dell'episodio)`), `counter` = ordinale
+  degli episodi con lo STESSO insieme di forze nella sessione (0 per il primo); stessa regola per la tempra
+  (`temper_event_id`, tempra NUOVA per episodio). Una componente che e' un solo episodio ha esattamente lo
+  stream, le finestre, l'ordine e quindi l'esito di prima.
+- **Forza disingaggiata** (DISENGAGED in un episodio): negli episodi successivi della sessione e' PASSIVA, tutti
+  i suoi asset: nessuna salva offensiva (`ActivityCriteria.until` = istante del cambio di esito, o fine
+  dell'esito se manca, combinato con i criteri esistenti come per il bingo), resta bersaglio e intercettore.
+  Nel solo G4a il DES non la ri-instrada (prosegue sulla rotta pianificata) e l'esito di missione non cambia; dal
+  G4b gli AEREI di una missione disingaggiata rientrano (v. "Ri-pianificazione dopo l'episodio (G4b)"), le forze
+  terrestri e navali restano come qui. Stessa regola per una fine di attivita' della F6-B1 (winchester, danno, bersaglio distrutto)
+  scattata in un episodio precedente: l'asset resta passivo dall'istante della fine (dentro la run il
+  risolutore non lo saprebbe fino al primo controllo). Erosione e shock della soglia di rottura sono contati
+  sugli asset impegnati all'inizio dell'episodio (`ForceOutcome.committed`): le perdite degli episodi
+  precedenti non entrano nell'erosione dell'episodio (ingaggio diverso, tempra nuova).
+- **Soglia di danno** (`damage_threshold`): la salute di riferimento e' quella d'inizio SESSIONE
+  (`ActivityCriteria.reference_health`), cosi' che il danno di episodi diversi si sommi.
+- **Esiti di forza**: un `ForceOutcome` per forza PER EPISODIO (`SessionOutcome.outcomes_of` ne restituisce uno
+  per episodio, nell'ordine di risoluzione).
+- **Consumo d'ingaggio (G3)**: uno per episodio a cui l'aereo partecipa.
+- **Distruzioni e fini di attivita'** (`_destruction_times`, `_known_destructions`, `_activity_ends`): gia'
+  sull'insieme degli esiti (minimo per asset), corrette con piu' esiti per asset.
+Spento: la componente connessa, esattamente come prima. Limiti: l'episodio e' risolto in blocco (le decisioni
+dopo l'episodio sono del G4b, sotto); senza il G4b il DES non ri-instrada ne' la forza disingaggiata ne' l'aereo
+sotto la soglia di bingo; la forza occupata e' per forza intera, non per asset.
+
+## Ri-pianificazione dopo l'episodio (G4b del nuovo modello di bingo, decisioni dell'utente del 2026-10-17)
+
+Interruttore `G4_REPLAN` (attivo), letto solo con `G4_EPISODES` acceso. Alla fine di ogni episodio (istante `t_r` =
+`t_end` del suo esito, l'ultimo evento: salve in volo comprese) sono candidati gli aerei di MISSIONE (dominio
+'air') che vi hanno CONSUMATO (G3: partecipazione in volo, la stessa regola della contabilita') o la cui FORZA
+d'ingaggio vi e' DISINGAGGIATA (con `F6_BINGO` e `F6_BINGO_DISENGAGE_RESERVE` accesi: e' l'albero del G2). Per
+ciascuno, in ordine di id:
+  * **istante della decisione** `t_d` = `t_r` o, se i tratti di movimento dell'aereo nella sessione finiscono prima
+    (rotta completata DENTRO l'episodio, es. S26 'transfer_continue'), la loro fine: in quel caso conta solo
+    l'esaurimento (sotto), non c'e' piu' rotta da cui rientrare. Escluso se a terra a `t_d`, gia' a secco (planata
+    o perso), distrutto, oltre la fine della sessione o con il carburante non modellato;
+  * **residuo** a `t_d` calcolato ANALITICAMENTE (`Fuel_Model.fuel_at`): carburante d'inizio sessione - fabbisogno
+    dei tratti che consumano fino a `t_d` alla crociera (tratto in corso in proporzione) - consumi d'ingaggio fino
+    a `t_d`; stessa aritmetica della contabilita' finale (oltre la fine dei tratti coincide con il carburante
+    finale);
+  * **residuo zero** (esaurito in ingaggio): regole della F6-A dal punto in cui l'aereo e' a `t_d`
+    (`_exhaustion_end`: planata in linea retta su una base del lato raggiungibile, poi a terra; altrimenti perso,
+    DESTROYED/FUEL_EXHAUSTED con l'equipaggio recuperato). Sostituisce la soluzione minima del G3 (contatore a zero
+    e l'aereo prosegue). Il punto e' quello a fine episodio e non quello dell'esaurimento analitico (anteriore):
+    la storia dell'episodio, risolto in blocco con l'aereo in volo fino a `t_d`, resta fissata (causalita');
+  * altrimenti, se l'aereo non e' gia' in rientro:
+      - **bingo** (ha consumato, `EndCriteria.bingo`): `Mission_Adapter.mission_bingo_decision(..., time=t_d,
+        fuel=residuo)` sui tratti della missione INTERA (`airborne_legs`, quelli che consumano, come
+        `_decision_end`), albero del G2 per tipo di missione; qui le basi alternative entro 3 km dalla rotta contano
+        davvero (all'inizio dei tratti non potevano vincere);
+      - **rientro forzato dopo il disingaggio** (decisione dell'utente del 2026-10-17), se il bingo non fa rientrare:
+        `mission_bingo_decision(..., forced=True)` (`Fuel_Model.bingo_decision`: nessun controllo di soglia), con la
+        regola di COMBATTIMENTO qualunque sia il tipo di missione (base di partenza a ritroso o base alternativa,
+        la raggiungibile col percorso piu' breve; altrimenti la base piu' vicina; altrimenti verso la piu' vicina e,
+        a secco, la F6-A), INDIPENDENTEMENTE dal carburante. Il consumo d'ingaggio e il disingaggio coesistono:
+        prima il consumo (residuo), poi la decisione; se entrambe le regole fanno rientrare vince il bingo (motivo
+        BINGO);
+      - **uscita di scena senza basi** (`G4_OFF_SCENE_EXIT`, decisione dell'utente del 2026-10-17): un aereo COMPARSO
+        IN VOLO (`start_mode` AIR, nessuna base di partenza) senza alcuna base aerea del suo lato che, per l'una o
+        l'altra regola sopra, deve rientrare (dove la regola darebbe `BINGO_NO_BASE`) ripercorre la rotta a ritroso
+        fino al PUNTO DI COMPARSA (il primo punto dei tratti della missione; la meccanica del ritroso della
+        F6-B2bis e del G2, alle quote dei waypoint, senza le soste e senza il tratto diretto finale) e li' ESCE DI
+        SCENA (`Fuel_Model.BINGO_EXIT`, `BingoEnd.exits`): nessuna presenza dopo (come l'aereo che finisce la rotta
+        senza atterrare su una base vera, F5-B), mai a terra, postura `off_scene` a fine sessione se uscito entro
+        la fine (altrimenti il tipo di missione, in volo sul ritroso), non distrutto. Esito per asset e missione:
+        il motivo del rientro (DISENGAGED o BINGO, ABORTED(...)) all'istante della decisione, come gli altri
+        rientri. Il ritroso consuma alla crociera; se il residuo non basta a raggiungere il punto di comparsa
+        valgono le regole della F6-A sul ritroso (planata su una base raggiungibile, che senza basi non c'e':
+        perso, DESTROYED/FUEL_EXHAUSTED con l'equipaggio recuperato), come per un rientro irraggiungibile. SOLO
+        nella ri-pianificazione dopo l'episodio: la decisione del G2 alla partenza (`_decision_end`) resta senza
+        rientro (`BINGO_NO_BASE`, regole della F6-A). Spento: `BINGO_NO_BASE`, l'aereo resta passivo sulla rotta
+        (G4a);
+    il rientro deciso e' un `BingoEnd` da `t_d` con la meccanica del G2 (`_return_end`, `_legs_after_bingo`:
+    rotta di rientro, nessuna salva offensiva da `t_d`, a terra `parking_cold` sulla base raggiunta, o uscito di
+    scena al punto di comparsa), motivo `BingoEnd.reason` = BINGO (ABORTED(BINGO)) o DISENGAGED
+    (`AssetEndReason.DISENGAGED`, missione ABORTED(DISENGAGED), precedenza a parita' d'istante subito dopo il
+    bingo nella regola unica della F6-B1);
+  * **esaurimento sui tratti da `t_d`** (nuovi o invariati): `Fuel_Model.fuel_exhaustion(..., fuel=residuo)`
+    (planata o perdita della F6-A anche sul rientro). Un aereo gia' in rientro (bingo o disingaggio) puo' essere
+    ri-pianificato di nuovo SOLO per esaurimento (residuo zero o nuovo esaurimento), mai per un nuovo rientro.
+**Ri-scheduling** (se i tratti di almeno un aereo sono cambiati): tratti di presenza, di movimento e programma a
+terra degli aerei ri-pianificati sostituiti da `t_d` in poi (`route_presence`/`route_moving` prima del troncamento
+all'esaurimento, `_fuel_truncated`, `_grounded_after_bingo`/`_grounded_after_fuel` sul programma pianificato);
+`Contact_Scheduler.schedule_contacts` rieseguito con i tratti aggiornati sulle sole coppie con un aereo
+ri-pianificato (`only_assets`, lo stesso sottoinsieme delle finestre senza filtro); delle nuove finestre si tengono
+quelle che finiscono dopo `t_r`, ritagliate a `t_r` (`Contact_Scheduler.trim_contact_window`) e poi alle forze
+occupate (`_trim_busy`); le finestre non ancora risolte di quegli aerei sono scartate; gli episodi non ancora
+risolti sono ricostruiti (`_episodes`, stessa regola, stesso ordine). Gli episodi gia' risolti non cambiano
+(causalita'). Rientri, esaurimenti, presenza, programma a terra, posture ed esiti sono letti dai dizionari finali;
+la contabilita' del carburante usa i tratti definitivi.
+**Terminazione**: gli episodi sono estratti in ordine di inizio non decrescente e ogni finestra nuova comincia non
+prima di `t_r` (ritaglio) e della fine delle forze occupate; ogni ri-pianificazione di un aereo ne accorcia i
+tratti (rientro o esaurimento) e un aereo in rientro non ne decide un altro: il ciclo termina.
+Terra e mare: nessun consumo d'ingaggio e nessun rientro; una forza terrestre o navale disingaggiata resta passiva
+sulla rotta (G4a), dichiarato. Spento: il G4a esattamente.
+Limiti dichiarati: la decisione e' presa alla FINE dell'episodio, non a meta' (l'episodio e' risolto in blocco
+con i tratti di prima; la riserva di disimpegno e' il carburante di quella coda); un aereo ri-pianificato che
+incontrerebbe una forza ancora occupata in un episodio gia' risolto la incontra solo dopo la fine di quell'episodio
+(forza occupata); l'uscita di scena e' sempre al punto di comparsa, anche quando il resto della rotta in avanti
+fosse piu' corto o portasse fuori dalla zona delle minacce (decisione dell'utente: ritroso), e vale solo nella
+ri-pianificazione dopo un episodio, non alla partenza; lo scheduler rieseguito vede lo stato degli asset a `t_r` (un asset distrutto o non piu'
+operativo negli episodi gia' risolti non ha finestre nuove, mentre le sue finestre del primo scheduling restano,
+come nel G4a); la formazione si puo' dividere (le decisioni sul carburante sono per aereo, il rientro forzato per
+forza); il rientro non evita le minacce dell'andata (il ritroso le ripercorre, in episodi nuovi); un aereo
+danneggiato oltre la soglia della F6-B1 resta passivo sulla rotta (nessun rientro per danno); aerei di una forza
+disingaggiata ancora a terra (non decollati) a `t_r` non sono ri-pianificati.
 
 ## RNG: uno stream per ingaggio
 
@@ -259,9 +411,10 @@ per intervalli aggiungerebbe complessita' senza aggiungere correttezza.
   componente ORDINATI — funzione pura dell'INSIEME delle forze (id di dominio), mai
   dell'ordine di iterazione o di passaggio a `run_session`, e non ambigua anche con id che
   contengono separatori (una concatenazione `"a:b"` non lo sarebbe).
-- `counter=0`: ogni componente e' risolta una sola volta per sessione. Il contatore resta
-  libero per un futuro re-ingaggio (re-scheduling dopo un disingaggio, R4 seconda parte,
-  non implementato).
+- `counter`: dal G4a l'ordinale degli episodi con lo stesso insieme di forze nella sessione (0 per il
+  primo, quindi lo stream di prima per ogni componente che e' un solo episodio), per lo stream
+  dell'ingaggio e per quello della tempra; con `G4_EPISODES` spento sempre 0 (ogni componente e'
+  risolta una sola volta per sessione).
 
 **Precondizione di riproducibilita':** gli id di forza devono essere STABILI fra le
 esecuzioni. `Block.__init__` genera l'id con `Utility.setId`, che aggiunge un suffisso
@@ -325,7 +478,9 @@ contatti sono calcolati sui tratti reali. Esito (`_fuel_end`, `FuelEnd`):
     e' un colpo: nessun tiratore ne' arma); l'esito per asset e' DESTROYED con motivo FUEL_EXHAUSTED
     e (F6-B1) la postura `destroyed`.
 Un asset il cui consumo cambia per effetto di un ingaggio (regime 'max', o dal G3 consumo d'ingaggio,
-sotto) puo' esaurire prima del punto calcolato a monte: limite noto, nessun ri-scheduling (v. sotto).
+sotto) puo' esaurire prima del punto calcolato a monte: dal G4b, per gli aerei con il consumo d'ingaggio, il
+punto e' RICALCOLATO alla fine di ogni episodio dal residuo analitico (v. "Ri-pianificazione dopo l'episodio
+(G4b)"); col regime 'max' (G3 spento) resta il limite noto.
 
 **Contabilita' (`F6_FUEL_PER_LEG`).** All'evento MOVEMENT dell'asset (fine dei suoi tratti troncati)
 un `FuelEvent` per tratto che consuma, in ordine, applicato subito (`Fuel_Model.apply_fuel_event`);
@@ -349,13 +504,14 @@ interruttore spento, per gli aerei.
 `G3_ENGAGEMENT_FUEL`, attivo).** Sostituisce, per gli aerei, la sovrastima "tutto il movimento al regime 'max'
 perche' ha combattuto":
   * il movimento di un aereo e' SEMPRE contabilizzato alla crociera (attese comprese, come prima);
-  * a ogni ingaggio (`resolve_engagement` di una componente connessa) a cui l'aereo PARTECIPA, l'aereo consuma
+  * a ogni ingaggio (`resolve_engagement` di un episodio, G4a; spento, di una componente connessa) a cui l'aereo
+    PARTECIPA, l'aereo consuma
     nell'ISTANTE della sua prima partecipazione `Fuel_Model.engagement_fuel(asset)` = il carburante di
     `Fuel_Model.DISENGAGE_TIME` (5 minuti) alla massima spinta militare, la stessa quantita' della riserva di
     disimpegno del G1 (`Fuel_Model.build_engagement_fuel_event`: un `FuelEvent` istantaneo, distanza e durata
-    nulle, regime `Fuel_Model.ENGAGEMENT_REGIME`, limitato al disponibile). Oggi ogni forza e' in UNA sola
-    componente per sessione, quindi un aereo consuma al piu' un ingaggio per sessione; il codice conta un
-    consumo per esito d'ingaggio, cosi' resta corretto se un giorno le componenti si spezzassero nel tempo;
+    nulle, regime `Fuel_Model.ENGAGEMENT_REGIME`, limitato al disponibile). Il codice conta un consumo per
+    esito d'ingaggio: dal G4a uno per EPISODIO a cui l'aereo partecipa (con `G4_EPISODES` spento ogni forza
+    e' in una sola componente per sessione, quindi al piu' un consumo per aereo e per sessione);
   * PARTECIPA (`_engagement_instants`) = la definizione di "ha combattuto" della F6-A (`_engaged_assets`): ha
     lanciato una salva, e' stato bersaglio di una salva (anche mancato o intercettato), o ha intercettato;
     istante = il primo fra il lancio delle salve sue o dirette a lui (`Salvo.t_launch`) e le sue
@@ -367,12 +523,13 @@ perche' ha combattuto":
     PRIMA del tratto in cui cadono (l'evento di quel tratto, all'istante della sua fine, parte dal residuo gia'
     ridotto): nessun tratto e' spezzato, la forma "un `FuelEvent` per tratto" della F6-A resta;
   * ESAURIMENTO in ingaggio (consumo d'ingaggio > residuo, o tratti successivi non piu' coperti): il contatore
-    va a ZERO (mai negativo, `FuelEvent.exhausted`), nessun evento dopo, e l'aereo NON e' fermato ne' perso:
-    i tratti, i contatti e l'ingaggio sono gia' stati calcolati a monte al regime di crociera e non sono
-    ricalcolati (nessun ri-scheduling, G4). E' lo stesso limite gia' dichiarato dalla F6-A per il regime
-    'max' (sotto), ora con una causa diversa; planata/perdita della F6-A, `crew_recovered` ed esito per asset
-    NON cambiano per un esaurimento della sola contabilita'. Il bingo resta valutato alla partenza (G2): dopo
-    l'ingaggio l'aereo puo' essere sotto la soglia e prosegue la rotta (G4).
+    va a ZERO (mai negativo, `FuelEvent.exhausted`), nessun evento dopo. Dal G4b (`G4_REPLAN`) l'aereo e'
+    ri-pianificato alla fine dell'episodio: a secco, regole della F6-A dal punto in cui si trova (planata su una
+    base raggiungibile, altrimenti perso con l'equipaggio recuperato); sotto la soglia di bingo, rientro con
+    l'albero del G2; tratti successivi non piu' coperti, nuovo esaurimento (v. "Ri-pianificazione dopo l'episodio
+    (G4b)"). Con il G4b spento (il G3 e il G4a) l'aereo NON e' fermato ne' perso: tratti, contatti e ingaggio sono
+    quelli calcolati a monte alla crociera, l'esaurimento e' della sola contabilita' (lo stesso limite della
+    F6-A per il regime 'max', sotto) e il bingo resta valutato alla partenza (G2).
 Terra e mare non cambiano (nessun consumo d'ingaggio: il registro non ha consumi per regime).
 Spento: la regola della F6-A qui sopra, esattamente come prima.
 
@@ -381,7 +538,8 @@ Spento: la regola della F6-A qui sopra, esattamente come prima.
   regime 'max' (dal G3: con i consumi d'ingaggio) puo' esaurire il carburante prima del punto di troncamento (`FuelEvent.exhausted` con
   `distance_covered < distance` sull'ultimo tratto) senza che il movimento sia ricalcolato (nessun
   ri-scheduling dopo gli ingaggi, P2/R4); per veicoli e navi i due regimi coincidono e il limite non
-  si presenta;
+  si presenta. Dal G4b, con il consumo d'ingaggio del G3, il movimento E' ricalcolato alla fine di ogni episodio
+  (resta solo la decisione presa a fine episodio e non a meta', v. "Ri-pianificazione dopo l'episodio (G4b)");
 - un asset distrutto a meta' rotta consuma comunque il tragitto (troncato) intero (il carburante di un
   relitto non ha conseguenze di campagna);
 - un asset senza rotta (fermo) non produce FuelEvent; il carburante di partenza e il rifornimento non
@@ -452,10 +610,11 @@ il carburante per il resto della rotta pianificata fino al LAND (attese comprese
 di disimpegno (`Fuel_Model.disengagement_reserve`, G1). La funzione di decisione e' GENERALE
 (`Fuel_Model.bingo_decision`, via `Mission_Adapter.mission_bingo_decision`: posizione e residuo qualunque),
 ma con il solo consumo di movimento residuo e resto della rotta calano insieme, quindi la soglia scatta
-all'inizio dei tratti oppure mai (dal G3 un ingaggio abbassa il residuo e la soglia potrebbe scattare dopo:
-la rivalutazione dopo l'ingaggio e' il G4, non ancora fatto): la sessione la valuta UNA volta, all'inizio
-dei tratti della missione intera (`airborne_legs`, come la F6-B2bis), con il carburante di partenza
-(`_decision_end`). Albero per tipo di missione (`Mission_Adapter.is_transfer_mission`, categoria TRANSPORT):
+all'inizio dei tratti oppure mai: la sessione la valuta all'inizio dei tratti della missione intera
+(`airborne_legs`, come la F6-B2bis), con il carburante di partenza (`_decision_end`). Dal G3 un ingaggio abbassa
+il residuo e la soglia puo' scattare dopo: dal G4b la sessione la rivaluta alla fine di ogni episodio a cui
+l'aereo ha partecipato, col residuo di quell'istante (v. "Ri-pianificazione dopo l'episodio (G4b)"; e' esatto, non
+un campionamento, perche' il residuo scende a scatti solo ai consumi d'ingaggio). Albero per tipo di missione (`Mission_Adapter.is_transfer_mission`, categoria TRANSPORT):
   * TRASFERIMENTO: se il residuo basta a CONCLUDERE la rotta (senza riserva) l'aereo CONTINUA, consuma la
     riserva, nessun aborto; altrimenti ritroso fino al DEPARTURE (all'inizio: lunghezza zero, resta a terra
     sul DEPARTURE con esito BINGO all'istante della partenza; partito in volo: diretto alla base del lato piu'
@@ -468,9 +627,12 @@ dei tratti della missione intera (`airborne_legs`, come la F6-B2bis), con il car
     vicino, poi diretto con discesa); parita': la base di partenza, poi (x, y); nessuna raggiungibile: i passi
     3 e 4 del trasferimento. All'inizio dei tratti: resta a terra sul DEPARTURE o, partito in volo, va alla
     candidata migliore (per la disuguaglianza triangolare il diretto alla base piu' vicina al punto di comparsa
-    non e' mai piu' lungo del percorso verso una base alternativa: le alternative contano lungo la rotta, G4).
+    non e' mai piu' lungo del percorso verso una base alternativa: le alternative contano lungo la rotta, dal G4b
+    quando il bingo scatta dopo un episodio).
 Raggiungibile = il residuo basta per il solo percorso alla crociera. Senza alcuna base (partenza in volo senza
-basi del lato): nessun rientro, regole della F6-A (come la F6-B2bis). Il rientro deciso diventa un `BingoEnd`
+basi del lato): alla partenza nessun rientro, regole della F6-A (come la F6-B2bis); dopo un episodio d'ingaggio
+(G4b, `G4_OFF_SCENE_EXIT`) uscita di scena lungo la rotta a ritroso fino al punto di comparsa (v. "Ri-pianificazione
+dopo l'episodio (G4b)"). Il rientro deciso diventa un `BingoEnd`
 con la stessa meccanica della F6-B2bis (`_return_legs`, `_legs_after_bingo`, nessuna salva offensiva dal bingo,
 a terra `parking_cold` sulla base raggiunta, BINGO / ABORTED(BINGO), un bingo oltre la fine della sessione non
 c'e'). Il validatore `Mission_Adapter.check_mission_bingo` (con `disengage_reserve` True) rifiuta esattamente le
@@ -492,7 +654,8 @@ attivita', con un log. I contatti invece sono cercati solo dentro la sessione.
 ## Cosa NON fa
 - Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`.
 - Non seleziona l'arma (lo fa la fire control iniettata), non rifornisce (munizioni o carburante), non ri-instrada le forze
-  che si disingaggiano (restano solo segnalate nell'esito).
+  TERRESTRI e NAVALI che si disingaggiano (restano segnalate nell'esito e, dal G4a, passive negli episodi
+  successivi); dal G4b gli aerei di missione disingaggiati rientrano alla base.
 - Nessun componente LLM, in nessuna forma.
 """
 
@@ -610,6 +773,37 @@ F6_BINGO_DISENGAGE_RESERVE = True
 #     cambiano in nessun caso.
 G3_ENGAGEMENT_FUEL = True
 
+# G4a del nuovo modello di bingo (episodi d'ingaggio), interruttore dedicato (stessa ragione dei precedenti):
+#   * `G4_EPISODES` (ATTIVO): l'ingaggio e' un EPISODIO nel tempo, non piu' la componente connessa di forze
+#     dell'intera sessione: finestre di contatto legate perche' condividono una forza (o il dominio di
+#     coordinamento) e si sovrappongono entro `EPISODE_GAP`; un `resolve_engagement` per episodio, in ordine di
+#     tempo, con forza occupata fino alla fine dell'esito, stream RNG con `counter` = ordinale, forza disingaggiata
+#     passiva negli episodi successivi (v. "Episodi d'ingaggio (G4a)" nel docstring). Spento: la componente
+#     connessa, esattamente come prima.
+G4_EPISODES = True
+
+# G4b del nuovo modello di bingo (ri-pianificazione dopo l'episodio d'ingaggio), interruttore dedicato (stessa ragione
+# dei precedenti), letto solo con `G4_EPISODES` acceso:
+#   * `G4_REPLAN` (ATTIVO): alla fine di ogni episodio ogni aereo di missione in volo che vi ha consumato (G3) o la
+#     cui forza si e' disingaggiata e' ri-pianificato da quell'istante: residuo analitico (`Fuel_Model.fuel_at`),
+#     esaurimento in ingaggio (regole della F6-A), bingo (albero del G2) o rientro forzato dopo il disingaggio
+#     (regola di combattimento), esaurimento sui nuovi tratti; tratti, programma a terra e contatti non ancora
+#     risolti sono ricalcolati (v. "Ri-pianificazione dopo l'episodio (G4b)" nel docstring). Spento: il G4a
+#     esattamente (bingo valutato solo alla partenza, esaurimento in ingaggio nel solo contatore).
+G4_REPLAN = True
+#   * `G4_OFF_SCENE_EXIT` (ATTIVO, decisione dell'utente del 2026-10-17), letto solo con `G4_REPLAN` acceso: un aereo
+#     comparso in volo senza alcuna base aerea del suo lato che nella ri-pianificazione deve rientrare (bingo dopo
+#     l'episodio o rientro forzato per disingaggio) ripercorre la rotta a ritroso fino al punto di comparsa e li'
+#     ESCE DI SCENA (`Fuel_Model.BINGO_EXIT`, `BingoEnd.exits`). Spento: `BINGO_NO_BASE`, resta passivo sulla
+#     rotta (il G4b fino al 2026-10-17). Sotto-interruttore per isolarne l'effetto nel confronto degli scenari.
+G4_OFF_SCENE_EXIT = True
+
+# Intervallo [s] entro cui due finestre (di una stessa forza o dominio) che non si sovrappongono sono ancora lo
+# stesso episodio. Decisione dell'utente del 2026-10-17: 300 s, cioe' `Fuel_Model.DISENGAGE_TIME`, i 5 minuti del
+# disimpegno (STIMA dell'utente, G1): ritrovare il contatto entro il tempo del disimpegno e' lo stesso
+# combattimento. Legato per costruzione: cambiare la durata del disimpegno cambia anche questo intervallo.
+EPISODE_GAP = FM.DISENGAGE_TIME
+
 # Esiti dell'esaurimento del carburante (F6-A, decisioni dell'utente).
 FUEL_HALT = 'halt'      # terra/mare (o aereo ancora a terra): fermo e presente nel punto
 FUEL_GLIDE = 'glide'    # aereo in volo: planata sulla base raggiungibile piu' vicina, poi a terra
@@ -649,6 +843,11 @@ class BingoEnd:
         route: punti del rientro dal punto di bingo a `landing_point` compresi (F6-B2: la retta (point,
             landing_point); F6-B2bis: la rotta a ritroso o, sull'anello, il resto della rotta), volati a
             velocita' costante; vuota = (point, landing_point).
+        reason: motivo del rientro nell'esito per asset: BINGO (carburante) o, dal G4b, DISENGAGED (rientro
+            forzato dopo il disingaggio della forza d'ingaggio). Stessa meccanica per i due.
+        exits: USCITA DI SCENA (G4b, `G4_OFF_SCENE_EXIT`, `Fuel_Model.BINGO_EXIT`): `landing_point` e' il punto
+            di comparsa dell'aereo partito in volo senza basi del lato; li', a `landing_time`, l'aereo lascia la
+            scena senza atterrare: nessuna presenza dopo, non a terra, postura `off_scene`.
     """
     asset_id: str
     time: float
@@ -656,6 +855,8 @@ class BingoEnd:
     landing_point: Tuple[float, float, float]
     landing_time: float
     route: Tuple[Tuple[float, float, float], ...] = ()
+    reason: AssetEndReason = AssetEndReason.BINGO
+    exits: bool = False
 
 
 # ── IDENTITA' ─────────────────────────────────────────────────────────────────
@@ -898,6 +1099,116 @@ def _connected_components(groups: Mapping[Tuple[str, str], List[CS.ContactWindow
     return [(tuple(ids), group) for ids, group in zip(members, windows)]
 
 
+def _episodes(groups: Mapping[Tuple[str, str], List[CS.ContactWindow]],
+              domain_of: Optional[Mapping[str, str]] = None,
+              gap: Optional[float] = None) -> List[Tuple[Tuple[str, ...], List[CS.ContactWindow]]]:
+    """Episodi d'ingaggio (G4a, v. "Episodi d'ingaggio (G4a)" nel docstring del modulo), con le finestre di ciascuno.
+
+    Nodi: le finestre di `groups`; due finestre sono legate se hanno una forza in comune o (con `domain_of`) forze
+    dello stesso dominio di coordinamento, E i loro intervalli si sovrappongono o distano al piu' `gap` secondi
+    (default `EPISODE_GAP`). Episodio = componente connessa di questo grafo. Per ogni chiave (forza o dominio) le
+    sue finestre, in ordine di `(t_start, t_end, posizione)`, sono scandite una volta come una fusione di
+    intervalli: una finestra che comincia entro `gap` dalla fine piu' lontana raggiunta finora e' legata alla
+    precedente (e' la componente di un grafo di intervalli); le chiavi sono unite con un union-find. La
+    componente connessa di `_connected_components` e' l'unione dei suoi episodi; con `gap` infinito coincidono.
+
+    Returns:
+        `[(force_ids ordinati, finestre), ...]` in ordine di `(inizio della prima finestra, engagement_event_id)`,
+        poi della prima finestra (mai l'ordine di un dizionario). Le finestre di un episodio sono nell'ordine di
+        `_connected_components` (coppie ordinate, poi l'ordine nella coppia): una componente che e' un solo
+        episodio ha esattamente le finestre di oggi, nello stesso ordine.
+
+    Raises:
+        ValueError: `gap` negativo.
+    """
+    gap = EPISODE_GAP if gap is None else float(gap)
+
+    if gap < 0:
+        raise ValueError(f"gap must be non-negative, got {gap!r}")
+
+    entries = [(pair, window) for pair in sorted(groups) for window in groups[pair]]
+    parent = list(range(len(entries)))
+
+    def find(index):
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    by_key: Dict[str, List[int]] = {}
+
+    for index, (pair, _) in enumerate(entries):
+        for key in sorted({(domain_of or {}).get(force_id, force_id) for force_id in pair}):
+            by_key.setdefault(key, []).append(index)
+
+    for key in sorted(by_key):
+        reach, previous = None, None
+
+        for index in sorted(by_key[key], key=lambda i: (entries[i][1].t_start, entries[i][1].t_end, i)):
+            window = entries[index][1]
+
+            if previous is not None and window.t_start <= reach + gap + CS.TIME_EPS:
+                low, high = sorted((find(previous), find(index)))
+                parent[high] = low
+                reach = max(reach, window.t_end)
+            else:
+                reach = window.t_end
+
+            previous = index
+
+    members: Dict[int, List[int]] = {}
+
+    for index in range(len(entries)):
+        members.setdefault(find(index), []).append(index)
+
+    episodes = []
+
+    for indices in members.values():
+        force_ids = tuple(sorted({force_id for index in indices for force_id in entries[index][0]}))
+        windows = [entries[index][1] for index in indices]
+        episodes.append(((min(w.t_start for w in windows), engagement_event_id(*force_ids), indices[0]),
+                         force_ids, windows))
+
+    episodes.sort(key=lambda episode: episode[0])
+    return [(force_ids, windows) for _, force_ids, windows in episodes]
+
+
+def _trim_busy(left: Dict[Tuple[str, str], List[CS.ContactWindow]], busy_until: Mapping[str, float],
+               legs: Mapping[str, List[CS.Leg]]) -> bool:
+    """Forza occupata (G4a): ritaglia SUL POSTO le finestre non ancora risolte in `left` perche' non comincino
+    prima della fine dell'episodio gia' risolto di una delle due forze (`busy_until`); scarta quelle che si
+    svuotano (`Contact_Scheduler.trim_contact_window`). True se qualcosa e' cambiato (gli episodi rimasti vanno
+    ricostruiti)."""
+    changed = False
+
+    for pair in sorted(left):
+        limit = max(busy_until.get(pair[0], float('-inf')), busy_until.get(pair[1], float('-inf')))
+        kept = []
+
+        for window in left[pair]:
+            if limit <= window.t_start + CS.TIME_EPS:
+                kept.append(window)
+                continue
+
+            changed = True
+            trimmed = CS.trim_contact_window(window, limit, legs.get(window.asset_a_id, ()),
+                                             legs.get(window.asset_b_id, ()))
+
+            if trimmed is None:
+                logger.info(f"run_session: window {window.asset_a_id!r}-{window.asset_b_id!r} "
+                            f"[{window.t_start:.1f}, {window.t_end:.1f}] dropped: force of {pair} busy in an "
+                            f"earlier engagement episode until t={limit:.1f}")
+            else:
+                logger.info(f"run_session: window {window.asset_a_id!r}-{window.asset_b_id!r} "
+                            f"[{window.t_start:.1f}, {window.t_end:.1f}] trimmed to start at t={limit:.1f}: force "
+                            f"of {pair} busy in an earlier engagement episode")
+                kept.append(trimmed)
+
+        left[pair] = kept
+
+    return changed
+
+
 def _engaged_assets(result: ER.EngagementResult) -> set:
     """Asset che hanno combattuto: tiratori, bersagli di salve, intercettori."""
     engaged = set()
@@ -1000,8 +1311,22 @@ def _moving_speed(legs, time: float) -> Optional[float]:
 
 
 def _fuel_end(asset, asset_id: str, domain: str, consuming, grounded: CS.GroundedSchedule,
-              air_bases) -> Optional[FuelEnd]:
+              air_bases, fuel: Optional[float] = None) -> Optional[FuelEnd]:
     """Esaurimento del carburante dell'asset sui suoi tratti e suo esito (F6-A), o None se basta.
+
+    `fuel` (G4b): residuo all'inizio di `consuming` (None = il carburante attuale dell'asset), per ricalcolare
+    l'esaurimento da un istante qualunque (`Fuel_Model.fuel_exhaustion`). Esito: `_exhaustion_end`."""
+    exhaustion = FM.fuel_exhaustion(asset, consuming, regime=CRUISE_REGIME, fuel=fuel)
+
+    if exhaustion is None:
+        return None
+
+    return _exhaustion_end(asset, asset_id, domain, exhaustion.time, exhaustion.point, consuming, grounded, air_bases)
+
+
+def _exhaustion_end(asset, asset_id: str, domain: str, time: float, point, consuming, grounded: CS.GroundedSchedule,
+                    air_bases) -> FuelEnd:
+    """Esito dell'esaurimento del carburante all'istante `time` nel punto `point` (F6-A).
 
     Terra/mare, o aereo ancora A TERRA all'esaurimento (o a quota <= 0): FUEL_HALT (fermo nel punto;
     l'aereo a terra, `on_ground`). Aereo in volo:
@@ -1009,30 +1334,27 @@ def _fuel_end(asset, asset_id: str, domain: str, consuming, grounded: CS.Grounde
     piu' vicina entro il raggio di planata (`Fuel_Model.nearest_reachable_base`), FUEL_GLIDE; nessuna
     base raggiungibile: FUEL_CRASH. Punto d'atterraggio = la posizione dell'asset di base piu' vicino,
     a quota 0 (il terreno non e' modellato). Velocita' di planata = la crociera dell'asset (in mancanza
-    quella del tratto in corso): semplificazione dichiarata."""
-    exhaustion = FM.fuel_exhaustion(asset, consuming, regime=CRUISE_REGIME)
-
-    if exhaustion is None:
-        return None
+    quella del tratto in corso): semplificazione dichiarata. Dal G4b anche per l'esaurimento IN INGAGGIO
+    (punto e istante = quelli dell'aereo alla fine dell'episodio)."""
+    point = tuple(float(c) for c in point)
 
     if domain != 'air':
-        return FuelEnd(asset_id, FUEL_HALT, exhaustion.time, exhaustion.point)
+        return FuelEnd(asset_id, FUEL_HALT, float(time), point)
 
-    if grounded.at(asset_id, exhaustion.time) or exhaustion.point[2] <= 0.0:
+    if grounded.at(asset_id, time) or point[2] <= 0.0:
         # A terra (o a quota nulla, es. serbatoio vuoto al decollo): resta fermo a terra nel punto.
-        return FuelEnd(asset_id, FUEL_HALT, exhaustion.time, exhaustion.point, on_ground=True)
+        return FuelEnd(asset_id, FUEL_HALT, float(time), point, on_ground=True)
 
-    base = FM.nearest_reachable_base(exhaustion.point, air_bases)
+    base = FM.nearest_reachable_base(point, air_bases)
 
     if base is None:
-        return FuelEnd(asset_id, FUEL_CRASH, exhaustion.time, exhaustion.point)
+        return FuelEnd(asset_id, FUEL_CRASH, float(time), point)
 
     landing = (base[0], base[1], 0.0)
-    speed = FM.cruise_speed(asset) or _moving_speed(consuming, exhaustion.time)
-    length = sqrt(sum((e - s) ** 2 for s, e in zip(exhaustion.point, landing)))
+    speed = FM.cruise_speed(asset) or _moving_speed(consuming, time)
+    length = sqrt(sum((e - s) ** 2 for s, e in zip(point, landing)))
     duration = length / speed if speed else 0.0
-    return FuelEnd(asset_id, FUEL_GLIDE, exhaustion.time, exhaustion.point,
-                   landing_time=exhaustion.time + duration, landing_point=landing)
+    return FuelEnd(asset_id, FUEL_GLIDE, float(time), point, landing_time=float(time) + duration, landing_point=landing)
 
 
 def _truncate_at_fuel_end(legs, end: FuelEnd, t0: float, session_end: float) -> List[CS.Leg]:
@@ -1082,6 +1404,18 @@ def _grounded_after_fuel(grounded: CS.GroundedSchedule, ends: Mapping[str, FuelE
     return CS.GroundedSchedule(intervals)
 
 
+def _fuel_truncated(presence, moving, end: Optional[FuelEnd], t0: float, session_end: float
+                    ) -> Tuple[Optional[List[CS.Leg]], List[CS.Leg]]:
+    """(tratti di presenza, tratti di movimento) dell'asset con l'esaurimento `end` (F6-A): presenza troncata con
+    l'esito (`_truncate_at_fuel_end`, lista anche vuota = l'asset non esiste nella sessione), movimento troncato
+    all'esaurimento. Senza esaurimento i tratti dati; presenza None se vuota (asset fermo in posizione)."""
+    if end is None:
+        return (presence or None), moving
+
+    return (_truncate_at_fuel_end(presence, end, t0, session_end),
+            [leg for leg in CS.clamp_legs(moving, t0, end.time) if leg.duration > CS.TIME_EPS])
+
+
 def _postures_after_fuel(postures: Dict[str, str], ends: Mapping[str, FuelEnd], domains: Mapping[str, str],
                          mission_types: Mapping[str, str], grounded: CS.GroundedSchedule,
                          session_end: float) -> Dict[str, str]:
@@ -1110,10 +1444,12 @@ def _postures_after_fuel(postures: Dict[str, str], ends: Mapping[str, FuelEnd], 
 def _return_end(asset, asset_id: str, consuming, found) -> BingoEnd:
     """Il `BingoEnd` di un rientro gia' deciso (`Fuel_Model.BingoPoint` o `Fuel_Model.BingoDecision`: istante,
     punto, spezzata `route`, `base` e `return_length`), volato alla crociera dell'asset (in mancanza quella del
-    tratto in corso), come la planata della F6-A."""
+    tratto in corso), come la planata della F6-A. Una decisione d'uscita di scena (`BingoDecision.exits`, G4b) da'
+    un `BingoEnd` con `exits`."""
     speed = FM.cruise_speed(asset) or _moving_speed(consuming, found.time)
     duration = found.return_length / speed if speed else 0.0
-    return BingoEnd(asset_id, found.time, found.point, found.base, found.time + duration, found.route)
+    return BingoEnd(asset_id, found.time, found.point, found.base, found.time + duration, found.route,
+                    exits=bool(getattr(found, 'exits', False)))
 
 
 def _bingo_end(asset, asset_id: str, consuming, air_bases, rule: Optional[FM.ReturnRule] = None) -> Optional[BingoEnd]:
@@ -1172,11 +1508,12 @@ def _return_legs(end: BingoEnd) -> List[CS.Leg]:
 def _legs_after_bingo(legs, end: BingoEnd, t0: float, session_end: float, park: bool) -> List[CS.Leg]:
     """Tratti dell'asset fino al bingo, poi il rientro sulla base (`_return_legs`: la retta della F6-B2 o la
     spezzata della F6-B2bis) e, con `park` (tratti di presenza), la sosta a terra sulla base fino alla fine
-    della sessione. Senza tratti degeneri."""
+    della sessione; un'uscita di scena (`end.exits`, G4b) non ha sosta: la presenza finisce al punto di
+    comparsa (come l'aereo che finisce la rotta senza atterrare su una base vera, F5-B). Senza tratti degeneri."""
     kept = [leg for leg in CS.clamp_legs(legs, t0, end.time) if leg.duration > CS.TIME_EPS]
     kept.extend(_return_legs(end))
 
-    if park:
+    if park and not end.exits:
         kept.append(CS.Leg(t_start=end.landing_time, t_end=max(float(session_end), end.landing_time),
                            p_start=end.landing_point, p_end=end.landing_point))
 
@@ -1186,7 +1523,7 @@ def _legs_after_bingo(legs, end: BingoEnd, t0: float, session_end: float, park: 
 def _grounded_after_bingo(grounded: CS.GroundedSchedule, ends: Mapping[str, BingoEnd]) -> CS.GroundedSchedule:
     """Programma degli aerei a terra corretto per i rientri al bingo (F6-B2): gli intervalli a terra che
     cominciano dopo il bingo (atterraggio pianificato mai raggiunto) cadono; l'aereo e' a terra sulla base
-    dall'atterraggio del rientro."""
+    dall'atterraggio del rientro, tranne dopo un'uscita di scena (`BingoEnd.exits`, G4b: mai a terra)."""
     if not ends:
         return grounded
 
@@ -1194,7 +1531,10 @@ def _grounded_after_bingo(grounded: CS.GroundedSchedule, ends: Mapping[str, Bing
 
     for asset_id, end in ends.items():
         spans = [(lo, min(hi, end.time)) for lo, hi in intervals.get(asset_id, ()) if lo < end.time]
-        spans.append((end.landing_time, float('inf')))
+
+        if not end.exits:
+            spans.append((end.landing_time, float('inf')))
+
         intervals[asset_id] = spans
 
     return CS.GroundedSchedule(intervals)
@@ -1203,9 +1543,15 @@ def _grounded_after_bingo(grounded: CS.GroundedSchedule, ends: Mapping[str, Bing
 def _postures_after_bingo(postures: Dict[str, str], ends: Mapping[str, BingoEnd], mission_types: Mapping[str, str],
                           grounded: CS.GroundedSchedule, session_end: float) -> Dict[str, str]:
     """Postura a fine sessione degli aerei rientrati al bingo (F6-B2): a terra sulla base `PARKED_POSTURE`,
-    ancora in volo verso la base il tipo di missione (un esaurimento successivo la corregge dopo, F6-A)."""
+    ancora in volo verso la base il tipo di missione (un esaurimento successivo la corregge dopo, F6-A); uscito di
+    scena al punto di comparsa entro la fine della sessione (`BingoEnd.exits`, G4b) `OFF_SCENE_POSTURE`."""
     for asset_id, end in ends.items():
-        if asset_id in postures:
+        if asset_id not in postures:
+            continue
+
+        if end.exits and end.landing_time <= session_end + CS.TIME_EPS:
+            postures[asset_id] = MA.OFF_SCENE_POSTURE
+        else:
             postures[asset_id] = MA.PARKED_POSTURE if grounded.at(asset_id, session_end) else mission_types[asset_id]
 
     return postures
@@ -1218,9 +1564,12 @@ def _postures_after_bingo(postures: Dict[str, str], ends: Mapping[str, BingoEnd]
 _ACTIVITY_ORDER = (AssetEndReason.DAMAGE, AssetEndReason.WINCHESTER, AssetEndReason.TARGET_DESTROYED,
                    AssetEndReason.MAX_DURATION)
 # Motivi di fine di un asset che fanno ABORTIRE la missione e il motivo d'aborto corrispondente.
-# L'ordine e' la precedenza a parita' d'istante (F6-B2: il bingo subito dopo il carburante esaurito).
+# L'ordine e' la precedenza a parita' d'istante (F6-B2: il bingo subito dopo il carburante esaurito; G4b: il rientro
+# forzato dopo il disingaggio subito dopo il bingo, scelta conservativa: prima i motivi di carburante, fatti fisici,
+# poi la decisione tattica, poi munizioni e danno come prima).
 _ABORT_REASON_OF = {AssetEndReason.FUEL_EXHAUSTED: AbortReason.FUEL,
                     AssetEndReason.BINGO: AbortReason.BINGO,
+                    AssetEndReason.DISENGAGED: AbortReason.DISENGAGED,
                     AssetEndReason.WINCHESTER: AbortReason.AMMUNITION,
                     AssetEndReason.DAMAGE: AbortReason.DAMAGE}
 
@@ -1370,19 +1719,22 @@ def _known_destructions(results, assets: Mapping[str, object], t0: float,
     return known
 
 
-def _activity_criteria(plans: Mapping[str, ActivityPlan], known: Optional[Mapping[str, float]]
-                       ) -> Dict[str, ER.ActivityCriteria]:
+def _activity_criteria(plans: Mapping[str, ActivityPlan], known: Optional[Mapping[str, float]],
+                       reference_health: Optional[Mapping[str, int]] = None) -> Dict[str, ER.ActivityCriteria]:
     """I criteri nella forma del risolutore (`ER.ActivityCriteria`) per un ingaggio, con le distruzioni
-    dei bersagli gia' note (`known`, None se nessun piano ha bersagli)."""
+    dei bersagli gia' note (`known`, None se nessun piano ha bersagli) e (G4a) la salute d'inizio sessione
+    come riferimento della soglia di danno (`reference_health`, None = la salute all'ingresso nella run)."""
     criteria = {}
 
     for asset_id, plan in plans.items():
         destroyed = {target_id: known[target_id] for target_id in plan.target_ids if target_id in known} \
             if known is not None and plan.target_ids else {}
+        reference = (reference_health or {}).get(asset_id) if plan.damage_threshold is not None else None
         criteria[asset_id] = ER.ActivityCriteria(
             winchester_weapons=plan.winchester_weapons, damage_threshold=plan.damage_threshold,
             target_ids=plan.target_ids, destroyed_targets=destroyed,
-            until=plan.static_end[0] if plan.static_end is not None else None)
+            until=plan.static_end[0] if plan.static_end is not None else None,
+            reference_health=reference)
 
     return criteria
 
@@ -1615,8 +1967,9 @@ def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed
                 # secco sul rientro dopo il bingo (F6-B2): conta l'ultimo fatto, l'esaurimento.
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.FUEL_EXHAUSTED, end.time)
             elif bingo is not None:
-                # Rientro al bingo (F6-B2): l'asset ha lasciato la rotta all'istante del bingo.
-                outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.BINGO, bingo.time)
+                # Rientro al bingo (F6-B2) o, dal G4b, rientro forzato dopo il disingaggio (motivo DISENGAGED):
+                # l'asset ha lasciato la rotta all'istante della decisione.
+                outcome = AssetMissionOutcome(asset_id, state, bingo.reason, bingo.time)
             else:
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.SESSION_END, session_end)
 
@@ -1675,9 +2028,12 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                 fire_doctrine: Optional[Dict] = None) -> SessionOutcome:
     """Esegue una sessione virtuale e restituisce il suo `SessionOutcome`. **Muta gli asset.**
 
-    Danno, munizioni e carburante sono applicati agli asset reali man mano che gli eventi
-    sono risolti (ogni componente connessa di forze e' un solo ingaggio, v. docstring del
-    modulo). Il `SessionOutcome` restituito e' il resoconto di cio' che e' stato applicato.
+    Danno e munizioni sono applicati agli asset reali man mano che gli ingaggi sono risolti (dal
+    G4a un ingaggio per episodio, con `G4_EPISODES` spento uno per componente connessa di forze, v.
+    docstring del modulo), il carburante in un passo finale. Dal G4b, dopo ogni episodio, gli aerei di
+    missione sotto la soglia di bingo, a secco o la cui forza si e' disingaggiata sono ri-pianificati e i
+    loro contatti non ancora risolti ricalcolati (v. "Ri-pianificazione dopo l'episodio (G4b)"). Il
+    `SessionOutcome` restituito e' il resoconto di cio' che e' stato applicato.
 
     Args:
         order: il `SessionOrder`. Ne vengono usati `session_id` (radice del seed),
@@ -1698,13 +2054,14 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         thresholds/reaction_profile_for/detection_factor/provenance/morale_for/
             enemy_estimate_for/fire_doctrine: passati a `resolve_engagement`; `provenance` vale anche per i
             FuelEvent. La tempra delle forze (soglia di rottura) e' estratta dal flusso
-            `order.rng(event_id=temper_event_id(*forze))`, separato da quello dell'ingaggio. Il
+            `order.rng(event_id=temper_event_id(*forze), counter=ordinale dell'episodio)`, separato da
+            quello dell'ingaggio. Il
             dominio di coordinamento (`coordination_of`) e' ricavato dalle missioni e da
             `order.operations` (v. "Dominio di coordinamento").
 
     Returns:
         Il `SessionOutcome`, con un `MissionOutcome` per missione dell'ordine, un `ForceOutcome`
-            per forza d'ingaggio (missione) che ha combattuto e la postura a fine sessione di ogni
+            per forza d'ingaggio (missione) che ha combattuto e per episodio (G4a) e la postura a fine sessione di ogni
             asset delle forze passate (`postures`, F5-B); senza ingaggi ne' movimenti resta valido,
             con le sole posture.
 
@@ -1744,6 +2101,9 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     # Aerei a terra nel tempo (F4c + F5): sempre gli aerei senza missione, a intervalli quelli di
     # missione prima del decollo e dopo l'atterraggio su una base vera. V. docstring del modulo.
     grounded = MA.grounded_schedule(forces, movement_of.values())
+    # G4b: il programma a terra PIANIFICATO, base delle correzioni per bingo ed esaurimento (ricalcolate dopo ogni
+    # ri-pianificazione con gli stessi `_grounded_after_bingo` / `_grounded_after_fuel`).
+    planned_grounded = grounded
     assets_by_id: Dict[str, object] = {}
 
     for force_id in sorted(blocks):
@@ -1827,6 +2187,10 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     # F6-A: troncati all'esaurimento del carburante (una lista VUOTA data allo scheduler = l'asset non
     # esiste nella sessione, aereo perso alla partenza).
     presence_legs: Dict[str, List[CS.Leg]] = {}
+    # G4b: tratti di presenza e di movimento PRIMA del troncamento all'esaurimento (con l'eventuale rientro al bingo),
+    # da cui la ri-pianificazione ricava i tratti definitivi con un nuovo esaurimento (`_fuel_truncated`).
+    route_presence: Dict[str, List[CS.Leg]] = {}
+    route_moving: Dict[str, List[CS.Leg]] = {}
 
     for asset_id, movement in movement_of.items():
         legs = MA.movement_legs(movement, t0, session_end)
@@ -1835,14 +2199,12 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             # F6-B2: fino al bingo, rientro e sosta a terra sulla base.
             legs = _legs_after_bingo(legs, bingo_ends[asset_id], t0, session_end, park=True)
 
-        end = fuel_ends.get(asset_id)
+        route_presence[asset_id], route_moving[asset_id] = legs, moving_legs[asset_id]
+        presence, moving_legs[asset_id] = _fuel_truncated(legs, moving_legs[asset_id], fuel_ends.get(asset_id), t0,
+                                                          session_end)
 
-        if end is not None:
-            presence_legs[asset_id] = _truncate_at_fuel_end(legs, end, t0, session_end)
-            moving_legs[asset_id] = [leg for leg in CS.clamp_legs(moving_legs[asset_id], t0, end.time)
-                                     if leg.duration > CS.TIME_EPS]
-        elif legs:
-            presence_legs[asset_id] = legs
+        if presence is not None:
+            presence_legs[asset_id] = presence
 
     grounded = _grounded_after_fuel(grounded, fuel_ends)
     # F6-B1: criteri di fine di attivita' dichiarati dalle missioni (vuoto senza criteri o spento).
@@ -1858,7 +2220,6 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     # Tratti di ogni asset (presenza o posizione fissa): servono al risolutore per l'istante
     # esatto di rilevamento; i soli tratti di MOVIMENTO (senza la presenza ferma) al carburante.
     all_legs: Dict[str, List[CS.Leg]] = {}
-    movements: List[Tuple[str, object, List[CS.Leg]]] = []
 
     for force_id in sorted(blocks):
         for asset in (getattr(blocks[force_id], 'assets', None) or {}).values():
@@ -1867,39 +2228,450 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             if asset_id is None:
                 continue
 
-            moving = moving_legs.get(asset_id, [])
-
-            if moving:
-                movements.append((asset_id, asset, moving))
-
             if asset_id in presence_legs:
                 all_legs[asset_id] = presence_legs[asset_id]
             else:
                 all_legs[asset_id] = CS.static_legs(getattr(asset, 'position', None), t0, session_end)
 
-    # ── coda eventi ───────────────────────────────────────────────────────────
-    queue: List = []
+    # ── strato 2: ingaggi (coda eventi ENGAGEMENT) ────────────────────────────
+    committed = _engagement_committed(order, forces)
+    results: List[Optional[ER.EngagementResult]] = []
+    # Ingaggi risolti nell'ordine di risoluzione, con l'istante e l'id della loro voce di coda: la contabilita'
+    # del carburante (passo finale, sotto) li ripercorre nello stesso ordine (G4a).
+    resolved: List[Tuple[float, str, Optional[ER.EngagementResult]]] = []
+    # G4a (v. "Episodi d'ingaggio (G4a)"): salute d'inizio sessione (riferimento della soglia di danno), istante
+    # dal quale un asset e' PASSIVO per un disingaggio o una fine di attivita' in un episodio gia' risolto, fine
+    # dell'ultimo episodio di ogni forza (forza occupata) e ordinale degli episodi per insieme di forze (`counter`
+    # dell'RNG). Con un solo episodio per componente sono tutti senza effetto.
+    start_health = {asset_id: asset.health for asset_id, asset in assets_by_id.items()
+                    if isinstance(getattr(asset, 'health', None), int) and not isinstance(asset.health, bool)} \
+        if G4_EPISODES else None
+    passive_from: Dict[str, float] = {}
+    busy_until: Dict[str, float] = {}
+    ordinals: Dict[str, int] = {}
+
+    # G4b (v. "Ri-pianificazione dopo l'episodio (G4b)"): carburante d'inizio sessione (la contabilita' e' il passo
+    # finale, quindi durante gli episodi il contatore e' ancora quello di partenza; copiato per chiarezza), consumi
+    # d'ingaggio gia' avvenuti per aereo `(istante, quantita')` (la stessa regola della contabilita') e aerei di
+    # missione, i soli che consumano in ingaggio.
+    air_assets = {asset_id for asset_id, movement in movement_of.items()
+                  if mission_of[movement.mission_id].domain == 'air'}
+    start_fuel = {asset_id: getattr(asset, 'fuel', None) for asset_id, asset in assets_by_id.items()}
+    charges_of: Dict[str, List[Tuple[float, float]]] = {}
+    replanning = G4_EPISODES and G4_REPLAN
+
+    def replan(result) -> Dict[str, float]:
+        """G4b: ri-pianifica, alla fine dell'episodio risolto `result`, gli aerei di missione in volo che vi hanno
+        consumato o la cui forza si e' disingaggiata; aggiorna rientri, esaurimenti, tratti e programma a terra.
+        Restituisce `{asset_id: istante da cui i suoi tratti sono cambiati}` (vuoto = nulla da ri-schedulare)."""
+        nonlocal grounded
+        t_r = result.t_end
+
+        if t_r is None:
+            return {}
+
+        t_r = float(t_r)
+        consumed = set()
+
+        if G3_ENGAGEMENT_FUEL:
+            # Stessa regola della contabilita' (G3): aerei di missione IN VOLO all'istante della prima partecipazione.
+            for asset_id, instant in sorted(_engagement_instants(result).items()):
+                asset = assets_by_id.get(asset_id)
+
+                if asset is None or asset_id not in air_assets or grounded.at(asset_id, instant):
+                    continue
+
+                amount = FM.engagement_fuel(asset)
+
+                if amount is not None:
+                    charges_of.setdefault(asset_id, []).append((instant, amount))
+                    consumed.add(asset_id)
+
+        disengaged = set()
+
+        if F6_BINGO and F6_BINGO_DISENGAGE_RESERVE:
+            # Decisione dell'utente del 2026-10-17: un aereo di missione la cui FORZA d'ingaggio si e' disingaggiata
+            # nell'episodio rientra con la regola di combattimento, indipendentemente dal carburante.
+            for force_outcome in result.forces:
+                mission = mission_of.get(force_outcome.force_id)
+
+                if force_outcome.outcome == ER.DISENGAGED and mission is not None and mission.domain == 'air':
+                    disengaged.update(mission.asset_ids)
+
+        changed: Dict[str, float] = {}
+
+        for asset_id in sorted(consumed | disengaged):
+            asset = assets_by_id.get(asset_id)
+            movement = movement_of.get(asset_id)
+
+            if asset is None or movement is None or getattr(asset, 'is_destroyed', lambda: False)() \
+                    or start_fuel.get(asset_id) is None:
+                continue
+
+            moving = moving_legs.get(asset_id) or []
+            exhausted = fuel_ends.get(asset_id)
+
+            if not moving:
+                continue
+
+            # Istante della decisione per l'aereo: la fine dell'episodio o, se la sua rotta nella sessione finisce
+            # prima (rotta completata DENTRO l'episodio), la fine dei suoi tratti di movimento; in quel caso conta
+            # solo l'esaurimento (A.2), non c'e' piu' rotta da cui rientrare.
+            t_d = min(t_r, float(moving[-1].t_end))
+            completed = t_d < t_r - CS.TIME_EPS
+
+            if t_d >= session_end - CS.TIME_EPS:
+                # Nessuna ri-pianificazione oltre la sessione (come un bingo che cadrebbe dopo la fine).
+                continue
+
+            # In volo a `t_d`: dentro i suoi tratti di movimento, non a terra, non gia' a secco (planata o perso).
+            if t_d < moving[0].t_start - CS.TIME_EPS or grounded.at(asset_id, t_d) \
+                    or (exhausted is not None and exhausted.time <= t_d + CS.TIME_EPS):
+                continue
+
+            mission = mission_of[movement.mission_id]
+            bases = air_bases.get(getattr(blocks[mission.block_id], 'side', None), ())
+            residual = FM.fuel_at(asset, _consuming_legs(asset_id, moving, grounded), t_d,
+                                  charges_of.get(asset_id, ()), fuel=start_fuel[asset_id], regime=CRUISE_REGIME)
+
+            if residual is None:
+                continue
+
+            previous = bingo_ends.get(asset_id)
+            # Gia' in rientro (bingo o disingaggio): nessun nuovo rientro, solo l'esaurimento (A.2/A.4).
+            returning = previous is not None and previous.time <= t_d + CS.TIME_EPS
+            bingo = previous
+
+            if residual <= 0.0:
+                # A.2: esaurito in ingaggio, regole della F6-A dal punto in cui l'aereo e' alla fine dell'episodio (un
+                # bingo calcolato a monte per piu' tardi, regole a G2 spento, non avviene piu').
+                point = CS.position_on_legs(route_presence.get(asset_id) or moving, t_d) \
+                    or CS.position_on_legs(moving, t_d)
+
+                if point is None:
+                    continue
+
+                bingo = previous if returning else None
+                end = _exhaustion_end(asset, asset_id, mission.domain, t_d, point, moving, grounded, bases)
+            elif completed:
+                continue
+            else:
+                if not returning and F6_BINGO and F6_BINGO_DISENGAGE_RESERVE:
+                    mission_legs = _consuming_legs(asset_id, MA.airborne_legs(movement), grounded)
+                    decision, reason = None, AssetEndReason.BINGO
+                    # Partenza in volo senza basi del lato: uscita di scena al punto di comparsa (decisione
+                    # dell'utente del 2026-10-17) invece di `BINGO_NO_BASE`, solo qui (non alla partenza, G2).
+                    exit_scene = G4_OFF_SCENE_EXIT
+
+                    if asset_id in consumed and mission.end_criteria.bingo:
+                        # A.3: bingo con il residuo dopo il consumo d'ingaggio, albero del G2 sulla missione intera.
+                        decision = MA.mission_bingo_decision(mission, movement, asset, bases, time=t_d, fuel=residual,
+                                                             legs=mission_legs, exit_scene=exit_scene)
+
+                        if decision is not None and not decision.returns:
+                            logger.info(f"run_session: asset {asset_id!r} under the bingo threshold after the "
+                                        f"engagement episode at t={t_d:.1f} (fuel {decision.fuel:.4f} < "
+                                        f"{decision.threshold:.4f}): {decision.action}, no return")
+                            decision = None
+
+                    if decision is None and asset_id in disengaged:
+                        # B: rientro forzato dopo il disingaggio, regola di combattimento, nessuna soglia.
+                        decision = MA.mission_bingo_decision(mission, movement, asset, bases, time=t_d, fuel=residual,
+                                                             legs=mission_legs, forced=True, exit_scene=exit_scene)
+                        reason = AssetEndReason.DISENGAGED
+
+                        if decision is not None and not decision.returns:
+                            logger.info(f"run_session: asset {asset_id!r} disengaged at t={t_d:.1f} has no base to "
+                                        f"return to ({decision.action}): it stays on its route, passive")
+                            decision = None
+
+                    if decision is not None:
+                        bingo = dataclasses.replace(_return_end(asset, asset_id, mission_legs, decision), reason=reason)
+                        logger.info(f"run_session: asset {asset_id!r} returns after the engagement episode "
+                                    f"({reason.value}) at t={t_d:.1f} to {bingo.landing_point}, "
+                                    f"{'leaving the scene' if bingo.exits else 'landing'} at "
+                                    f"t={bingo.landing_time:.1f}")
+
+                if bingo != previous:
+                    # Rotta nuova da `t_d`: i tratti pianificati fino a `t_d`, poi il rientro (come al bingo del G2).
+                    presence = _legs_after_bingo(MA.movement_legs(movement, t0, session_end), bingo, t0, session_end,
+                                                 park=True)
+                    moving_route = _legs_after_bingo(MA.movement_legs(movement, t0, session_end, presence=False), bingo,
+                                                     t0, session_end, park=False)
+                elif asset_id in consumed:
+                    presence, moving_route = route_presence[asset_id], route_moving[asset_id]
+                else:
+                    # Nessun consumo in questo episodio e nessuna rotta nuova: l'esaurimento noto resta valido.
+                    continue
+
+                # A.4: esaurimento sui tratti da `t_d` con il residuo.
+                after = [leg for leg in CS.clamp_legs(_consuming_legs(asset_id, moving_route, grounded), t_d,
+                                                      float('inf')) if leg.duration > CS.TIME_EPS]
+                end = _fuel_end(asset, asset_id, mission.domain, after, grounded, bases, fuel=residual)
+                route_presence[asset_id], route_moving[asset_id] = presence, moving_route
+
+            if bingo is None:
+                bingo_ends.pop(asset_id, None)
+            else:
+                bingo_ends[asset_id] = bingo
+
+            if end is None:
+                fuel_ends.pop(asset_id, None)
+            else:
+                fuel_ends[asset_id] = end
+                logger.info(f"run_session: asset {asset_id!r} runs out of fuel at t={end.time:.1f} ({end.kind}), "
+                            f"re-planned at t={t_d:.1f} after the engagement episode ending at t={t_r:.1f}")
+
+            if bingo == previous and end == exhausted:
+                continue
+
+            # Istante da cui i tratti cambiano: la decisione (rientro, esaurimento in ingaggio) o il primo dei due
+            # esaurimenti, vecchio e nuovo (solo esaurimento anticipato sui tratti di prima).
+            since = [t_d] if bingo != previous else []
+            since += [e.time for e in (end, exhausted) if e is not None] if end != exhausted else []
+            presence, moving_legs[asset_id] = _fuel_truncated(route_presence[asset_id], route_moving[asset_id], end,
+                                                              t0, session_end)
+
+            if presence is not None:
+                presence_legs[asset_id] = presence
+                all_legs[asset_id] = presence
+            else:
+                presence_legs.pop(asset_id, None)
+                all_legs[asset_id] = CS.static_legs(getattr(asset, 'position', None), t0, session_end)
+
+            changed[asset_id] = min(since)
+
+        if changed:
+            grounded = _grounded_after_fuel(_grounded_after_bingo(planned_grounded, bingo_ends), fuel_ends)
+
+        return changed
+
+    def engage(time, force_ids, group, event_id):
+        component = [forces[force_id] for force_id in force_ids]
+        # G4a: `counter` = ordinale degli episodi con lo STESSO insieme di forze (0 per il primo: lo stream di
+        # prima), per lo stream dell'ingaggio e per quello della tempra (tempra nuova per episodio).
+        counter = ordinals.get(event_id, 0)
+        ordinals[event_id] = counter + 1
+        # F6-B1: criteri passati solo se dichiarati (senza, la chiamata e' quella di prima), con le
+        # distruzioni dei bersagli note a questo punto (ingaggi gia' risolti, carburante).
+        extra = {}
+        criteria = {}
+
+        if activity_plans:
+            known = _known_destructions(results, assets_by_id, t0, fuel_ends) if plans_with_targets else None
+            criteria = _activity_criteria(activity_plans, known, start_health)
+
+        # F6-B2: dal bingo l'aereo rientra e non lancia piu' salve offensive (fine nota a monte, `until`).
+        for asset_id, bingo in bingo_ends.items():
+            known_criteria = criteria.get(asset_id)
+
+            if known_criteria is None:
+                criteria[asset_id] = ER.ActivityCriteria(until=bingo.time)
+            elif known_criteria.until is None or bingo.time < known_criteria.until:
+                criteria[asset_id] = dataclasses.replace(known_criteria, until=bingo.time)
+
+        if passive_from:
+            # G4a: passivo (nessuna salva offensiva, resta bersaglio e intercettore) l'asset che si e' disingaggiato
+            # o ha chiuso l'attivita' in un episodio precedente; stesso meccanismo del bingo, solo per gli asset
+            # delle forze di questo episodio.
+            members = {_domain_id(asset) for force in component
+                       for asset in (getattr(force, 'assets', None) or {}).values()}
+
+            for asset_id in sorted(members & set(passive_from)):
+                until = passive_from[asset_id]
+                known_criteria = criteria.get(asset_id)
+
+                if known_criteria is None:
+                    criteria[asset_id] = ER.ActivityCriteria(until=until)
+                elif known_criteria.until is None or until < known_criteria.until:
+                    criteria[asset_id] = dataclasses.replace(known_criteria, until=until)
+
+        if criteria:
+            extra['activity_criteria'] = criteria
+
+        result = ER.resolve_engagement(component[0], component[1], group, fire_control,
+                                       order.rng(mission_id=None, event_id=event_id, counter=counter),
+                                       extra_forces=component[2:],
+                                       legs=all_legs, committed=committed,
+                                       thresholds=thresholds,
+                                       reaction_profile_for=reaction_profile_for,
+                                       detection_factor=detection_factor,
+                                       salvo_window=order.salvo_window,
+                                       provenance=provenance,
+                                       breakpoint_rng=order.rng(mission_id=None,
+                                                                event_id=temper_event_id(*force_ids),
+                                                                counter=counter),
+                                       morale_for=morale_for,
+                                       enemy_estimate_for=enemy_estimate_for,
+                                       fire_doctrine=fire_doctrine,
+                                       coordination_of=coordination,
+                                       grounded=grounded, **extra)
+        results.append(result)
+        resolved.append((time, event_id, result))
+
+        if result is None:
+            return None
+
+        # Applicato SUBITO, a tutte le forze dell'ingaggio: un episodio successivo delle stesse forze (G4a) parte
+        # dallo stato gia' consumato (salute e scorte), i `health_before/after` sono concatenati.
+        ER.apply_engagement_result(result, *component)
+
+        if not G4_EPISODES:
+            return result
+
+        # G4a: forza occupata fino alla fine dell'esito (salve in volo comprese) e passivita' dopo un disingaggio
+        # (dall'istante del cambio di esito, o dalla fine dell'esito se manca) o una fine di attivita'.
+        for force_id in force_ids:
+            if result.t_end is not None:
+                busy_until[force_id] = max(busy_until.get(force_id, float('-inf')), float(result.t_end))
+
+        for force_outcome in result.forces:
+            if force_outcome.outcome != ER.DISENGAGED:
+                continue
+
+            since = force_outcome.time if force_outcome.time is not None else result.t_end
+
+            for asset in (getattr(forces.get(force_outcome.force_id), 'assets', None) or {}).values():
+                asset_id = _domain_id(asset)
+
+                if asset_id is not None and since is not None:
+                    passive_from[asset_id] = min(float(since), passive_from.get(asset_id, float('inf')))
+
+        for event in result.activity_ends:
+            passive_from[event.asset_id] = min(float(event.time), passive_from.get(event.asset_id, float('inf')))
+
+        return result
+
+    def reschedule(changed, t_r, left, pairs_of) -> None:
+        """G4b: contatti degli aerei ri-pianificati `changed` (`{asset_id: istante da cui i tratti cambiano}`)
+        ricalcolati con i tratti aggiornati (`schedule_contacts` rieseguito, solo per le coppie con uno di loro,
+        `only_assets`): le loro finestre non ancora risolte in `left` sono scartate e sostituite dalle nuove che
+        finiscono dopo `t_r`, ritagliate a `t_r` (la storia prima e' fissata) e poi alle forze occupate
+        (`_trim_busy`, dal chiamante). Il tratto di una finestra nuova gia' coperto da una finestra RISOLTA della
+        stessa coppia di asset (`covered`) con la geometria di prima (cioe' prima dell'istante da cui i tratti
+        cambiano) e' tolto anch'esso: l'episodio risolto ha gia' deciso che li' non succede altro, un secondo
+        episodio sullo stesso intervallo con gli stessi tratti sarebbe una seconda estrazione."""
+        fresh = CS.schedule_contacts(items_a, items_b, horizon, routes=routes, starts=starts, speeds=speeds, t0=t0,
+                                     margin=margin, range_type=range_type, grounded=grounded, legs=presence_legs,
+                                     only_assets=changed)
+        kept = []
+
+        for window in fresh:
+            since = min(changed.get(window.asset_a_id, float('inf')), changed.get(window.asset_b_id, float('inf')))
+            start = max(t_r, min(covered.get((window.asset_a_id, window.asset_b_id), float('-inf')), since))
+
+            if window.t_end <= start + CS.TIME_EPS:
+                continue
+
+            trimmed = CS.trim_contact_window(window, start, all_legs.get(window.asset_a_id, ()),
+                                             all_legs.get(window.asset_b_id, ()))
+
+            if trimmed is not None:
+                kept.append(trimmed)
+
+        for pair in sorted(left):
+            left[pair] = [window for window in left[pair]
+                          if window.asset_a_id not in changed and window.asset_b_id not in changed]
+
+        for pair, windows in sorted(_group_windows(kept, owner).items()):
+            if pair not in left:
+                for force_id in pair:
+                    pairs_of.setdefault(force_id, []).append(pair)
+
+            # Ordine dello scheduler, `(t_start, asset_a_id, asset_b_id)`, sulle finestre della coppia (sort stabile).
+            left[pair] = sorted(left.get(pair, []) + windows,
+                                key=lambda w: (w.t_start, str(w.asset_a_id), str(w.asset_b_id)))
+
+    if G4_EPISODES:
+        # G4a: un ENGAGEMENT per EPISODIO, in ordine di tempo (inizio della prima finestra, poi l'event_id). Dopo
+        # ogni episodio le finestre non ancora risolte delle sue forze sono ritagliate alla fine del suo esito
+        # (forza occupata) e, se qualcosa e' cambiato, gli episodi rimasti sono ricostruiti con la stessa regola.
+        left = {pair: list(windows) for pair, windows in groups.items()}
+        pairs_of: Dict[str, List[Tuple[str, str]]] = {}
+
+        for pair in sorted(left):
+            for force_id in pair:
+                pairs_of.setdefault(force_id, []).append(pair)
+
+        pending = _episodes(left, coordination)
+        # G4b: fine della finestra RISOLTA piu' tarda per coppia di asset (v. `reschedule`).
+        covered: Dict[Tuple[str, str], float] = {}
+
+        while pending:
+            force_ids, group = pending.pop(0)
+            result = engage(min(w.t_start for w in group), force_ids, group, engagement_event_id(*force_ids))
+            done = {id(window) for window in group}
+
+            for window in group:
+                key = (window.asset_a_id, window.asset_b_id)
+                covered[key] = max(covered.get(key, float('-inf')), float(window.t_end))
+
+            for pair in {(owner[w.asset_a_id][1], owner[w.asset_b_id][1]) for w in group}:
+                left[pair] = [window for window in left.get(pair, ()) if id(window) not in done]
+
+            # G4b: ri-pianificazione degli aerei alla fine dell'episodio e, se qualche tratto e' cambiato, nuovi
+            # contatti per loro (v. "Ri-pianificazione dopo l'episodio (G4b)").
+            changed = replan(result) if replanning and result is not None else {}
+
+            if changed:
+                # Le finestre nuove possono toccare forze occupate da episodi gia' risolti: ritaglio su tutte.
+                reschedule(changed, float(result.t_end), left, pairs_of)
+                _trim_busy(left, busy_until, all_legs)
+                pending = _episodes({pair: windows for pair, windows in left.items() if windows}, coordination)
+                continue
+
+            touched = {pair: left[pair] for force_id in force_ids for pair in pairs_of.get(force_id, ())
+                       if left.get(pair)}
+
+            if _trim_busy(touched, busy_until, all_legs):
+                left.update(touched)
+                pending = _episodes({pair: windows for pair, windows in left.items() if windows}, coordination)
+    else:
+        # Prima del G4a: un evento per COMPONENTE connessa di forze d'ingaggio, cioe' di missioni (F4b).
+        queue: List = []
+        sequence = 0
+
+        for force_ids, group in _connected_components(groups, coordination):
+            event_id = engagement_event_id(*force_ids)
+            sequence += 1
+            heapq.heappush(queue, (min(w.t_start for w in group), ENGAGEMENT_EVENT, event_id,
+                                   sequence, (force_ids, group)))
+
+        while queue:
+            time, _, key, _, (force_ids, group) = heapq.heappop(queue)
+            engage(time, force_ids, group, key)
+
+    # Tratti di MOVIMENTO definitivi (G4b: dopo le ri-pianificazioni) per la contabilita' del carburante.
+    movements: List[Tuple[str, object, List[CS.Leg]]] = []
+
+    for force_id in sorted(blocks):
+        for asset in (getattr(blocks[force_id], 'assets', None) or {}).values():
+            asset_id = _domain_id(asset)
+            moving = moving_legs.get(asset_id, []) if asset_id is not None else []
+
+            if moving:
+                movements.append((asset_id, asset, moving))
+
+    # ── strato 3: carburante (coda eventi MOVEMENT + ingaggi risolti) ─────────
+    # G4a: la contabilita' del carburante e' un passo FINALE, dopo tutti gli ingaggi (il risolutore non legge il
+    # carburante e il carburante non legge danno ne' scorte). La coda e' quella di prima: gli ingaggi risolti
+    # alla loro chiave `(istante, ENGAGEMENT, event_id)` e un MOVEMENT per asset alla fine dei suoi tratti;
+    # ripercorsa nello stesso ordine produce gli stessi `FuelEvent` nello stesso ordine.
+    queue = []
     sequence = 0
 
-    # Un evento per COMPONENTE connessa di forze d'ingaggio, cioe' di missioni (F4b).
-    for force_ids, group in _connected_components(groups, coordination):
-        event_id = engagement_event_id(*force_ids)
+    for time, event_id, result in resolved:
         sequence += 1
-        heapq.heappush(queue, (min(w.t_start for w in group), ENGAGEMENT_EVENT, event_id,
-                               sequence, (force_ids, group)))
+        heapq.heappush(queue, (time, ENGAGEMENT_EVENT, event_id, sequence, result))
 
     for asset_id, asset, legs in movements:
         sequence += 1
         heapq.heappush(queue, (legs[-1].t_end, MOVEMENT_EVENT, asset_id, sequence, (asset, legs)))
 
-    committed = _engagement_committed(order, forces)
-    results: List[Optional[ER.EngagementResult]] = []
     fuel_events: List[FM.FuelEvent] = []
     engaged: set = set()
-    # G3: aerei di missione (i soli che consumano in ingaggio), consumi d'ingaggio in attesa dell'evento
-    # MOVEMENT dell'asset (per metterli in ordine di tempo fra i tratti) e asset gia' contabilizzati.
-    air_assets = {asset_id for asset_id, movement in movement_of.items()
-                  if mission_of[movement.mission_id].domain == 'air'}
+    # G3: consumi d'ingaggio in attesa dell'evento MOVEMENT dell'asset (per metterli in ordine di tempo fra i tratti)
+    # e asset gia' contabilizzati (`air_assets`, gli aerei di missione, i soli che consumano in ingaggio: sopra).
     with_movement = {asset_id for asset_id, _, _ in movements}
     pending_charges: Dict[str, List[float]] = {}
     accounted: set = set()
@@ -1918,59 +2690,16 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         time, kind, key, _, payload = heapq.heappop(queue)
 
         if kind == ENGAGEMENT_EVENT:
-            force_ids, group = payload
-            component = [forces[force_id] for force_id in force_ids]
-            # F6-B1: criteri passati solo se dichiarati (senza, la chiamata e' quella di prima), con le
-            # distruzioni dei bersagli note a questo punto (ingaggi gia' risolti, carburante).
-            extra = {}
-            criteria = {}
-
-            if activity_plans:
-                known = _known_destructions(results, assets_by_id, t0, fuel_ends) if plans_with_targets else None
-                criteria = _activity_criteria(activity_plans, known)
-
-            # F6-B2: dal bingo l'aereo rientra e non lancia piu' salve offensive (fine nota a monte, `until`).
-            for asset_id, bingo in bingo_ends.items():
-                known_criteria = criteria.get(asset_id)
-
-                if known_criteria is None:
-                    criteria[asset_id] = ER.ActivityCriteria(until=bingo.time)
-                elif known_criteria.until is None or bingo.time < known_criteria.until:
-                    criteria[asset_id] = dataclasses.replace(known_criteria, until=bingo.time)
-
-            if criteria:
-                extra['activity_criteria'] = criteria
-
-            result = ER.resolve_engagement(component[0], component[1], group, fire_control,
-                                           order.rng(mission_id=None, event_id=key, counter=0),
-                                           extra_forces=component[2:],
-                                           legs=all_legs, committed=committed,
-                                           thresholds=thresholds,
-                                           reaction_profile_for=reaction_profile_for,
-                                           detection_factor=detection_factor,
-                                           salvo_window=order.salvo_window,
-                                           provenance=provenance,
-                                           breakpoint_rng=order.rng(mission_id=None,
-                                                                    event_id=temper_event_id(*force_ids),
-                                                                    counter=0),
-                                           morale_for=morale_for,
-                                           enemy_estimate_for=enemy_estimate_for,
-                                           fire_doctrine=fire_doctrine,
-                                           coordination_of=coordination,
-                                           grounded=grounded, **extra)
-            results.append(result)
+            result = payload
 
             if result is not None:
-                # Applicato SUBITO, a tutte le forze della componente. Le componenti sono
-                # disgiunte: nessun altro ingaggio della sessione legge queste forze.
-                ER.apply_engagement_result(result, *component)
                 engaged |= _engaged_assets(result)
 
                 if G3_ENGAGEMENT_FUEL:
                     # G3: consumo d'ingaggio degli aerei IN VOLO all'istante della loro prima partecipazione
-                    # (un aereo a terra colpito sul parcheggio non manovra). In attesa dell'evento MOVEMENT
-                    # dell'asset, per l'ordine di tempo fra i tratti; subito se l'asset e' gia' contabilizzato
-                    # o non ha tratti di movimento.
+                    # (un aereo a terra colpito sul parcheggio non manovra), uno per ingaggio risolto (dal G4a uno
+                    # per episodio). In attesa dell'evento MOVEMENT dell'asset, per l'ordine di tempo fra i tratti;
+                    # subito se l'asset e' gia' contabilizzato o non ha tratti di movimento.
                     for asset_id, instant in sorted(_engagement_instants(result).items()):
                         asset = assets_by_id.get(asset_id)
 
@@ -2115,6 +2844,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             if asset is not None and getattr(asset, 'is_destroyed', lambda: False)():
                 postures[asset_id] = MA.DESTROYED_POSTURE
 
+    # Ogni esito e' applicato prima di risolvere il successivo: i `health_before/after` sono concatenati anche
+    # quando lo stesso asset e' in piu' episodi (G4a).
     return assemble_session_outcome(order.session_id, results, fuel_events,
                                     t_start=t0, t_end=latest, mission_outcomes=mission_outcomes,
-                                    postures=postures)
+                                    postures=postures, chained=True)

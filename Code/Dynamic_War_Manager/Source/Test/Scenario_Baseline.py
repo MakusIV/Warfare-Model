@@ -122,6 +122,27 @@ prima partecipazione) e il suo movimento e' sempre alla crociera ('nominal' inve
 cambiano la voce `fuel`, i conteggi `counts.fuel_events`/`counts.fuel_exhausted` e il carburante finale
 (`assets.*.fuel`).
 
+## Episodi d'ingaggio dopo il G4a
+
+Dal G4a (`Session_Simulator.G4_EPISODES`) una componente connessa le cui finestre sono separate nel tempo (oltre
+`EPISODE_GAP`, 300 s) e' risolta come piu' EPISODI, ciascuno con il proprio ingaggio: nessuna voce nuova, ma
+`engagements` ha una voce per episodio, `counts.engagements` le conta e `force_outcomes` ha un esito per forza e
+per episodio (gia' una lista per blocco nell'ordine degli ingaggi); stream RNG e storia degli episodi dopo il primo
+sono diversi. Le componenti di un solo episodio sono identiche. Variante nuova in coda in S5: 'episodes_off'
+(G4a spento, la vecchia 'default').
+
+## Ri-pianificazione dopo il G4b
+
+Dal G4b (`Session_Simulator.G4_REPLAN`) un aereo di missione che dopo un episodio e' sotto la soglia di bingo, a secco,
+o la cui forza si e' disingaggiata e' ri-pianificato da fine episodio: cambiano tratti, contatti, episodi successivi e
+carburante, quindi le voci di sempre (nessuna voce nuova). I nuovi motivi `AssetEndReason.DISENGAGED` /
+`AbortReason.DISENGAGED` sono negli esiti di missione, NON registrati nella fotografia (si verificano nei test di S5
+e S26). Varianti nuove in coda: S5 'with_base', 'with_base_resistant', 'replan_off'; S26 'post_engagement_bingo',
+'replan_off'. Dall'uscita di scena (`Session_Simulator.G4_OFF_SCENE_EXIT`, decisione dell'utente del 2026-10-17) un
+aereo comparso in volo senza basi del suo lato che nella ri-pianificazione deve rientrare ripercorre la rotta a
+ritroso fino al punto di comparsa ed esce di scena: cambiano tratti, contatti, episodi successivi, carburante e
+posture (`off_scene`), nessuna voce nuova. Variante nuova in coda: S5 'exit_off' (uscita spenta).
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -210,7 +231,16 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     ('S2', 'Test_Session_Scenarios', 'TestS2PreliminarySEAD', None, _s2_label),
     ('S3', 'Test_Session_Scenarios', 'TestS3StealthVersusMass', None, _by_occurrence('control', 'stealth')),
     ('S4', 'Test_Session_Scenarios', 'TestS4SAMAsThirdComponent', None, _by_occurrence('no_sam', 'with_sam')),
-    ('S5', 'Test_Session_Scenarios', 'TestS5DeepInterdictionThreeLayers', None, _by_occurrence('press_on', 'default', 'resistant')),
+    # G4a (2026-10-17): episodi d'ingaggio; nuova variante in coda 'episodes_off' (G4a spento, dottrina di default:
+    # la vecchia 'default').
+    # G4b (2026-10-17): ri-pianificazione dopo l'episodio; nuove varianti in coda con una base aerea Blue (senza
+    # basi la formazione disingaggiata non ha dove rientrare): 'with_base' (default), 'with_base_resistant' e
+    # 'replan_off' (base, default, G4b spento).
+    # G4b, uscita di scena (2026-10-17): nuova variante in coda 'exit_off' (senza base, default,
+    # `G4_OFF_SCENE_EXIT` spento: la 'default' del G4b prima dell'uscita di scena).
+    ('S5', 'Test_Session_Scenarios', 'TestS5DeepInterdictionThreeLayers', None,
+     _by_occurrence('press_on', 'default', 'resistant', 'episodes_off', 'with_base', 'with_base_resistant',
+                    'replan_off', 'exit_off')),
     ('S6', 'Test_Session_Scenarios', 'TestS6CarrierGroupVersusCoastalDefence', None, _single_or_index),
     ('S7', 'Test_Session_Scenarios', 'TestS7LogisticInterdiction', None, _single_or_index),
     ('S8', 'Test_Session_Scenarios', 'TestS8MultiFrontScale', None, _single_or_index),
@@ -297,9 +327,12 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     # 'reserve_off' (G2 spento: la F6-B2bis), 'transfer_continue' e 'transfer_return' (missione 'Transport').
     # G3 (2026-10-16): consumo di carburante in ingaggio; nuova variante in coda 'engagement_fuel_off' (G3 spento:
     # la regola 'max' della F6-A).
+    # G4b (2026-10-17): ri-pianificazione dopo l'episodio; nuove varianti in coda 'post_engagement_bingo' (secondo
+    # sito e base alternativa sulla rotta: bingo dopo l'episodio) e 'replan_off' (stesso scenario, G4b spento).
     ('S26-BINGO', 'Test_Session_Scenarios_S26', 'TestS26Bingo', None,
      _by_occurrence('bingo', 'none', 'switch_off', 'no_base', 'bingo_off', 'reverse_off', 'reserve_off',
-                    'transfer_continue', 'transfer_return', 'engagement_fuel_off')),
+                    'transfer_continue', 'transfer_return', 'engagement_fuel_off', 'post_engagement_bingo',
+                    'replan_off')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

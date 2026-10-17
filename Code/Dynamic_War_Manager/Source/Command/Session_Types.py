@@ -441,7 +441,8 @@ def assemble_session_outcome(session_id: str,
                              t_start: Optional[float] = None,
                              t_end: Optional[float] = None,
                              mission_outcomes: Optional[Mapping[str, MissionOutcome]] = None,
-                             postures: Optional[Mapping[str, str]] = None
+                             postures: Optional[Mapping[str, str]] = None,
+                             chained: bool = False
                              ) -> SessionOutcome:
     """Aggrega gli esiti di una sessione in un unico `SessionOutcome`. Funzione pura.
 
@@ -461,6 +462,10 @@ def assemble_session_outcome(session_id: str,
             riportati tali e quali (None = nessuna missione).
         postures: `{asset_id: postura}` a fine sessione calcolate dall'esecutore (F5), riportate
             tali e quali (None = nessuna).
+        chained: True se l'esecutore garantisce di aver applicato ogni esito prima di risolvere il
+            successivo (G4a, `Session_Simulator`: lo stesso asset in piu' episodi d'ingaggio della
+            sessione); allora i `health_before/after` sono concatenati e il warning del limite noto
+            (sotto) non e' emesso. Default False: comportamento precedente.
 
     Ordine degli eventi nel risultato: per ciascun tipo, ordinamento STABILE per `time`
     sulla concatenazione degli eventi nell'ordine degli ingaggi. Dentro un ingaggio gli eventi
@@ -506,7 +511,8 @@ def assemble_session_outcome(session_id: str,
         if not isinstance(event, FuelEvent):
             raise TypeError(f"fuel_events must contain FuelEvent, got {type(event).__name__}")
 
-    _warn_shared_targets(session_id, results)
+    if not chained:
+        _warn_shared_targets(session_id, results)
 
     by_time = lambda event: event.time  # noqa: E731 — sorted() e' stabile
     damage = tuple(sorted((e for r in results for e in r.damage_events), key=by_time))

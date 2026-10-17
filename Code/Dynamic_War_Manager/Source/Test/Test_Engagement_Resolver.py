@@ -3205,6 +3205,34 @@ class TestActivityEnd(unittest.TestCase):
         self.assertTrue(any(t > end.time for t in self._launches(free, 'b1')))
         self.assertFalse(any(e.destroyed for e in result.damage_events))
 
+    def test_reference_health_of_the_damage_threshold(self):
+        """G4a: b1 entra nella run con salute 80 (20 punti persi in un episodio precedente), soglia 0,25, Red lo
+        graffia senza mai distruggerlo. Senza riferimento la soglia e' sulla salute d'ingresso (servono altri 20
+        punti); con `reference_health` = 100 (inizio sessione) i 20 punti gia' persi contano (ne bastano 5: la fine
+        e' al primo colpo)."""
+        scratch = ER.ShotSpec(accuracy=1.0, destroy_capacity=0.0, rounds=5, time_of_flight=1.0)
+
+        for reference, base in ((None, 80), (100, 100)):
+            with self.subTest(reference=reference):
+                blue = _Asset('b1', health=80, stores={'AIM-9M': 2, 'M61A1': 500})
+                criteria = {'b1': ER.ActivityCriteria(damage_threshold=0.25, reference_health=reference)}
+                result = self._duel(lambda t: _miss(), lambda t: scratch, criteria, blue=blue)
+                end, = result.activity_ends
+                self.assertEqual(end.reason, ER.ACTIVITY_DAMAGE)
+                hits = [e for e in result.damage_events if e.target_id == 'b1']
+                at_end = [e for e in hits if e.time <= end.time]
+                # La fine e' alla prima risoluzione che porta la perdita (dal riferimento) alla soglia.
+                self.assertGreaterEqual((base - at_end[-1].health_after) / base, 0.25)
+                before = [e for e in hits if e.time < end.time]
+
+                if before:
+                    self.assertLess((base - before[-1].health_after) / base, 0.25)
+
+                if reference is not None:
+                    self.assertEqual(end.time, hits[0].time)
+                else:
+                    self.assertGreater(end.time, hits[0].time)
+
     def test_target_destroyed_stops_the_attack_on_other_enemies(self):
         """b1 distrugge r1 al primo colpo (impatto prima del lancio successivo); con il bersaglio r1
         non ingaggia piu' r2."""

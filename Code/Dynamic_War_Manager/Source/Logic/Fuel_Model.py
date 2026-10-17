@@ -103,9 +103,14 @@ resto della rotta fino al LAND, attese comprese, + riserva di disimpegno) e cosa
     passi 3 e 4 del trasferimento.
 Raggiungibile = il residuo basta per il solo percorso alla crociera. Con il solo consumo di movimento
 residuo e resto della rotta calano insieme, quindi la soglia scatta all'inizio dei tratti o mai: la sessione
-la valuta una sola volta, alla partenza. Dal G3 un ingaggio abbassa il residuo senza accorciare la rotta,
-quindi dopo un ingaggio la soglia puo' scattare: la rivalutazione dopo l'ingaggio e' il G4 (non ancora
-fatto). Formule e casi nella sezione G2 del codice.
+la valuta alla partenza. Dal G3 un ingaggio abbassa il residuo senza accorciare la rotta, quindi dopo un
+ingaggio la soglia puo' scattare: dal G4b la sessione rivaluta il bingo alla fine di ogni episodio d'ingaggio con
+il residuo calcolato analiticamente (`fuel_at`) e ricalcola l'esaurimento da quell'istante (`fuel_exhaustion` con
+il parametro `fuel`); la stessa funzione serve al RIENTRO FORZATO dopo il disingaggio (`forced`: nessun controllo
+di soglia, v. `bingo_decision`). Dal G4b (decisione dell'utente del 2026-10-17) la sessione, nella sola
+ri-pianificazione dopo un episodio, chiede l'USCITA DI SCENA (`exit_scene`) al posto di `BINGO_NO_BASE`: partenza
+in volo senza alcuna base del lato, ritroso fino al punto di comparsa (`BINGO_EXIT`). Formule e casi nella sezione
+G2 del codice.
 
 ## Consumo in ingaggio (G3, decisioni dell'utente del 2026-10-15)
 
@@ -408,29 +413,32 @@ def build_leg_fuel_event(asset, leg, regime: str = 'nominal', provenance: str = 
 
 
 def fuel_exhaustion(asset, legs: Sequence, regime: str = 'nominal',
-                    hold_regime: str = HOLD_REGIME) -> Optional[FuelExhaustion]:
+                    hold_regime: str = HOLD_REGIME, fuel: Optional[float] = None) -> Optional[FuelExhaustion]:
     """Istante e punto in cui il carburante di `asset` finisce lungo `legs` (F6-A), calcolati A MONTE.
 
     Il fabbisogno di ogni tratto e' quello di `leg_fuel_demand` (movimento in distanza, soste nel
-    tempo alla crociera), sottratto in ordine dal carburante attuale dell'asset (non mutato). Nel
-    tratto in cui il fabbisogno supera il residuo l'esaurimento e' nella frazione `residuo /
-    fabbisogno` del tratto (consumo uniforme lungo il tratto), con posizione interpolata.
+    tempo alla crociera), sottratto in ordine dal carburante attuale dell'asset (non mutato) o dal
+    residuo `fuel`. Nel tratto in cui il fabbisogno supera il residuo l'esaurimento e' nella frazione
+    `residuo / fabbisogno` del tratto (consumo uniforme lungo il tratto), con posizione interpolata.
 
     Args:
         legs: i tratti che CONSUMANO, in ordine di tempo (il chiamante esclude quelli senza consumo,
             es. un aereo fermo a terra).
+        fuel: residuo [frazione] all'inizio di `legs`, None = il carburante attuale dell'asset (G4b: la
+            sessione lo passa per ricalcolare l'esaurimento da un istante qualunque, `fuel_at`, senza
+            mutare l'asset). Il carburante deve comunque essere modellato sull'asset.
 
     Returns:
         Il `FuelExhaustion`, oppure None se il carburante basta per tutti i tratti o non e'
         modellato (nessun vincolo).
     """
-    fuel = getattr(asset, 'fuel', None)
+    modelled = getattr(asset, 'fuel', None)
     asset_id = _domain_id(asset)
 
-    if fuel is None or asset_id is None:
+    if modelled is None or asset_id is None:
         return None
 
-    fuel = float(fuel)
+    fuel = float(modelled if fuel is None else fuel)
     remaining = fuel
 
     for index, leg in enumerate(legs):
@@ -452,6 +460,61 @@ def fuel_exhaustion(asset, legs: Sequence, regime: str = 'nominal',
         return FuelExhaustion(asset_id=asset_id, time=time, point=point, leg_index=index, fuel_before=fuel)
 
     return None
+
+
+def fuel_at(asset, legs: Sequence, time: float, charges: Iterable[Tuple[float, float]] = (),
+            fuel: Optional[float] = None, regime: str = 'nominal',
+            hold_regime: str = HOLD_REGIME) -> Optional[float]:
+    """Residuo [frazione del carico pieno] dell'asset all'istante `time`, calcolato ANALITICAMENTE (G4b).
+
+    Carburante di partenza (`fuel`, None = il carburante attuale dell'asset, non mutato) meno:
+      * il fabbisogno (`leg_fuel_demand`) dei tratti che consumano finiti entro `time`, e del tratto in
+        corso la parte gia' volata o trascorsa, in proporzione al tempo (consumo uniforme lungo il tratto,
+        la stessa ipotesi di `fuel_exhaustion`);
+      * i consumi istantanei `charges` = `[(istante, quantita'), ...]` (G3, `engagement_fuel`) con istante
+        entro `time` (compreso).
+    E' la stessa aritmetica della contabilita' della sessione (un `FuelEvent` per tratto e un evento
+    istantaneo per consumo d'ingaggio, ciascuno limitato al disponibile, nessun evento dopo l'esaurimento):
+    le sottrazioni limitate a zero danno lo stesso residuo finale in qualunque ordine, quindi a `time` oltre
+    la fine dei tratti e dei consumi il valore coincide con il carburante finale della contabilita'. Mai
+    negativo (0 = esaurito).
+
+    Args:
+        legs: i tratti che CONSUMANO, in ordine di tempo (come `fuel_exhaustion`).
+        time: istante assoluto [s].
+        charges: consumi istantanei (istante, quantita' non limitata al disponibile).
+        fuel: carburante all'inizio dei tratti [frazione].
+        regime/hold_regime: come `leg_fuel_demand` (la sessione usa la crociera, come il vincolo a monte).
+
+    Returns:
+        Il residuo, oppure None se il carburante non e' modellato.
+    """
+    modelled = getattr(asset, 'fuel', None)
+
+    if modelled is None:
+        return None
+
+    remaining = float(modelled if fuel is None else fuel)
+    time = float(time)
+
+    for leg in legs:
+        if float(leg.t_start) >= time:
+            break
+
+        demand = leg_fuel_demand(asset, leg, regime, hold_regime)
+
+        if demand is None:
+            return None
+
+        duration = _leg_duration(leg)
+        share = 1.0 if float(leg.t_end) <= time or duration <= 0.0 else (time - float(leg.t_start)) / duration
+        remaining -= demand * share
+
+    for instant, amount in charges:
+        if float(instant) <= time:
+            remaining -= float(amount)
+
+    return 0.0 if remaining < _FUEL_EPS else remaining
 
 
 # ── PLANATA DI UN AEREO A SECCO (F6-A) ────────────────────────────────────────
@@ -1160,7 +1223,13 @@ def build_engagement_fuel_event(asset, time: float, provenance: str = DM.DERIVED
 # Raggiungibile = `fuel` basta per il SOLO percorso alla crociera (la riserva si puo' consumare nel rientro).
 # Basi della linea retta (passi 3 e 4): le basi del lato e, partendo da una base, il DEPARTURE (base amica
 # anch'esso). Nessuna base possibile (partenza in volo senza basi del lato): `BINGO_NO_BASE`, nessun rientro
-# (come la F6-B2bis: valgono le regole della F6-A).
+# (come la F6-B2bis: valgono le regole della F6-A). Con `exit_scene` (G4b, decisione dell'utente del 2026-10-17,
+# solo nella ri-pianificazione dopo un episodio) al posto di `BINGO_NO_BASE` l'aereo USCE DI SCENA
+# (`BINGO_EXIT`): ritroso fino al punto di comparsa (il primo punto dei tratti), alle quote dei waypoint e senza
+# le soste (la meccanica del ritroso della F6-B2bis, `_return_route` senza il tratto diretto finale); il punto di
+# comparsa e' il "punto d'atterraggio" della decisione, ma l'aereo NON atterra: li' lascia la scena. Raggiungibile
+# come le altre (il residuo basta per il ritroso alla crociera); altrimenti `reachable` False e all'esaurimento
+# valgono le regole della F6-A (senza basi: perso).
 # Nessuna estrazione casuale.
 
 # Distanza orizzontale massima [m] di una base aerea amica dalla rotta programmata perche' sia una base
@@ -1176,6 +1245,7 @@ BINGO_ALTERNATE = 'alternate'       # combattimento: base entro ALTERNATE_BASE_M
 BINGO_NEAREST = 'nearest'           # base piu' vicina in linea retta, raggiungibile
 BINGO_UNREACHABLE = 'unreachable'   # nessuna base raggiungibile: verso la piu' vicina, poi regole della F6-A
 BINGO_NO_BASE = 'no_base'           # nessuna base a cui tornare: nessun rientro (regole della F6-A)
+BINGO_EXIT = 'exit'                 # G4b, `exit_scene`: nessuna base, ritroso fino al punto di comparsa e uscita
 
 # Via del rientro verso una base alternativa: lungo la rotta programmata, poi diretto.
 RETURN_ALONG = 'along'
@@ -1193,13 +1263,14 @@ class BingoDecision:
         rest: carburante per il resto della rotta fino al LAND [frazione], alla crociera, attese comprese.
         reserve: riserva di disimpegno [frazione] (`disengagement_reserve`).
         action: una di BINGO_CONTINUE, BINGO_DEPARTURE, BINGO_ALTERNATE, BINGO_NEAREST, BINGO_UNREACHABLE,
-            BINGO_NO_BASE.
-        route: punti del rientro dal punto della decisione all'atterraggio compresi; vuota per CONTINUE e
-            NO_BASE.
-        base: punto d'atterraggio (l'ultimo di `route`), None per CONTINUE e NO_BASE.
+            BINGO_NO_BASE, BINGO_EXIT.
+        route: punti del rientro dal punto della decisione all'atterraggio compresi (EXIT: fino al punto di
+            comparsa); vuota per CONTINUE e NO_BASE.
+        base: punto d'atterraggio (l'ultimo di `route`; EXIT: il punto di comparsa, dove l'aereo esce di scena
+            senza atterrare), None per CONTINUE e NO_BASE.
         via: RETURN_REVERSE, RETURN_FORWARD, RETURN_ALONG o RETURN_DIRECT; None per CONTINUE e NO_BASE.
         return_length: lunghezza [m] di `route`.
-        reachable: il residuo basta per `route` alla crociera (False solo per UNREACHABLE).
+        reachable: il residuo basta per `route` alla crociera (False per UNREACHABLE e, se non basta, EXIT).
     """
     asset_id: str
     time: float
@@ -1222,8 +1293,14 @@ class BingoDecision:
 
     @property
     def returns(self) -> bool:
-        """L'aereo lascia la rotta per una base (tutte le azioni tranne CONTINUE e NO_BASE)."""
+        """L'aereo lascia la rotta per una base o, con EXIT, per il punto di comparsa (tutte le azioni tranne
+        CONTINUE e NO_BASE)."""
         return self.action not in (BINGO_CONTINUE, BINGO_NO_BASE)
+
+    @property
+    def exits(self) -> bool:
+        """L'aereo esce di scena alla fine del rientro (EXIT, G4b) invece di atterrare."""
+        return self.action == BINGO_EXIT
 
 
 def _locate(legs: Sequence, time: float) -> Tuple[int, float]:
@@ -1407,10 +1484,18 @@ def _base_options(asset_id: str, legs: Sequence, index: int, fraction: float, po
 def bingo_decision(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], rule: 'ReturnRule',
                    transfer: bool = False, time: Optional[float] = None, fuel: Optional[float] = None,
                    reserve: Optional[float] = None,
-                   max_offset: float = ALTERNATE_BASE_MAX_OFFSET) -> Optional[BingoDecision]:
+                   max_offset: float = ALTERNATE_BASE_MAX_OFFSET, forced: bool = False,
+                   exit_scene: bool = False) -> Optional[BingoDecision]:
     """Soglia di bingo e albero di decisione (G2, v. il commento della sezione) in un punto QUALUNQUE della
-    rotta: la funzione e' generale (G4 la richiamera' dopo ogni ingaggio); oggi la sessione la chiama una sola
-    volta, all'inizio dei tratti.
+    rotta: la funzione e' generale; la sessione la chiama all'inizio dei tratti (G2) e, dal G4b, alla fine di
+    ogni episodio d'ingaggio con il residuo di quell'istante (`fuel_at`).
+
+    RIENTRO FORZATO (`forced`, G4b, decisione dell'utente del 2026-10-17: la forza d'ingaggio dell'aereo si e'
+    DISINGAGGIATA): l'aereo interrompe la missione e rientra INDIPENDENTEMENTE dalla soglia. Il controllo di
+    soglia e il passo "continua" del trasferimento sono saltati; il resto dell'albero e' lo stesso (candidate,
+    raggiungibilita' col residuo, passi 3 e 4, `BINGO_NO_BASE` senza alcuna base). La sessione lo chiama con
+    `transfer` False, cioe' con la regola di COMBATTIMENTO. Con la riserva non modellata il rientro forzato e'
+    comunque deciso (la riserva serve solo alla soglia): `reserve` della decisione 0.
 
     Args:
         legs: i tratti che CONSUMANO della missione INTERA fino al LAND (`Mission_Adapter.airborne_legs`).
@@ -1423,11 +1508,15 @@ def bingo_decision(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], 
         fuel: residuo [frazione], None = il carburante attuale dell'asset (non mutato).
         reserve: riserva [frazione], None = `disengagement_reserve(asset)`.
         max_offset: distanza massima di una base alternativa dalla rotta [m].
+        forced: rientro forzato (v. sopra): nessun controllo di soglia, nessun "continua".
+        exit_scene: G4b (decisione dell'utente del 2026-10-17): senza alcuna base possibile (partenza in volo
+            senza basi del lato) `BINGO_EXIT` al posto di `BINGO_NO_BASE`: ritroso fino al punto di comparsa
+            (v. il commento della sezione). Senza effetto partendo da una base (il DEPARTURE c'e' sempre).
 
     Returns:
         La `BingoDecision`, oppure None se l'aereo non e' in bingo (`fuel` >= soglia, a meno del rumore
-        `_FUEL_EPS`) o se il controllo non e' possibile (carburante o riserva non modellati, nessun tratto,
-        asset senza id).
+        `_FUEL_EPS`; mai con `forced`) o se il controllo non e' possibile (carburante o, senza `forced`, riserva
+        non modellati, nessun tratto, asset senza id).
     """
     asset_id = _domain_id(asset)
     rate = _cruise_rate(asset)
@@ -1440,14 +1529,17 @@ def bingo_decision(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], 
     rest = remaining_route_demand(asset, legs, time)
     reserve = disengagement_reserve(asset) if reserve is None else float(reserve)
 
-    if rest is None or reserve is None or fuel >= rest + reserve - _FUEL_EPS:
+    if forced and rest is not None and reserve is None:
+        reserve = 0.0
+
+    if rest is None or reserve is None or (not forced and fuel >= rest + reserve - _FUEL_EPS):
         return None
 
     index, fraction = _locate(legs, time)
     point = _interpolate(legs[index], fraction)
     decided = dict(asset_id=asset_id, time=time, point=point, leg_index=index, fuel=fuel, rest=rest, reserve=reserve)
 
-    if transfer and fuel >= rest - _FUEL_EPS:
+    if transfer and not forced and fuel >= rest - _FUEL_EPS:
         return BingoDecision(action=BINGO_CONTINUE, **decided)
 
     bases = tuple((float(bx), float(by)) for bx, by in bases)
@@ -1468,6 +1560,13 @@ def bingo_decision(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], 
     nearest = nearest_base(point, straight)
 
     if nearest is None:
+        if exit_scene and not rule.departure:
+            # G4b: uscita di scena al punto di comparsa, il ritroso della F6-B2bis senza il tratto diretto finale.
+            points = _return_route(legs, index, fraction, point, False, None)
+            length = _path_length(points)
+            return BingoDecision(action=BINGO_EXIT, route=points, base=tuple(points[-1]), via=RETURN_REVERSE,
+                                 return_length=length, reachable=reachable(length), **decided)
+
         return BingoDecision(action=BINGO_NO_BASE, **decided)
 
     distance, landing = nearest

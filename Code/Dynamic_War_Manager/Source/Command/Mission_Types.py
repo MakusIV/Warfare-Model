@@ -161,6 +161,9 @@ class AbortReason(Enum):
     DAMAGE = 'damage'
     FUEL = 'fuel'            # carburante esaurito (F6-A: fermo nel punto, o aereo atterrato in planata)
     BINGO = 'bingo'          # rientro al bingo in volo (F6-B2; F6-B2bis a ritroso; G2 albero di decisione)
+    # Rientro forzato dopo il disingaggio della forza d'ingaggio (G4b, decisione dell'utente del 2026-10-17):
+    # la missione si interrompe e l'aereo torna alla base con la regola di combattimento dell'albero di bingo.
+    DISENGAGED = 'disengaged'
     AMMUNITION = 'ammunition'
     SUPPORT_MISSING = 'support_missing'
 
@@ -180,12 +183,17 @@ class AssetEndReason(Enum):
     Dalla F6-B1 il motore produce WINCHESTER, DAMAGE, TARGET_DESTROYED e MAX_DURATION
     (`Logic/Session_Simulator`, "Fine di attivita' e stato di missione"); dalla F6-B2 BINGO, che invece
     CAMBIA la rotta (rientro alla base, dalla F6-B2bis lungo la rotta a ritroso, dal G2 con l'albero di
-    decisione per tipo di missione, `Logic/Session_Simulator`, "Bingo"); THREAT
-    e MISSION_ABORTED non sono ancora prodotti.
+    decisione per tipo di missione, `Logic/Session_Simulator`, "Bingo"); dal G4b DISENGAGED, il rientro
+    forzato di un aereo la cui forza d'ingaggio si e' disingaggiata (anch'esso cambia la rotta,
+    `Logic/Session_Simulator`, "Ri-pianificazione dopo l'episodio (G4b)"); THREAT e MISSION_ABORTED non
+    sono ancora prodotti.
     """
     ROUTE_COMPLETED = 'route_completed'    # ultimo waypoint raggiunto
     MAX_DURATION = 'max_duration'          # durata / tempo sulla stazione esaurito
     BINGO = 'bingo'
+    # Rientro forzato dopo il disingaggio della forza d'ingaggio (G4b): l'aereo lascia la rotta e torna alla
+    # base, come al bingo, indipendentemente dal carburante.
+    DISENGAGED = 'disengaged'
     WINCHESTER = 'winchester'
     DAMAGE = 'damage'                      # soglia di danno superata (mission kill)
     THREAT = 'threat'                      # aborto per minaccia
@@ -746,8 +754,10 @@ class EndCriteria:
     + la riserva di disimpegno (`Fuel_Model.bingo_decision`) e l'albero dipende dal tipo di missione:
     trasferimento (categoria TRANSPORT) continua se il residuo basta a concludere, altrimenti ritroso, base piu'
     vicina, regole della F6-A; combattimento interrompe sempre e va alla piu' vicina in percorso fra base di
-    partenza e basi entro 3 km dalla rotta; con consumo deterministico solo alla partenza (fino a G4).
-    False = la missione non rientra al bingo (vola fino all'esaurimento, regole della F6-A).
+    partenza e basi entro 3 km dalla rotta; valutato alla partenza e, dal G4b, alla fine di ogni episodio
+    d'ingaggio a cui l'aereo ha consumato.
+    False = la missione non rientra al bingo (vola fino all'esaurimento, regole della F6-A); il rientro forzato
+    dopo il disingaggio della forza (G4b) NON dipende da questo criterio.
     NON letti: `abort_on_threat` (fuori dal piano della F6), `last_waypoint` (la rotta completata resta
     sempre una fine, anche con False).
     """

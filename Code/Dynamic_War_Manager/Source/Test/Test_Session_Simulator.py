@@ -775,6 +775,9 @@ class TestMissions(_Base):
         self.assertEqual(sorted(e.asset_id for e in outcome.fuel_events), ['bn1', 'bn2'])
         self.assertEqual(sorted(outcome.mission_outcomes), ['M-north'])
 
+    # Partenze in volo senza basi: con l'uscita di scena del G4b (`G4_OFF_SCENE_EXIT`) un superstite di una forza
+    # disingaggiata esce di scena (DISENGAGED); qui si prova la regola DESTROYED/COMPLETED.
+    @patch.object(SS, 'G4_OFF_SCENE_EXIT', False)
     def test_destroyed_mission(self):
         def fire(shooter, target):
             return self.LETHAL if type(target).__name__ == 'Aircraft' else None
@@ -930,6 +933,9 @@ class TestMissionAsEngagementUnit(_Base):
         self.assertIs(forces['Red-East'], red[0])
         self.assertEqual((owner['bn1'], owner['bn2'], owner['re1']), ((0, 'M-a'), (0, 'Blue-North'), (1, 'Red-East')))
 
+    # Partenze in volo senza basi: con l'uscita di scena del G4b (`G4_OFF_SCENE_EXIT`) una forza disingaggiata
+    # ripercorre la rotta a ritroso (un episodio in piu'); qui si provano i domini di coordinamento.
+    @patch.object(SS, 'G4_OFF_SCENE_EXIT', False)
     def test_coordination_domains_are_passed_to_every_engagement(self):
         """Senza Operazioni: ogni missione e' il proprio dominio (blocchi diversi), due run."""
         with patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as spy:
@@ -1813,11 +1819,13 @@ class TestEngagementFuel(_Base):
         self.assertEqual(red.assets['rp1'].fuel, 1.0)
 
     def test_exhaustion_by_the_charge_empties_the_counter_only(self):
-        """Carburante 0,10 < consumo d'ingaggio 0,12: il contatore va a zero all'istante dell'ingaggio, nessun
-        evento dopo (il tratto non e' contabilizzato), ma l'aereo non e' fermato ne' perso (nessun ri-scheduling,
-        G4): esito di rotta completata, nessun `crew_recovered`. Senza basi il bingo alla partenza (soglia 0,04 +
-        0,12) non ha dove rientrare (`BINGO_NO_BASE`)."""
-        outcome, b1, _ = self._single(fuel=0.10)
+        """G4b spento (il G3 e il G4a): carburante 0,10 < consumo d'ingaggio 0,12: il contatore va a zero
+        all'istante dell'ingaggio, nessun evento dopo (il tratto non e' contabilizzato), ma l'aereo non e' fermato
+        ne' perso (nessun ri-scheduling): esito di rotta completata, nessun `crew_recovered`. Senza basi il bingo
+        alla partenza (soglia 0,04 + 0,12) non ha dove rientrare (`BINGO_NO_BASE`). Con il G4b acceso v.
+        `TestReplanAfterEpisode`."""
+        with patch.object(SS, 'G4_REPLAN', False):
+            outcome, b1, _ = self._single(fuel=0.10)
         events = [e for e in outcome.fuel_events if e.asset_id == 'b1']
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0].regime, FM.ENGAGEMENT_REGIME)
@@ -1847,3 +1855,561 @@ class TestEngagementFuel(_Base):
                                  ER.InterceptionEvent(time=5.0, asset_id='b', interceptions=1)))
         self.assertEqual(SS._engagement_instants(result), {'a': 10.0, 'b': 5.0, 'c': 10.0, 'd': 20.0})
         self.assertEqual(set(SS._engagement_instants(result)), SS._engaged_assets(result))
+
+
+# ── G4a: EPISODI D'INGAGGIO ────────────────────────────────────────────────────
+
+def _cw(a, b, t_start, t_end):
+    """Finestra di contatto minima (solo gli istanti contano per gli episodi)."""
+    return CS.ContactWindow(asset_a_id=a, asset_b_id=b, t_start=float(t_start), t_end=float(t_end),
+                            t_cpa=float(t_start), distance_cpa=0.0, range_a=1.0, range_b=1.0)
+
+
+class TestEpisodes(unittest.TestCase):
+    """`_episodes` (G4a): finestre legate da una forza (o un dominio di coordinamento) comune che si sovrappongono
+    entro `EPISODE_GAP`; ordine deterministico."""
+
+    def test_gap_is_the_disengage_time(self):
+        self.assertEqual(SS.EPISODE_GAP, FM.DISENGAGE_TIME)
+        self.assertEqual(SS.EPISODE_GAP, 300.0)
+
+    def test_the_gap_splits_the_same_pair(self):
+        near = {('a', 'b'): [_cw('x', 'y', 0, 100), _cw('x', 'y', 400, 500)]}
+        far = {('a', 'b'): [_cw('x', 'y', 0, 100), _cw('x', 'y', 401, 500)]}
+        self.assertEqual([ids for ids, _ in SS._episodes(near)], [('a', 'b')])
+        self.assertEqual([(ids, [w.t_start for w in ws]) for ids, ws in SS._episodes(far)],
+                         [(('a', 'b'), [0.0]), (('a', 'b'), [401.0])])
+        self.assertEqual(len(SS._episodes(near, gap=0.0)), 2)
+        self.assertEqual(len(SS._episodes({('a', 'b'): [_cw('x', 'y', 0, 100), _cw('x', 'y', 100, 200)]}, gap=0.0)), 1)
+
+    def test_a_shared_force_joins_and_chains(self):
+        shared = {('a1', 'b1'): [_cw('x', 'y', 0, 100)], ('a1', 'b2'): [_cw('x', 'z', 250, 300)]}
+        self.assertEqual([ids for ids, _ in SS._episodes(shared)], [('a1', 'b1', 'b2')])
+        chain = {('a1', 'b1'): [_cw('p', 'q', 0, 100)], ('a2', 'b1'): [_cw('r', 'q', 350, 450)],
+                 ('a2', 'b2'): [_cw('r', 's', 700, 800)]}
+        self.assertEqual([ids for ids, _ in SS._episodes(chain)], [('a1', 'a2', 'b1', 'b2')])
+        disjoint = {('a2', 'b2'): [_cw('r', 's', 50, 80)], ('a1', 'b1'): [_cw('p', 'q', 0, 100)]}
+        self.assertEqual([ids for ids, _ in SS._episodes(disjoint)], [('a1', 'b1'), ('a2', 'b2')])
+
+    def test_coordination_domain_joins_only_within_the_gap(self):
+        domains = {'a1': 'D', 'a2': 'D', 'b1': 'b1', 'b2': 'b2'}
+        overlapping = {('a1', 'b1'): [_cw('p', 'q', 0, 100)], ('a2', 'b2'): [_cw('r', 's', 50, 80)]}
+        apart = {('a1', 'b1'): [_cw('p', 'q', 0, 100)], ('a2', 'b2'): [_cw('r', 's', 1000, 1100)]}
+        self.assertEqual([ids for ids, _ in SS._episodes(overlapping, domains)], [('a1', 'a2', 'b1', 'b2')])
+        self.assertEqual([ids for ids, _ in SS._episodes(apart, domains)], [('a1', 'b1'), ('a2', 'b2')])
+
+    def test_infinite_gap_is_the_connected_component(self):
+        groups = {('a1', 'b1'): [_cw('p', 'q', 0, 100), _cw('p', 'q', 5000, 5100)],
+                  ('a1', 'b2'): [_cw('p', 'z', 9000, 9100)], ('a2', 'b3'): [_cw('r', 's', 20, 30)]}
+        domains = {'a1': 'D', 'a2': 'D'}
+
+        for mapping in (None, domains):
+            with self.subTest(domains=mapping):
+                self.assertEqual(sorted(SS._episodes(groups, mapping, gap=float('inf'))),
+                                 sorted(SS._connected_components(groups, mapping)))
+
+    def test_one_episode_has_the_windows_of_the_component_in_its_order(self):
+        groups = {('a2', 'b1'): [_cw('r', 'q', 10, 50)], ('a1', 'b1'): [_cw('p', 'q', 30, 60), _cw('p', 'q', 0, 20)]}
+        self.assertEqual(SS._episodes(groups), SS._connected_components(groups))
+
+    def test_order_by_time_then_event_id_and_dict_order_independent(self):
+        groups = {('a3', 'b3'): [_cw('u', 'v', 10, 20)], ('a2', 'b2'): [_cw('r', 's', 0, 5)],
+                  ('a1', 'b1'): [_cw('p', 'q', 10, 20)]}
+        expected = [('a2', 'b2'), ('a1', 'b1'), ('a3', 'b3')]
+        self.assertEqual([ids for ids, _ in SS._episodes(groups)], expected)
+        self.assertEqual([ids for ids, _ in SS._episodes(dict(reversed(list(groups.items()))))], expected)
+
+    def test_negative_gap_raises(self):
+        with self.assertRaises(ValueError):
+            SS._episodes({}, gap=-1.0)
+
+    def test_busy_force_trims_or_drops_the_later_windows(self):
+        """Forza occupata: le finestre di 'a' che cominciano prima della fine del suo episodio sono ritagliate o
+        scartate; quelle di altre forze non cambiano."""
+        legs = {name: CS.static_legs(Point3D(0, 0, 0), 0.0, 1000.0) for name in ('p', 'q', 'r', 's')}
+        left = {('a', 'b'): [_cw('p', 'q', 100, 200), _cw('p', 'q', 150, 400)], ('c', 'd'): [_cw('r', 's', 100, 200)]}
+
+        with patch(_SOURCE + 'Logic.Session_Simulator.logger'):
+            self.assertTrue(SS._trim_busy(left, {'a': 300.0}, legs))
+            self.assertFalse(SS._trim_busy(left, {'a': 300.0}, legs))
+
+        self.assertEqual([(w.t_start, w.t_end) for w in left[('a', 'b')]], [(300.0, 400.0)])
+        self.assertEqual([(w.t_start, w.t_end) for w in left[('c', 'd')]], [(100.0, 200.0)])
+
+
+class TestEngagementEpisodes(_Base):
+    """G4a (`G4_EPISODES`, attivo): un aereo blu sorvola due veicoli della STESSA forza rossa a 150 km l'uno
+    dall'altro (finestre [75, 125] e [825, 875] s, 700 s > `EPISODE_GAP`): due episodi con lo stesso insieme di
+    forze, risolti in ordine di tempo, ciascuno con le sole sue finestre."""
+
+    CHARGE = 200.0 * FM.DISENGAGE_TIME / AUTONOMY['max']
+    # Il blu manca sempre, i veicoli rossi (2 salve ciascuno) graffiano senza distruggere: 5 punti a salva.
+    MISS = ER.ShotSpec(accuracy=0.0, destroy_capacity=0.0, rounds=1, time_of_flight=1.0)
+    SCRATCH = ER.ShotSpec(accuracy=1.0, destroy_capacity=0.0, rounds=5, time_of_flight=1.0)
+
+    def _scratch(self, shooter, target):
+        return self.MISS if type(shooter).__name__ == 'Aircraft' else self.SCRATCH
+
+    def _patrol(self, fire=_aircraft_fire, episodes=True, session_id='S-g4a', criteria=None, spy=None):
+        blue = _force('Blue', 'Blue', [_asset(Aircraft, 'b1', -20_000, 0, speed=200.0, ammunition=200)])
+        red = _force('Red', 'Red', [_asset(Vehicle, 'r1', 0, 0, ammunition=2), _asset(Vehicle, 'r2', 150_000, 0, ammunition=2)])
+        mission = _air_mission('M-b1', blue, _route([(-20_000, 0), (200_000, 0)], 200.0, 'r-b1'), [('b1', 0.0)])
+
+        if criteria:
+            mission = _with_criteria(mission, **criteria)
+
+        calls = []
+        original = ER.resolve_engagement
+
+        def resolve(*args, **kwargs):
+            forces = (args[0], args[1], *kwargs.get('extra_forces', ()))
+            health = {asset.id: asset.health for force in forces for asset in force.assets.values()}
+            result = original(*args, **kwargs)
+            result = spy(len(calls), result) if spy is not None and result is not None else result
+            calls.append((args, kwargs, health, result))
+            return result
+
+        with patch.object(SS, 'G4_EPISODES', episodes), patch.object(SS.ER, 'resolve_engagement', side_effect=resolve):
+            outcome = SS.run_session(self._order(session_id, (mission,)), [blue], [red], fire,
+                                     reaction_profile_for=_profile)
+
+        return outcome, blue.assets['b1'], calls
+
+    def test_two_episodes_in_time_order_with_their_own_windows(self):
+        outcome, _, calls = self._patrol()
+        self.assertEqual(len(calls), 2)
+        self.assertEqual([{w.asset_b_id for w in args[2]} for args, *_ in calls], [{'r1'}, {'r2'}])
+        self.assertLess(max(w.t_end for w in calls[0][0][2]), min(w.t_start for w in calls[1][0][2]))
+        self.assertEqual([tuple(o.force_id for o in e) for e in outcome.engagement_outcomes],
+                         [('M-b1', 'Red'), ('M-b1', 'Red')])
+        self.assertEqual(len(outcome.outcomes_of('M-b1')), 2)
+
+    def test_switch_off_is_one_connected_component(self):
+        outcome, _, calls = self._patrol(episodes=False)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual({w.asset_b_id for w in calls[0][0][2]}, {'r1', 'r2'})
+        self.assertEqual(len(outcome.engagement_outcomes), 1)
+
+    def test_same_forces_counter_is_the_ordinal(self):
+        """Stesso insieme di forze: stesso event_id, `counter` 0 e 1, per l'ingaggio e per la tempra (tempra nuova)."""
+        original = SessionOrder.rng
+
+        with patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
+            outcome, _, _ = self._patrol()
+
+        keys = [(tuple(json.loads(call.kwargs['event_id'])), call.kwargs['counter']) for call in spy.call_args_list]
+        self.assertEqual(keys, [(('engagement', 'M-b1', 'Red'), 0), (('temper', 'M-b1', 'Red'), 0),
+                                (('engagement', 'M-b1', 'Red'), 1), (('temper', 'M-b1', 'Red'), 1)])
+        first, second = outcome.outcomes_of('M-b1')
+        self.assertNotEqual(first.temper, second.temper)
+
+    # Requisito del G4a: con l'uscita di scena del G4b (`G4_OFF_SCENE_EXIT`, partenze in volo senza basi) una
+    # forza disingaggiata cambierebbe rotta dopo l'episodio; qui si confrontano solo episodi e componenti.
+    @patch.object(SS, 'G4_OFF_SCENE_EXIT', False)
+    def test_one_episode_sessions_are_identical_to_the_switch_off(self):
+        """Requisito forte: una componente che e' un solo episodio ha lo stream e l'esito di prima."""
+        for session_id in ('S-one-1', 'S-one-2'):
+            with self.subTest(session_id=session_id):
+                with patch.object(SS, 'G4_EPISODES', False):
+                    before, _, _ = self._run(session_id)
+
+                after, _, _ = self._run(session_id)
+                self.assertEqual(after, before)
+                self.assertGreater(len(after.damage_events), 0)
+
+        for session_id in ('S-one-3', 'S-one-4'):
+            with self.subTest(session_id=session_id):
+                outcomes = []
+
+                for episodes in (False, True):
+                    raider, red_a, red_b, missions = TestTwoFronts._forces(self)
+
+                    with patch.object(SS, 'G4_EPISODES', episodes):
+                        outcomes.append(SS.run_session(self._order(session_id, missions), [raider], [red_a, red_b],
+                                                       _fire, reaction_profile_for=_profile))
+
+                self.assertEqual(outcomes[1], outcomes[0])
+
+    def test_deterministic(self):
+        first, _, _ = self._patrol(fire=_fire)
+        second, _, _ = self._patrol(fire=_fire)
+        self.assertEqual(first, second)
+
+    def test_two_engagement_charges_in_two_episodes(self):
+        """G3: un consumo d'ingaggio per episodio, all'istante della prima salva di ciascuno, prima del tratto
+        (unico) di movimento alla crociera; con il G4a spento un consumo solo."""
+        outcome, b1, calls = self._patrol()
+        events = [e for e in outcome.fuel_events if e.asset_id == 'b1']
+        self.assertEqual([e.regime for e in events], [FM.ENGAGEMENT_REGIME, FM.ENGAGEMENT_REGIME, SS.CRUISE_REGIME])
+        first = [min(s.t_launch for s in result.salvos) for *_, result in calls]
+        self.assertEqual([e.time for e in events[:2]], first)
+        self.assertAlmostEqual(events[0].amount, self.CHARGE)
+        self.assertAlmostEqual(events[1].fuel_before, events[0].fuel_after)
+        self.assertAlmostEqual(events[2].fuel_before, 1.0 - 2 * self.CHARGE)
+        self.assertAlmostEqual(b1.fuel, 1.0 - 2 * self.CHARGE - 220_000.0 / AUTONOMY['nominal'])
+
+        outcome, _, _ = self._patrol(episodes=False)
+        self.assertEqual([e.regime for e in outcome.fuel_events if e.asset_id == 'b1'],
+                         [FM.ENGAGEMENT_REGIME, SS.CRUISE_REGIME])
+
+    def test_health_is_chained_across_episodes(self):
+        """Ogni esito e' applicato prima dell'episodio successivo: il secondo legge la salute gia' ridotta e i
+        `health_before/after` sono concatenati."""
+        outcome, b1, calls = self._patrol(fire=self._scratch)
+        hits = [e for e in outcome.damage_events if e.target_id == 'b1']
+        self.assertTrue(any(e.time < 500 for e in hits) and any(e.time > 500 for e in hits))
+        self.assertEqual(calls[1][2]['b1'], [e for e in hits if e.time < 500][-1].health_after)
+
+        for previous, event in zip(hits, hits[1:]):
+            self.assertEqual(event.health_before, previous.health_after)
+
+        self.assertEqual(b1.health, hits[-1].health_after)
+
+    def test_damage_threshold_reference_is_the_session_start_health(self):
+        """Soglia di danno: la salute di riferimento passata a OGNI episodio e' quella d'inizio sessione (100),
+        anche quando l'aereo entra nel secondo gia' danneggiato; con il G4a spento non e' passata."""
+        _, _, calls = self._patrol(fire=self._scratch, criteria={'damage_threshold': 0.9})
+        self.assertEqual([kwargs['activity_criteria']['b1'].reference_health for _, kwargs, *_ in calls], [100, 100])
+        self.assertLess(calls[1][2]['b1'], 100)
+
+        _, _, calls = self._patrol(fire=self._scratch, criteria={'damage_threshold': 0.9}, episodes=False)
+        self.assertIsNone(calls[0][1]['activity_criteria']['b1'].reference_health)
+
+    # Partenza in volo senza basi: dal G4b la forza disingaggiata uscirebbe di scena (`G4_OFF_SCENE_EXIT`,
+    # provata in TestReplanAfterEpisode) e il secondo episodio non ci sarebbe; qui si prova la passivita' del G4a.
+    @patch.object(SS, 'G4_OFF_SCENE_EXIT', False)
+    def test_a_disengaged_force_is_passive_in_the_later_episodes(self):
+        """Forza DISINGAGGIATA nel primo episodio (esito forzato a 100 s): nel secondo nessuna salva offensiva
+        (`until` = istante del disingaggio), resta bersaglio; senza disingaggio nel secondo episodio spara."""
+        def disengage(index, result):
+            if index:
+                return result
+
+            forces = tuple(dataclasses.replace(o, outcome=ER.DISENGAGED, time=100.0) if o.force_id == 'M-b1' else o
+                           for o in result.forces)
+            return dataclasses.replace(result, forces=forces)
+
+        _, _, free = self._patrol()
+        self.assertTrue(any(s.shooter_id == 'b1' for s in free[1][3].salvos))
+
+        outcome, _, calls = self._patrol(spy=disengage)
+        self.assertEqual(calls[1][1]['activity_criteria']['b1'].until, 100.0)
+        self.assertFalse(any(s.shooter_id == 'b1' for s in calls[1][3].salvos))
+        self.assertEqual(outcome.outcomes_of('M-b1')[0].outcome, ER.DISENGAGED)
+
+    def test_an_activity_end_carries_over_to_the_later_episodes(self):
+        """Fine di attivita' (qui: danno oltre la soglia 0,01, il primo graffio) nel primo episodio: nel secondo l'aereo e' passivo
+        dall'istante della fine, nessuna salva offensiva."""
+        _, _, free = self._patrol(fire=self._scratch)
+        self.assertTrue(any(s.shooter_id == 'b1' for s in free[1][3].salvos))
+        _, _, calls = self._patrol(fire=self._scratch, criteria={'damage_threshold': 0.01})
+        end, = [e for e in calls[0][3].activity_ends if e.asset_id == 'b1']
+        self.assertEqual(end.reason, ER.ACTIVITY_DAMAGE)
+        self.assertEqual(calls[1][1]['activity_criteria']['b1'].until, end.time)
+        self.assertFalse(any(s.shooter_id == 'b1' for s in calls[1][3].salvos))
+
+    def test_a_force_busy_until_its_salvos_land_skips_the_overlapping_contact(self):
+        """Forza occupata: salve con 1000 s di volo nel primo episodio (fine dell'esito > 1000 s), quindi la
+        finestra con r2 ([825, 875] s) cade dentro l'occupazione ed e' scartata: un solo episodio."""
+        slow = ER.ShotSpec(accuracy=0.7, destroy_capacity=0.3, rounds=1, time_of_flight=1000.0)
+        outcome, _, calls = self._patrol(fire=lambda shooter, target: slow if type(shooter).__name__ == 'Aircraft'
+                                         else None)
+        self.assertEqual(len(calls), 1)
+        self.assertGreater(calls[0][3].t_end, 875.0)
+        self.assertEqual({w.asset_b_id for w in calls[0][0][2]}, {'r1'})
+
+
+# ── G4b: RI-PIANIFICAZIONE DOPO L'EPISODIO D'INGAGGIO ──────────────────────────
+
+class TestReplanAfterEpisode(_Base):
+    """G4b (`G4_REPLAN`, attivo): alla fine di ogni episodio gli aerei di missione in volo che vi hanno consumato
+    (G3) o la cui forza si e' disingaggiata sono ri-pianificati da quell'istante. Volo di test: b1 in volo da
+    (0, 0, 1000) verso nord per 150 km a 200 m/s (750 s, 0,15 del pieno alla crociera); veicoli rossi r1 a 20 km
+    (finestra ~[75, 125] s) e r2 a 100 km (~[475, 525] s), due episodi; spara solo l'aereo (consumo d'ingaggio
+    0,12 = la riserva di ripiego, v. `TestEngagementFuel`); base aerea Blue a (0, -10 km)."""
+
+    CHARGE = TestEngagementFuel.CHARGE
+
+    def _flight(self, fuel=0.30, base=(0.0, -10_000.0), mission_type='CAS', bingo=True, replan=True, spy=None,
+                z=1_000.0, fire=_aircraft_fire, session_id='S-g4b', exit_scene=True):
+        blue = [_force('Blue', 'Blue', [_asset(Aircraft, 'b1', 0.0, 0.0, z=z, fuel=fuel, speed=200.0)])]
+
+        if base is not None:
+            blue.append(TestReserveBingo._airbase(self, base))
+
+        red = _force('Red', 'Red', [_asset(Vehicle, 'r1', 0.0, 20_000.0), _asset(Vehicle, 'r2', 0.0, 100_000.0)])
+        mission = _air_mission('M-b1', blue[0], _route([(0.0, 0.0), (0.0, 150_000.0)], 200.0, 'r-b1', z=z),
+                               [('b1', 0.0)])
+        mission = dataclasses.replace(mission, mission_type=mission_type, end_criteria=EndCriteria(bingo=bingo))
+        calls = []
+        original = ER.resolve_engagement
+
+        def resolve(*args, **kwargs):
+            result = original(*args, **kwargs)
+            result = spy(len(calls), result) if spy is not None and result is not None else result
+            calls.append((args, kwargs, result))
+            return result
+
+        with patch.object(SS, 'G4_REPLAN', replan), patch.object(SS, 'G4_OFF_SCENE_EXIT', exit_scene), \
+                patch.object(SS.ER, 'resolve_engagement', side_effect=resolve), \
+                patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler, \
+                patch.object(FM, 'bingo_decision', wraps=FM.bingo_decision) as decisions:
+            outcome = SS.run_session(self._order(session_id, (mission,)), blue, [red], fire,
+                                     reaction_profile_for=_profile)
+
+        return outcome, blue[0].assets['b1'], calls, scheduler, decisions
+
+    @staticmethod
+    def _disengage_first(index, result):
+        """Esito della forza blu forzato a DISINGAGGIATA nel primo episodio (100 s)."""
+        if index:
+            return result
+
+        forces = tuple(dataclasses.replace(o, outcome=ER.DISENGAGED, time=100.0) if o.force_id == 'M-b1' else o
+                       for o in result.forces)
+        return dataclasses.replace(result, forces=forces)
+
+    @staticmethod
+    def _miss(shooter, target):
+        """Spara solo l'aereo, e manca sempre: il bersaglio resta operativo per tutta la finestra."""
+        return TestEngagementEpisodes.MISS if type(shooter).__name__ == 'Aircraft' else None
+
+    @staticmethod
+    def _met(calls, asset_id):
+        return any(asset_id in (w.asset_a_id, w.asset_b_id) for args, _, _ in calls for w in args[2])
+
+    def test_the_switch_is_on_and_needs_the_episodes(self):
+        self.assertTrue(SS.G4_REPLAN)
+        _, _, calls, scheduler, _ = self._flight(fuel=1.0, spy=self._disengage_first)
+        self.assertGreater(scheduler.call_count, 1)
+
+        with patch.object(SS, 'G4_EPISODES', False):
+            _, _, _, scheduler, _ = self._flight(fuel=1.0, spy=self._disengage_first)
+
+        self.assertEqual(scheduler.call_count, 1)
+
+    def test_bingo_after_the_episode_returns_and_never_meets_the_threat_ahead(self):
+        """0,30 > soglia alla partenza (0,15 + 0,12): nessun bingo al G2; dopo il primo episodio (consumo 0,12) il
+        residuo a fine episodio e' sotto il resto della rotta + la riserva: bingo da `t_r`, ritroso fino al punto
+        di comparsa e diretto sulla base; r2, piu' avanti sulla rotta, non e' mai incontrato. Esito BINGO a `t_r`,
+        ABORTED(BINGO), a terra sulla base."""
+        outcome, b1, calls, scheduler, decisions = self._flight(fire=self._miss)
+        t_r = calls[0][2].t_end
+        self.assertFalse(self._met(calls, 'r2'))
+        # Contatti ricalcolati da `t_r` (l'aereo manca sempre, r1 resta operativo): sul ritroso l'aereo ripassa su r1
+        # (nuovo episodio, passivo: nessuna salva).
+        self.assertEqual(len(calls), 2)
+        self.assertEqual({w.asset_b_id for w in calls[1][0][2]}, {'r1'})
+        self.assertGreaterEqual(min(w.t_start for w in calls[1][0][2]), t_r - 1e-9)
+        self.assertEqual(calls[1][2].salvos, ())
+        self.assertFalse(any(e.target_id == 'r2' for e in outcome.damage_events))
+        mission = outcome.mission_outcomes['M-b1']
+        self.assertEqual((mission.status, mission.reason), (MissionStatus.ABORTED, AbortReason.BINGO))
+        asset = mission.asset_outcomes['b1']
+        self.assertEqual(asset.end_reason, AssetEndReason.BINGO)
+        self.assertAlmostEqual(asset.end_time, t_r, delta=1e-9)
+        self.assertEqual(outcome.postures['b1'], MA.PARKED_POSTURE)
+        legs = scheduler.call_args.kwargs['legs']['b1']
+        self.assertEqual(legs[-1].p_end, (0.0, -10_000.0, 0.0))
+        self.assertAlmostEqual(legs[0].t_end, t_r, delta=1e-6)
+        # Residuo analitico a `t_r` (coerenza con la contabilita'): partenza - crociera fino a `t_r` - consumo.
+        replanned = [call for call in decisions.call_args_list if call.kwargs.get('time') not in (None, 0.0)]
+        self.assertEqual(len(replanned), 1)
+        residual = 0.30 - 200.0 * t_r / AUTONOMY['nominal'] - self.CHARGE
+        self.assertAlmostEqual(replanned[0].kwargs['fuel'], residual, delta=1e-12)
+        decision = FM.bingo_decision(b1, *replanned[0].args[1:], **replanned[0].kwargs)
+        self.assertAlmostEqual(b1.fuel, residual - decision.return_length / AUTONOMY['nominal'], delta=1e-9)
+        self.assertFalse(any(e.exhausted for e in outcome.fuel_events))
+
+    def test_switch_off_flies_on_and_empties_the_counter(self):
+        """G4b spento (il G4a): l'aereo prosegue, incontra r2, consuma due volte e il contatore arriva a zero con
+        la rotta completata (il limite del G3)."""
+        outcome, b1, calls, scheduler, _ = self._flight(replan=False)
+        self.assertTrue(self._met(calls, 'r2'))
+        self.assertEqual(scheduler.call_count, 1)
+        self.assertEqual(outcome.mission_outcomes['M-b1'].status, MissionStatus.COMPLETED)
+        self.assertEqual(b1.fuel, 0.0)
+
+    def test_above_the_threshold_nothing_changes(self):
+        """Pieno: dopo ogni consumo l'aereo resta sopra la soglia, nessun tratto cambia, nessun nuovo scheduling:
+        l'esito e' quello del G4a."""
+        outcome, _, _, scheduler, _ = self._flight(fuel=1.0)
+        self.assertEqual(scheduler.call_count, 1)
+        before, _, _, _, _ = self._flight(fuel=1.0, replan=False)
+        self.assertEqual(outcome, before)
+        self.assertEqual(outcome.mission_outcomes['M-b1'].status, MissionStatus.COMPLETED)
+
+    def test_exhaustion_in_the_engagement_without_a_base_is_a_loss(self):
+        """0,10 < consumo d'ingaggio 0,12, nessuna base (nessun bingo possibile alla partenza): esaurito in
+        ingaggio, regole della F6-A dal punto a fine episodio, nessuna base in planata: perso con l'equipaggio
+        recuperato, i tratti finiscono a `t_r`, r2 mai incontrato."""
+        outcome, b1, calls, scheduler, _ = self._flight(fuel=0.10, base=None)
+        t_r = calls[0][2].t_end
+        asset = outcome.mission_outcomes['M-b1'].asset_outcomes['b1']
+        self.assertEqual((asset.state, asset.end_reason, asset.crew_recovered),
+                         (AssetState.DESTROYED, AssetEndReason.FUEL_EXHAUSTED, True))
+        self.assertAlmostEqual(asset.end_time, t_r, delta=1e-9)
+        self.assertAlmostEqual(scheduler.call_args.kwargs['legs']['b1'][-1].t_end, t_r, delta=1e-6)
+        self.assertTrue(b1.is_destroyed())
+        self.assertFalse(self._met(calls, 'r2'))
+        self.assertEqual(outcome.postures['b1'], MA.DESTROYED_POSTURE)
+
+    def test_exhaustion_in_the_engagement_glides_to_a_reachable_base(self):
+        """Come sopra, con una base 5 km a est del punto di fine episodio (planata 10 km da 1000 m) e il bingo non
+        dichiarato (altrimenti al G2 l'aereo tornerebbe subito): planata sulla base, a terra, FUEL_EXHAUSTED,
+        ABORTED(FUEL)."""
+        _, _, calls, _, _ = self._flight(fuel=0.10, base=None)
+        y = 200.0 * calls[0][2].t_end
+        outcome, b1, _, scheduler, _ = self._flight(fuel=0.10, base=(5_000.0, y), bingo=False)
+        mission = outcome.mission_outcomes['M-b1']
+        self.assertEqual((mission.status, mission.reason), (MissionStatus.ABORTED, AbortReason.FUEL))
+        self.assertEqual((mission.asset_outcomes['b1'].state, mission.asset_outcomes['b1'].end_reason),
+                         (AssetState.OPERATIONAL, AssetEndReason.FUEL_EXHAUSTED))
+        glide, parked = scheduler.call_args.kwargs['legs']['b1'][-2:]
+        for got, want in zip(glide.p_end, (5_000.0, y, 0.0)):
+            self.assertAlmostEqual(got, want, delta=1e-6)
+
+        self.assertEqual(parked.p_start, parked.p_end)
+        self.assertEqual(outcome.postures['b1'], MA.PARKED_POSTURE)
+        self.assertFalse(b1.is_destroyed())
+
+    def test_disengaged_force_returns_with_plenty_of_fuel(self):
+        """Forza disingaggiata nel primo episodio, carburante pieno (nessuna soglia): rientro forzato con la regola
+        di combattimento da `t_r`, motivo DISENGAGED, ABORTED(DISENGAGED); r2 mai incontrato. Anche un
+        trasferimento ('Transport') rientra: il rientro forzato e' sempre con la regola di combattimento."""
+        for mission_type in ('CAS', 'Transport'):
+            with self.subTest(mission_type=mission_type):
+                outcome, _, calls, scheduler, _ = self._flight(fuel=1.0, spy=self._disengage_first,
+                                                               mission_type=mission_type)
+                mission = outcome.mission_outcomes['M-b1']
+                self.assertEqual((mission.status, mission.reason), (MissionStatus.ABORTED, AbortReason.DISENGAGED))
+                asset = mission.asset_outcomes['b1']
+                self.assertEqual(asset.end_reason, AssetEndReason.DISENGAGED)
+                self.assertAlmostEqual(asset.end_time, calls[0][2].t_end, delta=1e-9)
+                self.assertFalse(self._met(calls, 'r2'))
+                self.assertEqual(scheduler.call_args.kwargs['legs']['b1'][-1].p_end, (0.0, -10_000.0, 0.0))
+                self.assertEqual(outcome.postures['b1'], MA.PARKED_POSTURE)
+
+    def _assert_exit(self, outcome, calls, scheduler, t_r, reason, abort):
+        """Uscita di scena (G4b, `G4_OFF_SCENE_EXIT`): ritroso da `t_r` fino al punto di comparsa (0, 0, 1000) alla
+        crociera, nessuna sosta dopo (presenza finita), postura `off_scene`, nessun contatto dopo l'uscita, r2 mai
+        incontrato, motivo dell'esito quello del rientro all'istante della decisione."""
+        legs = scheduler.call_args.kwargs['legs']['b1']
+        exit_time = 2.0 * t_r      # andata e ritorno alla stessa velocita' (200 m/s)
+        self.assertEqual(legs[-1].p_end, (0.0, 0.0, 1_000.0))
+        self.assertNotEqual(legs[-1].p_start, legs[-1].p_end)          # nessuna sosta: non atterra
+        self.assertAlmostEqual(legs[-1].t_end, exit_time, delta=1e-6)
+        self.assertAlmostEqual(legs[0].t_end, t_r, delta=1e-6)
+        self.assertFalse(any(w.t_end > exit_time + 1e-6 for args, _, _ in calls for w in args[2]
+                             if 'b1' in (w.asset_a_id, w.asset_b_id)))
+        self.assertFalse(self._met(calls, 'r2'))
+        self.assertFalse(any(s.shooter_id == 'b1' and s.t_launch > t_r + 1e-9 for _, _, result in calls
+                             for s in result.salvos))
+        self.assertEqual(outcome.postures['b1'], MA.OFF_SCENE_POSTURE)
+        mission = outcome.mission_outcomes['M-b1']
+        self.assertEqual((mission.status, mission.reason), (MissionStatus.ABORTED, abort))
+        asset = mission.asset_outcomes['b1']
+        self.assertEqual((asset.state, asset.end_reason), (AssetState.OPERATIONAL, reason))
+        self.assertAlmostEqual(asset.end_time, t_r, delta=1e-9)
+        self.assertIsNone(asset.crew_recovered)
+
+    def test_disengaged_without_a_base_exits_at_the_appearance_point(self):
+        """Partenza in volo senza basi del lato, forza disingaggiata nel primo episodio (decisione dell'utente del
+        2026-10-17): al posto di NO_BASE l'aereo ripercorre la rotta a ritroso fino al punto di comparsa e li' esce
+        di scena; ABORTED(DISENGAGED). Il ritroso consuma alla crociera."""
+        outcome, b1, calls, scheduler, decisions = self._flight(fuel=1.0, base=None, spy=self._disengage_first)
+        t_r = calls[0][2].t_end
+        self.assertEqual(decisions.call_args.kwargs.get('exit_scene'), True)
+        self._assert_exit(outcome, calls, scheduler, t_r, AssetEndReason.DISENGAGED, AbortReason.DISENGAGED)
+        self.assertAlmostEqual(b1.fuel, 1.0 - self.CHARGE - 2.0 * 200.0 * t_r / AUTONOMY['nominal'], delta=1e-9)
+        self.assertFalse(b1.is_destroyed())
+
+    def test_bingo_after_the_episode_without_a_base_exits(self):
+        """Come `test_bingo_after_the_episode_returns_and_never_meets_the_threat_ahead` senza basi: bingo dopo il
+        consumo d'ingaggio, ritroso fino al punto di comparsa e uscita di scena, ABORTED(BINGO)."""
+        outcome, b1, calls, scheduler, _ = self._flight(base=None, fire=self._miss)
+        t_r = calls[0][2].t_end
+        self._assert_exit(outcome, calls, scheduler, t_r, AssetEndReason.BINGO, AbortReason.BINGO)
+        self.assertAlmostEqual(b1.fuel, 0.30 - self.CHARGE - 2.0 * 200.0 * t_r / AUTONOMY['nominal'], delta=1e-9)
+        self.assertFalse(any(e.exhausted for e in outcome.fuel_events))
+
+    def test_exit_with_an_insufficient_residual_is_a_loss(self):
+        """Residuo a fine episodio pari a meta' del ritroso: a secco a meta' strada, nessuna base in planata
+        (regole della F6-A): perso, DESTROYED/FUEL_EXHAUSTED con l'equipaggio recuperato. Alla partenza (G2) la
+        soglia scatta ma senza basi nessun rientro (NO_BASE, invariato)."""
+        _, _, calls, _, _ = self._flight(base=None, fire=self._miss)
+        t_r = calls[0][2].t_end
+        leg = 200.0 * t_r / AUTONOMY['nominal']
+        outcome, b1, calls, scheduler, decisions = self._flight(fuel=self.CHARGE + 1.5 * leg, base=None,
+                                                                fire=self._miss)
+        self.assertAlmostEqual(calls[0][2].t_end, t_r, delta=1e-9)
+        self.assertEqual(decisions.call_args_list[0].kwargs.get('exit_scene', False), False)    # G2: invariato
+        asset = outcome.mission_outcomes['M-b1'].asset_outcomes['b1']
+        self.assertEqual((asset.state, asset.end_reason, asset.crew_recovered),
+                         (AssetState.DESTROYED, AssetEndReason.FUEL_EXHAUSTED, True))
+        self.assertAlmostEqual(asset.end_time, 1.5 * t_r, delta=1e-6)
+        self.assertAlmostEqual(scheduler.call_args.kwargs['legs']['b1'][-1].t_end, 1.5 * t_r, delta=1e-6)
+        self.assertEqual(outcome.mission_outcomes['M-b1'].status, MissionStatus.DESTROYED)
+        self.assertTrue(b1.is_destroyed())
+        self.assertEqual(outcome.postures['b1'], MA.DESTROYED_POSTURE)
+        self.assertFalse(self._met(calls, 'r2'))
+
+    def test_exit_switch_off_stays_passive_on_its_route(self):
+        """`G4_OFF_SCENE_EXIT` spento (il G4b fino al 2026-10-17): nessun rientro possibile (NO_BASE), passivo
+        sulla rotta (incontra r2 senza sparare), nessun motivo nuovo."""
+        outcome, b1, calls, scheduler, _ = self._flight(fuel=1.0, base=None, spy=self._disengage_first,
+                                                        exit_scene=False)
+        self.assertEqual(scheduler.call_count, 1)
+        self.assertTrue(self._met(calls, 'r2'))
+        self.assertFalse(any(s.shooter_id == 'b1' for s in calls[1][2].salvos))
+        self.assertEqual(outcome.mission_outcomes['M-b1'].status, MissionStatus.COMPLETED)
+
+    def test_exit_switch_is_on_and_without_effect_with_a_base_or_without_replan(self):
+        """Con una base del lato (rientro sulla base) o con il G4b spento l'interruttore non cambia nulla (senza G4b
+        e senza basi l'aereo finisce la rotta e la postura e' gia' `off_scene` per la F5-B)."""
+        self.assertTrue(SS.G4_OFF_SCENE_EXIT)
+
+        for kwargs in (dict(fuel=1.0, spy=self._disengage_first), dict(fire=self._miss),
+                       dict(fuel=1.0, base=None, spy=self._disengage_first, replan=False),
+                       dict(base=None, fire=self._miss, replan=False)):
+            with self.subTest(**{k: v for k, v in kwargs.items() if k not in ('spy', 'fire')}):
+                on = self._flight(**kwargs)[0]
+                off = self._flight(exit_scene=False, **kwargs)[0]
+                self.assertEqual(on, off)
+
+    def test_ground_forces_are_not_replanned(self):
+        """Terra: una colonna disingaggiata non e' ri-instradata (passiva sulla rotta, G4a): nessun nuovo
+        scheduling, esito identico a G4b spento."""
+        def run(replan):
+            blue = _force('Blue', 'Blue', [_asset(Vehicle, 'v1', 0.0, 0.0, speed=10.0)])
+            red = _force('Red', 'Red', [_asset(Vehicle, 'r1', 0.0, 2_000.0), _asset(Vehicle, 'r2', 0.0, 20_000.0)])
+            mission = _ground_mission('M-v1', blue, _ground_route([(0.0, 0.0), (0.0, 30_000.0)], 10.0, 'g-v1'), 'v1')
+
+            def resolve(*args, **kwargs):
+                result = ER_resolve(*args, **kwargs)
+
+                if result is None:
+                    return result
+
+                forces = tuple(dataclasses.replace(o, outcome=ER.DISENGAGED, time=o.time or result.t_start)
+                               if o.force_id == 'M-v1' else o for o in result.forces)
+                return dataclasses.replace(result, forces=forces)
+
+            with patch.object(SS, 'G4_REPLAN', replan), patch.object(SS.ER, 'resolve_engagement', side_effect=resolve), \
+                    patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler:
+                outcome = SS.run_session(self._order('S-g4b-ground', (mission,)), [blue], [red], _fire,
+                                         reaction_profile_for=_profile)
+
+            return outcome, scheduler.call_count
+
+        ER_resolve = ER.resolve_engagement
+        on, calls_on = run(True)
+        off, _ = run(False)
+        self.assertEqual(calls_on, 1)
+        self.assertEqual(on, off)
+        self.assertGreater(len(on.engagement_outcomes), 0)
+
+    def test_deterministic(self):
+        first = self._flight()[0]
+        second = self._flight()[0]
+        self.assertEqual(first, second)

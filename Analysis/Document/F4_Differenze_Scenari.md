@@ -1864,3 +1864,405 @@ scenari hanno rotte di 40-300 km, quindi quasi tutti gli aerei finiscono con MEN
 - `Test_Session_Scenarios_S24.TestS24OrbitExhaustion.test_fuel_events_are_per_leg` e
   `Test_Session_Scenarios_S10_S18.TestS11SessionBoundary.test_fuel_in_second_session_starts_from_carried_fuel`:
   adattati all'evento d'ingaggio (tratti filtrati, contatore concatenato; primo evento per asset).
+
+## G4a: episodi d'ingaggio (decisioni dell'utente del 2026-10-17)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` installata (802 esecuzioni, G3).
+**Dopo**: `Session_Simulator.G4_EPISODES = True`, `EPISODE_GAP` = 300 s. `--compare`, 2026-10-17 su ProArt P16:
+**814 esecuzioni**; delle 802 della base **762 IDENTICHE**, **40 cambiate** (S5: 36 = 12 seed x 'press_on', 'default',
+'resistant'; S6: 4 seed), **12 nuove** (`S5/S5-k/episodes_off`, k = 0..11). Sono esattamente le esecuzioni previste
+dalla sonda della proposta (componenti con 2 episodi a 300 s): nessun'altra esecuzione cambia, quindi lo spostamento
+della contabilita' del carburante in un passo finale e il nuovo campo `reference_health` non hanno effetti nelle
+sessioni di un solo episodio per componente. Verificato fuori dal repository: le 12 'episodes_off' sono IDENTICHE
+(confronto dell'intera voce) alle vecchie 'default'. Fotografia del repository NON rigenerata.
+
+### Il cambio
+
+1. **Episodio** (`_episodes`): finestre legate se le loro coppie di forze condividono una forza (o due forze dello
+   stesso dominio di coordinamento) E gli intervalli si sovrappongono o distano al piu' `EPISODE_GAP` = 300 s
+   (`Fuel_Model.DISENGAGE_TIME`). Union-find sulle finestre, una scansione per chiave (forza o dominio) come fusione di
+   intervalli; ordine: inizio, `event_id`, prima finestra.
+2. **Coda**: un `resolve_engagement` per episodio, in ordine di tempo, sulle sole sue finestre e forze; esito applicato
+   subito.
+3. **Forza occupata**: fino al `t_end` dell'esito; finestre successive delle sue forze ritagliate
+   (`Contact_Scheduler.trim_contact_window`: CPA e reciproco ricalcolati) o scartate, episodi rimasti ricostruiti.
+   Negli scenari della fotografia non scatta mai (nessuna salva in volo per piu' di 300 s oltre le finestre).
+4. **RNG**: `event_id` di prima, `counter` = ordinale degli episodi con lo stesso insieme di forze, anche per la tempra.
+5. **Forza DISENGAGED** passiva negli episodi successivi (`until` = istante del disingaggio); idem per le fini di
+   attivita' della F6-B1 gia' scattate.
+6. **Soglia di danno**: `ActivityCriteria.reference_health` = salute d'inizio sessione.
+7. **G3**: un consumo d'ingaggio per episodio (codice invariato: uno per esito).
+8. **Carburante**: passo finale dopo tutti gli episodi, stessa coda ripercorsa (stessi `FuelEvent`, stesso ordine).
+9. `assemble_session_outcome(..., chained=True)`: nessun warning "health_before/after non concatenati" (lo sono).
+
+### Differenze della fotografia, esecuzione per esecuzione
+
+- **S5** (36 cambiate). Prima: una run con i quattro rossi; una formazione che rompeva il contatto con L1 era "andata
+  via" per tutta la sessione (forza rotta nella run) e L2 non sparava. Ora due episodi per replica, L1
+  ([556, 1648] s) e L2 + L3 + bersaglio (da ~2206 s); la formazione disingaggiata a L1 prosegue la rotta PASSIVA (il
+  DES non la ri-instrada) e L2 la ingaggia di nuovo, con tempra nuova ed erosione contata sui superstiti. Stream RNG
+  di entrambi gli episodi diversi da prima (insiemi di forze diversi da quello della componente). Su 12 seed:
+
+  | variante | Blue distrutti prima -> G4a | repliche in cui L2 spara | L3 spara | salve Blue (bersaglio raggiunto) |
+  |---|---|---|---|---|
+  | press_on | 45 -> 41 | 12 -> 12 | 1 -> 2 | 2 -> 7 (S5-7; ora anche S5-9) |
+  | default | 17 -> 28 | 1 -> 12 | 0 -> 0 | 0 -> 0 |
+  | resistant | 30 -> 33 | 7 -> 12 | 1 -> 0 | 2 -> 0 |
+
+  Con la dottrina di default la formazione si ferma al primo strato in 11 repliche su 12 sia prima sia dopo, ma ora
+  subisce comunque il secondo strato (11 distrutti in piu'): e' l'effetto della decisione 5 (passiva, resta
+  bersaglio) senza ri-instradamento. Esiti di forza: due per replica (`force_outcomes` 'disengaged/disengaged',
+  'held/destroyed', ...). Carburante: chi partecipa a entrambi gli episodi ha due consumi d'ingaggio.
+- **S6** (4 cambiate). Prima una run con le quattro forze; ora episodio 1 = Blue-AirWing contro Red-Coast +
+  Red-Flotilla (dal ~100 s, la fusione terra-mare resta nello stesso episodio), episodio 2 = Blue-CSG contro
+  Red-Flotilla (~3600-6500 s, il gruppo navale arriva molto dopo). Stream diversi (primo tiro 107,5-150,8 s ->
+  107,5-107,8 s), esiti diversi per seed (es. S6-0 Blue-AirWing held -> destroyed, S6-1 destroyed -> held, la flottiglia
+  'held/disengaged' in 3 seed su 4); gli invarianti del test (finestre miste, entrambe le minacce sparano, navi che
+  intercettano, ala colpita da terra e da mare) valgono ancora.
+- **Identiche**: tutte le altre 762, comprese S5-like a un episodio (ORC-twofronts M-raid: finestre a 100 s
+  l'una dall'altra, un episodio), S20 e ogni scenario con Operazioni o missioni dello stesso blocco (finestre
+  sovrapposte).
+- **Nuove**: 'episodes_off' x 12 seed (S5, G4a spento, dottrina di default) = vecchia 'default'.
+
+### Scelte dove le decisioni lasciavano margine
+
+1. Legame per dominio: la chiave di legame di una finestra e' il dominio di coordinamento di ciascuna delle due forze
+   (la forza stessa senza dominio): condividere una forza e' il caso particolare. Una forza che e' sola nel suo dominio
+   si comporta esattamente come "condividono una forza".
+2. Forza occupata "dal primo istante del suo episodio" letto come inizio dell'EPISODIO (non della prima finestra della
+   forza nell'episodio): poiche' gli episodi sono estratti in ordine di inizio, ogni finestra non ancora risolta
+   comincia dopo, e basta ritagliare quelle che cominciano prima del `t_end`. Garantisce la causalita' per forza
+   (episodi di una forza mai sovrapposti nel tempo, risolti in ordine); costo: una forza entrata tardi in un episodio
+   lungo e' occupata dall'inizio dell'episodio (un suo contatto altrove in quell'intervallo e' spostato alla fine).
+3. Ritaglio della finestra: CPA e primo intervallo reciproco ricalcolati sui tratti ritagliati con la regola di
+   `contact_windows`; portate e `first_detector` invariati. Funzione nello scheduler (`trim_contact_window`), che
+   possiede la geometria delle finestre.
+4. Ricostruzione degli episodi solo se un ritaglio ha cambiato qualcosa (equivalente a ricostruire sempre, perche' gli
+   episodi sono componenti disgiunte); controllo limitato alle coppie delle forze dell'episodio appena risolto.
+5. `counter` contato su ogni episodio estratto, anche se `resolve_engagement` restituisce None.
+6. Passivita' dopo il disingaggio estesa a TUTTI gli asset della forza disingaggiata, anche quelli che nel suo
+   episodio non erano in contatto (la decisione e' per forza; esempio nel test `TestEngagementEpisodes`: la forza
+   rossa che rompe il contatto con il primo veicolo distrutto non spara piu' con il secondo, 150 km piu' avanti).
+   `until` = `ForceOutcome.time` (istante del cambio di esito), `t_end` dell'esito se manca.
+7. Estesa anche alle fini di attivita' della F6-B1 (danno, winchester, bersaglio distrutto) scattate in un episodio
+   precedente: senza, nella run successiva l'asset tornerebbe a sparare fino al primo controllo dei criteri (il
+   risolutore non ne ha memoria). Stesso meccanismo `until`, applicato solo agli asset delle forze dell'episodio (cosi'
+   un episodio senza criteri resta "senza criteri" per il risolutore).
+8. Salute di riferimento: nuovo campo opzionale `ActivityCriteria.reference_health` (None = comportamento precedente),
+   passato solo per gli asset con `damage_threshold` e solo con il G4a acceso.
+9. Erosione e shock della soglia di rottura per episodio (sugli asset impegnati all'inizio dell'episodio): coerente con
+   "ingaggio diverso, tempra nuova"; e' la ragione per cui in S5 la formazione 'press_on'/'resistant' "held" a L1 con
+   2 perdite su 4 rompe a L2 con 1 perdita su 2.
+10. Contabilita' del carburante finale: SEMPRE (anche con il G4a spento), perche' e' verificata equivalente
+    (risolutore e carburante non si leggono a vicenda) e la fotografia lo conferma (762 identiche, 'episodes_off' =
+    vecchia 'default').
+11. `assemble_session_outcome` riceve `chained=True` da `run_session` sempre (l'esecutore applica ogni esito prima del
+    successivo da sempre): cambia solo un warning di log, mai emesso prima del G4a.
+12. `Scenario_Fixtures.force_outcome`: con piu' esiti della stessa forza (piu' episodi) solleva ValueError come per le
+    piu' missioni di un blocco (prima restituiva in silenzio il primo esito per un `mission_id`); S5 legge gli esiti
+    per episodio.
+
+### Costanti stimate
+
+- `EPISODE_GAP` = `Fuel_Model.DISENGAGE_TIME` = 300 s: valore deciso dall'utente, legato alla stima G1 dei 5 minuti di
+  disimpegno (non tarato).
+- Nessuna costante di test nuova (scenario di test `TestEngagementEpisodes`: geometria scelta per avere finestre a
+  700 s l'una dall'altra; salve di 1000 s di volo per la forza occupata).
+
+### Limiti noti
+
+- L'episodio e' risolto in blocco con i tratti calcolati a monte: nessuna decisione sul carburante dopo l'episodio
+  (G4b), l'aereo sotto la soglia di bingo dopo un ingaggio prosegue la rotta; il contatore a zero (S26
+  'transfer_continue') resta come al G3.
+- Il DES non ri-instrada la forza disingaggiata: prosegue passiva sulla rotta e puo' essere ingaggiata dagli strati
+  successivi (S5), effetto voluto dalla decisione 5 ma che rende la "rottura" meno protettiva di prima.
+- Forza occupata per forza intera e dall'inizio dell'episodio (scelta 2), non per asset.
+- Episodi separati da piu' di 300 s anche se fisicamente lo stesso scontro prolungato con una pausa: lo dichiara la
+  regola.
+
+### Test
+
+- `Test_Session_Simulator.TestEpisodes` (9 test): intervallo di fusione (300 s, 0 s, limite incluso), forza condivisa e
+  catena, dominio di coordinamento solo entro l'intervallo, intervallo infinito = componente connessa, un episodio =
+  stesse finestre nello stesso ordine della componente, ordine per tempo ed `event_id` indipendente dall'ordine del
+  dizionario, intervallo negativo, `_trim_busy` (ritaglio, scarto, idempotenza).
+- `Test_Session_Simulator.TestEngagementEpisodes` (11 test): due episodi in ordine con le sole loro finestre,
+  interruttore spento = una componente, `counter` 0/1 per ingaggio e tempra (tempre diverse), identita' delle sessioni
+  a un episodio con l'interruttore spento (scenario base e due fronti), determinismo, due consumi d'ingaggio G3 in due
+  episodi, salute concatenata fra episodi, salute di riferimento della soglia di danno, forza disingaggiata passiva,
+  fine di attivita' riportata all'episodio successivo, forza occupata (finestra scartata).
+- `Test_Engagement_Resolver.TestActivityEnd.test_reference_health_of_the_damage_threshold`,
+  `Test_Contact_Scheduler.TestContactWindows.test_trim_recomputes_cpa_and_mutual_on_the_rest`.
+- `Test_Session_Scenarios`: S5 riscritto per gli episodi (invarianti per episodio, verdetto sulla prima rottura,
+  nuova variante 'episodes_off', nuovo `test_two_episodes_one_per_layer_group`), S6 aggiornato (due episodi). Variante
+  registrata nella tabella `UNITS` di `Scenario_Baseline.py` (in coda).
+- Suite completa: 4344 test OK (7 skipped), 23 nuovi.
+
+## G4b: ri-pianificazione dopo l'episodio d'ingaggio (decisioni dell'utente del 2026-10-17)
+
+**Base del confronto**: (1) `Test/baseline/scenario_baseline.json` installata (802 esecuzioni, G3); (2) la cattura del
+G4a (814 esecuzioni, fuori dal repository), per separare gli effetti del G4b da quelli del G4a. **Dopo**:
+`Session_Simulator.G4_EPISODES = True`, `G4_REPLAN = True`. `--compare`, 2026-10-17 su ProArt P16: **866 esecuzioni**.
+- Contro la fotografia (802): **746 IDENTICHE**, **56 cambiate**, **64 nuove**. Delle 56 cambiate, 40 sono quelle del
+  G4a (S5 'press_on'/'default'/'resistant' x 12, S6 x 4: identiche alla cattura G4a) e **16 sono del G4b** (S24-ORBIT
+  'per_leg_off' x 8, S26 'transfer_continue' x 8). Delle 64 nuove, 12 sono del G4a (S5 'episodes_off') e 52 del G4b
+  (S5 'with_base', 'with_base_resistant', 'replan_off' x 12; S26 'post_engagement_bingo', 'replan_off' x 8).
+- Contro la cattura G4a (814): **798 IDENTICHE**, **16 cambiate** (le 16 del G4b sopra), **52 nuove**.
+Ogni esecuzione cambiata ha un aereo ri-pianificato per carburante (nessuna per disingaggio fra le esecuzioni di prima:
+nessuna ha una base del lato della forza disingaggiata, v. S5). Fotografia del repository NON rigenerata.
+
+### Il cambio
+
+1. **Candidati**, alla fine di ogni episodio (`t_r` = `t_end` dell'esito): aerei di MISSIONE che vi hanno consumato
+   (G3, la stessa regola della contabilita') o la cui FORZA vi e' DISINGAGGIATA; in volo, non distrutti, non gia' a
+   secco, con il carburante modellato; in ordine di id.
+2. **Residuo analitico** a `t_d` (`Fuel_Model.fuel_at`): carburante d'inizio sessione - tratti che consumano fino a
+   `t_d` alla crociera (in corso in proporzione) - consumi d'ingaggio fino a `t_d`. Stessa aritmetica della
+   contabilita' (test `TestFuelAt.test_end_value_is_the_accounting` e, in sessione, residuo e carburante finale
+   ricalcolati a mano in `TestReplanAfterEpisode`).
+3. **A secco** (residuo zero): regole della F6-A dal punto a `t_d` (`_exhaustion_end`, estratta da `_fuel_end`).
+4. **Bingo**: `Mission_Adapter.mission_bingo_decision(..., time=t_d, fuel=residuo)` sulla missione intera, albero del
+   G2 (le basi alternative entro 3 km contano davvero); `BingoEnd` da `t_d` con la meccanica del G2.
+5. **Rientro forzato dopo il disingaggio** (decisione dell'utente): `Fuel_Model.bingo_decision(..., forced=True)`,
+   nessun controllo di soglia, regola di COMBATTIMENTO qualunque sia il tipo di missione; motivo nuovo
+   `AssetEndReason.DISENGAGED`, missione `AbortReason.DISENGAGED`.
+6. **Esaurimento sui nuovi tratti**: `Fuel_Model.fuel_exhaustion(..., fuel=residuo)` (nuovo parametro) da `t_d`.
+7. **Ri-scheduling**: tratti di presenza e movimento e programma a terra sostituiti; `schedule_contacts` rieseguito
+   sulle sole coppie con un aereo ri-pianificato (nuovo parametro `only_assets`); finestre nuove ritagliate a `t_r` e
+   alle forze occupate; finestre non risolte di quegli aerei scartate; episodi rimasti ricostruiti. Episodi risolti
+   invariati.
+8. Interruttore `G4_REPLAN`, letto solo con `G4_EPISODES`; spento = G4a.
+
+### Differenze della fotografia, esecuzione per esecuzione (solo G4b; per il G4a v. la sezione "G4a")
+
+- **S26 'transfer_continue'** (8 cambiate; voce: `Blue-Flight.destroyed` 0 -> 1). Trasferimento a 0,27 (sotto la soglia
+  alla partenza ma con carburante per la rotta: CONTINUA). In ogni seed Red-Site spara e l'F-16C consuma la riserva
+  (~0,085): il residuo non basta piu' per la rotta (analiticamente a secco a ~1162 s). L'episodio con Red-Site dura
+  fino all'ultimo impatto (~1211 s), OLTRE la fine della rotta (1200 s): la decisione e' alla fine dei tratti
+  dell'aereo (scelta 2 sotto), residuo zero, regole della F6-A dal punto finale (310 km dalla base, planata 50 km da
+  5000 m): perso, DESTROYED/FUEL_EXHAUSTED con l'equipaggio recuperato, missione DESTROYED. Prima: rotta completata con
+  il contatore a 0,0. Carburante finale, eventi di carburante e istante di fine movimento invariati (0,0, 1200 s).
+- **S24-ORBIT 'per_leg_off'** (8 cambiate; voci: `Red-CAP.destroyed` 0 -> 1, `Red-CAP.movement_end` 2400,0 ->
+  2026,1). MiG-29S con il carburante 'dry' (dimensionato per mezza orbita) e `F6_FUEL_PER_LEG` spento (l'orbita non
+  consuma): in ogni seed la CAP ingaggia i bombardieri (~1282 s, consumo d'ingaggio 0,104) e il residuo non basta piu'
+  per il rientro. Nessuna base Red: nessun rientro possibile (NO_BASE), ma l'esaurimento e' ricalcolato dal residuo:
+  a secco sul rientro a 2026,1 s, perso (nessuna base in planata). Prima: rientro completato con il contatore a zero.
+- **S5** (nessuna delle 48 esecuzioni di prima cambia): la formazione parte in volo e Blue NON ha basi aeree, quindi
+  il rientro forzato dopo il disingaggio non ha dove andare (`BINGO_NO_BASE`, passiva sulla rotta come al G4a); il
+  consumo d'ingaggio degli F-15E (pieno) non porta mai sotto la soglia. Le nuove varianti con la base Blue (10 km
+  dietro il punto di comparsa) mostrano il G4b. Su 12 seed:
+
+  | variante | Blue distrutti | repliche in cui L2 spara | L3 spara | salve Blue | esito di missione |
+  |---|---|---|---|---|---|
+  | default (G4a, senza base) | 28 | 12 | 0 | 0 | COMPLETED 12 |
+  | replan_off (base, G4b spento) | 28 | 12 | 0 | 0 | COMPLETED 12 (salve e danni = 'default') |
+  | with_base (base, G4b) | 20 | 1 (S5-9) | 0 | 0 | ABORTED(DISENGAGED) 12 |
+  | resistant (G4a, senza base) | 33 | 12 | 0 | 0 | COMPLETED 10, DESTROYED 2 |
+  | with_base_resistant (base, G4b) | 31 | 9 | 0 | 0 | ABORTED(DISENGAGED) 8, COMPLETED 1, DESTROYED 3 |
+  | episodes_off (G4a spento) | 17 | 1 | 0 | 0 | COMPLETED 12 |
+
+  Con la dottrina di default e la base, la formazione disingaggiata a L1 (11 repliche) RIENTRA dalla fine
+  dell'episodio lungo la rotta a ritroso fino al punto di comparsa e poi sulla base: L2 non spara mai; sul ritroso
+  ripassa su L1 (nuovo episodio, passiva) e in alcune repliche perde un altro aereo (20 distrutti contro i 17 della
+  vecchia run unica, 'episodes_off', e i 28 del G4a senza rientro). In S5-9 la rottura e' a L2: rientra e ripassa su L2
+  e L1. Con la formazione resistente: 3 disingaggi a L1, 6 a L2 (in S5-11 la formazione rientrata e' distrutta da L2
+  sul ritroso), 3 formazioni DESTROYED a L2 senza disingaggio (nessun rientro, come al G4a; in S5-3 il superstite
+  prosegue e completa).
+- **S26 'post_engagement_bingo'** (8 nuove): F-16C a 0,28 (sopra la soglia alla partenza), secondo sito Red-Near a
+  (100 km, 0) e base Blue alternativa a (180 km, 2 km) (sensore 'ground' dell'F-16C dichiarato di 20 km perche' i due
+  siti siano due episodi). Dopo l'episodio con Red-Near (fine ~523-533 s): residuo ~0,110 < resto della rotta ~0,106 +
+  riserva ~0,085: BINGO, regola di combattimento, base alternativa (~42 km lungo la rotta e discesa) contro il ritroso
+  (~145 km); atterraggio ~690 s, carburante finale 0,0831 in ogni seed, Red-Site non spara mai. ABORTED(BINGO).
+- **S26 'replan_off'** (8 nuove): lo stesso scenario con il G4b spento: prosegue, entrambi i siti sparano, due consumi
+  d'ingaggio, rotta completata a carburante 0,0 (il limite del G3).
+- **Identiche**: tutte le altre (798 contro il G4a), compresi S26 'none' (pieno: sopra la soglia dopo il consumo),
+  'switch_off' (`F6_BINGO` spento: residuo 0,0037 positivo, nessun esaurimento), 'no_base'/'bingo_off' (gia' a secco
+  a monte a 942 s, dentro l'episodio), e ogni scenario senza aerei che consumano in ingaggio o senza basi del lato di una
+  forza aerea disingaggiata.
+
+### Scelte dove le decisioni lasciavano margine (da approvare)
+
+1. **Rientro forzato**: parametro `forced` di `Fuel_Model.bingo_decision` (e di `Mission_Adapter.mission_bingo_decision`)
+   invece di una funzione nuova: salta il controllo di soglia e il passo "continua"; tutto il resto dell'albero
+   (candidate, raggiungibilita', passi 3 e 4, NO_BASE) e' lo stesso codice. La sessione lo chiama con `transfer`
+   False (regola di combattimento anche per un trasferimento). Riserva non modellata: il rientro forzato e' deciso lo
+   stesso (riserva 0 nella decisione: serve solo alla soglia).
+2. **Istante della decisione** `t_d` = `t_r`, oppure la fine dei tratti di movimento dell'aereo se la sua rotta finisce
+   DENTRO l'episodio (S26 'transfer_continue': episodio fino a ~1211 s, rotta fino a 1200 s). In quel caso conta solo
+   l'esaurimento (A.2), non c'e' rotta da cui rientrare. Senza questa estensione "in volo a `t_r`" escluderebbe l'aereo
+   e 'transfer_continue' resterebbe "rotta completata a 0,0", contro l'atteso.
+3. **Punto dell'esaurimento in ingaggio** = posizione a `t_d`, non l'istante analitico dell'esaurimento (anteriore): la
+   storia dell'episodio, risolto in blocco con l'aereo in volo fino a `t_d`, resta fissata.
+4. **Bingo e disingaggio insieme**: prima il consumo (residuo), poi il bingo (se l'aereo ha consumato e dichiara
+   `EndCriteria.bingo`); se il bingo non fa rientrare (sopra la soglia, o un trasferimento che continua) e la forza e'
+   disingaggiata, rientro forzato. Se fanno rientrare entrambi vince il bingo (motivo BINGO). Il rientro forzato NON
+   dipende da `EndCriteria.bingo` (e' un altro criterio), ma richiede `F6_BINGO` e `F6_BINGO_DISENGAGE_RESERVE` accesi
+   (usa l'albero del G2).
+5. **Precedenza dei motivi d'aborto** a parita' d'istante: FUEL > BINGO > DISENGAGED > AMMUNITION > DAMAGE (prima i
+   fatti di carburante, poi la decisione tattica).
+6. **Chi rientra per il disingaggio**: tutti gli aerei della MISSIONE disingaggiata in volo a `t_d` (decisione per
+   forza, come la passivita' del G4a); per il carburante ogni aereo decide per se' (la formazione si puo' dividere). Una
+   forza con esito DESTROYED (anche con superstiti) non rientra (S5 'with_base_resistant' S5-3).
+7. **Esaurimento ricalcolato anche senza rientro**: un aereo che ha consumato e non rientra (sopra la soglia, NO_BASE,
+   bingo non dichiarato, `F6_BINGO` spento) ha comunque l'esaurimento ricalcolato dal residuo (S24-ORBIT 'per_leg_off');
+   un aereo disingaggiato che NON ha consumato e non rientra non e' toccato (esaurimento a monte ancora valido).
+8. **Coda gia' risolta**: il tratto di una finestra nuova gia' coperto da una finestra RISOLTA della stessa coppia di
+   asset con la geometria di prima (prima dell'istante da cui i tratti cambiano) e' tolto. Senza, in S24-ORBIT
+   'per_leg_off' il solo anticipo dell'esaurimento sul rientro (tratti invariati fino a 2026 s) faceva rieseguire come
+   NUOVO episodio la coda della finestra con i bombardieri gia' risolta (stessi tratti, seconda estrazione: un secondo
+   consumo d'ingaggio e la perdita a ~1383 s). Con un rientro (tratti cambiati da `t_d` = `t_r`) la coda E' rieseguita:
+   la geometria e' un'altra.
+9. **Scheduler rieseguito solo sulle coppie con un aereo ri-pianificato** (`only_assets`, sottoinsieme esatto delle
+   finestre senza filtro, testato): stessa potatura e stesso ordine, senza ricalcolare le altre coppie. Lo scheduler
+   vede lo stato degli asset a `t_r`: un asset distrutto nei primi episodi non ha finestre nuove.
+10. **S5**: lo scenario di sempre (senza basi Blue) e' lasciato com'e' (non cambia: NO_BASE); il rientro si vede in tre
+    varianti nuove con una base Blue, in coda. Alternativa scartata: aggiungere la base a tutte le varianti (avrebbe
+    cambiato nella fotografia anche le esecuzioni in cui il G4b non agisce, con una causa diversa dal G4b). Gli
+    invarianti "dentro ciascun episodio" di S5 leggono ora gli eventi del SOLO episodio (esiti per episodio registrati
+    con un `resolve_engagement` che li annota): dal G4b uno strato gia' attraversato puo' sparare di nuovo sul ritroso,
+    in un episodio successivo.
+11. **S26**: 'transfer_continue' tenuto (cambia); due varianti nuove 'post_engagement_bingo' / 'replan_off' con un
+    secondo sito e una base alternativa, e il sensore 'ground' dell'F-16C dichiarato di 20 km (col radar del registro,
+    ~95 km, i due siti sarebbero un solo episodio).
+
+### Costanti stimate
+
+- Nessuna costante del modello nuova. Costanti di SCENARIO dichiarate (non tarate): S5 `BASE_POSITION` = (-310 km, 0);
+  S26 `NEAR_SITE_POSITION` = (100 km, 0), `ALTERNATE_BASE_POSITION` = (180 km, 2 km), `NEAR_JET_GROUND_SENSOR` = 20 km.
+  Restano le stime gia' dichiarate: `DISENGAGE_TIME` 300 s, `ALTERNATE_BASE_MAX_OFFSET` 3000 m, `GLIDE_RATIO` 10.
+
+### Limiti noti
+
+- Decisione alla FINE dell'episodio, non a meta' (episodio risolto in blocco con i tratti di prima).
+- Forza occupata: un aereo ri-pianificato incontra una forza impegnata in un episodio gia' risolto solo dopo la sua fine.
+- Il rientro a ritroso ripercorre le minacce dell'andata (S5: L1 di nuovo sul ritroso).
+- Episodi "vuoti" per le finestre di aerei gia' distrutti (lo scheduler non le tronca alla distruzione: comportamento
+  del G4a, visibile in S5 come esiti di forza 'held' senza eventi).
+- Danno oltre la soglia (F6-B1): l'aereo resta passivo sulla rotta, nessun rientro per danno. Aerei di una forza
+  disingaggiata ancora a terra a `t_r` non sono ri-pianificati. Terra e mare invariati.
+- Col G3 spento (regime 'max' per chi ha combattuto) il residuo resta calcolato alla crociera: la contabilita' puo'
+  divergere (limite della F6-A).
+
+### Test
+
+- `Test_Session_Simulator.TestReplanAfterEpisode` (10 test): interruttore acceso e letto solo con il G4a; bingo dopo
+  l'episodio (residuo analitico ricalcolato a mano, rientro, r2 piu' avanti mai incontrato, contatti ricalcolati da
+  `t_r`: nuovo episodio passivo su r1 sul ritroso); G4b spento = contatore a zero; sopra la soglia nulla cambia
+  (esito identico al G4b spento); esaurimento in ingaggio senza base (perso) e con una base in planata (a terra,
+  ABORTED(FUEL)); disingaggio con carburante pieno = rientro forzato (anche 'Transport'); disingaggio senza basi =
+  passivo sulla rotta; terra invariata; determinismo. `TestEngagementFuel.test_exhaustion_by_the_charge_empties_the_counter_only`
+  ora con il G4b spento.
+- `Test_Fuel_Model`: `TestFuelAt` (3), `TestExhaustionFromAResidual` (1), `TestForcedReturn` (3).
+- `Test_Contact_Scheduler.TestScheduleContacts.test_only_assets_is_the_filtered_subset`.
+- `Test_Session_Scenarios` S5: tre varianti nuove e tre test (`test_without_a_base_the_replan_changes_nothing`,
+  `test_with_a_base_the_disengaged_formation_returns`, `test_with_a_base_the_resistant_formation_returns_where_it_breaks`),
+  invarianti per episodio sugli esiti registrati. `Test_Session_Scenarios_S26`: `transfer_continue` riscritto, due
+  varianti e due test nuovi. `Test_Session_Scenarios_S24`: 'per_leg_off' aggiornato. Varianti registrate in coda nella
+  tabella `UNITS` di `Scenario_Baseline.py`.
+- Suite completa: 4368 test (7 skipped), 24 nuovi.
+
+### G4b: uscita di scena senza basi (decisione dell'utente del 2026-10-17)
+
+**Regola**: un aereo di missione COMPARSO IN VOLO (`start_mode` AIR, nessuna base di partenza) senza alcuna base aerea
+del suo lato che nella RI-PIANIFICAZIONE G4b deve rientrare (rientro forzato per disingaggio, o bingo dopo l'episodio)
+non resta piu' passivo sulla rotta (`BINGO_NO_BASE`): ripercorre la rotta a ritroso fino al punto di comparsa (la
+meccanica del ritroso F6-B2bis/G2, alle quote dei waypoint, senza le soste) e li' ESCE DI SCENA: nessuna presenza dopo
+(come l'aereo che finisce la rotta senza atterrare su una base vera, F5-B), mai a terra, postura `off_scene` a fine
+sessione se uscito, non distrutto; nessuna salva offensiva dal rientro. Esito per asset e missione: il motivo del
+rientro (DISENGAGED o BINGO, ABORTED(...)) all'istante della decisione. Il ritroso consuma alla crociera; residuo
+insufficiente: regole della F6-A sul ritroso (senza basi: perso, DESTROYED/FUEL_EXHAUSTED, equipaggio recuperato).
+
+**Codice**: nuova azione `Fuel_Model.BINGO_EXIT` di `bingo_decision(..., exit_scene=True)`, data AL POSTO di
+`BINGO_NO_BASE` (stesso punto dell'albero: nessuna candidata, nessuna base in linea retta) e solo con partenza in volo
+(`rule.departure` False: partendo da una base il DEPARTURE c'e' sempre); rotta = `_return_route` a ritroso senza il
+tratto diretto finale, `base` = punto di comparsa, `reachable` come le altre. `BingoDecision.exits`; parametro
+passato da `Mission_Adapter.mission_bingo_decision(exit_scene=)`. In sessione `BingoEnd.exits`: `_legs_after_bingo`
+senza sosta, `_grounded_after_bingo` senza intervallo a terra, `_postures_after_bingo` `off_scene` se uscito entro la
+fine della sessione. La ri-pianificazione passa `exit_scene=G4_OFF_SCENE_EXIT` alle due chiamate (bingo dopo
+l'episodio, rientro forzato). Sotto-interruttore `Session_Simulator.G4_OFF_SCENE_EXIT` (attivo, letto solo con
+`G4_REPLAN`).
+
+**Confronto** (2026-10-17, ProArt P16, 878 esecuzioni: le 866 della cattura G4b + 12 della variante nuova S5
+'exit_off'):
+- Contro la cattura G4b (866): **728 IDENTICHE**, **138 cambiate**, **12 nuove** ('exit_off').
+- Contro la fotografia del repository (802): **637 IDENTICHE**, **165 cambiate** (le 56 gia' cambiate dal G4a/G4b +
+  109 dall'uscita di scena), **76 nuove** (64 del G4a/G4b + 12 'exit_off'). Fotografia NON rigenerata. **Verifica 2026-10-17** (ProArt P16): suite 4375 OK (7 skipped), `--compare` ripetuto, stessi numeri, cattura identica a quella dell'agente (determinismo). G4a, G4b e uscita di scena approvati dall'utente insieme, fotografia installata (878 esecuzioni). Alla partenza (G2) restano le regole della F6-A (decisione dell'utente del 2026-10-17).
+- **Causalita' verificata in due modi**: (1) cattura con `G4_OFF_SCENE_EXIT` spento = cattura G4b esattamente (866
+  identiche, solo le 12 'exit_off' nuove), e 'exit_off' coincide esecuzione per esecuzione con la 'default' della
+  cattura G4b; (2) cattura strumentata (`bingo_decision` avvolta): 425 decisioni `BINGO_EXIT` in 109 sessioni, e OGNI
+  esecuzione cambiata appartiene a una sessione con un'uscita di scena, tranne S11 '*-dcs' (3), seconda sessione che
+  riparte dagli asset mutati dalla prima sessione '*-synthetic', che ne ha una; nessuna sessione con un'uscita resta
+  invariata. Ripetuta, la cattura e' IDENTICA (determinismo).
+- **Chi esce** (aerei comparsi in volo senza basi del lato; 417 rientri forzati per disingaggio, 8 bingo dopo
+  l'episodio):
+
+  | scenario (esecuzioni cambiate) | forze che escono di scena |
+  |---|---|
+  | S3 'control' 18, 'stealth' 20 | Blue-Stealth, Red-Mass (caccia contro caccia: chi rompe torna indietro e spesso l'altro lo reincontra) |
+  | S5 'default' 12, 'resistant' 9 | Blue-Deep (v. sotto) |
+  | S2 'baseline' 8 | Blue-Strike |
+  | S21 'control' 8, 'parked' 8; S21R 2 | Blue-Strike; Blue-CAS |
+  | S24-ORBIT 'per_leg_off' 8 | Red-CAP in BINGO dopo l'ingaggio, ritroso irraggiungibile: a secco a ~1540-1610 s verso il punto di comparsa (prima: a secco sul rientro a 2026 s), perso in entrambi i casi |
+  | S24-ORBIT 'full' 5 | Blue-Bomber disingaggiati: ripassano nell'orbita, secondo episodio con la CAP |
+  | S11 6 (3 'synthetic' + 3 'dcs' a valle) | Blue-CAS |
+  | S13 6, S14 6, S4 'with_sam' 6, S9 'detection_factor=0.0' 6 | Blue-Strike, Blue-Bombers, Blue-CAS, Blue-CAS |
+  | S7 3, S18 'network' 1 | Red-Escort e scorta Blue; Red-CAP e Blue-Package |
+  | S23-CAP 'during' 2 | Blue-Bomber |
+  | ORC-twofronts 'first' 3, ORC-seed 1 (sessioni dei test d'orchestrazione) | aerei di test in volo senza basi |
+
+  Effetti tipici: sul ritroso la formazione ripassa sulle minacce dell'andata (nuovo episodio, passiva) o reincontra la
+  forza aerea avversaria; gli strati/bersagli oltre il punto della rottura non sono piu' raggiunti; postura `off_scene`
+  invece del tipo di missione a fine sessione.
+- **S5 per variante** (12 seed; "chi spara" = strato che ha distrutto gli aerei Blue; la formazione non lancia mai):
+
+  | variante | Blue distrutti | L2 spara | L3 spara | distrutti da L1 / L2 / L3 | esito di missione | posture superstiti |
+  |---|---|---|---|---|---|---|
+  | default (G4b + uscita, senza base) | 20 | 1 (S5-9) | 0 | 20 / 0 / 0 | ABORTED(DISENGAGED) 12 | off_scene 28 |
+  | resistant (G4b + uscita, senza base) | 31 | 9 | 0 | 19 / 12 / 0 | ABORTED(DISENGAGED) 8, COMPLETED 1, DESTROYED 3 | off_scene 17 |
+  | exit_off (uscita spenta = 'default' del G4b) | 28 | 12 | 0 | 17 / 11 / 0 | COMPLETED 12 | off_scene 20 (fine rotta) |
+  | with_base | 20 | 1 | 0 | 20 / 0 / 0 | ABORTED(DISENGAGED) 12 | parking_cold 28 |
+  | with_base_resistant | 31 | 9 | 0 | 19 / 12 / 0 | ABORTED(DISENGAGED) 8, COMPLETED 1, DESTROYED 3 | parking_cold 16, off_scene 1 |
+  | replan_off (base, G4b spento) | 28 | 12 | 0 | 17 / 11 / 0 | COMPLETED 12 | off_scene 20 |
+  | press_on (non disingaggia: invariata) | 41 | 12 | 2 | 19 / 20 / 2 | DESTROYED 7, COMPLETED 5 | off_scene 7 |
+  | episodes_off (G4a spento: invariata) | 17 | 1 | 0 | 17 / 0 / 0 | COMPLETED 12 | off_scene 31 |
+
+  Senza base la storia degli ingaggi e' QUELLA delle varianti con la base (stesse salve, danni ed episodi: la base e'
+  10 km dietro il punto di comparsa, fuori da ogni minaccia); cambiano solo il tratto finale (uscita al punto di
+  comparsa invece dei 10 km fino alla base), il carburante finale e la postura (`off_scene` invece di `parking_cold`).
+  In 'resistant' le 3 repliche invariate sono le formazioni DESTROYED a L2 senza disingaggio (nessun rientro).
+
+**Scelte** (margine lasciato dalla decisione):
+1. Logica come azione nuova dell'albero (`BINGO_EXIT`) e non come caso speciale della sessione su `BINGO_NO_BASE`: la
+   rotta del ritroso e la raggiungibilita' sono calcolate dove si calcolano tutte le altre (`_return_route`, la stessa
+   del ritroso F6-B2bis), la sessione riceve un rientro come gli altri con il solo flag `exits`.
+2. Ambito conservativo: SOLO la ri-pianificazione G4b; `_decision_end` (G2 alla partenza) e il validatore
+   `check_mission_bingo` non passano `exit_scene` (invariati).
+3. Sotto-interruttore `G4_OFF_SCENE_EXIT` per isolare l'effetto (spento = il G4b di prima, verificato sulla cattura).
+4. Postura: `off_scene` solo se l'uscita avviene entro la fine della sessione; ancora in volo sul ritroso a fine
+   sessione: il tipo di missione (come un rientro verso una base non ancora raggiunta).
+5. Test non di G4b che usavano incidentalmente forze aeree in volo senza basi disingaggiate (`Test_Session_Simulator`:
+   `test_destroyed_mission`, `test_coordination_domains_are_passed_to_every_engagement`,
+   `test_a_disengaged_force_is_passive_in_the_later_episodes`, `test_one_episode_sessions_are_identical_to_the_switch_off`)
+   girano con l'uscita spenta (decoratore, commento): provano altro (regola DESTROYED/COMPLETED, domini, passivita'
+   del G4a, requisito del G4a).
+6. Scenari: invarianti aggiornati, non la composizione. `Scenario_Fixtures.losses_of` somma le perdite sugli episodi
+   della stessa forza d'ingaggio (gli impegnati di un episodio sono gli operativi al suo inizio: nessun doppio conteggio;
+   piu' missioni di un blocco restano un ValueError); S13/S14/S21 leggono gli esiti per episodio
+   (`outcome.outcomes_of`); S7/S18 accettano episodi successivi fra le sole forze aeree dopo un disingaggio; S24 'full'
+   al piu' due consumi d'ingaggio della CAP, 'per_leg_off' esaurimento sul ritroso verso il punto di comparsa; S5 nuova
+   variante 'exit_off' in coda (`UNITS` di `Scenario_Baseline.py`), `test_without_a_base_the_replan_changes_nothing`
+   sostituito da `test_without_a_base_the_disengaged_formation_exits`, "due episodi" verificato su 'exit_off' e
+   'replan_off'.
+
+**Costanti stimate**: nessuna nuova.
+
+**Limiti**: uscita sempre al punto di comparsa, anche se il resto della rotta in avanti fosse piu' corto o fuori dalle
+minacce; il ritroso ripercorre le minacce dell'andata (S2, S3, S5, S24: secondi episodi); solo dopo un episodio (non
+alla partenza); la scelta fra "uscire" e "atterrare" non considera basi di altri lati o neutrali.
+
+**Test**: `Test_Fuel_Model.TestExitScene` (3); `Test_Session_Simulator.TestReplanAfterEpisode`: uscita dopo il
+disingaggio (ABORTED(DISENGAGED), ritroso alla crociera fino al punto di comparsa, nessuna sosta, `off_scene`, nessun
+contatto dopo l'uscita, carburante), uscita al bingo dopo l'episodio (ABORTED(BINGO)), residuo insufficiente (perso a
+meta' ritroso; G2 alla partenza invariato), interruttore spento (passivo sulla rotta, il test di prima), nessun effetto
+con una base o con il G4b spento (5 test, il test "passivo senza base" sostituito).
+Suite completa: 4375 test OK (7 skipped), 7 nuovi rispetto ai 4368 del G4b.

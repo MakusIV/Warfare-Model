@@ -41,10 +41,13 @@ from unittest.mock import patch
 from Code.Dynamic_War_Manager.Source.Test import Scenario_Fixtures as F
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
+from Code.Dynamic_War_Manager.Source.Command.Mission_Types import AbortReason, AssetEndReason, AssetState, MissionStatus
 from Code.Dynamic_War_Manager.Source.Command.Session_Types import SessionOutcome
 from Code.Dynamic_War_Manager.Source.Context import Doctrine
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
 from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA
+from Code.Dynamic_War_Manager.Source.Logic import Session_Simulator as SS
 
 VISUAL = {'ground': F.DECLARED_GROUND_VISUAL_RANGE}
 
@@ -519,11 +522,72 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
         avere i due esiti in proporzioni non estreme, stima su 40 seed). Con p = 0,575 e 12
         repliche la probabilita' di non vedere uno dei due esiti e' p^12 + (1-p)^12 = 0,12 %
         (< 2 %), quindi la verifica "entrambi gli esiti compaiono" non dipende dal campione.
+
+    G4a (episodi d'ingaggio, `Session_Simulator.G4_EPISODES`, 2026-10-17): la sessione non e' piu'
+    UNA run con i tre strati, ma DUE episodi, perche' le finestre dei due strati sono separate da
+    piu' di `EPISODE_GAP` (300 s): L1 a [556, 1648] s e L2 + L3 + bersaglio da 2206 s. Cambia la
+    semantica del disingaggio fra strati: una formazione che rompe il contatto con L1 NON e' piu'
+    "andata via" per il resto della sessione (forza rotta solo DENTRO la run); il DES non la
+    ri-instrada, quindi prosegue sulla rotta PASSIVA (nessuna salva offensiva, decisione 5
+    dell'utente) e L2 la ingaggia di nuovo, con una tempra nuova e l'erosione contata sui
+    superstiti all'inizio dell'episodio. Le verifiche diventano: invarianti per replica
+    (ordine geometrico; dentro ciascun episodio, dopo la rottura nessuna forza rossa di quel
+    l'episodio lancia; dopo la PRIMA rottura la formazione non lancia piu'); esito = dove avviene
+    la prima rottura ('stopped' al primo strato, 'went_on' piu' avanti o mai, 'held' senza
+    perdite e senza rotture). Misurato su 12 seed (2026-10-17): default 11 'stopped' + 1
+    'went_on' (S5-9: nessuna perdita da L1, rottura a L2); resistente 3 'stopped' + 9 'went_on';
+    PRESS_ON: in ogni replica L2 spara (12/12), il bersaglio e' raggiunto in 2 repliche (S5-7,
+    S5-9) contro 1 con il G4a spento. La variante 'episodes_off' (dottrina di default, G4a
+    spento) e' la vecchia 'default', per il confronto con la fotografia.
+
+    G4b (ri-pianificazione dopo l'episodio, `Session_Simulator.G4_REPLAN`, decisione dell'utente
+    del 2026-10-17: una formazione DISINGAGGIATA rientra con la regola di combattimento del bingo).
+    Lo scenario di sempre NON ha basi aeree Blue e la formazione parte in volo: la regola non ha
+    dove farla rientrare (`Fuel_Model.BINGO_NO_BASE`, regole della F6-A), quindi le quattro
+    varianti di prima erano IDENTICHE al G4a (la formazione resta passiva sulla rotta, decisione 5;
+    superato dall'uscita di scena, v. sotto).
+    Per vedere il rientro le varianti nuove in coda aggiungono una base aerea Blue 10 km dietro il
+    punto di comparsa (`BASE_POSITION`, fuori dalla portata di ogni strato): 'with_base' (dottrina
+    di default), 'with_base_resistant' (formazione resistente) e 'replan_off' (base, default, G4b
+    spento: la storia del G4a, la base da sola non cambia nulla). Con la base la formazione rotta
+    rientra dalla fine dell'episodio lungo la rotta a ritroso fino al punto di comparsa e poi
+    sulla base: gli strati OLTRE quello della rottura non sparano mai; sul ritroso ripassa sugli
+    strati gia' attraversati (il rientro non evita le minacce dell'andata, limite dichiarato della
+    F6-B2bis) e li incontra di nuovo da passiva, in episodi nuovi. Misurato su 12 seed
+    (2026-10-17): 'with_base' 11 disingaggi a L1 (L2 non spara mai) + S5-9 (disingaggio a L2,
+    rientro); 'with_base_resistant' 3 disingaggi a L1, 6 a L2 (in S5-11 la formazione rientrata e'
+    poi distrutta da L2 sul ritroso), 3 formazioni con esito DESTROYED a L2 senza disingaggio
+    (S5-3, con un superstite che prosegue come prima, S5-8, S5-10), identiche a 'resistant';
+    'replan_off' con le stesse salve e gli stessi danni di 'default'. Gli invarianti "dentro
+    ciascun episodio" leggono gli eventi del solo episodio (`episode_results`): sul ritroso uno
+    strato gia' attraversato puo' sparare di nuovo, in un episodio successivo. Episodi "vuoti"
+    (nessun rilevamento) restano per le finestre degli aerei gia' distrutti, che lo scheduler non
+    tronca (comportamento del G4a).
+
+    G4b, uscita di scena senza basi (`Session_Simulator.G4_OFF_SCENE_EXIT`, decisione dell'utente del 2026-10-17):
+    senza basi Blue la formazione disingaggiata non resta piu' passiva sulla rotta: ripercorre la rotta a ritroso fino
+    al punto di comparsa e li' esce di scena. 'default' e 'resistant' cambiano (fino ad allora identiche al G4a) e
+    hanno la STESSA storia d'ingaggio di 'with_base' / 'with_base_resistant' (la base e' 10 km dietro il punto di
+    comparsa, fuori da ogni minaccia): misurato su 12 seed, 'default' 20 Blue distrutti (tutti da L1), L2 spara solo
+    in S5-9, ABORTED(DISENGAGED) 12, superstiti `off_scene`; 'resistant' 31 distrutti (19 da L1, 12 da L2), L2 spara in
+    9, ABORTED(DISENGAGED) 8, COMPLETED 1, DESTROYED 3 (le formazioni distrutte a L2 senza disingaggio, invariate).
+    'press_on' non disingaggia: invariata. Variante nuova in coda 'exit_off' (senza base, uscita spenta): la 'default'
+    del G4b di prima, con salve e danni uguali a 'replan_off'.
     """
 
     SEEDS = _seeds('S5', 12)
     RESISTANT_EROSION = 0.65   # costante di scenario dichiarata (stima su 40 seed), non calibrata
     LAYERS = ('Red-L1-Long', 'Red-L2-Medium', 'Red-L3-Point')
+    # G4b: base aerea Blue delle varianti 'with_base*' e 'replan_off', 10 km dietro il punto di comparsa (-300 km):
+    # posizione di scenario dichiarata (come la base di S26), a 300 km dal primo strato.
+    BASE_POSITION = (-310_000.0, 0.0)
+
+    @classmethod
+    def _base(cls):
+        base = F.make_force('Blue-Base', 'Blue', F.AIR_UNIT)
+        F.add_assets(base, [F.make_structure(base, 'Blue-Base/depot0', cls.BASE_POSITION, category='Farp',
+                                             asset_type='Oil_Tank')])
+        return base
 
     @staticmethod
     def _build():
@@ -550,15 +614,51 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.press_on, cls.default, cls.resistant = [], [], []
+        cls.press_on, cls.default, cls.resistant, cls.episodes_off = [], [], [], []
+        cls.with_base, cls.with_base_resistant, cls.replan_off = [], [], []
+        cls.exit_off = []
+        # Esiti d'ingaggio per episodio di ogni esecuzione (`id(outcome)` -> [EngagementResult, ...] nell'ordine di
+        # risoluzione): gli invarianti "dentro ciascun episodio" leggono gli eventi del SOLO episodio (dal G4b la
+        # formazione che rientra puo' incontrare di nuovo uno strato gia' attraversato, in un episodio successivo).
+        cls.episode_results = {}
 
         for session_id in cls.SEEDS:
-            for bucket, thresholds in ((cls.press_on, PRESS_ON), (cls.default, None),
-                                       (cls.resistant, cls._resistant_doctrine())):
+            # 'episodes_off' in coda (G4a spento, dottrina di default), poi le tre del G4b con la base Blue e infine
+            # 'exit_off' (senza base, dottrina di default, uscita di scena del G4b spenta): i nomi delle varianti nella
+            # fotografia restano stabili.
+            for bucket, thresholds, episodes, base, replan, exit_scene in (
+                    (cls.press_on, PRESS_ON, True, False, True, True), (cls.default, None, True, False, True, True),
+                    (cls.resistant, cls._resistant_doctrine(), True, False, True, True),
+                    (cls.episodes_off, None, False, False, True, True),
+                    (cls.with_base, None, True, True, True, True),
+                    (cls.with_base_resistant, cls._resistant_doctrine(), True, True, True, True),
+                    (cls.replan_off, None, True, True, False, True),
+                    (cls.exit_off, None, True, False, True, False)):
                 strike, reds, missions, fire = cls._build()
-                outcome = F.run(session_id, [strike], reds, fire, duration=7_200.0, missions=missions,
-                                thresholds=thresholds)
+                blue = [strike, cls._base()] if base else [strike]
+                results = []
+
+                with patch.object(SS, 'G4_EPISODES', SS.G4_EPISODES and episodes), \
+                        patch.object(SS, 'G4_REPLAN', SS.G4_REPLAN and replan), \
+                        patch.object(SS, 'G4_OFF_SCENE_EXIT', SS.G4_OFF_SCENE_EXIT and exit_scene), \
+                        patch.object(SS.ER, 'resolve_engagement', side_effect=cls._recording(results)):
+                    outcome = F.run(session_id, blue, reds, fire, duration=7_200.0, missions=missions,
+                                    thresholds=thresholds)
+
+                cls.episode_results[id(outcome)] = [result for result in results if result is not None]
                 bucket.append((strike, reds, outcome))
+
+    @staticmethod
+    def _recording(results):
+        """`resolve_engagement` che registra in `results` l'esito di ogni episodio (nessun cambiamento)."""
+        original = ER.resolve_engagement
+
+        def resolve(*args, **kwargs):
+            result = original(*args, **kwargs)
+            results.append(result)
+            return result
+
+        return resolve
 
     @classmethod
     def _resistant_doctrine(cls):
@@ -574,29 +674,57 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
                 for layer in self.LAYERS}
 
     def _check_break_invariants(self, reds, outcome):
-        """Invarianti per replica, validi per ogni dottrina. Restituisce `'held'` se la formazione
-        non ha perso nulla, altrimenti `'stopped'` (nessun tiro dal secondo strato) o `'went_on'`."""
-        result = F.force_outcome(outcome, 'Blue-Deep')
-
-        if result.outcome == ER.HELD:
-            return 'held'   # nessuna perdita: nulla da verificare
-
+        """Invarianti per replica, validi per ogni dottrina (G4a: un esito della formazione per episodio).
+        Restituisce `'held'` se la formazione non ha perso nulla e non ha mai rotto il contatto, `'stopped'` se
+        rompe (o e' distrutta) prima che il secondo strato spari, altrimenti `'went_on'`."""
+        episodes = self._episodes(reds, outcome)
         shots = self._layer_first_shots(reds, outcome)
         fired = [shots[layer] is not None for layer in self.LAYERS]
 
         # Gli strati sparano in ordine geometrico: se uno strato ha sparato, anche i precedenti.
         self.assertEqual(fired, sorted(fired, reverse=True), shots)
 
-        # Dopo la rottura nessuna forza rossa lancia piu' contro la formazione.
+        # Dentro ciascun episodio, dopo la rottura della formazione nessuna forza rossa di quell'episodio lancia
+        # (forza rotta per-forza nella run: eventi del SOLO episodio, v. `episode_results`); dopo la PRIMA rottura la
+        # formazione non lancia piu' (passiva, G4a).
         red_ids = {a for force in reds for a in force.assets}
-        late = [e for e in outcome.ammunition_events if e.asset_id in red_ids and e.time > result.time]
-        self.assertEqual(late, [])
 
-        if shots['Red-L2-Medium'] is None:
-            self.assertIsNone(shots['Red-L3-Point'])   # fermata al primo strato: il secondo non ha mai sparato
-            return 'stopped'
+        for result in self.episode_results[id(outcome)]:
+            formation = [o for o in result.forces if o.block_id == 'Blue-Deep']
 
-        return 'went_on'
+            if formation and formation[0].outcome != ER.HELD:
+                late = [e for e in result.ammunition_events if e.asset_id in red_ids and e.time > formation[0].time]
+                self.assertEqual(late, [])
+
+        breaks = [formation for formation, _ in episodes if formation.outcome != ER.HELD]
+
+        if breaks:
+            offensive = [e for e in outcome.ammunition_events
+                         if e.asset_id not in red_ids and e.time > breaks[0].time]
+            self.assertEqual(offensive, [])
+
+        if not breaks and not any(formation.lost for formation, _ in episodes):
+            return 'held'   # nessuna perdita e nessuna rottura: nulla da verificare
+
+        # Fermata al primo strato: la prima rottura precede il primo tiro del secondo strato (con il G4a spento la
+        # definizione di prima: il secondo strato non ha mai sparato, perche' dopo la rottura nella run unica
+        # nessuno la ingaggia piu').
+        second = shots[self.LAYERS[1]]
+        return 'stopped' if breaks and (second is None or second > breaks[0].time) else 'went_on'
+
+    @staticmethod
+    def _episodes(reds, outcome):
+        """`[(esito della formazione, asset rossi dell'episodio), ...]` per episodio, nell'ordine di risoluzione."""
+        assets = {force.id: set(force.assets) for force in reds}
+        episodes = []
+
+        for engagement in outcome.engagement_outcomes:
+            formation = [o for o in engagement if o.block_id == 'Blue-Deep']
+
+            if formation:
+                episodes.append((formation[0], {a for o in engagement for a in assets.get(o.force_id, ())}))
+
+        return episodes
 
     def test_layers_engage_in_geometric_order(self):
         for _, reds, outcome in self.press_on:
@@ -605,26 +733,134 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
             self.assertGreaterEqual(len(times), 1)
 
     def test_mission_is_engaged_at_several_layers(self):
-        # Il terzo strato (1 replica su 24 con 4 aerei) e' informazione nel docstring, non asserzione.
+        # Il bersaglio raggiunto (2 repliche su 12 con il G4a) e' informazione nel docstring, non asserzione.
         fired = [sum(t is not None for t in self._layer_first_shots(reds, o).values())
                  for _, reds, o in self.press_on]
         self.assertTrue(all(count >= 2 for count in fired), fired)
 
     def test_mission_reaches_the_target_or_is_stopped(self):
-        for strike, _, outcome in self.press_on:
-            result = F.force_outcome(outcome, 'Blue-Deep')
+        """Con PRESS_ON la formazione o arriva a sparare sul bersaglio o finisce (ultimo episodio) distrutta o
+        disingaggiata."""
+        for strike, reds, outcome in self.press_on:
+            final = self._episodes(reds, outcome)[-1][0]
             reached = any(e.asset_id in strike.assets for e in outcome.ammunition_events)
-            self.assertTrue(reached or result.outcome in (ER.DESTROYED, ER.DISENGAGED))
+            self.assertTrue(reached or final.outcome in (ER.DESTROYED, ER.DISENGAGED))
+
+    def test_two_episodes_one_per_layer_group(self):
+        """G4a: due episodi per replica (L1; poi L2 + L3 + bersaglio), la formazione in entrambi, quando la
+        formazione rotta prosegue sulla rotta ('exit_off' senza base e 'replan_off' con la base: la storia del G4a);
+        con il G4a spento la componente connessa di prima, un solo ingaggio con tutte le forze. Con l'uscita di scena
+        ('default') il primo episodio e' sempre L1 (gli episodi dopo dipendono da dove la formazione rompe)."""
+        for runs in (self.exit_off, self.replan_off):
+            for _, reds, outcome in runs:
+                self.assertEqual(F.engagement_blocks(outcome),
+                                 [('Blue-Deep', 'Red-L1-Long'),
+                                  ('Blue-Deep', 'Red-L2-Medium', 'Red-L3-Point', 'Red-Target')])
+
+        for _, reds, outcome in self.default:
+            self.assertEqual(F.engagement_blocks(outcome)[0], ('Blue-Deep', 'Red-L1-Long'))
+
+        for _, reds, outcome in self.episodes_off:
+            self.assertEqual(F.engagement_blocks(outcome),
+                             [('Blue-Deep', 'Red-L1-Long', 'Red-L2-Medium', 'Red-L3-Point', 'Red-Target')])
 
     def test_default_doctrine_mostly_stops_at_the_first_layer(self):
-        verdicts = Counter(self._check_break_invariants(reds, outcome) for _, reds, outcome in self.default)
-        # Misurato 23/24: la maggioranza delle formazioni con perdite si ferma al primo strato.
-        self.assertGreater(verdicts['stopped'], verdicts['went_on'] + verdicts['held'], verdicts)
+        # Misurato 11/12 con il G4a e 11/12 con il G4a spento ('episodes_off', la run unica di prima): la
+        # maggioranza delle formazioni si ferma (rompe il contatto) al primo strato.
+        for name, runs in (('default', self.default), ('episodes_off', self.episodes_off)):
+            with self.subTest(variant=name):
+                verdicts = Counter(self._check_break_invariants(reds, outcome) for _, reds, outcome in runs)
+                self.assertGreater(verdicts['stopped'], verdicts['went_on'] + verdicts['held'], verdicts)
 
     def test_resistant_formation_break_point_varies_between_replicas(self):
         verdicts = Counter(self._check_break_invariants(reds, outcome) for _, reds, outcome in self.resistant)
         self.assertGreater(verdicts['stopped'], 0, verdicts)
         self.assertGreater(verdicts['went_on'], 0, verdicts)
+
+    def test_without_a_base_the_disengaged_formation_exits(self):
+        """G4b senza basi Blue (lo scenario di sempre, partenza in volo; decisione dell'utente del 2026-10-17): la
+        formazione rotta ripercorre la rotta a ritroso fino al punto di comparsa e li' esce di scena
+        (`G4_OFF_SCENE_EXIT`): nessuno strato oltre quello del disingaggio spara, superstiti DISENGAGED e
+        `off_scene`, ABORTED(DISENGAGED); nella dottrina di default la rottura e' a L1 nella maggioranza delle
+        repliche (L2 non spara mai). PRESS_ON non disingaggia: nessun DISENGAGED. Con l'uscita spenta ('exit_off')
+        salve e danni sono quelli della base con il G4b spento ('replan_off'): la storia del G4a, la base da sola
+        non cambia nulla."""
+        layers = Counter(self._check_return(strike, reds, outcome, MA.OFF_SCENE_POSTURE)
+                         for strike, reds, outcome in self.default)
+        self.assertGreater(layers[0], len(self.SEEDS) // 2, layers)
+        layers = Counter(self._check_return(strike, reds, outcome, MA.OFF_SCENE_POSTURE)
+                         for strike, reds, outcome in self.resistant)
+        self.assertGreater(layers[0], 0, layers)
+
+        for runs in (self.press_on, self.exit_off):
+            for strike, _, outcome in runs:
+                reasons = {o.end_reason for o in outcome.mission_outcomes[f'{strike.id}:Strike'].asset_outcomes.values()}
+                self.assertNotIn(AssetEndReason.DISENGAGED, reasons)
+
+        for (_, _, exit_off), (_, _, replan_off) in zip(self.exit_off, self.replan_off):
+            self.assertEqual(replan_off.ammunition_events, exit_off.ammunition_events)
+            self.assertEqual(replan_off.damage_events, exit_off.damage_events)
+
+    def _first_disengagement(self, reds, outcome):
+        """(esito della formazione, indice dello strato) del primo episodio in cui la formazione e' DISINGAGGIATA
+        (il solo esito che fa rientrare, G4b), None se non succede mai."""
+        layer_of = {asset_id: index for index, layer in enumerate(self.LAYERS)
+                    for force in reds if force.id == layer for asset_id in force.assets}
+
+        for formation, red_assets in self._episodes(reds, outcome):
+            if formation.outcome == ER.DISENGAGED:
+                return formation, min(layer_of[a] for a in red_assets if a in layer_of)
+
+        return None
+
+    def _check_return(self, strike, reds, outcome, posture=MA.PARKED_POSTURE):
+        """G4b: dopo il PRIMO disingaggio nessuno strato oltre quello del disingaggio spara; ogni aereo superstite ha
+        chiuso con il rientro forzato (DISENGAGED, non prima del disingaggio), a fine sessione ha la postura
+        `posture` (con la base a terra sulla base, `PARKED_POSTURE`; senza basi uscito di scena al punto di
+        comparsa, `OFF_SCENE_POSTURE`), missione ABORTED(DISENGAGED). Una formazione DISTRUTTA (esito di forza
+        DESTROYED, anche con superstiti) non rientra: come prima, i superstiti proseguono. Restituisce lo strato
+        del disingaggio (None senza disingaggi)."""
+        self._check_break_invariants(reds, outcome)
+        found = self._first_disengagement(reds, outcome)
+
+        if found is None:
+            return None
+
+        first, layer = found
+        shots = self._layer_first_shots(reds, outcome)
+        self.assertEqual([shots[name] for name in self.LAYERS[layer + 1:]], [None] * (len(self.LAYERS) - layer - 1))
+        mission = outcome.mission_outcomes[f'{strike.id}:Strike']
+        survivors = [o for o in mission.asset_outcomes.values() if o.state is not AssetState.DESTROYED]
+
+        for asset in survivors:
+            self.assertEqual(asset.end_reason, AssetEndReason.DISENGAGED)
+            self.assertGreaterEqual(asset.end_time, first.time)
+            self.assertEqual(outcome.postures[asset.asset_id], posture)
+
+        if survivors:
+            self.assertEqual((mission.status, mission.reason), (MissionStatus.ABORTED, AbortReason.DISENGAGED))
+        else:
+            self.assertEqual(mission.status, MissionStatus.DESTROYED)
+
+        return layer
+
+    def test_with_a_base_the_disengaged_formation_returns(self):
+        """G4b, dottrina di default, base Blue: la formazione che rompe il contatto rientra dalla fine
+        dell'episodio; nella maggioranza delle repliche la rottura e' a L1 e L2 non spara mai. Con il G4b spento
+        ('replan_off') la formazione prosegue passiva e L2 spara in ogni replica."""
+        layers = Counter(self._check_return(strike, reds, outcome) for strike, reds, outcome in self.with_base)
+        self.assertGreater(layers[0], len(self.SEEDS) // 2, layers)
+
+        for _, reds, outcome in self.replan_off:
+            self.assertIsNotNone(self._layer_first_shots(reds, outcome)['Red-L2-Medium'])
+
+    def test_with_a_base_the_resistant_formation_returns_where_it_breaks(self):
+        """G4b, formazione resistente, base Blue: la rottura cade a L1 in alcune repliche e piu' avanti in altre;
+        ovunque cada, nessuno strato oltre la rottura spara e i superstiti rientrano."""
+        layers = Counter(self._check_return(strike, reds, outcome) for strike, reds, outcome in self.with_base_resistant)
+        self.assertGreater(layers[0], 0, layers)
+        self.assertGreater(sum(count for layer, count in layers.items() if layer is not None and layer > 0), 0,
+                           layers)
 
 
 # ── S6 — GRUPPO NAVALE CONTRO DIFESA COSTIERA ─────────────────────────────────
@@ -642,7 +878,8 @@ class TestS6CarrierGroupVersusCoastalDefence(F.LoggerSilencer, unittest.TestCase
     sia a terra sia in mare. Si verifica che:
       * lo scheduler produce finestre di dominio misto (aereo-veicolo, aereo-nave,
         nave-nave) e che `run_session` le fonde in UN solo ingaggio con tutte e quattro le
-        forze;
+        forze (dal G4a, episodi d'ingaggio: l'ala con costa e flottiglia in un episodio, il gruppo
+        navale con la flottiglia in un secondo episodio piu' tardi, v. il test);
       * nella stessa timeline agiscono entrambe le minacce (salve lanciate sia da Ship
         rosse sia da Vehicle rossi) e le navi usano la loro difesa (intercettazioni);
       * i danni cadono su piu' classi di asset.
@@ -704,8 +941,12 @@ class TestS6CarrierGroupVersusCoastalDefence(F.LoggerSilencer, unittest.TestCase
         self.assertEqual(kinds[('Ship', 'Vehicle')], 0)
 
     def test_land_and_sea_threats_are_fused_in_one_engagement(self):
+        """G4a (episodi d'ingaggio): l'ala imbarcata combatte costa E flottiglia nello STESSO episodio (la fusione
+        terra-mare resta); il gruppo navale incontra la flottiglia piu' tardi, oltre `EPISODE_GAP`, in un secondo
+        episodio. L'unione dei due episodi e' la componente connessa di prima (un solo ingaggio con il G4a spento)."""
         for _, outcome in self.runs:
-            self.assertEqual(F.engagement_blocks(outcome), [('Blue-AirWing', 'Blue-CSG', 'Red-Coast', 'Red-Flotilla')])
+            self.assertEqual(F.engagement_blocks(outcome), [('Blue-AirWing', 'Red-Coast', 'Red-Flotilla'),
+                                                            ('Blue-CSG', 'Red-Flotilla')])
 
     def test_both_threats_act_in_the_same_timeline(self):
         shooters = Counter()
@@ -827,11 +1068,19 @@ class TestS7LogisticInterdiction(F.LoggerSilencer, unittest.TestCase):
 
     def test_escort_and_package_fight_in_the_same_engagement(self):
         """Dalla F4b strike e scorta sono due forze d'ingaggio (due missioni dello stesso blocco),
-        nello stesso ingaggio."""
+        nello stesso ingaggio. Dal G4b (uscita di scena, `Session_Simulator.G4_OFF_SCENE_EXIT`) una CAP rossa
+        disingaggiata nel primo episodio (partenza in volo, nessuna base Red) ripercorre la rotta a ritroso e puo'
+        incontrare di nuovo il pacchetto in un secondo episodio, senza il deposito."""
         for _, outcome in self.runs:
-            self.assertEqual(F.engagement_blocks(outcome), [('Blue-Interdiction', 'Red-Depot', 'Red-Escort')])
-            self.assertEqual(F.engagement_forces(outcome), [('Blue-Interdiction:Escort', 'Blue-Interdiction:Strike',
-                                                             'Red-Depot', 'Red-Escort:CAP')])
+            blocks, forces = F.engagement_blocks(outcome), F.engagement_forces(outcome)
+            self.assertEqual(blocks[0], ('Blue-Interdiction', 'Red-Depot', 'Red-Escort'))
+            self.assertEqual(forces[0], ('Blue-Interdiction:Escort', 'Blue-Interdiction:Strike', 'Red-Depot',
+                                         'Red-Escort:CAP'))
+            first = {o.force_id: o.outcome for o in outcome.engagement_outcomes[0]}
+
+            if len(blocks) > 1:
+                self.assertEqual(first['Red-Escort:CAP'], ER.DISENGAGED)
+                self.assertTrue(all(set(b) <= {'Blue-Interdiction', 'Red-Escort'} for b in blocks[1:]), blocks)
 
 
 # ── S8 — FRONTE MULTIPLO, STRESS DI SCALA ─────────────────────────────────────

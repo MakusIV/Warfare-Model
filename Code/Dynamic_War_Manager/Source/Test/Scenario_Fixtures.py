@@ -985,24 +985,22 @@ def combined_arms_scenario(*, with_cas: bool = True, blue_tanks: int = 3, blue_i
 # ── LETTURE DELL'ESITO (solo letture, nessun ricalcolo) ───────────────────────
 
 def force_outcome(outcome: SessionOutcome, force_id: str) -> Optional[ER.ForceOutcome]:
-    """L'esito della forza nel suo (unico, per costruzione) ingaggio, None se non ha combattuto.
+    """L'esito della forza nel suo (unico) ingaggio, None se non ha combattuto.
 
     Dalla F4b la forza d'ingaggio e' la missione: `force_id` puo' essere un `mission_id` o l'id di
     un blocco. Per un blocco con UNA sola forza d'ingaggio che ha combattuto (una missione, o nessuna
     missione) si restituisce il suo esito; per un blocco con piu' missioni in combattimento
     l'esito del blocco non e' unico (v. `SessionOutcome.outcomes_of_block`): ValueError, chiedere
-    l'esito della missione.
+    l'esito della missione. Dal G4a (episodi d'ingaggio, `Session_Simulator.G4_EPISODES`) una forza puo'
+    combattere in piu' episodi della stessa sessione, con un esito per episodio: anche allora l'esito non e'
+    unico, ValueError (leggere `outcome.outcomes_of(...)`, nell'ordine degli episodi).
     """
-    found = outcome.outcomes_of(force_id)
-
-    if found:
-        return found[0]
-
-    found = outcome.outcomes_of_block(force_id)
+    found = outcome.outcomes_of(force_id) or outcome.outcomes_of_block(force_id)
 
     if len(found) > 1:
-        raise ValueError(f"block {force_id!r} fought as {len(found)} engagement forces "
-                         f"{[o.force_id for o in found]}: ask for the outcome of one mission")
+        raise ValueError(f"{force_id!r} fought as {len(found)} engagement outcomes "
+                         f"{[o.force_id for o in found]} (several missions, or several engagement episodes of one "
+                         f"mission): ask for the outcomes of one mission")
 
     return found[0] if found else None
 
@@ -1024,9 +1022,20 @@ def engagement_forces(outcome: SessionOutcome) -> List[Tuple[str, ...]]:
 
 
 def losses_of(outcome: SessionOutcome, force_id: str) -> int:
-    """Asset impegnati e non piu' operativi a fine ingaggio (ForceOutcome.lost), 0 se assente."""
-    found = force_outcome(outcome, force_id)
-    return found.lost if found is not None else 0
+    """Asset impegnati e non piu' operativi a fine ingaggio (ForceOutcome.lost), 0 se assente.
+
+    Dal G4b (uscita di scena, `Session_Simulator.G4_OFF_SCENE_EXIT`) una formazione disingaggiata che ripercorre la
+    rotta a ritroso puo' combattere un altro episodio della stessa sessione: le perdite sono la SOMMA sugli episodi
+    della stessa forza d'ingaggio (gli impegnati di un episodio sono gli asset ancora operativi al suo inizio e gli
+    esiti sono applicati in ordine, quindi nessun asset e' contato due volte). Un blocco con piu' missioni in
+    combattimento resta un ValueError, come `force_outcome`.
+    """
+    found = outcome.outcomes_of(force_id) or outcome.outcomes_of_block(force_id)
+
+    if len({o.force_id for o in found}) > 1:
+        return force_outcome(outcome, force_id).lost      # ValueError: piu' missioni, chiedere quella giusta
+
+    return sum(o.lost for o in found)
 
 
 def damage_on(outcome: SessionOutcome, target_ids: Iterable[str]) -> List:

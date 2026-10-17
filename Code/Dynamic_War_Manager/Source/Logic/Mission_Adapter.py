@@ -1228,15 +1228,25 @@ def is_transfer_mission(mission: Mission) -> bool:
 
 def mission_bingo_decision(mission: Mission, movement: AssetMovement, asset, air_bases: Iterable[Tuple[float, float]],
                            time: Optional[float] = None, fuel: Optional[float] = None,
-                           legs: Optional[Sequence] = None) -> Optional[FM.BingoDecision]:
+                           legs: Optional[Sequence] = None, forced: bool = False,
+                           exit_scene: bool = False) -> Optional[FM.BingoDecision]:
     """Soglia di bingo e albero di decisione del G2 (`Fuel_Model.bingo_decision`) per un asset della missione:
     tratti della missione INTERA (`airborne_legs`, o `legs` se dati: in sessione quelli che consumano),
     partenza e anello dalla regola della missione (`bingo_return_rule`), trasferimento o combattimento dal tipo
     (`is_transfer_mission`). `time` None = l'inizio dei tratti, `fuel` None = il carburante dell'asset. La
-    usano il validatore (`check_mission_bingo`) e l'esecutore (`Session_Simulator`): stesso criterio."""
+    usano il validatore (`check_mission_bingo`) e l'esecutore (`Session_Simulator`): stesso criterio.
+
+    `forced` (G4b): RIENTRO FORZATO dopo il disingaggio della forza d'ingaggio, sempre con la regola di
+    COMBATTIMENTO (`transfer` False qualunque sia il tipo di missione, decisione dell'utente del 2026-10-17) e
+    senza controllo di soglia (v. `Fuel_Model.bingo_decision`).
+
+    `exit_scene` (G4b, decisione dell'utente del 2026-10-17): partenza in volo senza alcuna base del lato, uscita
+    di scena al punto di comparsa (`Fuel_Model.BINGO_EXIT`) al posto di `BINGO_NO_BASE`; la usa solo la
+    ri-pianificazione dopo un episodio, non il validatore ne' la decisione alla partenza."""
     legs = airborne_legs(movement) if legs is None else legs
     return FM.bingo_decision(asset, legs, air_bases, bingo_return_rule(mission),
-                             transfer=is_transfer_mission(mission), time=time, fuel=fuel)
+                             transfer=False if forced else is_transfer_mission(mission), time=time, fuel=fuel,
+                             forced=forced, exit_scene=exit_scene)
 
 
 def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_bases: Iterable[Tuple[float, float]],
