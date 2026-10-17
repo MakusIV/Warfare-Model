@@ -22,3 +22,9 @@ Assegnazione per tipo di attività:
 **Why:** l'utente vuole che il principale lo aiuti a decidere l'uso di modelli e sforzi adeguati; il risparmio viene dal delegare l'esecuzione, non dall'abbassare il principale.
 
 **How to apply:** prima di delegare, proporre in una riga "compito → agente, modello, sforzo, motivo" e attendere conferma; se una scelta si ripete senza obiezioni diventa regola e non si chiede più. Le verifiche pre-commit restano sempre al principale (v. [[feedback-parallel-agents-verification]]).
+
+**Deroghe (2026-10-17):** ogni scostamento dallo sforzo/modello della regola o del frontmatter dell'agente (es.
+`des-developer` a effort high invece di medium) va proposto in una riga DEDICATA con il motivo e confermato
+dall'utente; mai inserito nella descrizione di un'opzione di una domanda su altro, mai esteso da un passo al
+successivo (G4a -> G4b) senza chiedere. Una nota di memoria che dice "proposta Opus high" riguarda l'analisi del
+principale, non l'implementazione delegata. Origine: G4a e G4b lanciati a effort high senza conferma esplicita.

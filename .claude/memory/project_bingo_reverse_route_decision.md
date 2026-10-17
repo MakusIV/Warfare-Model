@@ -85,6 +85,9 @@ Implementata dall'agente `des-developer` (Opus medium). Suite 4245 OK (7 skipped
   episodio (residuo analitico, F6-A se a secco, `bingo_decision(time, fuel)`, ri-scheduling dei contatti futuri). Sonda:
   con 300 s 40/778 componenti a 2 episodi (S5 x36, Blue-AirWing+CSG x4). Due passi, interruttori `G4_EPISODES`/`G4_REPLAN`,
   confronti e approvazioni separati, `des-developer` Opus high.
+- **G4a+G4b APPROVATI 2026-10-17** con l'uscita di scena senza basi (decisione utente: aereo comparso in volo senza
+  basi del lato che deve rientrare dopo un episodio ripercorre la rotta fino al punto di comparsa ed esce di scena,
+  `BINGO_EXIT`, `G4_OFF_SCENE_EXIT`); alla partenza (G2) restano le regole F6-A. Fotografia 878 installata, pushato.
 - **G4** (dettaglio originale): ri-scheduling dopo l'ingaggio + piu' consumi d'ingaggio per sessione (limite noto P2/R4 di `Session_Simulator`: cancellare le finestre future dell'asset e
   ricalcolarle). Prima l'analisi dell'architettura; proposta Opus effort high.
 - **G5**: S26 riscritto, nuovo S27, Piano §5, `F4_Differenze`, manuale.
