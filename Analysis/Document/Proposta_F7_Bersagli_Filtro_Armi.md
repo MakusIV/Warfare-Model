@@ -293,6 +293,12 @@ Se c'è `attack_profile` e `weapons` è vuoto, vale `(attack_profile.weapon,)`.
 
 ## 4. Decisioni aperte per l'utente
 
+> **DECISO dall'utente il 2026-10-18**: accettate TUTTE le raccomandazioni (R) delle decisioni 1-14 e 16, compresa
+> la tabella `MISSION_WEAPON_POLICY` della §2.4 cosi' com'e' (decisione 5) e la ROE di default B1 (decisione 4).
+> Decisione 8: la F7a non tocca i registri; la correzione di `self_escort_capability` dei 5 loadout dell'A-10C
+> con AIM-9M si fara' a parte, dopo una verifica dell'utente in DCS. Decisione 15 (scelte della F7b) RIMANDATA
+> all'inizio della F7b, dopo l'approvazione della F7a.
+
 1. **Scomposizione**: F7a (regole d'ingaggio) e poi F7b (fuoco su posizione), ognuna con interruttore,
    confronto e approvazione separati. (R: sì.)
 2. **Architettura a due strati** A3: politica d'armi come involucro della fire control più `TargetRules` nel
