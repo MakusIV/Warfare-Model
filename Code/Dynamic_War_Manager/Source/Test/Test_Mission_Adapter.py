@@ -1563,10 +1563,24 @@ class TestWeaponPolicies(_EngagementRulesBase):
     def test_self_escort_comes_from_the_assigned_loadout(self):
         policies = MA.weapon_policies([self.mission(self.group('Red-Line'))], self.assets)
         self.assertEqual(set(policies), {'a1', 'a2'})
-        self.assertFalse(policies['a1'].self_escort)       # 'Maverick/Gun CAS': anomalia di dato, decisione 8
+        self.assertTrue(policies['a1'].self_escort)        # A-10C 'Maverick/Gun CAS' (con AIM-9M)
         self.assertTrue(policies['a2'].self_escort)        # F-16C 'Strike'
         self.assertEqual((policies['a1'].mission_id, policies['a1'].domain), ('m1', 'air'))
         self.assertEqual(policies['a1'].rules['surface'], frozenset({'CAS', 'Strike'}))
+
+    def test_a_loadout_declaring_no_self_defence_gets_none(self):
+        """Loadout di TEST dello stesso A-10C con il flag False: `self_escort` False."""
+        import copy
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+        no_escort = copy.deepcopy(AIRCRAFT_LOADOUTS['A-10C Thunderbolt II']['Maverick/Gun CAS'])
+        no_escort['self_escort_capability'] = False
+
+        with patch.dict(AIRCRAFT_LOADOUTS['A-10C Thunderbolt II'], {'Test No Escort': no_escort}):
+            plain = _EngagementAsset('a1', 'A-10C Thunderbolt II', 'Test No Escort')
+            policies = MA.weapon_policies([self.mission(self.group('Red-Line'))], {'a1': plain, 'a2': self.a2})
+
+        self.assertFalse(policies['a1'].self_escort)
+        self.assertTrue(policies['a2'].self_escort)
 
     def test_unknown_loadout_has_no_self_defence_and_unknown_assets_are_skipped(self):
         stranger = _EngagementAsset('a1', 'A-10C Thunderbolt II', 'No such loadout')

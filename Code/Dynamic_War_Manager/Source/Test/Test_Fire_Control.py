@@ -9,7 +9,9 @@ Logger: silenziati con `Scenario_Fixtures.LoggerSilencer` (mixin, non un TestCas
 copre anche `Logic.Fire_Control`.
 """
 
+import copy
 import unittest
+from unittest.mock import patch
 
 from Code.Dynamic_War_Manager.Source.Test import Scenario_Fixtures as F
 from Code.Dynamic_War_Manager.Source.Asset import Ground_Weapon_Data as GWD
@@ -797,12 +799,22 @@ class TestRestrictByPolicy(_FireControlFixture, unittest.TestCase):
         self.assertIsNone(self.restricted(a10, 'Anti_Ship')(a10, tank))
 
     def test_air_to_ground_self_defence_depends_on_the_loadout(self):
+        """Caso positivo sui loadout reali (F-16C 'Strike' e A-10C 'Maverick/Gun CAS', flag True): l'AIM-9M e'
+        ammesso contro un aereo. Caso negativo con un loadout di TEST dello stesso A-10C che dichiara il flag
+        False: nessuna opzione aria-aria in missione aria-suolo."""
         mig = self.aircraft('MiG-29S', 5_000.0, loadout='CAP')
         f16 = self.aircraft(F16, 5_000.0, loadout='Strike', force=self.blue)
         a10 = self.aircraft(A10, 5_000.0, loadout='Maverick/Gun CAS', force=self.blue)
         self.assertIn('AIM-9M', self.weapons(self.restricted(f16, 'Strike')(f16, mig)))
-        self.assertIsNone(self.restricted(a10, 'CAS')(a10, mig))
-        self.assertTrue(self.base(a10, mig))      # premessa: senza politica l'A-10C avrebbe il cannone
+        self.assertIn('AIM-9M', self.weapons(self.restricted(a10, 'CAS')(a10, mig)))
+
+        no_escort = copy.deepcopy(AIRCRAFT_LOADOUTS[A10]['Maverick/Gun CAS'])
+        no_escort['self_escort_capability'] = False
+
+        with patch.dict(AIRCRAFT_LOADOUTS[A10], {'Test No Escort': no_escort}):
+            plain = self.aircraft(A10, 5_000.0, loadout='Test No Escort', force=self.blue)
+            self.assertTrue(self.base(plain, mig))      # premessa: senza politica avrebbe armi contro un aereo
+            self.assertIsNone(self.restricted(plain, 'CAS')(plain, mig))
 
     def test_weapons_outside_the_registry_are_unconstrained(self):
         spec = ShotSpec(accuracy=0.5, destroy_capacity=0.5, weapon='test:agm')

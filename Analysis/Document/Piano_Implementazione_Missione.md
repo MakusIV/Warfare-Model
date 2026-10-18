@@ -448,8 +448,8 @@ su cui poggia la successiva.
       invariata `weapon_free` (decisione 4, B1).
     - **Politica d'armi** (decisioni 5-8): tabella `Context.MISSION_WEAPON_POLICY` confermata riga per riga (solo
       aria; terra e mare `None`); classe `air_defence` = `Vehicle` `isSAM`/`isAAA`/`isEWR`; armi assenti dai registri
-      (`test:*`) senza vincoli; autodifesa da `self_escort_capability` senza toccare i registri (i 5 loadout A-10C con
-      AIM-9M e flag False restano com'e').
+      (`test:*`) senza vincoli; autodifesa da `self_escort_capability` (la F7a non tocca i registri; il dato dei 5 loadout
+      A-10C II con AIM-9M, flag False, e' stato poi CORRETTO a True dall'utente: v. sotto).
     - **Bersagli e armi designate** (decisioni 9-12): `Target.asset_ids` (sottoinsieme del GROUP);
       `MissionAsset.weapons` (implicito da `AttackProfile.weapon`, sul designato solo quelle e nessun ripiego,
       riservate sui non designati); `Mission_Adapter.TARGET_POINT_RADIUS_M` = 500 m (STIMA) piu' l'incertezza
@@ -463,6 +463,9 @@ su cui poggia la successiva.
       decisione sulla coppia e il candidato fuori area e' esaurito per la finestra: un bersaglio che entra nell'area dopo
       la prima valutazione non e' ingaggiato (LIMITE DICHIARATO, non implementato per decisione dell'utente); F7b non
       implementata.
+    - **Limite "self_escort A-10C non corretto" CHIUSO** (decisione 8, 2026-10-18): `self_escort_capability` = True sui
+      5 loadout A-10C II con AIM-9M in `Aircraft_Loadouts.py` ('Low Level Bomb Run', senza AIM-9, resta False);
+      4 esecuzioni di S28 cambiate (`S28-CLASS/*/self_defence`), v. `F4_Differenze_Scenari.md`, "Correzione dati A-10C".
     - Dettagli, scelte e confronto in `F4_Differenze_Scenari.md`, "F7a".
 
 **Punti aperti rilevati dall'aggiornamento del manuale** (capitolo 10 §9.6 del manuale DES):

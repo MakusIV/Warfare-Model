@@ -1676,7 +1676,7 @@ AIRCRAFT_LOADOUTS = {
             "tasks": ["CAS", "Pinpoint_Strike"],
             "attributes": ["Close Air Support", "Anti-armor", "Precision"],
             "Lock_Down_Shoot_Down": False,
-            "self_escort_capability": False,
+            "self_escort_capability": True,
             "cruise": {
                 "speed": 520, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 100,
@@ -1710,7 +1710,7 @@ AIRCRAFT_LOADOUTS = {
             "tasks": ["Strike", "Pinpoint_Strike"],
             "attributes": ["Precision", "Laser-guided"],
             "Lock_Down_Shoot_Down": False,
-            "self_escort_capability": False,
+            "self_escort_capability": True,
             "cruise": {
                 "speed": 510, "reference_altitude": 5000,
                 "altitude_max": 10000, "altitude_min": 300,
@@ -1743,7 +1743,7 @@ AIRCRAFT_LOADOUTS = {
             "tasks": ["CAS"],
             "attributes": ["Close Air Support", "Area"],
             "Lock_Down_Shoot_Down": False,
-            "self_escort_capability": False,
+            "self_escort_capability": True,
             "cruise": {
                 "speed": 490, "reference_altitude": 2000,
                 "altitude_max": 6000, "altitude_min": 50,
@@ -1781,7 +1781,7 @@ AIRCRAFT_LOADOUTS = {
             "tasks": ["CAS", "Pinpoint_Strike"],
             "attributes": ["Close Air Support", "Anti-armor", "Precision"],
             "Lock_Down_Shoot_Down": False,
-            "self_escort_capability": False,
+            "self_escort_capability": True,
             "cruise": {
                 "speed": 520, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 100,
@@ -1815,7 +1815,7 @@ AIRCRAFT_LOADOUTS = {
             "tasks": ["Strike", "Pinpoint_Strike"],
             "attributes": ["Precision", "Laser-guided"],
             "Lock_Down_Shoot_Down": False,
-            "self_escort_capability": False,
+            "self_escort_capability": True,
             "cruise": {
                 "speed": 510, "reference_altitude": 5000,
                 "altitude_max": 10000, "altitude_min": 300,

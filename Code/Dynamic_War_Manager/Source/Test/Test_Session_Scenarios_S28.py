@@ -35,11 +35,13 @@ spento (il comportamento di prima):
   * 'sead' / 'sead_off': 2 F-16C 'SEAD' (AGM-88) a 500 m contro Red-AD (2 BMP-2 e uno Strela-10). Con la politica
     solo l'AGM-88 e solo sul SAM; senza, il cannone spara anche ai BMP-2 (premessa). Lo Strela-10 e non un SAM a
     radar come il Tor: il Tor abbatte la formazione prima che il cannone possa sparare (premessa non ottenibile);
-  * 'self_defence' / 'self_defence_off': un F-16C 'Strike' (autodifesa dichiarata nel loadout) e un A-10C 'Maverick/Gun
-    CAS' (`self_escort_capability` False: anomalia di dato nota, decisione 8) incrociano 2 MiG-29S 'CAP'. Con la
-    politica spara l'F-16C (AIM-9M), non l'A-10C; senza, l'A-10C spara ai MiG (premessa). Sensore 'air' dell'A-10C e dei
-    MiG DICHIARATO di test (valori sotto): col sensore del registro i MiG sparerebbero per primi da 30 km e
-    abbatterebbero i Blu prima della portata dell'AIM-9M.
+  * 'self_defence' / 'self_defence_off': un F-16C 'Strike' e un A-10C 'Maverick/Gun CAS' (entrambi con
+    `self_escort_capability` True: l'A-10C ha l'AIM-9M, dato corretto con la decisione 8 della F7) incrociano 2 MiG-29S
+    'CAP'. Con la politica entrambi si difendono con l'AIM-9M (autodifesa aria-aria dei tipi aria-suolo); senza, anche
+    l'A-10C spara ai MiG (premessa). Il caso negativo (loadout senza capacita' di autodifesa = nessuna opzione
+    aria-aria) e' provato con un loadout di test nei test unitari (Test_Fire_Control, Test_Mission_Adapter). Sensore
+    'air' dell'A-10C e dei MiG DICHIARATO di test (valori sotto): col sensore del registro i MiG sparerebbero per
+    primi da 30 km e abbatterebbero i Blu prima della portata dell'AIM-9M.
 
 ## S28-ZONE (`TestS28ZoneDesignation`)
 
@@ -288,14 +290,19 @@ class TestS28WeaponPolicyByMissionType(F.LoggerSilencer, unittest.TestCase):
         fired = sum(len(_on(_blue_salvos(salvos, 'Blue-CAS'), 'Red-CAP')) for _, salvos in self.runs['self_defence_off'])
         self.assertGreater(fired, 0)
 
-    def test_self_defence_only_the_aircraft_with_the_declared_capability_fires(self):
+    def test_self_defence_both_aircraft_defend_themselves_with_the_aam(self):
+        """Caso positivo: F-16C e A-10C (autodifesa dichiarata nel loadout) sparano l'AIM-9M ai MiG."""
         runs = self.runs['self_defence']
-        strike_aam = sum(len(_on(_blue_salvos(salvos, 'Blue-Strike'), 'Red-CAP', 'AIM-9M')) for _, salvos in runs)
-        self.assertGreater(strike_aam, 0)
+
+        for prefix in ('Blue-Strike', 'Blue-CAS'):
+            with self.subTest(aircraft=prefix):
+                aam = sum(len(_on(_blue_salvos(salvos, prefix), 'Red-CAP', 'AIM-9M')) for _, salvos in runs)
+                self.assertGreater(aam, 0)
 
         for outcome, salvos in runs:
             with self.subTest(session=outcome.session_id):
-                self.assertEqual(_blue_salvos(salvos, 'Blue-CAS'), [])
+                self.assertTrue(all(salvo.target_id.startswith('Red-CAP')
+                                    for salvo in _blue_salvos(salvos, 'Blue-')))
 
 
 # ── S28-ZONE ───────────────────────────────────────────────────────────────────

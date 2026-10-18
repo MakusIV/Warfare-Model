@@ -2459,8 +2459,7 @@ ProArt P16: **970 esecuzioni**.
   raggiungerlo (tratti che non lo toccano) resta in avvicinamento. Un'uscita dall'attacco per DESTRUZIONE vale solo per
   i designati per id (non per area).
 - Quelli del piano (§7): priorita' solo locale, designazione geometrica approssimata (istante di decisione), winchester
-  e politica d'armi (un'arma sempre esclusa non si esaurisce), `self_escort_capability` dei 5 loadout A-10C con AIM-9M
-  (decisione 8, i registri non sono toccati), scorta senza protezione del gruppo, terra e mare senza restrizioni
+  e politica d'armi (un'arma sempre esclusa non si esaurisce), scorta senza protezione del gruppo, terra e mare senza restrizioni
   d'arma. La F7b (fuoco su posizione) non e' implementata.
 
 ### Test
@@ -2470,5 +2469,20 @@ ProArt P16: **970 esecuzioni**.
   `Test_Engagement_Resolver.TestTargetRules` (30), `Test_Mission_Adapter` (+20: `designated_targets`, `target_rules`,
   `weapon_policies`), `Test_Session_Simulator.TestMissionEngagementRules` (8), `Test_Session_Scenarios_S19_Air_Defence`
   (+3), `Test_Session_Scenarios_S28` (14).
-- Suite completa: 4489 test OK (7 skipped), 104 nuovi rispetto ai 4385 del G5.
+- Suite completa: 4490 test OK (7 skipped), 105 nuovi rispetto ai 4385 del G5.
+
+## Correzione dati A-10C (decisione 8 F7, 2026-10-18)
+
+**Verificata dalla sessione principale e approvata dall'utente il 2026-10-18**: suite 4490 OK, 966 identiche + 4 cambiate (solo `self_defence`), fotografia 970 aggiornata.
+
+**Base del confronto**: fotografia 970 (F7a). **Dopo**: `self_escort_capability` = True sui 5 loadout A-10C II con
+AIM-9M in `Asset/Aircraft_Loadouts.py` ('Low Level Bomb Run', senza AIM-9, resta False); nessun cambio di codice.
+`--compare`: **966 IDENTICHE, 4 CAMBIATE, 0 nuove**.
+- Cambiate: `S28-CLASS/S28-CLASS-{0,1,2,3}/self_defence`. Causa: l'A-10C in CAS ora ha l'autodifesa aria-aria (politica
+  d'armi della F7a) e tira l'AIM-9M ai MiG; prima non tirava mai (flag False). Le altre 966 non toccano l'A-10C in
+  missione aria-suolo contro aerei (`self_defence_off`, con la politica spenta, e' identica).
+- Test: i casi che si appoggiavano all'anomalia sono riscritti: caso negativo (loadout senza autodifesa = nessuna
+  opzione aria-aria) con un loadout di TEST dello stesso A-10C col flag False (`patch.dict`), caso positivo sui loadout
+  reali; S28 'self_defence' diventa il caso positivo (F-16C e A-10C si difendono con l'AIM-9M), nome della variante e
+  geometria invariati.
 

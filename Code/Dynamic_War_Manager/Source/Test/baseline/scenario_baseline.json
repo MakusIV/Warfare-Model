@@ -595392,23 +595392,23 @@
    "actual_etas": {
     "Blue-CAS:CAS": [
      0.0,
-     null
+     514.285714
     ],
     "Blue-Strike:Strike": [
      0.0,
-     null
+     300.0
     ],
     "Red-CAP:CAP": [
      0.0,
-     313.043478
+     null
     ]
    },
    "ammunition_consumed": {
+    "Blue-CAS/a0": {
+     "AIM-9M": 1
+    },
     "Blue-Strike/f0": {
      "AIM-9M": 2
-    },
-    "Red-CAP/m1": {
-     "R-73": 4
     }
    },
    "ammunition_events": [
@@ -595419,40 +595419,34 @@
      2
     ],
     [
-     176.787761,
-     "Red-CAP/m1",
-     "R-73",
-     2
-    ],
-    [
-     178.287761,
-     "Red-CAP/m1",
-     "R-73",
-     2
+     149.660384,
+     "Blue-CAS/a0",
+     "AIM-9M",
+     1
     ]
    ],
    "assets": {
     "Blue-CAS/a0": {
-     "ammunition": 1183,
-     "destroyed": true,
+     "ammunition": 1182,
+     "destroyed": false,
      "fuel": 0.901974,
-     "health": 0,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "AGM-65D": 4,
-      "AIM-9M": 1,
+      "AIM-9M": 0,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-Strike/f0": {
      "ammunition": 521,
-     "destroyed": true,
+     "destroyed": false,
      "fuel": 0.863817,
-     "health": 0,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "AIM-9M": 0,
       "M61A1": 511,
@@ -595474,16 +595468,16 @@
      }
     },
     "Red-CAP/m1": {
-     "ammunition": 152,
-     "destroyed": false,
+     "ammunition": 156,
+     "destroyed": true,
      "fuel": 0.835023,
-     "health": 100,
+     "health": 0,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "GSh-30-1": 150,
       "R-27ER": 2,
-      "R-73": 0
+      "R-73": 4
      }
     }
    },
@@ -595515,15 +595509,15 @@
     }
    },
    "counts": {
-    "damage_events": 3,
-    "destroyed_events": 3,
+    "damage_events": 2,
+    "destroyed_events": 2,
     "engagements": 1,
     "fuel_events": 8,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 6,
-    "salvos": 3
+    "rounds": 3,
+    "salvos": 2
    },
    "damage_events": [
     [
@@ -595537,20 +595531,10 @@
      true
     ],
     [
-     193.113225,
+     160.533143,
+     "Red-CAP/m1",
      "Blue-CAS/a0",
-     "Red-CAP/m1",
-     "R-73",
-     "kill",
-     100,
-     0,
-     true
-    ],
-    [
-     194.613225,
-     "Blue-Strike/f0",
-     "Red-CAP/m1",
-     "R-73",
+     "AIM-9M",
      "kill",
      100,
      0,
@@ -595563,68 +595547,66 @@
       "block_id": "Blue-CAS",
       "breakpoint": null,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Blue-CAS:CAS",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Blue",
       "temper": null,
-      "time": 193.113225,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      },
      {
       "block_id": "Blue-Strike",
       "breakpoint": null,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Blue-Strike:Strike",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Blue",
       "temper": null,
-      "time": 194.613225,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      },
      {
       "block_id": "Red-CAP",
       "breakpoint": 1.0,
       "committed": 2,
-      "erosion": 0.5,
+      "erosion": 1.0,
       "force_id": "Red-CAP:CAP",
       "force_ratio": null,
-      "lost": 1,
+      "lost": 2,
       "max_shock": 0.5,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Red",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 160.533143,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      }
     ]
    ],
    "force_outcomes": {
     "Blue-CAS": [
-     "destroyed"
+     "held"
     ],
     "Blue-Strike": [
-     "destroyed"
+     "held"
     ],
     "Red-CAP": [
-     "held"
+     "destroyed"
     ]
    },
    "fuel": {
@@ -595637,7 +595619,7 @@
       "fuel_after": 0.948485,
       "fuel_before": 1.0,
       "regime": "engagement",
-      "time": 176.787761
+      "time": 149.660384
      },
      {
       "amount": 0.046512,
@@ -595703,7 +595685,7 @@
       "fuel_after": 0.896373,
       "fuel_before": 1.0,
       "regime": "engagement",
-      "time": 176.787761
+      "time": 149.660384
      },
      {
       "amount": 0.06135,
@@ -595720,10 +595702,10 @@
    "interception_events": [],
    "interceptions": {},
    "postures": {
-    "Blue-CAS/a0": "destroyed",
-    "Blue-Strike/f0": "destroyed",
+    "Blue-CAS/a0": "off_scene",
+    "Blue-Strike/f0": "off_scene",
     "Red-CAP/m0": "destroyed",
-    "Red-CAP/m1": "off_scene"
+    "Red-CAP/m1": "destroyed"
    },
    "session": {
     "order_t_end": 1800.0,
@@ -597791,23 +597773,23 @@
    "actual_etas": {
     "Blue-CAS:CAS": [
      0.0,
-     null
+     514.285714
     ],
     "Blue-Strike:Strike": [
      0.0,
-     null
+     300.0
     ],
     "Red-CAP:CAP": [
      0.0,
-     313.043478
+     null
     ]
    },
    "ammunition_consumed": {
+    "Blue-CAS/a0": {
+     "AIM-9M": 1
+    },
     "Blue-Strike/f0": {
      "AIM-9M": 2
-    },
-    "Red-CAP/m1": {
-     "R-73": 4
     }
    },
    "ammunition_events": [
@@ -597818,40 +597800,34 @@
      2
     ],
     [
-     176.787761,
-     "Red-CAP/m1",
-     "R-73",
-     2
-    ],
-    [
-     178.287761,
-     "Red-CAP/m1",
-     "R-73",
-     2
+     149.660384,
+     "Blue-CAS/a0",
+     "AIM-9M",
+     1
     ]
    ],
    "assets": {
     "Blue-CAS/a0": {
-     "ammunition": 1183,
-     "destroyed": true,
+     "ammunition": 1182,
+     "destroyed": false,
      "fuel": 0.901974,
-     "health": 0,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "AGM-65D": 4,
-      "AIM-9M": 1,
+      "AIM-9M": 0,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-Strike/f0": {
      "ammunition": 521,
-     "destroyed": true,
+     "destroyed": false,
      "fuel": 0.863817,
-     "health": 0,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "AIM-9M": 0,
       "M61A1": 511,
@@ -597873,16 +597849,16 @@
      }
     },
     "Red-CAP/m1": {
-     "ammunition": 152,
-     "destroyed": false,
+     "ammunition": 156,
+     "destroyed": true,
      "fuel": 0.835023,
-     "health": 100,
+     "health": 5,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "GSh-30-1": 150,
       "R-27ER": 2,
-      "R-73": 0
+      "R-73": 4
      }
     }
    },
@@ -597914,15 +597890,15 @@
     }
    },
    "counts": {
-    "damage_events": 3,
-    "destroyed_events": 3,
+    "damage_events": 2,
+    "destroyed_events": 2,
     "engagements": 1,
     "fuel_events": 8,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 6,
-    "salvos": 3
+    "rounds": 3,
+    "salvos": 2
    },
    "damage_events": [
     [
@@ -597936,23 +597912,13 @@
      true
     ],
     [
-     193.113225,
+     160.533143,
+     "Red-CAP/m1",
      "Blue-CAS/a0",
-     "Red-CAP/m1",
-     "R-73",
-     "kill",
+     "AIM-9M",
+     "damage",
      100,
-     0,
-     true
-    ],
-    [
-     194.613225,
-     "Blue-Strike/f0",
-     "Red-CAP/m1",
-     "R-73",
-     "kill",
-     100,
-     0,
+     5,
      true
     ]
    ],
@@ -597962,68 +597928,66 @@
       "block_id": "Blue-CAS",
       "breakpoint": null,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Blue-CAS:CAS",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Blue",
       "temper": null,
-      "time": 193.113225,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      },
      {
       "block_id": "Blue-Strike",
       "breakpoint": null,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Blue-Strike:Strike",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Blue",
       "temper": null,
-      "time": 194.613225,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      },
      {
       "block_id": "Red-CAP",
       "breakpoint": 1.0,
       "committed": 2,
-      "erosion": 0.5,
+      "erosion": 1.0,
       "force_id": "Red-CAP:CAP",
       "force_ratio": null,
-      "lost": 1,
+      "lost": 2,
       "max_shock": 0.5,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Red",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 160.533143,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      }
     ]
    ],
    "force_outcomes": {
     "Blue-CAS": [
-     "destroyed"
+     "held"
     ],
     "Blue-Strike": [
-     "destroyed"
+     "held"
     ],
     "Red-CAP": [
-     "held"
+     "destroyed"
     ]
    },
    "fuel": {
@@ -598036,7 +598000,7 @@
       "fuel_after": 0.948485,
       "fuel_before": 1.0,
       "regime": "engagement",
-      "time": 176.787761
+      "time": 149.660384
      },
      {
       "amount": 0.046512,
@@ -598102,7 +598066,7 @@
       "fuel_after": 0.896373,
       "fuel_before": 1.0,
       "regime": "engagement",
-      "time": 176.787761
+      "time": 149.660384
      },
      {
       "amount": 0.06135,
@@ -598119,10 +598083,10 @@
    "interception_events": [],
    "interceptions": {},
    "postures": {
-    "Blue-CAS/a0": "destroyed",
-    "Blue-Strike/f0": "destroyed",
+    "Blue-CAS/a0": "off_scene",
+    "Blue-Strike/f0": "off_scene",
     "Red-CAP/m0": "destroyed",
-    "Red-CAP/m1": "off_scene"
+    "Red-CAP/m1": "destroyed"
    },
    "session": {
     "order_t_end": 1800.0,
@@ -600072,7 +600036,7 @@
     ],
     "Blue-Strike:Strike": [
      0.0,
-     300.0
+     null
     ],
     "Red-CAP:CAP": [
      0.0,
@@ -600080,6 +600044,10 @@
     ]
    },
    "ammunition_consumed": {
+    "Blue-CAS/a0": {
+     "AIM-9M": 1,
+     "GAU-8/A": 250
+    },
     "Blue-Strike/f0": {
      "AIM-9M": 2
     },
@@ -600095,6 +600063,12 @@
      2
     ],
     [
+     149.660384,
+     "Blue-CAS/a0",
+     "AIM-9M",
+     1
+    ],
+    [
      187.514667,
      "Red-CAP/m1",
      "R-73",
@@ -600105,11 +600079,41 @@
      "Red-CAP/m1",
      "R-73",
      2
+    ],
+    [
+     192.981101,
+     "Blue-CAS/a0",
+     "GAU-8/A",
+     50
+    ],
+    [
+     193.695387,
+     "Blue-CAS/a0",
+     "GAU-8/A",
+     50
+    ],
+    [
+     194.409673,
+     "Blue-CAS/a0",
+     "GAU-8/A",
+     50
+    ],
+    [
+     195.123959,
+     "Blue-CAS/a0",
+     "GAU-8/A",
+     50
+    ],
+    [
+     195.838244,
+     "Blue-CAS/a0",
+     "GAU-8/A",
+     50
     ]
    ],
    "assets": {
     "Blue-CAS/a0": {
-     "ammunition": 1183,
+     "ammunition": 932,
      "destroyed": true,
      "fuel": 0.901974,
      "health": 0,
@@ -600117,18 +600121,18 @@
      "operative": false,
      "stores": {
       "AGM-65D": 4,
-      "AIM-9M": 1,
-      "GAU-8/A": 1174,
+      "AIM-9M": 0,
+      "GAU-8/A": 924,
       "Mk-82AIR": 4
      }
     },
     "Blue-Strike/f0": {
      "ammunition": 521,
-     "destroyed": false,
+     "destroyed": true,
      "fuel": 0.863817,
-     "health": 100,
+     "health": 0,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "AIM-9M": 0,
       "M61A1": 511,
@@ -600191,15 +600195,15 @@
     }
    },
    "counts": {
-    "damage_events": 5,
-    "destroyed_events": 2,
+    "damage_events": 10,
+    "destroyed_events": 3,
     "engagements": 1,
     "fuel_events": 8,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 6,
-    "salvos": 3
+    "rounds": 257,
+    "salvos": 9
    },
    "damage_events": [
     [
@@ -600213,10 +600217,60 @@
      true
     ],
     [
-     203.840131,
-     "Blue-CAS/a0",
+     160.533143,
      "Red-CAP/m1",
-     "R-73",
+     "Blue-CAS/a0",
+     "AIM-9M",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     193.573402,
+     "Red-CAP/m1",
+     "Blue-CAS/a0",
+     "GAU-8/A",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     194.287687,
+     "Red-CAP/m1",
+     "Blue-CAS/a0",
+     "GAU-8/A",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     195.001973,
+     "Red-CAP/m1",
+     "Blue-CAS/a0",
+     "GAU-8/A",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     195.716259,
+     "Red-CAP/m1",
+     "Blue-CAS/a0",
+     "GAU-8/A",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     196.430544,
+     "Red-CAP/m1",
+     "Blue-CAS/a0",
+     "GAU-8/A",
      "miss",
      100,
      100,
@@ -600247,10 +600301,10 @@
      "Blue-Strike/f0",
      "Red-CAP/m1",
      "R-73",
-     "miss",
+     "kill",
      100,
-     100,
-     false
+     0,
+     true
     ]
    ],
    "engagements": [
@@ -600276,19 +600330,21 @@
      },
      {
       "block_id": "Blue-Strike",
-      "breakpoint": 1.0,
+      "breakpoint": null,
       "committed": 1,
-      "erosion": 0.0,
+      "erosion": 1.0,
       "force_id": "Blue-Strike:Strike",
       "force_ratio": null,
-      "lost": 0,
-      "max_shock": 0.0,
+      "lost": 1,
+      "max_shock": 1.0,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Blue",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 205.340131,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      },
      {
@@ -600315,7 +600371,7 @@
      "destroyed"
     ],
     "Blue-Strike": [
-     "held"
+     "destroyed"
     ],
     "Red-CAP": [
      "held"
@@ -600331,7 +600387,7 @@
       "fuel_after": 0.948485,
       "fuel_before": 1.0,
       "regime": "engagement",
-      "time": 187.514667
+      "time": 149.660384
      },
      {
       "amount": 0.046512,
@@ -600397,7 +600453,7 @@
       "fuel_after": 0.896373,
       "fuel_before": 1.0,
       "regime": "engagement",
-      "time": 187.514667
+      "time": 149.660384
      },
      {
       "amount": 0.06135,
@@ -600415,7 +600471,7 @@
    "interceptions": {},
    "postures": {
     "Blue-CAS/a0": "destroyed",
-    "Blue-Strike/f0": "off_scene",
+    "Blue-Strike/f0": "destroyed",
     "Red-CAP/m0": "destroyed",
     "Red-CAP/m1": "off_scene"
    },
@@ -602729,23 +602785,23 @@
    "actual_etas": {
     "Blue-CAS:CAS": [
      0.0,
-     null
+     514.285714
     ],
     "Blue-Strike:Strike": [
      0.0,
-     null
+     300.0
     ],
     "Red-CAP:CAP": [
      0.0,
-     313.043478
+     null
     ]
    },
    "ammunition_consumed": {
+    "Blue-CAS/a0": {
+     "AIM-9M": 1
+    },
     "Blue-Strike/f0": {
      "AIM-9M": 2
-    },
-    "Red-CAP/m1": {
-     "R-73": 4
     }
    },
    "ammunition_events": [
@@ -602756,40 +602812,34 @@
      2
     ],
     [
-     176.787761,
-     "Red-CAP/m1",
-     "R-73",
-     2
-    ],
-    [
-     178.287761,
-     "Red-CAP/m1",
-     "R-73",
-     2
+     149.660384,
+     "Blue-CAS/a0",
+     "AIM-9M",
+     1
     ]
    ],
    "assets": {
     "Blue-CAS/a0": {
-     "ammunition": 1183,
-     "destroyed": true,
+     "ammunition": 1182,
+     "destroyed": false,
      "fuel": 0.901974,
-     "health": 0,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "AGM-65D": 4,
-      "AIM-9M": 1,
+      "AIM-9M": 0,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-Strike/f0": {
      "ammunition": 521,
-     "destroyed": true,
+     "destroyed": false,
      "fuel": 0.863817,
-     "health": 0,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "AIM-9M": 0,
       "M61A1": 511,
@@ -602811,16 +602861,16 @@
      }
     },
     "Red-CAP/m1": {
-     "ammunition": 152,
-     "destroyed": false,
+     "ammunition": 156,
+     "destroyed": true,
      "fuel": 0.835023,
-     "health": 100,
+     "health": 0,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "GSh-30-1": 150,
       "R-27ER": 2,
-      "R-73": 0
+      "R-73": 4
      }
     }
    },
@@ -602852,15 +602902,15 @@
     }
    },
    "counts": {
-    "damage_events": 3,
-    "destroyed_events": 3,
+    "damage_events": 2,
+    "destroyed_events": 2,
     "engagements": 1,
     "fuel_events": 8,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 6,
-    "salvos": 3
+    "rounds": 3,
+    "salvos": 2
    },
    "damage_events": [
     [
@@ -602874,20 +602924,10 @@
      true
     ],
     [
-     193.113225,
+     160.533143,
+     "Red-CAP/m1",
      "Blue-CAS/a0",
-     "Red-CAP/m1",
-     "R-73",
-     "kill",
-     100,
-     0,
-     true
-    ],
-    [
-     194.613225,
-     "Blue-Strike/f0",
-     "Red-CAP/m1",
-     "R-73",
+     "AIM-9M",
      "kill",
      100,
      0,
@@ -602900,68 +602940,66 @@
       "block_id": "Blue-CAS",
       "breakpoint": null,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Blue-CAS:CAS",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Blue",
       "temper": null,
-      "time": 193.113225,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      },
      {
       "block_id": "Blue-Strike",
       "breakpoint": null,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Blue-Strike:Strike",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Blue",
       "temper": null,
-      "time": 194.613225,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      },
      {
       "block_id": "Red-CAP",
       "breakpoint": 1.0,
       "committed": 2,
-      "erosion": 0.5,
+      "erosion": 1.0,
       "force_id": "Red-CAP:CAP",
       "force_ratio": null,
-      "lost": 1,
+      "lost": 2,
       "max_shock": 0.5,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Red",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 160.533143,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      }
     ]
    ],
    "force_outcomes": {
     "Blue-CAS": [
-     "destroyed"
+     "held"
     ],
     "Blue-Strike": [
-     "destroyed"
+     "held"
     ],
     "Red-CAP": [
-     "held"
+     "destroyed"
     ]
    },
    "fuel": {
@@ -602974,7 +603012,7 @@
       "fuel_after": 0.948485,
       "fuel_before": 1.0,
       "regime": "engagement",
-      "time": 176.787761
+      "time": 149.660384
      },
      {
       "amount": 0.046512,
@@ -603040,7 +603078,7 @@
       "fuel_after": 0.896373,
       "fuel_before": 1.0,
       "regime": "engagement",
-      "time": 176.787761
+      "time": 149.660384
      },
      {
       "amount": 0.06135,
@@ -603057,10 +603095,10 @@
    "interception_events": [],
    "interceptions": {},
    "postures": {
-    "Blue-CAS/a0": "destroyed",
-    "Blue-Strike/f0": "destroyed",
+    "Blue-CAS/a0": "off_scene",
+    "Blue-Strike/f0": "off_scene",
     "Red-CAP/m0": "destroyed",
-    "Red-CAP/m1": "off_scene"
+    "Red-CAP/m1": "destroyed"
    },
    "session": {
     "order_t_end": 1800.0,
