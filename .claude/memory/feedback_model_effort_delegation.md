@@ -1,12 +1,33 @@
 ---
 name: feedback-model-effort-delegation
-description: "Regola concordata 2026-10-08 su quale modello/sforzo usare per il principale e per i sub-agenti, e come proporlo all'utente"
+description: "Regola modelli/sforzi: dal 2026-10-18 principale Sonnet high (settings di progetto), des-planner Opus high per analisi e piano, des-developer Sonnet high per eseguire il piano; come proporre le deleghe all'utente"
 metadata:
   node_type: memory
   type: feedback
   originSessionId: 4b5fdb17-4e5b-46ee-ad95-08f076180fc8
-  modified: 2026-10-08T13:17:45.491Z
+  modified: 2026-10-18T12:00:00.000Z
 ---
+
+## Schema in vigore dal 2026-10-18 (deciso dall'utente per ridurre il consumo di token)
+- **Principale: Sonnet high**, impostato in `.claude/settings.json` del progetto (`model`, `effortLevel`),
+  condiviso via git su tutte le macchine (osboxes compresa). Dialoga con l'utente, delega, verifica
+  (suite + `--compare` contro l'esito ATTESO dal piano), committa.
+- **Analisi, valutazione, piano di intervento → `des-planner` (Opus high)**, scrive solo in
+  `Analysis/Document/Proposta_*.md` con struttura fissa (problema, alternative, decisioni aperte, piano con
+  file/funzioni, effetti, vincoli RNG/interruttori/nomi della fotografia, test, esito atteso del confronto).
+  L'utente legge il documento direttamente.
+- **Esecuzione del piano → `des-developer` (Sonnet high)**: segue il piano, si FERMA e riferisce se il
+  codice non torna; fa girare suite e confronto mentre lavora.
+- **Nessun agente di test separato di norma**: la verifica indipendente e' del principale. Solo con molte
+  esecuzioni cambiate (es. le 165 dell'uscita di scena G4) l'analisi delle differenze va a `des-planner`.
+- **Riserva Opus high** (`des-developer` con override o `des-planner`) per bug difficili/causa ignota.
+- Restano: manuale → `des-manual-writer` Sonnet high; ricerche → `Explore`; ingestione documenti lunghi →
+  Sonnet medium.
+
+**Why:** il principale porta tutto il contesto della sessione ed e' il consumo maggiore; il giudizio di
+design si concentra nel piano scritto da Opus, che e' anche il passaggio di consegne verso Sonnet.
+
+## Regola precedente (2026-10-08, superata dallo schema sopra salvo le regole di conferma)
 
 Modello principale: **Opus 5.5, sforzo high** (deciso dall'utente 2026-10-08). Decide con l'utente, orchestra i sub-agenti e verifica prima del commit.
 

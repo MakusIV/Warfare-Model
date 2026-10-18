@@ -90,7 +90,7 @@ Implementata dall'agente `des-developer` (Opus medium). Suite 4245 OK (7 skipped
   `BINGO_EXIT`, `G4_OFF_SCENE_EXIT`); alla partenza (G2) restano le regole F6-A. Fotografia 878 installata, pushato.
 - **G4** (dettaglio originale): ri-scheduling dopo l'ingaggio + piu' consumi d'ingaggio per sessione (limite noto P2/R4 di `Session_Simulator`: cancellare le finestre future dell'asset e
   ricalcolarle). Prima l'analisi dell'architettura; proposta Opus effort high.
-- **G5**: S26 riscritto, nuovo S27, Piano §5, `F4_Differenze`, manuale.
+- **G5 APPROVATO 2026-10-18** (`6e7a9b81`, fotografia 918): S26 riorganizzato (stessi risultati), S27-DOUBLE doppio ingaggio (siti terrestri a tiro marcatore, NON intercettori aerei: limite dichiarato), Piano deviazione 22 con i limiti residui. Proposte non applicate per la prossima rigenerazione della fotografia: togliere S26 'switch_off', rinominare 'reverse_off'. Resta il manuale (`des-manual-writer`).
 - Agenti: `des-developer` Opus medium per G1-G3.
 
 **How to apply:** ogni passo segue la procedura solita: interruttore, mia verifica con suite + `--compare`, approvazione dell'utente,

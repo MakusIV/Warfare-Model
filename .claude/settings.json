@@ -1,4 +1,6 @@
 {
+  "model": "sonnet",
+  "effortLevel": "high",
   "statusLine": {
     "type": "command",
     "command": "/home/marco/.claude/statusline.sh"
