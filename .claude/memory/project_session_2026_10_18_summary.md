@@ -15,3 +15,10 @@ metadata:
 - Domanda dell'utente sulla quota del terreno nel DES -> perimetro del modulo mappe esteso, v. [[project-map-module-plan]].
 - **Prossimo**: manuale DES sul bingo G1-G5 (`des-manual-writer`, Sonnet high); poi gli aperti della deviazione 22
   (F6-B3 S24-GLIDE, registro emergency/time, validatore fuori da run_session, salve dopo il bingo), F7-F9.
+- Manuale DES aggiornato a a784a9e7 (`234071d3`). Proposta F7 (`des-planner` Opus high) committata `35c1336d`;
+  DECISO dall'utente: tutte le raccomandazioni accettate (tabella MISSION_WEAPON_POLICY com'e', ROE default
+  weapon_free), decisione 15 rimandata alla F7b, correzione self_escort_capability A-10C dopo verifica utente in DCS
+  (`4f6fa196`). F7a avviata con `des-developer` Sonnet high (primo uso del nuovo schema); atteso 918 identiche + S28.
+- Incongruenze da pulire dopo la F7 (trovate dal manual writer, manuale §9.6 voci 15-21): intestazione/colonna
+  Commit del Piano, residui "TOT comune" in Piano/Proposta_Struttura/F4 F5-C, docstring superati
+  (Mission_Adapter:165,:348; Session_Types:164; Engagement_Resolver:322).
