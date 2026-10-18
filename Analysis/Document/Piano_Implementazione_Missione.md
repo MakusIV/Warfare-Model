@@ -266,7 +266,7 @@ su cui poggia la successiva.
 
 ---
 
-## 5. Stato di avanzamento e deviazioni dal piano (aggiornato 2026-10-17)
+## 5. Stato di avanzamento e deviazioni dal piano (aggiornato 2026-10-18)
 
 | Fase | Stato | Commit | Note |
 |---|---|---|---|
@@ -292,6 +292,7 @@ su cui poggia la successiva.
 | G3 (nuovo modello di bingo) | FATTA, verificata e approvata 2026-10-17 (fotografia 802) | | deviazione 19: consumo di carburante in ingaggio: un aereo di missione IN VOLO che partecipa a un ingaggio (tiratore, bersaglio di una salva, intercettore) consuma, all'istante della prima partecipazione, `Fuel_Model.engagement_fuel` = 5 minuti alla massima spinta militare (la riserva di disimpegno del G1, unico punto di calcolo) con un `FuelEvent` istantaneo (regime 'engagement'); il movimento resta alla crociera (sostituisce, per gli aerei, il regime 'max' di chi ha combattuto della F6-A); terra e mare invariati; esaurimento in ingaggio = solo contatore a zero, nessun ri-scheduling (G4); interruttore `G3_ENGAGEMENT_FUEL`; S26 + variante 'engagement_fuel_off' (80 esecuzioni); v. `F4_Differenze_Scenari.md` |
 | G4a (nuovo modello di bingo) | verificata e approvata 2026-10-17 (fotografia 878, con G4b) | | deviazione 20: episodi d'ingaggio: la componente connessa di forze e' spezzata in EPISODI (finestre legate da una forza o un dominio di coordinamento comune e sovrapposte entro `EPISODE_GAP` = 300 s = `Fuel_Model.DISENGAGE_TIME`), un `resolve_engagement` per episodio in ordine di tempo con esito applicato subito; forza occupata fino al `t_end` dell'esito (finestre successive ritagliate, `Contact_Scheduler.trim_contact_window`); RNG `counter` = ordinale degli episodi con lo stesso insieme di forze (tempra nuova); forza disingaggiata (e asset a fine attivita') passiva negli episodi successivi; soglia di danno sulla salute d'inizio sessione (`ActivityCriteria.reference_health`); un consumo d'ingaggio G3 per episodio; contabilita' del carburante spostata in un passo finale; interruttore `G4_EPISODES`; S5 + variante 'episodes_off'; v. `F4_Differenze_Scenari.md`, "G4a" |
 | G4b (nuovo modello di bingo) | verificata e approvata 2026-10-17 (fotografia 878, con G4a e uscita di scena) | | deviazione 21 (con l'uscita di scena senza basi, `G4_OFF_SCENE_EXIT`, del 2026-10-17): ri-pianificazione dopo l'episodio d'ingaggio: alla fine di ogni episodio gli aerei di missione in volo che vi hanno consumato (G3) o la cui forza si e' disingaggiata sono ri-pianificati dal residuo ANALITICO (`Fuel_Model.fuel_at`): a secco regole della F6-A dal punto a fine episodio (sostituisce il "solo contatore a zero" del G3), sotto la soglia bingo con l'albero del G2 (basi alternative comprese), forza disingaggiata = rientro forzato con la regola di combattimento indipendentemente dal carburante (`bingo_decision(forced=True)`, decisione dell'utente del 2026-10-17; nuovi motivi `AssetEndReason.DISENGAGED` / `AbortReason.DISENGAGED`), esaurimento ricalcolato sui nuovi tratti (`fuel_exhaustion(fuel=)`); tratti, programma a terra e contatti non ancora risolti ricalcolati (`schedule_contacts(only_assets=)`), episodi rimasti ricostruiti; interruttore `G4_REPLAN`; S5 + 'with_base', 'with_base_resistant', 'replan_off'; S26 + 'post_engagement_bingo', 'replan_off'; v. `F4_Differenze_Scenari.md`, "G4b" |
+| G5 (nuovo modello di bingo) | FATTA, verificata e approvata 2026-10-18 (fotografia 918) | | deviazione 22: chiusura del piano G1-G5, nessun cambio del motore. S26 riorganizzato sul modello finale (docstring, varianti divise in modello finale e controprova degli interruttori, `FINAL_MODEL`/`SWITCH_CHECKS`; nomi, ordine e scenari invariati: 96 esecuzioni identiche); nuovo scenario S27-DOUBLE (doppio ingaggio dello stesso aereo: due consumi d'ingaggio, ri-pianificazione dopo ciascun episodio, bingo solo dopo il secondo con rientro sulla base alternativa; trasferimento che continua; controprova `G4_REPLAN`/`G4_EPISODES`/`G3_ENGAGEMENT_FUEL`; 40 esecuzioni); `--compare` contro la fotografia 878: 878 IDENTICHE, 0 cambiate, 40 nuove; fotografia NON rigenerata; v. `F4_Differenze_Scenari.md`, "G5" |
 | F7-F9 | DA FARE | | F7 = bersagli espliciti e filtro armi per missione (proposta di dettaglio separata, Q3); F8 = sessione e campagna (validatore di sessione, che potra' chiamare il bingo a priori; prontezza; posizione persistente); F9 = documentazione (manuale DES, togliere il 'TOT comune' nei capitoli 03 e 10, documentare F5/F6); `abort_on_threat` fuori dal Piano di F6 |
 
 **Deviazioni decise durante il lavoro**:
@@ -379,6 +380,46 @@ su cui poggia la successiva.
     - **Scenari**: S5 senza basi Blue (partenza in volo) non cambia (`BINGO_NO_BASE`): nuove varianti con una base Blue; S26 'transfer_continue' ora perso per carburante a fine rotta; nuove varianti S26 'post_engagement_bingo' / 'replan_off'; S24-ORBIT 'per_leg_off' (MiG a secco sul rientro dopo l'ingaggio, perso).
     - **Uscita di scena senza basi (decisione dell'utente del 2026-10-17, estensione del G4b)**: un aereo COMPARSO IN VOLO (`start_mode` AIR, nessuna base di partenza) senza alcuna base aerea del suo lato che nella ri-pianificazione dopo un episodio deve rientrare (rientro forzato per disingaggio o bingo dopo l'episodio) non resta piu' passivo sulla rotta (`BINGO_NO_BASE`): ripercorre la rotta a ritroso fino al punto di comparsa (meccanica del ritroso F6-B2bis/G2, alle quote dei waypoint, senza le soste) e li' ESCE DI SCENA: nessuna presenza dopo (come l'aereo che finisce la rotta senza atterrare su una base vera, F5-B), mai a terra, postura `off_scene` a fine sessione se uscito, non distrutto; nessuna salva offensiva dal rientro; esito per asset e missione = il motivo del rientro (DISENGAGED o BINGO, ABORTED(...)) all'istante della decisione. Il ritroso consuma alla crociera; residuo insufficiente: regole della F6-A sul ritroso (senza basi: perso, DESTROYED/FUEL_EXHAUSTED, equipaggio recuperato). Codice: nuova azione `Fuel_Model.BINGO_EXIT` di `bingo_decision(exit_scene=True)` (al posto di NO_BASE, solo con partenza in volo), passata da `Mission_Adapter.mission_bingo_decision(exit_scene=)`, `BingoEnd.exits` in sessione (nessuna sosta, nessun intervallo a terra, postura `off_scene`). Ambito conservativo: SOLO la ri-pianificazione G4b; la decisione del G2 alla partenza (`_decision_end`) resta senza rientro. Sotto-interruttore `Session_Simulator.G4_OFF_SCENE_EXIT` (default True, letto solo con `G4_REPLAN`); spento, il G4b di prima. Scenari: cambiano tutte e sole le esecuzioni con un aereo comparso in volo senza basi del lato che rientra dopo un episodio (S5 'default'/'resistant', e altri scenari con formazioni aeree disingaggiate senza basi, v. `F4_Differenze_Scenari.md`, "G4b: uscita di scena"); nuova variante S5 'exit_off' (uscita spenta).
     - Dettagli, scelte e fotografia in `F4_Differenze_Scenari.md`, "G4b".
+
+22. **Nuovo modello di bingo, passo G5: scenari e chiusura del piano G1-G5 (2026-10-18)**.
+    - **Codice del motore**: nessun cambio. Scenari e documenti soltanto; il manuale DES e' aggiornato a parte.
+    - **S26 riscritto sul modello finale**: docstring e test organizzati intorno al bingo di G1-G4 (riserva, soglia e
+      albero, consumo d'ingaggio, episodi e ri-pianificazione); le varianti sono divise in **modello finale** ('none',
+      'bingo', 'transfer_return', 'transfer_continue', 'no_base', 'bingo_off', 'post_engagement_bingo') e
+      **controprova degli interruttori** ('switch_off' = `F6_BINGO`, 'reverse_off' = la F6-B2, 'reserve_off' = la
+      F6-B2bis, 'engagement_fuel_off' = la F6-A senza consumo d'ingaggio, 'replan_off' = il G3 senza G4b), con un test
+      che verifica la partizione e che ogni controprova spenga davvero il suo interruttore. Nomi, ordine e costruzione
+      delle varianti invariati (chiavi della fotografia): le 96 esecuzioni di S26 sono identiche.
+    - **S27-DOUBLE**: un F-16C 'Strike' con carburante 0,53 su una rotta di 500 km con due siti Red separati (due
+      episodi, finestre a ~480 s di distanza > `EPISODE_GAP`) e una base alternativa sulla rotta oltre il secondo sito:
+      due consumi d'ingaggio nella stessa sessione (il limite "uno per sessione" del G3 e' risolto dal G4a), dopo il
+      primo episodio il residuo resta sopra la soglia (nessun rientro), dopo il secondo e' sotto: BINGO e rientro sulla
+      base alternativa; lo stesso caso in trasferimento CONTINUA e completa la rotta; controprova con `G4_REPLAN`,
+      `G4_EPISODES` e `G3_ENGAGEMENT_FUEL` spenti. Il carburante 0,53 e' dimostrato nel test fra rotta + 2 riserve e
+      rotta + 3 riserve (con il solo moto alla crociera la soglia dopo k consumi non dipende da dove e' l'aereo).
+    - **Stato finale del modello di bingo** (G1-G5 approvati, fotografia 918): riserva di disimpegno
+      = 5 minuti alla massima spinta militare (`DISENGAGE_TIME`); validatore del minimo `check_mission_fuel` e bingo a
+      priori `check_mission_bingo`; soglia = resto della rotta + riserva con albero trasferimento/combattimento e basi
+      alternative entro 3 km; consumo d'ingaggio per episodio; episodi d'ingaggio con `EPISODE_GAP` = 300 s;
+      ri-pianificazione a fine episodio (bingo, esaurimento, rientro forzato dopo il disingaggio, uscita di scena senza
+      basi). Interruttori tutti attivi: `F6_BINGO`, `F6_BINGO_DISENGAGE_RESERVE` (`F6_BINGO_REVERSE_ROUTE` letto solo
+      a G2 spento), `G3_ENGAGEMENT_FUEL`, `G4_EPISODES`, `G4_REPLAN`, `G4_OFF_SCENE_EXIT`.
+    - **Limiti residui noti** (il piano G1-G5 si chiude con questi aperti):
+      - dati `speed_data['emergency']` del registro `Aircraft_Data` non tarati: `consume` letto in kg/h per deduzione
+        (unita' non documentata, ~1/6 del postbruciatore pieno per i caccia che lo hanno), `time` di unita' ignota e non
+        usato (deviazione 17, arretrato); riserva e consumo d'ingaggio restano STIME;
+      - regola per gli aerei la cui emergenza dura meno di 5 minuti (WW2: emergenza per min(300 s, `time`), poi
+        'combat') NON implementata, in attesa di un `time` affidabile (deviazione 19);
+      - i validatori di pianificazione `check_mission_fuel` (G1) e `check_mission_bingo` NON sono chiamati da
+        `run_session`: sono del pianificatore (F8, validatore di sessione, da confermare);
+      - nessuna salva offensiva dopo il bingo (scelta della F6-B2): dal rientro l'aereo resta solo bersaglio e
+        intercettore, non attacca piu' nemmeno una minaccia che reincontra sul ritroso;
+      - decisione presa alla FINE dell'episodio, non a meta'; il rientro a ritroso ripercorre le minacce dell'andata;
+        nessun rientro per danno (aereo oltre la soglia della F6-B1 passivo sulla rotta); terra e mare senza bingo;
+      - F6-B3 aperto: S24-GLIDE dichiara ancora `EndCriteria(bingo=False)`; con il bingo di default cambierebbero le
+        sue esecuzioni (decisione dell'utente da prendere);
+      - G4a: esito degli episodi "vuoti" per finestre di aerei gia' distrutti (lo scheduler non le tronca).
+    - Dettagli, S27 e confronto in `F4_Differenze_Scenari.md`, "G5".
 
 **Punti aperti rilevati dall'aggiornamento del manuale** (capitolo 10 §9.6 del manuale DES):
 - docstring obsoleti in `Session_Simulator` (dicono ancora che la selezione dell'arma resta fuori dall'orchestratore);

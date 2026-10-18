@@ -143,6 +143,12 @@ aereo comparso in volo senza basi del suo lato che nella ri-pianificazione deve 
 ritroso fino al punto di comparsa ed esce di scena: cambiano tratti, contatti, episodi successivi, carburante e
 posture (`off_scene`), nessuna voce nuova. Variante nuova in coda: S5 'exit_off' (uscita spenta).
 
+## Doppio ingaggio dopo il G5
+
+Il G5 (chiusura del piano G1-G5) non cambia il motore: aggiunge in coda l'unita' S27-DOUBLE (stesso aereo in due
+episodi d'ingaggio separati, due consumi d'ingaggio, bingo dopo il secondo) con le varianti 'double', 'transfer',
+'replan_off', 'episodes_off', 'engagement_fuel_off'. Nessuna voce nuova; le esecuzioni esistenti non cambiano.
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -333,6 +339,9 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
      _by_occurrence('bingo', 'none', 'switch_off', 'no_base', 'bingo_off', 'reverse_off', 'reserve_off',
                     'transfer_continue', 'transfer_return', 'engagement_fuel_off', 'post_engagement_bingo',
                     'replan_off')),
+    # ── S27 (G5: doppio ingaggio dello stesso aereo, due consumi d'ingaggio, bingo dopo il secondo) — in coda ──
+    ('S27-DOUBLE', 'Test_Session_Scenarios_S27', 'TestS27DoubleEngagement', None,
+     _by_occurrence('double', 'transfer', 'replan_off', 'episodes_off', 'engagement_fuel_off')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

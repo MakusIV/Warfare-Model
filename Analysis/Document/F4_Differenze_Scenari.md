@@ -2266,3 +2266,91 @@ contatto dopo l'uscita, carburante), uscita al bingo dopo l'episodio (ABORTED(BI
 meta' ritroso; G2 alla partenza invariato), interruttore spento (passivo sulla rotta, il test di prima), nessun effetto
 con una base o con il G4b spento (5 test, il test "passivo senza base" sostituito).
 Suite completa: 4375 test OK (7 skipped), 7 nuovi rispetto ai 4368 del G4b.
+
+## G5: scenari del modello finale e chiusura del piano G1-G5 (2026-10-18)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` installata (878 esecuzioni, G4a + G4b + uscita di
+scena). **Dopo**: nessun cambio del motore; S26 riorganizzato, nuovo S27-DOUBLE in coda alla tabella `UNITS` di
+`Scenario_Baseline.py`. `--compare`, 2026-10-18 su ProArt P16: **918 esecuzioni**.
+- Contro la fotografia (878): **878 IDENTICHE** (S26 compreso: 96 su 96), **0 cambiate**, **40 nuove** (S27-DOUBLE,
+  5 varianti x 8 seed). **Verifica 2026-10-18** (ProArt P16, sessione principale): suite 4385 OK (7 skipped),
+  `--compare` ripetuto con lo stesso esito, cattura identica a quella dell'agente. **Approvato dall'utente
+  2026-10-18**: fotografia 918 installata.
+
+### Il cambio
+
+1. **S26 riscritto sul modello finale** (`Test_Session_Scenarios_S26.py`): docstring centrato sul bingo di G1-G4
+   (riserva, soglia e albero, consumo d'ingaggio, episodi e ri-pianificazione); varianti divise in modello finale
+   (`TestS26Bingo.FINAL_MODEL`: 'none', 'bingo', 'transfer_return', 'transfer_continue', 'no_base', 'bingo_off',
+   'post_engagement_bingo') e controprova degli interruttori (`TestS26Bingo.SWITCH_CHECKS`: 'switch_off' ->
+   `F6_BINGO`, 'reverse_off' -> `F6_BINGO_REVERSE_ROUTE` col G2 spento (la F6-B2), 'reserve_off' ->
+   `F6_BINGO_DISENGAGE_RESERVE` (la F6-B2bis), 'engagement_fuel_off' -> `G3_ENGAGEMENT_FUEL` (la F6-A), 'replan_off' ->
+   `G4_REPLAN`). I test misti di prima (che verificavano insieme regole finali e storiche) sono separati: un test per
+   regola storica con validatore, istante del bingo, tratti ed esito (`test_reverse_off_is_the_straight_return_of_f6_b2`,
+   `test_reserve_off_retraces_the_route_as_in_f6_b2bis`, `test_engagement_fuel_off_is_the_max_regime_of_f6_a`,
+   `test_switch_off_flies_the_whole_route`); nuovo `test_variants_split_into_final_model_and_switch_checks`. Helper,
+   costanti, `VARIANTS` (valori e ordine), `_scenario`, `_run` e `setUpClass` INVARIATI: le chiavi e le esecuzioni
+   della fotografia non cambiano (verificato: 96 identiche). Asserzioni di prima tutte conservate.
+2. **S27-DOUBLE** (`Test_Session_Scenarios_S27.py`, `TestS27DoubleEngagement`), descritto sotto.
+
+### S27-DOUBLE: doppio ingaggio dello stesso aereo
+
+Blue-Flight: un F-16C Block 52d 'Strike' (dati del registro: autonomia di crociera 1570 km col loadout, 'max' 1140 km,
+consumo d'ingaggio = riserva di disimpegno 0,0852 del pieno), ruolo 'unarmed', in volo a 5000 m da (10 km, 0) a
+(510 km, 0) a 250 m/s (2000 s; rotta 0,318 alla crociera, 0,439 al regime 'max'), sensore 'ground' DICHIARATO 20 km.
+Red-First (BMP-2 in (100 km, 0)) e Red-Second (BMP-2 in (300 km, 0)), sensore 'air' DICHIARATO 40 km, tiro marcatore
+senza effetto (precisione 0, come S26). Blue-Base in (0, 0); Blue-Alternate in (400 km, 2 km), entro 3 km dalla rotta e
+60 km oltre la fine della finestra di Red-Second. Finestre ~[160, 520] s e ~[1000, 1320] s: due episodi.
+
+Esito per variante (8 seed; in tutti e 8 sparano entrambi i siti):
+
+| variante | interruttore spento | consumi d'ingaggio | decisioni dopo l'episodio | esito | carburante finale | postura |
+|---|---|---|---|---|---|---|
+| double | - | 2 | ~524-532 s: nessun bingo (residuo ~0,361); ~1323-1327 s: `BINGO_ALTERNATE` (residuo ~0,149) | ABORTED(BINGO) a fine 2o episodio | 0,1077 | parking_cold (Blue-Alternate) |
+| transfer ('Transport') | - | 2 | 1o: nessun bingo; 2o: `BINGO_CONTINUE` | COMPLETED | 0,0411 | off_scene (fine rotta) |
+| replan_off | `G4_REPLAN` | 2 | nessuna | COMPLETED | 0,0411 | off_scene |
+| episodes_off | `G4_EPISODES` | 1 (componente connessa: un ingaggio) | nessuna | COMPLETED | 0,1263 | off_scene |
+| engagement_fuel_off | `G3_ENGAGEMENT_FUEL` | 0 (movimento al regime 'max') | nessuna | COMPLETED | 0,0914 | off_scene |
+
+Cosa mostra: (1) due consumi d'ingaggio dello stesso aereo nella stessa sessione, ciascuno all'istante del primo lancio
+del suo sito (il limite "un consumo per sessione" del G3 e' risolto dal G4a; 'episodes_off' e' la controprova);
+(2) ri-pianificazione dopo CIASCUN episodio con il residuo analitico (letta da uno spia su
+`Mission_Adapter.mission_bingo_decision`, le chiamate con `time`): dopo il primo il residuo e' sopra resto della rotta +
+riserva, dopo il secondo e' sotto; (3) bingo con la regola di combattimento: la base alternativa in avanti (~60 km +
+discesa) batte il ritroso (~340 km, che ripasserebbe sopra entrambi i siti); (4) trasferimento: sotto la soglia ma con
+carburante per la rotta, continua consumando la riserva; (5) gli interruttori G3/G4 non cambiano chi spara.
+
+### Scelte
+
+1. Gli "ingaggi" sono di siti terrestri con tiro marcatore, non di intercettori aerei: storia deterministica (nessun
+   danno, nessun disingaggio, che farebbe scattare il rientro forzato al posto del bingo), stesso schema di S26; il
+   consumo d'ingaggio del G3 non distingue la natura dell'avversario.
+2. Asserzioni condizionate a quali siti sparano nella replica (il rilevamento e' un'estrazione per finestra) piu' una
+   frazione aggregata dichiarata; nessuna asserzione tarata sul risultato.
+3. Decisioni della ri-pianificazione osservate con uno spia nel test (nessuna voce nuova nell'esito ne' nella
+   fotografia).
+4. Nessuna variante "senza base alternativa": il ritroso ripasserebbe su Red-Second (terzo episodio) e mescolerebbe
+   due effetti; il rientro a ritroso dopo l'episodio e' gia' coperto da S5 e S24-ORBIT.
+
+### Costanti stimate
+
+- Nessuna costante del modello nuova. Costanti di SCENARIO S27 dichiarate di test (non tarate): posizioni dei siti
+  (100 km, 300 km), della base alternativa (400 km, 2 km), sensori dichiarati (40 km 'air' dei siti, 20 km 'ground'
+  dell'F-16C), velocita' 250 m/s, quota 5000 m, `DOUBLE_FUEL` = 0,53 (verificato in `test_declared_fuels`: rotta + 2
+  riserve ~0,489 <= 0,53 < rotta + 3 riserve ~0,574, e > rotta al regime 'max'; geometria con finestre separate da piu'
+  di `EPISODE_GAP`), `MIN_FIRING_FRACTION` = 0,5 (stessa stima di S22-S26).
+
+### Limiti noti
+
+- Quelli del modello di bingo elencati al §5, deviazione 22, del Piano (registro `emergency` non tarato, regola WW2 non
+  implementata, validatori fuori da `run_session`, nessuna salva offensiva dopo il bingo, F6-B3 S24-GLIDE aperto).
+- S27 non copre il doppio ingaggio con intercettori aerei veri (danno e disingaggio in mezzo).
+
+### Test
+
+- `Test_Session_Scenarios_S26`: 16 test (erano 14), stesse esecuzioni.
+- `Test_Session_Scenarios_S27`: 8 test (`test_declared_fuels`, `test_both_sites_fire_in_most_replicas`,
+  `test_two_episodes_two_engagement_charges`, `test_replanned_after_each_episode`,
+  `test_bingo_after_the_second_episode_lands_on_the_alternate_base`, `test_transfer_continues_after_the_second_episode`,
+  `test_switches_off`, `test_switches_do_not_change_who_fires`).
+- Suite completa: 4385 test OK (7 skipped), 10 nuovi rispetto ai 4375 del G4b (S26 +2, S27 +8).
