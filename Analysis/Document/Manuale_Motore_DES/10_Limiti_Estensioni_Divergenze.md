@@ -1,16 +1,22 @@
 # Capitolo 9 — Limiti noti, punti di estensione, divergenze codice/wiki
 
-> **Stato descritto: commit `84a47670` (2026-10-11).** Il manuale descrive il motore a quel commit, cioè
-> **dopo le fasi F0-F4** del piano di implementazione della Missione
-> (`Analysis/Document/Piano_Implementazione_Missione.md`): la fase F4 è chiusa con i suoi sotto-passi F4a
-> (regola A), F4b (la missione è l'unità d'ingaggio), F4b+ (dominio di coordinamento), F4b++ (difesa di salva
-> per dominio) e F4c (postura continua). Le fasi **F5-F9** sono **da fare** e non sono descritte come codice: F5
-> presenza e attese, F6 fine missione e carburante nel tempo, F7 bersagli e filtro armi, F8 sessione e campagna,
-> F9 documentazione (questo stesso aggiornamento ne è parte). Il loro stato è in §9.5. Tutto ciò che il capitolo
-> elenca come "limite" va letto rispetto a quel commit: parte dei limiti è proprio ciò che quelle fasi
-> risolvono. Dall'aggiornamento a `533cd1f5` sono **superati** i limiti «l'unità d'ingaggio è ancora il blocco»,
-> «il `mission_id` non entra nell'RNG» e «nessuna condivisione dei rilevamenti fra missioni» (F4b, F4b+); sono
-> **nuovi** quelli della sezione «Limiti introdotti dalla fase F4» più sotto.
+> **Stato descritto: commit `a784a9e7` (2026-10-18).** Il manuale descrive il motore a quel commit, cioè dopo le fasi
+> F0-F6 del piano di implementazione della Missione (`Analysis/Document/Piano_Implementazione_Missione.md`) e i passi
+> G1-G5 del modello di bingo: la fase F4 (F4a regola A, F4b la missione è l'unità d'ingaggio, F4b+ dominio di
+> coordinamento, F4b++ difesa di salva per dominio, F4c postura continua), la fase F5 (presenza fuori dalla rotta,
+> `grounded` nel tempo, attese WAIT, ETA bloccate, TOT per missione), la fase F6 (carburante per tratto e nel tempo, criteri
+> di fine attività e stato di missione, postura `destroyed`, bingo e rientro) e i passi G1-G5 (riserva di disimpegno, soglia e
+> albero di decisione, consumo in ingaggio, episodi d'ingaggio, ri-pianificazione, uscita di scena, scenari S26-S27).
+> Restano **da fare** le fasi **F7** (bersagli espliciti e filtro armi per missione), **F8** (sessione e campagna: validatore
+> di sessione, prontezza, posizione persistente) e **F9** (documentazione: questo stesso aggiornamento ne è parte), più il
+> **F6-B3** (S24-GLIDE dichiara ancora `bingo=False`). Il loro stato è in §9.5. Tutto ciò che il capitolo elenca come
+> "limite" va letto rispetto a quel commit. Dall'aggiornamento a `84a47670` sono **superati**: «nessuna presenza prima della
+> partenza né dopo la fine», «nessun `WAIT`», «esito di missione di prima forma / nessun `ABORTED`», «`grounded` per tutta la
+> sessione», «la postura non è nell'esito», «un solo `FuelEvent` per asset, nessun consumo nel tempo, nessun bingo»,
+> «carburante esaurito a metà rotta: l'asset non viene fermato», «re-scheduling dopo un cambio di rotta: non esiste» (a
+> livello di sessione) e «il TOT comune dell'Operazione»; sono **nuovi** quelli della sezione «Limiti introdotti dalle fasi
+> F5, F6 e G1-G5» più sotto. (Dall'aggiornamento a `533cd1f5` erano già superati «l'unità d'ingaggio è ancora il blocco»,
+> «il `mission_id` non entra nell'RNG» e «nessuna condivisione dei rilevamenti fra missioni».)
 
 ## 9.1 Limiti noti (dichiarati nel codice, non difetti nascosti)
 
@@ -144,22 +150,24 @@ Impatta ogni chiamante che filtra per `category='Military'`, **incluse** `side_r
 tocca chiamanti esistenti al di fuori del perimetro di questo lavoro, da decidere a parte (v.
 memoria di progetto `project_session_2026_09_25_summary.md`).
 
-### Re-scheduling delle finestre di contatto dopo un cambio di rotta — rimandato
+### Re-scheduling delle finestre di contatto dopo un cambio di rotta — fatto dal G4b a livello di sessione, non nel risolutore
 
-Se un asset cambia rotta durante una finestra di contatto già calcolata dallo scheduler (Fase 3),
-la finestra andrebbe invalidata e ricalcolata: questo meccanismo **non esiste**, perché finora
-nessun consumatore modifica una rotta dopo che le finestre sono state prodotte
-(`Logic/Engagement_Resolver.py:279-281`, R4 seconda parte). Concretamente, una forza che si
-disingaggia è solo **segnalata** nell'esito (`ForceOutcome.outcome = DISENGAGED`); il nuovo
-instradamento e il ricalcolo delle finestre spettano a un livello superiore (C2/campagna), non
-ancora costruito. V. §9.2 per la divergenza fra questo comportamento e il testo originale della
-decisione che lo ha proposto.
+Se un asset cambia rotta durante una finestra di contatto già calcolata dallo scheduler, la finestra va invalidata e
+ricalcolata. **Dentro `resolve_engagement` questo meccanismo non esiste ancora**, e il docstring del risolutore lo dice
+(`Logic/Engagement_Resolver.py:322-324`, R4 seconda parte: «il nuovo instradamento e il ricalcolo delle finestre spettano a
+un livello superiore»): una forza che si disingaggia è **solo segnalata** nell'esito della run (`ForceOutcome.outcome =
+DISENGAGED`). **Dal G4b lo fa però l'orchestratore, fra un episodio e il successivo** (capitolo 6 §6.20): gli aerei di
+missione interessati sono ri-pianificati (bingo, esaurimento in ingaggio, rientro forzato dopo il disingaggio, uscita di
+scena), i loro tratti sono sostituiti e i contatti non ancora risolti sono ricalcolati con `schedule_contacts(only_assets=)`.
+Resta **non fatto** per le forze **terrestri e navali** che si disingaggiano (restano passive sulla rotta, G4a), per un
+cambio di rotta *durante* un episodio (la decisione è alla fine dell'episodio) e per le condizioni su eventi
+(`Activation.ON_EVENT`). V. §9.2 per la divergenza fra questo comportamento e il testo originale della decisione.
 
 ### La Pd non distingue radar da ottico
 
 `weather_detection_factor` applica un fattore di degradazione **unico** a qualunque sensore
 abbia prodotto la portata della finestra di contatto, perché la finestra stessa non porta
-l'informazione "quale sensore" (`Logic/Engagement_Resolver.py:360-372`, `:792-839`). Un radar non dovrebbe
+l'informazione "quale sensore" (`Logic/Engagement_Resolver.py:408-420`, `:897-944`). Un radar non dovrebbe
 subire la stessa degradazione notturna di un sensore ottico, ma oggi la subisce comunque, con un
 compromesso pesato verso il radar. La discriminazione per tipo di sensore richiede che la
 finestra di contatto porti anche il sensore che l'ha prodotta — un cambiamento nello strato 1.
@@ -168,20 +176,21 @@ finestra di contatto porti anche il sensore che l'ha prodotta — un cambiamento
 
 - **Ripartizione del fuoco**: round-robin locale per tiratore, sul **dominio di coordinamento** dalla F4b+
   (`_schedule_next`,
-  `Logic/Engagement_Resolver.py:1804-1972`), non un'assegnazione ottima arma-bersaglio (nessun
+  `Logic/Engagement_Resolver.py:2012-2197`), non un'assegnazione ottima arma-bersaglio (nessun
   WTA, nessun peso per valore del bersaglio; la Pk della coppia entra solo nella saturazione della
   dottrina di tiro, §4.25). Dal 2026-09-28/29 il round-robin è preceduto dalla priorità ai lanciatori
   (L2/L3, §4.24) e dal filtro dei bersagli bloccati (§4.25).
 - **`salvo_window` di default 0.0**: solo impatti simultanei formano un evento-salva; la finestra
   giusta per raggruppare impatti ravvicinati è un punto aperto di modello, da decidere con la
-  taratura (`Logic/Engagement_Resolver.py:2949`, `:2994-2996`).
+  taratura (`Logic/Engagement_Resolver.py:3213`, `:3260-3262`).
 - **Nessun movimento fisico fra sessioni**: `run_session` non aggiorna `asset.position` a fine
   rotta; una campagna che concatena sessioni vede le forze ripartire dalle posizioni iniziali a
   ogni sessione, a meno che il chiamante non aggiorni le posizioni da sé
   (`Test/Test_Session_Validation.py:281-285`, v. capitolo 8, §8.3).
-- **Carburante esaurito a metà rotta**: l'asset non viene fermato sulla rotta né i contatti già
-  calcolati vengono ricorretti; l'informazione (`FuelEvent.exhausted`) è nell'esito, e la userà
-  un livello superiore (capitolo 6, §6.5).
+- ~~**Carburante esaurito a metà rotta**: l'asset non viene fermato sulla rotta~~ — **superato dalla F6-A**: i tratti sono
+  troncati al punto di esaurimento e l'asset si ferma, plana o è perso (capitolo 6 §6.17); dal G4b il punto è ricalcolato
+  anche dopo un consumo in ingaggio (capitolo 6 §6.20). Resta il limite del vincolo calcolato a monte alla crociera per i
+  consumi che il motore non modella (il regime `'max'` di terra/mare coincide con la crociera).
 - **`calcFightResult` (fallback aggregato a rapporto di forze) resta invariato**: nessuna delle 7
   fasi lo ha toccato, per scelta esplicita (wiki `decisions/soglie-disingaggio-e-attrito-aggregato`
   §P2); se mai verrà riscritto, il bersaglio dichiarato è una forma eterogenea a matrice di
@@ -191,7 +200,7 @@ finestra di contatto porti anche il sensore che l'ha prodotta — un cambiamento
   un bug del motore, è un dato mancante nei registri d'arma che nessun chiamante di produzione
   compensa ancora.
 - **Nessun rifornimento nel motore**: né di munizioni né di carburante. È dichiarato materia del
-  ciclo di campagna in entrambi i moduli (`Logic/Fuel_Model.py:31-32`, wiki
+  ciclo di campagna in entrambi i moduli (`Logic/Fuel_Model.py:49`, `:130-131`, wiki
   `decisions/risolutore-ingaggio-salva-fase4` §R3).
 
 ### Limiti introdotti o resi evidenti dalle estensioni del 2026-09-28/30 (commit `72c7f7c8`...`a500fdf3`)
@@ -237,29 +246,28 @@ non si intercettano mai (Q2); il lanciatore deve essere già rilevato dal tirato
 traiettoria rettilinea, rilevamento per asset e non per forza (tutte semplificazioni ottimistiche per la
 difesa, dichiarate nella proposta §4).
 
-### Limiti della Missione a `84a47670` (fasi F0-F4 fatte, F5-F9 no)
+### Limiti della Missione a `a784a9e7` (fasi F0-F6 e G1-G5 fatte, F7-F9 no)
 
-Ciò che segue è **atteso** dal piano e non un difetto nascosto; v. §9.5 per la mappa fase per fase.
+Ciò che segue è **atteso** dal piano e non un difetto nascosto; v. §9.5 per la mappa fase per fase. (Questa sezione era
+«Limiti della Missione a `84a47670`»: sono stati tolti i limiti risolti dalle fasi F5 e F6, elencati in testa al capitolo.)
 
-- **Il motore consulta della Missione la geometria e l'identità, non il resto**: rotta, partenza, velocità e
-  offset di formazione (capitolo 6 §6.10); dalla F4b l'identità della forza d'ingaggio (id, blocco, asset,
-  capitolo 4 §4.27); dalla F4b+ l'appartenenza a un'Operazione, **solo** per il dominio di coordinamento
-  (`Operation.mission_ids` e `Mission.operation_id`, capitolo 6 §6.13). Ruoli degli asset, regole (ROE, allerta,
-  EMCON, reazione alla minaccia, formazione), bersaglio, criteri di fine, `OutcomeRule`, TOT comune e missione
-  principale dell'Operazione sono validati e portati dalla porta ma **non letti** da alcun modulo di `Logic`
+- **Il motore consulta della Missione la geometria, l'identità, le attese, i criteri di fine e il bersaglio dei criteri**:
+  rotta, partenza, velocità e offset di formazione (capitolo 6 §6.10); dalla F4b l'identità della forza d'ingaggio (id,
+  blocco, asset, capitolo 4 §4.27); dalla F4b+ l'appartenenza a un'Operazione, **solo** per il dominio di coordinamento
+  (`Operation.mission_ids` e `Mission.operation_id`, capitolo 6 §6.13); dalla F5-C le azioni `WAIT`, le ETA bloccate e il TOT
+  (capitolo 6 §6.16); dalla F6-B1/B2 i criteri di `EndCriteria` — `winchester`, `damage_threshold`, `target_destroyed`,
+  `max_duration_s`, `bingo` — e il bersaglio per `target_destroyed` (capitolo 6 §6.18-6.19); dal G2 il tipo di missione
+  (categoria `TRANSPORT` o no) per l'albero del bingo. **Non sono letti** da alcun modulo di `Logic`: i ruoli degli asset
+  (se non per le posizioni della formazione), le regole (ROE, allerta, EMCON, reazione alla minaccia, formazione),
+  `abort_on_threat` e `last_waypoint` di `EndCriteria`, la `OutcomeRule` dell'Operazione e la missione principale
   (verificato con una ricerca sul modulo del risolutore e dell'orchestratore: il risolutore non legge `mission`).
-- **Nessuna presenza prima della partenza né dopo la fine**: un asset con missione, fuori dai suoi tratti di
-  rotta, non esiste per lo scheduler (F5); nessun `WAIT` (sosta, orbita); gli scenari aerei finiscono
-  sull'obiettivo senza rientro (capitolo 8 §8.1). Gli aerei *senza* missione, invece, sono a terra per tutta la
-  sessione (F4c, sotto).
-- **Esito di missione di prima forma**: solo `COMPLETED`/`FAILED`/`DESTROYED`; nessun `ABORTED`, nessun
-  criterio di stato (bingo, winchester, danno, minaccia: F6); una missione **senza rotta** con asset
-  sopravvissuti risulta `FAILED` perché manca lo stato "in corso" (capitolo 6 §6.11); l'esito di
-  un'`Operation` non è calcolato da nessuno.
-- **Carburante**: ancora un `FuelEvent` per asset, distanza e regime unici; nessun consumo nel tempo e
-  nessun bingo a priori (F6).
+- **Esito di missione**: la regola unica `DESTROYED > COMPLETED > ABORTED(motivo) > FAILED` (capitolo 6 §6.11) produce
+  tutti gli stati; **non sono prodotti** `THREAT` e `SUPPORT_MISSING` (motivi di aborto) né `THREAT` e `MISSION_ABORTED` (fine
+  dell'asset: i gregari che seguono la missione che abortisce, D3.d). Una missione **senza rotta** con asset sopravvissuti
+  risulta ancora `FAILED` perché manca lo stato «in corso» (capitolo 6 §6.11, D4.e); l'esito di un'`Operation` non è calcolato
+  da nessuno.
 - **`Activation.ON_EVENT` è solo dichiarabile**: `mission_start` solleva `ValueError`; condizioni sullo stato e
-  re-scheduling restano fuori piano (N2.d, R4 seconda parte).
+  re-scheduling guidato da eventi restano fuori piano (N2.d, R4 seconda parte).
 - **Missioni fuori finestra**: una partenza derivata anteriore all'inizio della sessione è un errore, ma una
   rotta che supera la fine è ritagliata in silenzio (`clamp_legs`) e i controlli di durata (default 2 h,
   massimo 4 h) sono della F8.
@@ -267,8 +275,8 @@ Ciò che segue è **atteso** dal piano e non un difetto nascosto; v. §9.5 per l
 - **Elenchi di prima stesura**: `EMCON_STATES`, `THREAT_REACTIONS`, `FORMATIONS` come nomi generici, e
   `MITER_LIMIT = 2.0` dell'offset di formazione sono stime di progetto (capitolo 2 §2.6, capitolo 6 §6.10);
   la tabella `MISSION_TYPE_POSTURES` è solo un dato, il secondo stadio "postura → tipi di missione" non esiste.
-- **Aircraft**: 13 loadout hanno un task di supporto; ne resta **1 con `tasks` vuoto** (An-30M Recon, volutamente: ricognizione fotografica, `Asset/Aircraft_Loadouts.py:3620-3625`;
-  il piano ne ipotizzava 14 da assegnare).
+- **Aircraft**: 13 loadout hanno un task di supporto; ne resta **1 con `tasks` vuoto** (An-30M Recon, volutamente:
+  ricognizione fotografica, `Asset/Aircraft_Loadouts.py:3620-3625`; il piano ne ipotizzava 14 da assegnare).
 - **Regola A: il limite di velocità è il regime `'max'` generico**, non quello per terreno
   (`speed['off_road']['max']`): gli scenari pianificano oggi i mezzi terrestri al regime nominale su archi
   'offroad'; il vincolo per tipo d'arco va deciso con il modulo mappe. Un asset senza velocità massima nota è
@@ -276,7 +284,8 @@ Ciò che segue è **atteso** dal piano e non un difetto nascosto; v. §9.5 per l
 
 ### Limiti introdotti dalla fase F4 (2026-10-05/11, dichiarati nei docstring e in `F4_Differenze_Scenari.md`)
 
-Sono limiti del **modello** scelti consapevolmente, ciascuno con la fase o la decisione che li riprenderà.
+Sono limiti del **modello** scelti consapevolmente, ciascuno con la fase o la decisione che li riprenderà. (Due sono
+stati **superati** dalla F5: `grounded` per tutta la sessione e la postura fuori dall'esito; v. sotto.)
 
 **Dominio di coordinamento (F4b+, F4b++)** — capitolo 4 §4.28-4.29:
 
@@ -311,24 +320,98 @@ Sono limiti del **modello** scelti consapevolmente, ciascuno con la fase o la de
 - **`morale_for` e `enemy_estimate_for` ricevono la vista di missione** (con `owner_block`), ma nessun chiamante
   di produzione li fornisce.
 
-**Postura continua e aerei a terra (F4c)** — capitolo 4 §4.30, capitolo 6 §6.14:
+**Postura continua e aerei a terra (F4c, F5)** — capitolo 4 §4.30, capitolo 6 §6.14-6.15:
 
-- **`grounded` vale per tutta la sessione**: la presenza prima della partenza — un aereo *con* missione non
-  ancora partita è a terra — è della F5, che dovrà rendere l'insieme dipendente dal tempo senza toccare la
-  vista né il protocollo di fire control.
+- **~~`grounded` vale per tutta la sessione~~** — *superato dalla F5*: `grounded` è un `GroundedSchedule` nel tempo e
+  gli aerei con missione sono a terra prima del decollo e dopo l'atterraggio su una base vera (capitolo 3 §3.7). Resta
+  «sempre a terra» per gli aerei senza missione.
 - **Un aereo a terra resta nella posizione registrata** anche se la quota è di volo (caso `VAL-agn`, sessioni 2-3:
   i 2 A-10C a 3000 m ora non sparano): la posizione non persiste fra sessioni (D1.d, F8) e il motore non porta
-  l'aereo a terra.
+  l'aereo a terra. Un aereo con missione che parte dal parcheggio è a terra nel **primo punto** della rotta, alla
+  quota di quel punto: la rotta deve cominciare sulla base.
 - **Nessuno shelter/hangar**: un aereo parcheggiato è `'Soft'` come all'aperto.
 - **Gli aerei a terra non hanno sensori né RWR**: non contribuiscono alla percezione della base.
 - **Una fire control che non dichiara `target_grounded`** classifica gli aerei a terra come gli altri aerei
   (con un warning per run).
-- **La postura `Defense` delle unità di superficie senza missione è solo dichiarata**: sta in
-  `MissionForce.postures` e non cambia tiro né rilevamento (decisione dell'utente: nessun ROE "hold fire"), e
-  **non entra nell'esito di forza** (`ForceOutcome` non ha un campo postura): l'utente ha deciso che entrerà con
-  la F5.
+- **~~La postura `Defense` ... non entra nell'esito~~** — *superato dalla F5-B*: la postura di ogni asset è in
+  `SessionOutcome.postures` (capitolo 2 §2.3). Resta vero che la postura `Defense` delle unità di superficie senza
+  missione è **solo dichiarata**: non cambia tiro né rilevamento (nessun ROE «hold fire»).
 - **La potatura per blocco dello scheduler conta ancora velocità e portata degli aerei a terra**: è
   conservativa (più coppie di blocchi esaminate, nessun contatto perso), un costo e non un errore (capitolo 3 §3.6).
+
+### Limiti introdotti dalle fasi F5, F6 e G1-G5 (2026-10-11/18, dichiarati nei docstring e in `F4_Differenze_Scenari.md`)
+
+Sono limiti del **modello** scelti consapevolmente o conseguenze di dati non tarati. Quelli che il Piano raccoglie al
+§5, deviazione 22, come «limiti residui noti» che il piano G1-G5 si lascia aperti sono marcati con **[dev. 22]**.
+
+**Dati e stime del modello di bingo** (capitolo 5 §5.2):
+
+- **[dev. 22] Dati `speed_data['emergency']` del registro `Aircraft_Data` non tarati.** `consume` è letto in **kg/h** per
+  deduzione (unità non documentata; coerente con il regime `sustained` e con dati reali noti) e **sottostima di circa 1/6 il
+  consumo a postbruciatore pieno** per i caccia che lo hanno; `time` è di unità ignota e **non è usato**. La riserva di
+  disimpegno e il consumo in ingaggio, che ne derivano, restano **STIME**. La correzione del registro (valori di
+  `emergency.consume` e `time` dei 66 aerei, distinzione dei motori con postbruciatore) è un arretrato dichiarato dalla
+  deviazione 17 del Piano, non fatto.
+- **[dev. 22] Regola per gli aerei la cui emergenza dura meno di 5 minuti (Seconda guerra mondiale) NON implementata**:
+  «emergenza per `min(300 s, time)`, poi regime `'combat'`» (indicazione dell'utente), in attesa di un `time` affidabile
+  (docstring di `Fuel_Model.engagement_fuel_with_source`, capitolo 5 §5.2.8). Va deciso allora se la riserva del G1 la segue.
+- **Costanti STIMATE, non tarate**: `DISENGAGE_TIME` = 300 s e `ALTERNATE_BASE_MAX_OFFSET` = 3000 m (decisioni dell'utente);
+  `GLIDE_RATIO` = 10 (ordine di grandezza); `BINGO_RESERVE` = 0,10 e `BINGO_RETURN_FACTOR` = 1,2 (solo a interruttori spenti);
+  `AIR_BASE_AREA_RADIUS_M` = 3000 m (area di una base per il criterio d'atterraggio: da sostituire con il perimetro reale
+  quando arriverà il modulo mappe); `EPISODE_GAP` = `DISENGAGE_TIME`, legato per costruzione.
+- **Consumo in ingaggio a scatto**: i 5 minuti di manovra sono consumati nell'istante della prima partecipazione, non
+  distribuiti nel tempo né lungo la rotta; il consumo delle soste (attese e orbite) è pari alla **crociera**, anche per il
+  loiter (sovrastima per gli aerei) e per terra/mare (sovrastima, nessun dato di consumo da fermo nei registri).
+
+**Pianificazione e validatori:**
+
+- **[dev. 22] I validatori `check_mission_fuel` (minimo di pianificazione) e `check_mission_bingo` (bingo a priori) NON sono
+  chiamati da `run_session`**: sono del pianificatore (fase F8, validatore di sessione, da confermare). Nessun codice di
+  produzione li chiama (solo test e S26). Un ordine che parte sotto la soglia non è rifiutato dall'esecutore: l'aereo va in
+  bingo alla partenza.
+- **Idoneità della base non modellata**: qualunque base aerea amica va bene (pista, elicotteri, portaerei); terreno non
+  modellato (discesa rettilinea a quota 0, quota = altezza sulla base); la base è la posizione di un asset non aereo di un
+  blocco `is_Air_Base()` del lato.
+
+**Comportamento in volo:**
+
+- **[dev. 22] Nessuna salva offensiva dopo il bingo** (scelta della F6-B2): dal rientro l'aereo resta solo bersaglio e
+  intercettore, non attacca più nemmeno una minaccia che reincontra sul ritroso.
+- **[dev. 22] Decisione presa alla FINE dell'episodio, non a metà**: l'episodio è risolto in blocco con i tratti di prima; il
+  rientro a ritroso **ripercorre le minacce dell'andata** (in episodi nuovi, passivo); **nessun rientro per danno** (un aereo
+  oltre la soglia di danno della F6-B1 resta passivo sulla rotta); **terra e mare senza bingo** (restano fermi nel punto
+  d'esaurimento, nessun consumo d'ingaggio).
+- **Uscita di scena sempre al punto di comparsa** (decisione dell'utente), anche se il resto della rotta in avanti fosse più
+  corto o portasse fuori dalla zona delle minacce, e **solo dopo un episodio**: alla partenza (G2) un aereo senza basi non
+  esce di scena ma segue le regole della F6-A (`BINGO_NO_BASE`).
+- **Forza occupata per forza intera, non per asset**: una forza che entra tardi in un episodio lungo è «occupata»
+  dall'inizio dell'episodio, e un suo contatto in un altro episodio dentro quell'intervallo è spostato alla fine; un aereo
+  ri-pianificato che incontrerebbe una forza ancora occupata in un episodio già risolto la incontra solo dopo la fine di
+  quell'episodio.
+- **La formazione si può dividere**: le decisioni sul carburante sono per aereo, il rientro forzato per forza; gli aerei di una
+  forza disingaggiata ancora a terra (non decollati) a `t_r` non sono ri-pianificati.
+- **[dev. 22] G4a: esito degli episodi «vuoti» per finestre di aerei già distrutti**: lo scheduler non le tronca (filtra gli
+  asset operativi allo stato corrente, ma le finestre calcolate all'inizio restano).
+- **Durante la planata l'aereo è un aereo in volo come gli altri** (può essere ingaggiato e sparare): l'esaurimento non è
+  fra i criteri di fine attività.
+
+**Attese, presenza e fine attività:**
+
+- **Orbita senza circuito**: l'aereo è fermo nel punto (errore di posizione pari al raggio del circuito reale, qualche km per
+  un caccia); nessuna velocità d'orbita, quindi nessun effetto della cinematica sul rilevamento o sul tiro durante l'attesa.
+  Il raffinamento (distanza di riferimento/zona) è da decidere (capitolo 6 §6.16).
+- **In ritardo su un'ETA bloccata la missione non accelera** (warning, ETA effettiva); il TOT si applica con le attese: una
+  missione con `start_time` troppo tardo non lo rispetta.
+- **Bersagli `POINT`/`AREA`/`ZONE`**: `target_destroyed` non è rappresentabile prima della F7 (criterio ignorato con un
+  warning); nel risolutore il bersaglio distrutto vede solo le distruzioni della propria run e degli ingaggi già risolti;
+  nessuna latenza di valutazione dei criteri.
+- **`abort_on_threat` e `last_waypoint` non letti**; `MISSION_ABORTED`/`THREAT` non prodotti.
+- **[dev. 22] F6-B3 aperto**: S24-GLIDE dichiara ancora `EndCriteria(bingo=False)`; con il bingo di default cambierebbero 24
+  delle sue esecuzioni (decisione dell'utente da prendere).
+- **S27 senza intercettori aerei veri**: il doppio ingaggio è contro siti terrestri con tiro marcatore (storia deterministica,
+  nessun danno né disingaggio): non copre il caso con danno e disingaggio in mezzo (capitolo 8 §8.10).
+- A fine sessione un aereo ancora in volo sul rientro ha come postura il tipo di missione, non una postura di rientro
+  (`_postures_after_bingo`, `:1543-1557`).
 
 ### Limiti del pianificatore di rotta e del pianificatore d'attacco (2026-09-26/27, commit `815dc35f`/`6754bf1c`)
 
@@ -374,26 +457,31 @@ Verificate confrontando il codice a HEAD con i tre documenti indicati come fonte
 prevale; qui si segnala dove il testo della wiki, letto alla lettera, descrive un comportamento
 diverso da quello implementato.
 
-### D1 — Re-scheduling dopo disingaggio: la proposta originale (P1) descrive un comportamento non implementato
+### D1 — Re-scheduling dopo disingaggio: la proposta originale (P1) è oggi realizzata a livello di sessione, per gli aerei
 
 Il corpo della decisione P1 in `soglie-disingaggio-e-attrito-aggregato.md` (§"P1 — Soglia di
 disingaggio come esito di ingaggio di prima classe") dice testualmente: *"al superamento,
 l'ingaggio termina con esito `DISENGAGED` distinto da `DESTROYED`, e **la forza che si
 disingaggia rientra nello scheduler dei contatti con una nuova rotta** (non sparisce)"*.
 
-Il codice implementato non fa questo: `Logic/Engagement_Resolver.py:279-281` dichiara
+**Fino a `84a47670` il codice non faceva questo**: `Logic/Engagement_Resolver.py:322-324` dichiara
 esplicitamente che il **re-scheduling delle finestre** (di cui il rientro nello scheduler
-con una nuova rotta è un caso) è la **seconda parte di R4, rimandata** — non Fase 4. Una forza
-`DISENGAGED` è oggi **solo segnalata** nel `ForceOutcome`: nessun codice la re-instrada né
-ricalcola le finestre di contatto per lei. Questo non è un'incoerenza nascosta: il blocco di
+con una nuova rotta è un caso) è la **seconda parte di R4, rimandata** — non Fase 4. Il blocco di
 stato in cima a `soglie-disingaggio-e-attrito-aggregato.md` (`status: accepted`, aggiornato
 2026-09-23) e il blocco equivalente in `risolutore-ingaggio-salva-fase4.md` §"Punti aperti —
 RISOLTI" registrano correttamente che "R4: re-scheduling ora o rimandato → **rimandato** ...al
 primo consumatore reale". Il corpo originale della proposta P1, però, non è stato riscritto per
-riflettere questa decisione successiva, e un lettore che si fermasse al solo corpo della sezione
-P1 (senza leggere fino ai blocchi di stato/punti aperti) si farebbe un'idea sbagliata del
-comportamento attuale. Vale quindi la correzione: **oggi il rientro nello scheduler non esiste**,
-coerentemente con quanto descritto in questo manuale al capitolo 4, §4.9 e qui sopra in §9.1.
+riflettere questa decisione successiva.
+
+**Dal G4b (2026-10-17) la divergenza si è ridotta, ma non è sparita.** La forza **aerea** disingaggiata rientra
+davvero: dalla fine dell'episodio gli aerei di missione ripercorrono la rotta a ritroso fino alla base di partenza o a una
+base alternativa (o, comparsi in volo senza basi, fino al punto di comparsa, dove escono di scena), i loro tratti sono
+sostituiti e lo scheduler è rieseguito per i contatti rimasti (capitolo 6 §6.20) — cioè *«rientra nello scheduler con una
+nuova rotta»*, ma **per decisione dell'orchestratore, fra due episodi, e non dentro `resolve_engagement`**, che resta a
+stato ombra e non muta rotte. Per le forze **terrestri e navali** vale ancora il comportamento di prima (solo segnalate,
+dal G4a passive negli episodi successivi). Il docstring del risolutore (`:322-324`) descrive solo la parte del
+risolutore ed è quindi ancora corretto alla lettera, ma un lettore che lo prendesse come stato dell'intero motore ne
+trarrebbe un'idea in difetto: vale la lettura di §9.1 e del capitolo 4 §4.9.
 
 ### D2 — Nessun'altra divergenza sostanziale trovata
 
@@ -416,17 +504,18 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 | Fog-of-war reale | **Fatto** (`region_recon_detection_factor`/`recon_detection_factor_fn`, capitolo 4 §4.18, composto con il meteo tramite `combine_detection_factors`); resta da fare: un criterio di "non visto" più stringente (es. `position is None` nel report) per una nebbia meno "debole" (v. §9.1), e la correzione del bug di `Region.get_blocks_by_criteria(category='Military')` (`Context/Region.py:291-301`, v. §9.1) che la sessione di lavoro ha trovato ma non corretto. |
 | Volumi di rilevamento e intercettazione nel pianificatore di rotta | **Fatto** (`Logic/Air_Route_Manager.py`, `ThreatAA`/`DetectionThreat`, `ThreatMode.AVOID_DETECTION`, capitolo 7 §7.8); resta da fare: dati EWR/sensore visivo per ZSU-57-2/M163 (D-4b/c), reti di sensori/cueing EWR→SAM (D-7), attraversamento a corda limitata del solo rilevamento (D-5 opzione 2), cambio di quota per aggirare un volume di rilevamento (ricostruzione alla nuova quota, proposta §3.6 Attività D). |
 | Pianificatore d'attacco (quota e profilo di sgancio) | **Fatto** (`Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`, capitolo 7 §7.9, alimenta il DES via §4.20); resta da fare: collegare `MissionAsset.attack_profile` (campo già presente, capitolo 2 §2.6) al motore (fase F7), missili aria-superficie (fuori scope dichiarato), geometria di picchiata/cabrata nel tratto d'esposizione (v. §9.1). |
-| Missione come unità d'ingaggio | **Fatta** (F4b, `a4d8acf0`): vista di forza per missione `Mission_Adapter.MissionForce` (`:744-841`) passata a `resolve_engagement`, che accetta "qualunque oggetto con `assets`, `side`, `name`" (docstring `:2961-2965`); il `mission_id` entra nell'RNG attraverso l'`event_id` dell'ingaggio (`Logic/Session_Simulator.py:870`); la verifica su `morale_for`, `enemy_estimate_for`, soglia di rottura e `committed` è fatta (capitolo 4 §4.27). Resta da fare: usare ruoli, regole e bersaglio della missione (F5-F7). |
+| Missione come unità d'ingaggio | **Fatta** (F4b, `a4d8acf0`): vista di forza per missione `Mission_Adapter.MissionForce` (`:1594-1691`) passata a `resolve_engagement`, che accetta "qualunque oggetto con `assets`, `side`, `name`" (docstring `:3227-3231`); il `mission_id` entra nell'RNG attraverso l'`event_id` dell'ingaggio (`Logic/Session_Simulator.py:2493`); la verifica su `morale_for`, `enemy_estimate_for`, soglia di rottura e `committed` è fatta (capitolo 4 §4.27). Dalla F5-F6 il motore legge anche attese, TOT, criteri di fine e il bersaglio dei criteri (capitolo 6 §6.16, §6.18); resta da fare: usare ruoli e regole della missione, e il bersaglio per il filtro delle armi (F7). |
 | Dominio di coordinamento: cueing e latenza | **Fatto** il dominio (fuoco, percezione, difesa di salva: F4b+/F4b++, capitolo 4 §4.28-4.29). Resta da fare: il **cueing** del tiro (un sensore che assegna un bersaglio a un tiratore: EWR→SAM, AWACS→caccia, scorta→strike) e una **latenza/perdita** della condivisione, entrambi con la Fase 0 C2; i candidati di tiro per osservatore (`candidates`) sono il punto d'aggancio. |
-| Postura continua: dipendente dal tempo e nell'esito | **Fatta** la postura continua (F4c, capitolo 6 §6.14). Resta da fare, con la F5: rendere `grounded` dipendente dal tempo (aerei con missione non ancora partita, finestra del parcheggio), far entrare la postura nell'esito di forza (decisione dell'utente), shelter/hangar per gli aerei parcheggiati. |
-| Presenza, attese, fine missione | Fasi F5-F6: tratti fermi prima/dopo la rotta in `Contact_Scheduler._asset_legs` (`:1317-1332`);  azione `WAIT`; criteri di fine di `EndCriteria` come "fine di attività" senza cambio di rotta nel risolutore; `Fuel_Model` per tratto; `MissionOutcome` completo (`ABORTED`). |
+| Postura continua, presenza, attese | **Fatte** (F4c, F5-A/B/C): `GroundedSchedule` (capitolo 3 §3.7), presenza prima e dopo la rotta (`Mission_Adapter.movement_legs`, capitolo 6 §6.15), azione `WAIT`, ETA bloccate e TOT per missione (`mission_holds`, capitolo 6 §6.16), postura nell'esito (`SessionOutcome.postures`); resta da fare: circuito geometrico dell'orbita (raggio e velocità d'orbita nella `MissionAction`), shelter/hangar per gli aerei parcheggiati, perimetro reale di una base al posto di `AIR_BASE_AREA_RADIUS_M` (modulo mappe). |
+| Carburante e fine missione | **Fatti** (F6-A, F6-B1, F6-B2, G1-G5): `Fuel_Model` per tratto e nel tempo (capitolo 5 §5.2), criteri di `EndCriteria` come «fine di attività» senza cambio di rotta (capitolo 4 §4.31), `MissionOutcome` completo con regola unica, bingo con albero di decisione, consumo in ingaggio, episodi e ri-pianificazione (capitolo 6 §6.17-6.20); resta da fare: taratura del registro `emergency` (`consume`, `time`, motori con postbruciatore), regola WW2 per l'emergenza di durata inferiore a 5 minuti, salve offensive dal bingo, rientro per danno, `abort_on_threat`, idoneità delle basi per tipo d'aereo. |
+| Validazione di pianificazione (F8) | `Mission_Adapter.check_mission_fuel` e `check_mission_bingo` (capitolo 6 §6.19) esistono e sono testati ma **nessun produttore le chiama**: il punto d'aggancio è il validatore di sessione/pianificatore della fase F8, che le chiamerà con lo stato della campagna (carburante caricato, basi del lato). |
 | Filtro armi e bersagli espliciti | Fase F7: involucro di `fire_control` per missione (stesso schema di `ifv_only` di S19AD) e bersaglio di posizione stimata (salva su area, da progettare). |
 | Alimentazione di morale e stima del nemico | Fornire `morale_for`/`enemy_estimate_for` a `run_session` da `Block.morale` corretto (decisione D9) e dalla ricognizione/C2 (capitolo 4 §4.21). |
 | Settori RWR, `ewr`, `confidence` | Consumo nel modulo rotte/evasione e in un futuro SEAD (`Asset/Aircraft_Rwr_Data.py`, capitolo 7 §7.10). |
 | Legame C2 fra unità di difesa | Fase 0 della gerarchia C2: tracce condivise per R-INT (§4.26), assegnazione più rapida per L3 (§4.24). |
-| Re-scheduling dopo disingaggio | Livello C2/campagna: leggere `ForceOutcome.outcome == DISENGAGED` dal `SessionOutcome`, decidere una nuova rotta, e far ripartire `Contact_Scheduler.schedule_contacts` per quella forza in una sessione successiva (non dentro `resolve_engagement`, che è a stato ombra e non muta rotte). |
-| Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:192-227`, `Logic/Engagement_Resolver.py:792-839`). |
-| Assegnazione ottima arma-bersaglio | Sostituire la regola greedy round-robin di `_schedule_next` (`Logic/Engagement_Resolver.py:1804-1972`) con un algoritmo di weapon-target assignment, mantenendo l'invariante del payload congelato (R4 prima parte). |
+| Re-scheduling dopo disingaggio | **Fatto per gli aerei dal G4b**, a livello di sessione (`Session_Simulator.replan`/`reschedule`, capitolo 6 §6.20): rientro forzato, bingo e esaurimento dopo un episodio con ricalcolo dei contatti (`schedule_contacts(only_assets=)`). Resta da fare: forze terrestri e navali (oggi passive sulla rotta), cambio di rotta *durante* un episodio, condizioni su eventi (`ON_EVENT`); il risolutore resta a stato ombra e non muta rotte. |
+| Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:195-230`, `Logic/Engagement_Resolver.py:897-944`). |
+| Assegnazione ottima arma-bersaglio | Sostituire la regola greedy round-robin di `_schedule_next` (`Logic/Engagement_Resolver.py:2012-2197`) con un algoritmo di weapon-target assignment, mantenendo l'invariante del payload congelato (R4 prima parte). |
 | Movimento fisico persistente fra sessioni | Far scrivere a `run_session` (o a un futuro `Theater_Session_Manager`) la posizione finale di ogni asset mobile a fine sessione, oggi non aggiornata (`Logic/Session_Simulator.py`, v. capitolo 6 §6.5 e capitolo 8 §8.3). |
 | Rifornimento (munizioni/carburante) | Materia esplicitamente del ciclo di campagna, non del motore DES: da costruire come passo separato che precede una nuova `SessionOrder`, consumando `Mobile.load_stores_from_registry`/`load_fuel_from_registry` o equivalenti. |
 
@@ -466,6 +555,21 @@ risolutore, all'orchestratore e allo scheduler** (capitolo 2 §2.3, capitolo 3 �
 §4.27-4.30, capitolo 6 §6.12-6.14), più tre scenari nuovi (S20, S21, S21R). La suite è a **4039 test, OK**
 (messaggio del commit `af2efbe6`), la fotografia di non regressione a **370 esecuzioni** (capitolo 8 §8.7).
 
+**Aggiornamento 2026-10-11 → 2026-10-18 e fasi F5, F6 e G1-G5 della Missione (a `a784a9e7`)**: in ordine, il `grounded`
+dipendente dal tempo (`e723e82a`); la presenza fuori dalla rotta e la postura nell'esito (`90f2d4de`); le attese WAIT, le ETA
+bloccate e il TOT (`4da618b1`, poi **per missione** con la rimozione di `Operation.tot`, `03d77640`); il carburante per tratto
+e nel tempo con il vincolo sul movimento, la planata e la perdita (`00b6b531`); i criteri di fine attività, lo stato di
+missione a regola unica e la postura `destroyed` (`15ac3d3d`); il bingo con rientro, prima rettilineo (`6b1b7225`) poi a ritroso
+(`96942ca7`); infine il modello finale — riserva di disimpegno (`c1c0f576`), soglia e albero di decisione (`e1d08121`,
+approvato in `e5465b31`), consumo in ingaggio (`b1931ec3`, approvato in `20f0e0db`), episodi d'ingaggio, ri-pianificazione e
+uscita di scena (proposta `f526cc0a`, codice e approvazione `9de461e0`), scenari S26-S27 (`6e7a9b81`). A differenza della F4, **il risolutore
+cambia poco** (`grounded` nel tempo e `activity_criteria`: capitolo 4 §4.30-4.31); cambiano **molto lo scheduler** (capitolo 3
+§3.6-3.8), **`Fuel_Model`** (da 165 a 1576 righe, capitolo 5 §5.2), **`Mission_Adapter`** (da 926 a 1776 righe, capitolo 6
+§6.10, §6.15-6.19) e **l'orchestratore** (da 937 a 2851 righe, capitolo 6 §6.2-6.21), più sei scenari nuovi (S22-S27, capitolo 8
+§8.10). La suite è a **4385 test, OK** (capitolo 8 §8.10), la fotografia di non regressione a **918 esecuzioni** (capitolo 8
+§8.7). Il codice del motore a `a784a9e7` è identico a quello di `9de461e0`: i commit `6e7a9b81` (G5) e `a784a9e7` toccano solo
+test, scenari, fotografia, documenti e configurazione degli agenti.
+
 **Aggiornamento 2026-09-26/27**: quattro estensioni ulteriori, tutte sui moduli satellite che
 alimentano il motore dall'esterno, non sul motore in sé: (1) le finestre di rilascio di 29 bombe
 su 32 (commit `4ddbb089`, dato di registro, prerequisito delle altre); (2) il cannone di bordo come
@@ -487,13 +591,13 @@ d'attacco; dati EWR/sensore visivo mancanti per alcuni asset AD; reti di sensori
 (assegnazione ottima arma-bersaglio, movimento persistente fra sessioni, rifornimento, Pd per tipo
 di sensore).
 
-## 9.5 Stato del piano della Missione (F0-F9) a `84a47670`
+## 9.5 Stato del piano della Missione (F0-F9) a `a784a9e7`
 
-Fonte: `Analysis/Document/Piano_Implementazione_Missione.md` (§5, tabella di avanzamento e deviazioni 1-11) e
-`Analysis/Document/F4_Differenze_Scenari.md`. **Il manuale descrive lo stato di `84a47670`**: le fasi F5 e
-successive non sono descritte come codice.
+Fonte: `Analysis/Document/Piano_Implementazione_Missione.md` (§5, tabella di avanzamento e deviazioni 1-22) e
+`Analysis/Document/F4_Differenze_Scenari.md`. **Il manuale descrive lo stato di `a784a9e7`**: le fasi F7 e successive non sono
+descritte come codice.
 
-| Fase | Contenuto | Stato a `84a47670` | Dove nel manuale |
+| Fase | Contenuto | Stato a `a784a9e7` | Dove nel manuale |
 |---|---|---|---|
 | F0 | fotografia di non regressione degli scenari | **fatta** (`d3af6980`) | cap. 8 §8.7 |
 | F1 | tipi di dominio della Missione (`Mission_Types`) | **fatta** (`20b6de72`, `680dfcb6`) | cap. 2 §2.6 |
@@ -505,73 +609,85 @@ successive non sono descritte come codice.
 | F4b++ | difesa di salva per dominio (deviazione 8c) | **fatta** (`e6f59d21`) | cap. 4 §4.29 |
 | test S3/S5 | riprogettazione dei test al limite statistico (deviazione 9) | **fatta** (`8bf7b11f`) | cap. 8 §8.9 |
 | F4c | postura continua: aerei a terra, unità di superficie in difesa (D1.c, deviazione 11) | **fatta** (`af2efbe6`) | cap. 4 §4.30, cap. 6 §6.14 |
-| F5 | presenza prima/dopo la rotta, `WAIT`, ETA effettive; `grounded` dipendente dal tempo, postura nell'esito | **da fare** (prossima) | §9.1 |
-| F6 | fine missione (bingo, winchester, danno, minaccia), carburante nel tempo, `ABORTED` | da fare | §9.1 |
-| F7 | bersagli espliciti e filtro armi per missione (A4); salva su area | da fare | cap. 4 §4.4, §9.1 |
-| F8 | validatore di sessione e campagna (durata, prontezza, posizione persistente) | da fare | §9.1 |
-| F9 | documentazione | questo aggiornamento + sintesi/proposta da allineare | — |
+| F5-A | `grounded` dipendente dal tempo (`GroundedSchedule`) | **fatta** (`e723e82a`) | cap. 3 §3.7, cap. 4 §4.30 |
+| F5-B | presenza fuori dalla rotta, postura nell'esito (`SessionOutcome.postures`); scenario S22 | **fatta** (`90f2d4de`) | cap. 6 §6.15, cap. 8 §8.10 |
+| F5-C | azione WAIT, ETA bloccate, **TOT per missione**, ETA effettive; scenario S23 | **fatta** (`4da618b1`, `03d77640`) | cap. 6 §6.16, cap. 8 §8.10 |
+| F6-A | carburante per tratto e nel tempo, vincolo di movimento e contatti, planata e perdita; scenario S24 | **fatta** (`00b6b531`) | cap. 5 §5.2, cap. 6 §6.17 |
+| F6-B1 | criteri di fine attività, stato di missione a regola unica, postura `destroyed`; scenario S25 | **fatta** (`15ac3d3d`) | cap. 4 §4.31, cap. 6 §6.11, §6.18 |
+| F6-B2 / B2bis | bingo a priori (validatore) e in volo con rientro: rettilineo, poi a ritroso; scenario S26 | **fatta** (`6b1b7225`, `96942ca7`), **superata dal G2** | cap. 5 §5.2.5, cap. 6 §6.19 |
+| G1 | riserva di disimpegno (5 min alla massima spinta militare) e minimo di pianificazione | **fatta** (`c1c0f576`) | cap. 5 §5.2.6, cap. 6 §6.19 |
+| G2 | soglia di bingo e albero di decisione (trasferimento / combattimento, basi alternative entro 3 km) | **fatta**, approvata 2026-10-16 (`e1d08121`, `e5465b31`) | cap. 5 §5.2.7, cap. 6 §6.19 |
+| G3 | consumo di carburante in ingaggio | **fatto**, approvato 2026-10-17 (`b1931ec3`, `20f0e0db`) | cap. 5 §5.2.8, cap. 6 §6.20 |
+| G4a | episodi d'ingaggio | **fatto**, approvato 2026-10-17 (`9de461e0`; proposta `f526cc0a`) | cap. 6 §6.20 |
+| G4b | ri-pianificazione dopo l'episodio, rientro forzato dopo il disingaggio, uscita di scena senza basi | **fatto**, approvato 2026-10-17 (`9de461e0`; proposta `f526cc0a`) | cap. 6 §6.20 |
+| G5 | S26 riorganizzato sul modello finale, S27 doppio ingaggio, chiusura del piano G1-G5 | **fatta**, approvata 2026-10-18 (`6e7a9b81`) | cap. 8 §8.10 |
+| F6-B3 | S24-GLIDE dichiara `bingo=False`: con il bingo di default cambierebbero 24 esecuzioni | **aperto** (decisione dell'utente) | cap. 9 §9.1, cap. 8 §8.10 |
+| F7 | bersagli espliciti e filtro armi per missione (A4); salva su area | **da fare** (proposta di dettaglio separata, Q3) | cap. 4 §4.4, §9.1 |
+| F8 | validatore di sessione e campagna (durata, prontezza, posizione persistente; chiamerà i validatori del carburante) | **da fare** | §9.1 |
+| F9 | documentazione | questo aggiornamento (togliere il «TOT comune» nei capitoli 2 e 9, documentare F5/F6); sintesi/proposta da allineare | — |
 
-Fuori piano per decisione (D5.a, N2.d/D2.a/R4 seconda parte, N1, N3.f secondo stadio, C2/TSM): rifornimento in
-volo simulato, condizioni sullo stato e re-scheduling, adapter DCS, secondo stadio di scelta del tipo di
-missione nel pianificatore, `Theater_Session_Manager`. Domande ancora aperte nel piano: Q3 (salva su area,
-proposta di dettaglio all'inizio della F7).
+`abort_on_threat` è fuori dal Piano di F6. Fuori piano per decisione (D5.a, N2.d/D2.a/R4 seconda parte, N1, N3.f secondo
+stadio, C2/TSM): rifornimento in volo simulato, condizioni sullo stato e re-scheduling guidato da eventi, adapter DCS,
+secondo stadio di scelta del tipo di missione nel pianificatore, `Theater_Session_Manager`. Domande ancora aperte nel
+piano: Q3 (salva su area, proposta di dettaglio all'inizio della F7).
 
-*Diagramma D29 — fasi F0-F9 del piano della Missione e loro stato a `84a47670`.*
+*Diagramma D29 — fasi F0-F9 del piano della Missione e loro stato a `a784a9e7`.*
 
 ```mermaid
 flowchart LR
     F0["F0 fotografia<br/>FATTA"] --> F3["F3 porta di sessione<br/>FATTA"]
     F1["F1 tipi Mission<br/>FATTA"] --> F3
     F2["F2 tassonomia<br/>FATTA"] --> F3
-    F3 --> F4A["F4a regola A<br/>FATTA"]
-    F4A --> F4B["F4b missione = forza<br/>FATTA"]
-    F4B --> F4P["F4b+ e F4b++ dominio<br/>FATTE"]
-    F4P --> F4C["F4c postura continua<br/>FATTA"]
-    F4C --> F5["F5 presenza e attese<br/>prossima"]
-    F5 --> F6["F6 fine missione, carburante"]
-    F6 --> F7["F7 bersagli, filtro armi"]
+    F3 --> F4["F4a-F4c missione = forza,<br/>dominio, postura continua<br/>FATTE"]
+    F4 --> F5["F5-A/B/C presenza,<br/>attese, TOT per missione<br/>FATTA"]
+    F5 --> F6["F6-A/B1/B2 carburante,<br/>fine attivita', bingo<br/>FATTA"]
+    F6 --> G["G1-G5 modello di bingo:<br/>riserva, soglia, albero,<br/>ingaggio, episodi, replan<br/>FATTI"]
+    G --> F7["F7 bersagli, filtro armi<br/>prossima"]
     F7 --> F8["F8 sessione e campagna"]
-    F8 --> F9["F9 documentazione"]
+    F8 --> F9["F9 documentazione<br/>(questo aggiornamento)"]
+    G -.->|"aperto"| F6B3["F6-B3 S24-GLIDE bingo=False"]
 ```
 
-## 9.6 Incoerenze trovate fra documenti di progetto e codice a `84a47670`
+## 9.6 Incoerenze trovate fra documenti di progetto e codice a `a784a9e7`
 
 Il codice prevale; qui sono **riportate, non corrette**. Letti: `Piano_Implementazione_Missione.md`,
-`F4_Differenze_Scenari.md`, `Proposta_Struttura_Missione_Decisioni.md`, `Proposta_Regole_Allocazione_SAM.md`,
-`Proposta_Soglia_Rottura_Stocastica.md`, `Proposta_Uso_Classi_Settori_RWR.md`, `Proposta_Intercettazione_Reazione.md`
-e i docstring dei moduli. Le voci 1-10 sono quelle del manuale a `533cd1f5`, **ricontrollate una per una sul
-codice a `84a47670`**; le voci 11-14 sono nuove.
+`F4_Differenze_Scenari.md`, `Proposta_G4_Ri_scheduling.md`, `Proposta_Struttura_Missione_Decisioni.md`,
+`Proposta_Regole_Allocazione_SAM.md`, `Proposta_Soglia_Rottura_Stocastica.md`, `Proposta_Uso_Classi_Settori_RWR.md`,
+`Proposta_Intercettazione_Reazione.md` e i docstring dei moduli. Le voci 1-10 sono quelle del manuale a `533cd1f5`, le
+voci 11-14 quelle aggiunte a `84a47670`: tutte **ricontrollate una per una sul codice a `a784a9e7`**; le voci 15-21 sono
+nuove di questo aggiornamento.
 
-**Voci della stesura a `533cd1f5`: stato a `84a47670`**
+**Voci della stesura a `533cd1f5`: stato a `a784a9e7`**
 
 1. **`mission_id` nell'RNG** — **CHIUSA**. Il piano (F3) lo prevedeva reale nell'RNG; a `533cd1f5` il codice lo
    rimandava a F4. Dalla F4b (`a4d8acf0`) il `mission_id` entra nell'RNG *attraverso l'`event_id`*
-   (`engagement_event_id`, `Logic/Session_Simulator.py:311-332`, `:870`), con lo slot `mission_id` di
+   (`engagement_event_id`, `Logic/Session_Simulator.py:884-905`, `:2493`), con lo slot `mission_id` di
    `Session_Rng` ancora `None`; il piano (deviazioni 1 e 4 di §5) documenta l'una e l'altra scelta. La
    fotografia è stata rigenerata (capitolo 8 §8.7).
-2. **Parametri `routes`/`starts`/`speeds`** — **APERTA, solo nel testo del piano**. Il codice li ha rimossi (Q2:
-   una sola strada, `run_session` non li ha più); la riga F3 della tabella di §5 del piano lo dice («già
-   rimossi (Q2)»), ma il corpo della Fase 3 (§1, «Compatibilità») dice ancora che «restano nella prima versione
-   come strada interna ed equivalente».
+2. **Parametri `routes`/`starts`/`speeds`** — **CHIUSA**. Il codice li ha rimossi (Q2: una sola strada, `run_session` non
+   li ha più). Il corpo della Fase 3 (§1, «Compatibilità») dice ora «**[Esito: rimossi in F3, v. §5.]**»: il testo del piano è
+   stato allineato dopo `84a47670`.
 3. **Rotta aerea "da base a base"** (piano F1, validazione D2.c) — **CHIUSA**: `Mission` controlla solo i
-   **ruoli** (`DEPARTURE` all'inizio, `LAND` alla fine, `Command/Mission_Types.py:938-965`), non che i punti
-   siano basi; il piano lo registra ora come deviazione 10 (§5), con le rotte aeree degli scenari senza rientro
-   da completare in F5-F6.
+   **ruoli** (`DEPARTURE` all'inizio, `LAND` alla fine, `Command/Mission_Types.py:982-1009`), non che i punti
+   siano basi; il piano lo registra come deviazione 10 (§5). Il rientro vero che quella deviazione rimandava a F5-F6 esiste
+   oggi solo come **bingo** (capitolo 6 §6.19) e come atterraggio su una base vera riconosciuto per riferimento o per area
+   (`lands_on_air_base`, capitolo 6 §6.15); gli scenari aerei finiscono ancora per lo più senza rientro.
 4. **Loadout con task vuoto** (piano F2) — **CHIUSA**: il piano ne ipotizzava 14; ne sono stati assegnati 13 e
    resta l'An-30M Recon con `tasks` vuoto (`Asset/Aircraft_Loadouts.py:3620-3625`); la riga F2 della tabella di §5
-   del piano riporta ora «13 loadout su 14 (An-30M Recon lasciato vuoto)».
+   del piano riporta «13 loadout su 14 (An-30M Recon lasciato vuoto)».
 5. **`Salvo.launch_position`** (proposta SAM §7.5) — **APERTA**: il campo opzionale non esiste in `Salvo`
-   (`Logic/Engagement_Resolver.py:506-525`); L1 ricava le posizioni all'istante del lancio dai tratti di rotta
-   (`_position_at`, `:2325-2338`).
+   (`Logic/Engagement_Resolver.py:562-581`); L1 ricava le posizioni all'istante del lancio dai tratti di rotta
+   (`_position_at`, `:2578-2591`).
 6. **Regola L2 come "primo elemento della chiave"** (proposta SAM §7.7 Q3) — **APERTA**: nel codice è una
-   selezione di pool (`priority or viable`, `:1919`) che ignora anche la restrizione al primo istante utile
-   (`not priority and t_fire > t_first`, `:1933`); equivalente nello spirito, non nella forma.
+   selezione di pool (`priority or viable`, `:2144`) che ignora anche la restrizione al primo istante utile
+   (`not priority and t_fire > t_first`, `:2158`); equivalente nello spirito, non nella forma.
 7. **Esito di una missione sul posto** — **APERTA**: il piano la descrive "ancora in corso"; `MissionStatus` non
    ha quello stato e l'esito è `FAILED` (capitolo 6 §6.11). Il piano la elenca ancora fra i suoi punti aperti.
-8. **Docstring di `Session_Simulator` obsolete** — **CHIUSA parzialmente** dopo `84a47670`: le due frasi sulla
-   selezione dell'arma (in «`fire_control`: una sola callable» e in «Cosa NON fa») sono state corrette e
-   rimandano a `Fire_Control.make_registry_fire_control` (la `fire_control` resta comunque iniettata). Resta
-   la firma descritta come `ShotSpec | None` che non cita la sequenza di opzioni: imprecisione minore.
+8. **Docstring di `Session_Simulator` obsolete** — **CHIUSA parzialmente** (già a `84a47670`): le due frasi sulla
+   selezione dell'arma sono state corrette e rimandano a `Fire_Control.make_registry_fire_control` (la `fire_control`
+   resta comunque iniettata). Resta la firma descritta come `ShotSpec | None` (`:434-436`) che non cita la sequenza di
+   opzioni: imprecisione minore. Il docstring del modulo, riscritto per F5, F6 e G1-G5, descrive invece correttamente
+   lo stato attuale (verificato su tutte le sezioni «Bingo», «Episodi d'ingaggio», «Ri-pianificazione» contro il codice).
 9. **`rwr_catalogue`** (proposta R-CLS §2, "aggancio per il futuro") — **APERTA**: è un parametro di
    `resolve_engagement` ma `run_session` non lo inoltra (nessuna occorrenza in `Session_Simulator.py`): per
    usarlo bisogna chiamare il risolutore direttamente.
@@ -580,37 +696,65 @@ codice a `84a47670`**; le voci 11-14 sono nuove.
     consumati dal risolutore, ma usati solo dai test), quindi l'effetto descritto in proposta §3.2-3.3 non si
     manifesta oltre i test. Dalla F4b ricevono la vista di missione, non il blocco.
 
-**Voci nuove**
+**Voci aggiunte a `84a47670`: stato a `a784a9e7`**
 
-11. **Piano: intestazione e tabella di avanzamento non allineate** — **APERTA**. L'intestazione (riga 3) dice
-    «fatte F0, F1, F2, F3, F4a e F4b», mentre la tabella di §5 dà FATTE anche F4b+, F4b++, il test S3/S5 e F4c. La
-    riga F4c dice «fotografia 346 identiche, 2 cambiate: rigenerazione in attesa della decisione dell'utente», ma
-    `F4_Differenze_Scenari.md` (sezione F4c) registra il cambio come **ACCETTATO** e la fotografia come
-    **rigenerata** (370 esecuzioni = 348 + 22 nuove, due catture identiche), e il file in repository ha 370
-    esecuzioni (verificato). Nella tabella le righe F4b+, F4b++, test S3/S5 e F4c hanno la colonna «Commit» vuota
-    (i commit sono `098671d7`, `e6f59d21`, `8bf7b11f`, `af2efbe6`).
+11. **Piano: intestazione e tabella di avanzamento non allineate** — **PARZIALMENTE CHIUSA, ancora APERTA nell'intestazione**. La riga F4c
+    ora dice «fotografia rigenerata a 370 esecuzioni (2 cambiate accettate dall'utente)» e le colonne «Commit» di F4b+,
+    F4b++, test S3/S5 e F4c sono riempite: la parte di `84a47670` è sanata. Restano però l'**intestazione** (riga 3, «fatte
+    F0, F1, F2, F3, F4a, F4b, F4b+, F4b++, la riprogettazione dei test S3/S5 e F4c»), che non cita F5, F6 e G1-G5 pur dati
+    FATTI dalla tabella, e la colonna «Commit» con segnaposto («(commit F5-B)», «(commit F5-C)», «(commit F6-A)», «(commit
+    F6-B1)», «(commit F6-B2)»; commit reali `90f2d4de`, `4da618b1`, `00b6b531`, `15ac3d3d`, `6b1b7225`) e **vuota** per F6-B2bis e
+    G1-G5; la riga F5-A riporta `94859d8a`, mentre il `git log` del ramo ha `e723e82a` come commit che la introduce. Le
+    righe F6-B2bis e G1 dicono ancora «FATTA (da verificare e committare)» pur essendo committate (`96942ca7`, `c1c0f576`) e
+    approvate.
 12. **Piano: elenco dei «punti aperti rilevati dall'aggiornamento del manuale»** — **APERTA**. L'ultima riga
     dice che «ruoli, regole, bersaglio, criteri di fine e `Operation` sono validati ma non ancora letti da
-    `Logic`»: dalla F4b+ l'`Operation` **è letta** (`Mission_Adapter.coordination_domains` legge
-    `Operation.mission_ids` e `Mission.operation_id` per il dominio di coordinamento); restano non letti ruoli,
-    regole, bersaglio, criteri di fine, `OutcomeRule`, TOT comune e missione principale.
-13. **Manuale a `533cd1f5`: riferimento stantio (corretto qui)** — il §9.2 D1 citava
-    `Logic/Engagement_Resolver.py:160-162` per il «re-scheduling delle finestre» (seconda parte di R4,
-    rimandato); a `533cd1f5` quelle righe erano il titolo «Ingaggi a N forze» e il testo vero stava a `:209-211`
-    (oggi `:279-281`). Corretto in questo aggiornamento.
+    `Logic`»: dalla F4b+ l'`Operation` **è letta** (`Mission_Adapter.coordination_domains`) e dalla F6-B1/B2 sono letti i
+    **criteri di fine** e il bersaglio per `target_destroyed` (capitolo 6 §6.18-6.19); restano non letti ruoli, regole,
+    `abort_on_threat`, `last_waypoint`, `OutcomeRule` e missione principale (la voce non cita il TOT comune, rimosso).
+13. **Manuale a `533cd1f5`: riferimento stantio** — **CHIUSA**. Il §9.2 D1 citava `Logic/Engagement_Resolver.py:160-162`
+    per il «re-scheduling delle finestre»; corretto già a `84a47670`. Il testo vero è oggi a `:322-324`.
 14. **Commento del risolutore: `domain_of`** — **APERTA, minore**. Il commento di `_EngagementRun.__init__`
-    (`Logic/Engagement_Resolver.py:1347-1348`) dice che `domain_of` è «calcolato in `_build_forces`»; lo
-    calcola `_build_domains` (`:1518-1557`), chiamato subito dopo `_build_forces` (`:1421-1422`).
+    (`Logic/Engagement_Resolver.py:1460-1461`) dice che `domain_of` è «calcolato in `_build_forces`»; lo
+    calcola `_build_domains` (`:1644-1683`), chiamato subito dopo `_build_forces` (`:1534-1535`).
 
-**Limiti nuovi dichiarati nella documentazione di progetto** (non sono incoerenze: sono limiti di modello
-dichiarati in `F4_Differenze_Scenari.md` e nei docstring, e verificati sul codice; il dettaglio è in §9.1, sezione
-«Limiti introdotti dalla fase F4»): nessun cueing del tiro (EWR→SAM, AWACS→caccia, scorta→strike); condivisione
-istantanea senza latenza né perdite del canale; canali di intercettazione condivisi solo nello stesso istante;
-`grounded` per tutta la sessione (la F5 lo renderà dipendente dal tempo); nessuno shelter o hangar; postura
-`Defense` solo dichiarata sulla vista e **non** nell'esito di forza (entrerà con la F5); una missione di un solo
-asset è `DESTROYED` alla prima perdita; potatura per blocco dello scheduler conservativa per gli aerei a terra.
+**Voci nuove di questo aggiornamento (a `a784a9e7`)**
 
-*Altre osservazioni (non incoerenze, solo cose da sapere)*: i docstring di `Mission_Adapter` e `Session_Simulator`
-descrivono la F5 come «predisposta» (l'insieme `grounded` è per tutta la sessione); `Session_Types.SessionOrder`
-dichiara ancora che gli asset senza missione «restano fermi», vero ma ora incompleto (sono a terra o in difesa,
-capitolo 6 §6.14).
+15. **TOT comune: testo di piano superato dalla decisione del 2026-10-12** — **CHIUSA nel manuale, residui nei documenti**. I
+    capitoli del manuale 2 e 9 parlavano di «TOT comune» dell'Operazione; il codice (`Operation` senza `tot`,
+    `Mission_Adapter` senza `operation_tots`) non lo ha più dal commit `03d77640` e il manuale è stato allineato. Residui nei
+    documenti di progetto, non nel codice: `Piano_Implementazione_Missione.md` Fase 5 («Rende possibili TOT comune, CAP con
+    tempo sulla stazione e sosta a terra»), `Proposta_Struttura_Missione_Decisioni.md` («serve a sincronizzare le missioni di
+    un'Operazione (TOT comune)»), e `F4_Differenze_Scenari.md`, sezione «F5 passo (c)-(d)», che nel titolo e nel corpo
+    descrive il TOT comune (la correzione è in fondo alla stessa sezione, «Correzione: TOT per missione»).
+16. **Docstring di `Mission_Adapter` sulla postura `off_scene`: «finché la F6 non porterà il rientro»** — **APERTA, minore**. Il
+    docstring del modulo (`:165-166`) e il commento di `OFF_SCENE_POSTURE` (`:348-350`, «ETICHETTA PROVVISORIA») dicono che
+    l'uscita di scena è provvisoria finché la F6 non porta il rientro. La F6 ha portato il rientro (bingo), ma `off_scene`
+    resta la postura di chi finisce la rotta senza atterrare su una base vera e, dal G4b, di chi esce di scena per
+    `BINGO_EXIT`: non è più provvisoria.
+17. **`Session_Types.SessionOrder`: «gli asset senza missione restano fermi»** — **APERTA, minore**.
+    `Command/Session_Types.py:164` è vero ma incompleto: dalla F4c gli aerei senza missione sono a terra e le unità di
+    superficie in difesa (capitolo 6 §6.14); gli asset di missione, dalla F5, sono presenti anche fuori dalla rotta.
+18. **Docstring del risolutore: «Re-scheduling NON implementato (R4, seconda parte)»** — **APERTA, ambigua**. Il docstring di
+    `Engagement_Resolver` (`:322-324`) è vero per il risolutore, ma il motore nel suo insieme lo fa dal G4b a livello di
+    sessione (capitolo 6 §6.20, §9.2 D1); chi legge solo il docstring del risolutore ne deduce il contrario.
+19. **Piano, deviazione 15 (F6-B2): «scelte DA CONFERMARE»** — **APERTA, storica**. La deviazione elenca la riserva fissa
+    `BINGO_RESERVE` = 0,10 e il rientro in linea retta come scelte da confermare; non è mai marcata come confermata o
+    superata. Nel codice sono oggi i percorsi a interruttori spenti (`F6_BINGO_REVERSE_ROUTE`, `F6_BINGO_DISENGAGE_RESERVE`,
+    capitolo 6 §6.21): superata dal G2 per decisione dell'utente.
+20. **Piano, deviazione 19 e G2: «bingo valutato solo alla partenza», «un consumo per aereo e per sessione», «esaurimento in
+    ingaggio = solo contatore a zero»** — **CHIUSA dal piano stesso**: sono superati dalle deviazioni 20 (G4a) e 21 (G4b), che
+    lo dichiarano. Il codice è coerente con le deviazioni 20-22 punto per punto per quanto verificato (`EPISODE_GAP`
+    = 300 s, `t_d` = `min(t_r, fine dei tratti)`, rientro forzato con `forced=True`, interruttori e loro default, S26 con 96
+    esecuzioni identiche, fotografia a 918); nessuna discrepanza trovata fra la deviazione 22 e il codice.
+21. **Conteggi di test nei documenti** — **APERTA, minore**. `F4_Differenze_Scenari.md` dichiara 16 test per S22 e 17 per
+    S23; i moduli definiscono 13 e 16 metodi, perché i test dei mixin (`_GroundChecks`, `_EtaChecks`) sono eseguiti una volta
+    per classe (S22: 13 + 3 = 16). Non è un errore del codice, ma i numeri non si ritrovano contando i metodi.
+
+**Limiti nuovi dichiarati nella documentazione di progetto** (non sono incoerenze: sono limiti di modello dichiarati in
+`F4_Differenze_Scenari.md`, nel Piano (deviazione 22) e nei docstring, e verificati sul codice; il dettaglio è in §9.1,
+sezioni «Limiti introdotti dalla fase F4» e «Limiti introdotti dalle fasi F5, F6 e G1-G5»): dati `emergency` del registro non
+tarati; regola WW2 non implementata; validatori di pianificazione fuori da `run_session`; nessuna salva offensiva dopo il
+bingo; decisione presa alla fine dell'episodio; nessun rientro per danno; terra e mare senza bingo; F6-B3 S24-GLIDE aperto;
+episodi «vuoti» per finestre di aerei distrutti; S27 senza intercettori aerei veri; nessun cueing del tiro; condivisione
+istantanea; nessuno shelter o hangar.

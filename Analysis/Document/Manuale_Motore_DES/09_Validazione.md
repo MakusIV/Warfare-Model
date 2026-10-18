@@ -5,9 +5,10 @@ il nome non inizia con `Test_`), `Test/Test_Session_Validation.py` (determinismo
 come test di contratto), `Test/Test_Session_Scenarios.py` (S1-S9), `Test/
 Test_Session_Scenarios_S10_S18.py` (S10-S18), `Test/Test_Session_Scenarios_S19.py` e
 `Test/Test_Session_Scenarios_S19_Air_Defence.py` (S19, S19AD), `Test/Test_Session_Scenarios_S20.py` (S20) e
-`Test/Test_Session_Scenarios_S21.py` (S21, S21R), più lo strumento di non regressione
-`Test/Scenario_Baseline.py` (§8.7). Suite finale della Fase 7: **3371 test, OK
-(skipped=5)** (wiki `decisions/virtual-session-engine-des`, sezione Fase 7).
+`Test/Test_Session_Scenarios_S21.py` (S21, S21R), `Test/Test_Session_Scenarios_S22.py` ... `_S27.py` (S22-S27, §8.10),
+più lo strumento di non regressione `Test/Scenario_Baseline.py` (§8.7). Suite finale della Fase 7: **3371 test, OK
+(skipped=5)** (wiki `decisions/virtual-session-engine-des`, sezione Fase 7). **Suite a `a784a9e7`: 4385 test, OK
+(skipped=7)**; fotografia di non regressione: **918 esecuzioni** (§8.7, §8.10).
 
 **Aggiornamento rispetto alla stesura iniziale**: le estensioni successive alla Fase 7 (selezione
 arma dai registri, nebbia di guerra, scorta per modello d'arma, cannone di bordo, finestre di
@@ -16,7 +17,11 @@ v. capitolo 4 §4.16-4.20 e capitolo 7 §7.6-7.9) hanno portato la suite a **364
 (skipped=5)** al commit `6754bf1c` (2026-09-27), tutte nello stesso harness di questo capitolo. **Aggiornamento a `533cd1f5`** (2026-10-05): la suite è a
 **3922 test, OK (skipped=7)** (messaggio del commit `533cd1f5`), con le estensioni del 2026-09-28/30 (soglia
 di rottura stocastica, E(N), RWR, A6, dottrina di tiro, R-INT) e le fasi F0-F3 della Missione; i moduli di
-test nuovi e le classi aggiunte sono elencati in §8.8. **Aggiornamento a `84a47670`** (2026-10-11): la suite è a
+test nuovi e le classi aggiunte sono elencati in §8.8. **Aggiornamento a `a784a9e7`** (2026-10-18): la suite è a **4385 test, OK (skipped=7)** (`F4_Differenze_Scenari.md`,
+sezione G5, verificata dall'utente il 2026-10-18; i totali intermedi sono in §8.10), con le fasi F5 (presenza, attese,
+`grounded` nel tempo), F6 (carburante per tratto, criteri di fine, bingo) e i passi G1-G5 del modello di bingo (riserva di
+disimpegno, soglia e albero, consumo in ingaggio, episodi, ri-pianificazione, uscita di scena); sei scenari nuovi (S22-S27,
+§8.10) e S5 portato a otto varianti. Il processo di non regressione (§8.7) è lo stesso. **Aggiornamento a `84a47670`** (2026-10-11): la suite è a
 **4039 test, OK** (messaggio del commit `af2efbe6`, F4c; i commit di F4b, `a4d8acf0`, e della F4a, `951b0ee2`,
 dichiaravano 3951 e 3929, con 7 test saltati; l'ultimo messaggio non ripete il numero dei saltati), con la fase
 F4 della Missione (missione come unità d'ingaggio, dominio di coordinamento, difesa di salva per dominio,
@@ -90,8 +95,8 @@ derivata, `:921-925`) e `run(...)` accetta `missions=` (`:884-890`).
 - **letture dell'esito per forze d'ingaggio**: `force_outcome(outcome, force_id)` (`:987`) accetta un `mission_id`
   o l'id di un blocco con **una sola** forza d'ingaggio che ha combattuto, e solleva `ValueError` per un blocco con
   più missioni in combattimento (l'esito del blocco non è unico: chiedere quello della missione);
-  `engagement_blocks(outcome)` (`:1010`) restituisce per ogni ingaggio i **blocchi** coinvolti (dal `block_id`
-  degli esiti, con gli stessi valori attesi di prima della F4b) e `engagement_forces(outcome)` (`:1021`) gli id
+  `engagement_blocks(outcome)` (`:1008`) restituisce per ogni ingaggio i **blocchi** coinvolti (dal `block_id`
+  degli esiti, con gli stessi valori attesi di prima della F4b) e `engagement_forces(outcome)` (`:1019`) gli id
   delle forze d'ingaggio (missioni). Le verifiche di struttura "quali blocchi combattono nello stesso ingaggio"
   leggono i blocchi, quelle sugli id di forza le missioni.
 
@@ -164,7 +169,7 @@ attraverso gli asset mutati (nessuno stato nascosto fuori dagli asset). Limite a
 stesso (`:281-285`): `run_session` non aggiorna `asset.position` a fine rotta (nessun movimento
 fisico, v. capitolo 6 §6.5) — nelle sessioni successive le forze ripartono dalle posizioni
 iniziali; non conta per verificare la concatenazione di salute/munizioni/carburante, ma è un
-limite per una campagna vera (v. capitolo 10).
+limite per una campagna vera (v. capitolo 9).
 
 **Effetto della F4c sulla mini-campagna** (`F4_Differenze_Scenari.md`, sezione F4c): la seconda e la terza
 sessione sono *senza missioni*, quindi i 2 A-10C di Blue-CAS, che prima restavano fermi **in volo** nella
@@ -178,7 +183,7 @@ dello stato, non gli esiti, e passano.
 Quando l'adapter DCS esisterà, questo stesso test diventerà eseguibile alla lettera; fino ad
 allora è il suo equivalente verificabile (`Test/Test_Session_Validation.py:44-47`).
 
-## 8.4 La batteria di scenari S1-S21
+## 8.4 La batteria di scenari S1-S27
 
 Origine: S1-S5 adattano le composizioni di forza dei documenti Lanchester ingeriti (**senza i
 loro numeri**: solo composizione e domanda, v. wiki
@@ -195,11 +200,11 @@ prossimità `Urban`, scala gerarchica, rete `Transport` multi-nodo).
 | **S2** | `TestS2PreliminarySEAD` | Missione SEAD prima dell'attacco principale contro un sito SAM (Buk). Due sessioni concatenate sugli stessi seed: senza SEAD lo strike attraversa il SAM intatto, con SEAD la seconda sessione eredita lo stato mutato dalla prima (test di concatenazione fra sessioni). |
 | **S3** | `TestS3StealthVersusMass` | Pochi caccia "stealth" (4) contro molti convenzionali (8 F-15C), stesso modello per isolare il meccanismo: `detection_factor` degrada la Pd contro un bersaglio Blue. 20 repliche. **Riprogettato l'11 ottobre 2026** (§8.9): senza stealth si confronta la *frazione* di aerei persi, con stealth la differenza assoluta a coppie con una soglia statistica di 3 errori standard, e il rapporto di scambio migliora con lo stealth. |
 | **S4** | `TestS4SAMAsThirdComponent` | Scontro terra-terra con un sito SAM (terza forza, `extra_forces`) che interviene contro il CAS di un lato. Verifica che il SAM riduca l'efficacia del CAS ed entri nello stesso ingaggio dello scontro terrestre. |
-| **S5** | `TestS5DeepInterdictionThreeLayers` | Missione aerea profonda (4 F-15E) contro un bersaglio composito dietro 3 strati di difesa (lungo, medio, punto) su una rotta di 950 km. Verifica che gli strati ingaggino in ordine geometrico e che la missione raggiunga il bersaglio o sia fermata prima. 12 repliche, tre varianti (dottrina di default, ad oltranza, **«formazione resistente»**); **riprogettato l'11 ottobre 2026** (§8.9). |
+| **S5** | `TestS5DeepInterdictionThreeLayers` | Missione aerea profonda (4 F-15E) contro un bersaglio composito dietro 3 strati di difesa (lungo, medio, punto) su una rotta di 950 km. Verifica che gli strati ingaggino in ordine geometrico e che la missione raggiunga il bersaglio o sia fermata prima. 12 repliche, tre varianti (dottrina di default, ad oltranza, **«formazione resistente»**); **riprogettato l'11 ottobre 2026** (§8.9); **dal G4a/G4b otto varianti** (con la base aerea, episodi e uscita di scena spenti: §8.10). |
 | **S6** | `TestS6CarrierGroupVersusCoastalDefence` | Gruppo da battaglia navale (CVN+CG+DDG) contro litorale difeso da terra e da mare. Esercita la fusione di finestre di contatto di dominio misto (aereo-veicolo, aereo-nave, nave-veicolo) nella stessa timeline. |
 | **S7** | `TestS7LogisticInterdiction` | Attacco aereo contro un bersaglio **non militare** (`Block` generico `category='Logistic'`) con scorta di caccia. Verifica che il bersaglio non spari/intercetti mai ma riceva comunque un `ForceOutcome` e danno reale. |
 | **S8** | `TestS8MultiFrontScale` | Decine di blocchi su più fronti (40 blocchi, 240 asset) — test di **scala**, non di correttezza tattica. Verifica che la potatura gerarchica scarti la maggioranza delle coppie in modo conservativo e che la sessione completi entro un limite di tempo. |
-| **S9** | `TestS9PartialFogOfWar` | Stessa composizione di S1, con `detection_factor` degradato per il lato Blue. **Gap documentato**: il fog-of-war reale del progetto (`Region`/`Tactical_Analysis`, `recon_cp_snapshot`) non è collegato al motore di sessione — questo scenario esercita solo il punto di iniezione geometrico, non l'informazione C2 (v. capitolo 10). |
+| **S9** | `TestS9PartialFogOfWar` | Stessa composizione di S1, con `detection_factor` degradato per il lato Blue. **Gap documentato**: il fog-of-war reale del progetto (`Region`/`Tactical_Analysis`, `recon_cp_snapshot`) non è collegato al motore di sessione — questo scenario esercita solo il punto di iniezione geometrico, non l'informazione C2 (v. capitolo 9). |
 | **S10** | `TestS10DisengagementThreshold` | Scenario minimo costruito apposta: verifica che la dottrina di default (erosione 0.30, shock 0.20) faccia scattare `DISENGAGED` sia per erosione cumulata sia per shock di una singola salva, a metà di un ingaggio già in corso. |
 | **S11** | `TestS11SessionBoundary` | Confine fra due `SessionOrder` consecutive sulle stesse istanze di forza: non è un test di combattimento, è il test end-to-end del contratto porte (v. anche §8.3). |
 | **S12** | `TestS12C2Decapitation` | Colpo mirato contro un nodo C2 isolato (`mil_category='Command_&_Control_C2'`) con presidio minimo, più una forza di controllo lontana e fuori portata (verifica dell'isolamento). |
@@ -214,6 +219,12 @@ prossimità `Urban`, scala gerarchica, rete `Transport` multi-nodo).
 | **S20** | `TestS20TwoMissionsOfOneBlock` | Due missioni dello stesso blocco ingaggiano e disingaggiano separatamente (F4b, capitolo 4 §4.27): la composizione di S1 senza CAS, con Blue-Armor in due missioni d'attacco sulla stessa rotta ('Blue-Armor:Tanks', 3 M1A2; 'Blue-Armor:IFV', 2 M2) contro la stessa linea Red; variante 'single' con una sola missione. 6 seed (§8.9). |
 | **S21** | `TestS21ParkedAircraftStrike` | Attacco a una base con aerei parcheggiati (F4c, capitolo 4 §4.30), tabella a ruoli: Red-Airbase (4 MiG-29S sul piazzale, Strela-10, Shilka, nessuna missione) contro Blue-Strike (4 F-16C in missione Strike, sorvolo a 3000 m); variante di controllo senza aerei. 8 seed (§8.9). |
 | **S21R** | `TestS21RParkedAircraftRegistry` | Come S21 con la `fire_control` dei **registri**: Red-Apron (4 MiG-29S a terra, un blocco di soli bersagli passivi) + Red-AD (Strela-10 + Shilka) contro 2 A-10C 'Maverick/Gun CAS'. 6 seed (§8.9). |
+| **S22** | `TestS22E1FinishedMissionStaysEngageable`, `TestS22E3LateDepartureIsPresent`, `TestS22AircraftOnTheGround` | Presenza fuori dalla rotta (F5-B): unità di terra ferme dopo l'arrivo e prima della partenza, aerei a terra fino al decollo e dopo l'atterraggio su una base vera (capitolo 6 §6.15). 72 esecuzioni (§8.10). |
+| **S23** | `TestS23CapOrbit`, `TestS23GroundHold`, `TestS23TotPerMission` | Azione WAIT (orbita di una CAP, sosta di un carro), **TOT per missione** nella stessa Operazione, ETA effettive (F5-C, capitolo 6 §6.16). 80 esecuzioni (§8.10). |
+| **S24** | `TestS24DryTank`, `TestS24DryAircraft`, `TestS24OrbitExhaustion` | Carburante per tratto, esaurimento a monte, planata e perdita dell'aereo a secco (F6-A, capitolo 6 §6.17). 88 esecuzioni (§8.10). |
+| **S25** | `TestS25Winchester`, `TestS25MaxDuration`, `TestS25DestroyedPosture`, `TestS25DamageThreshold`, `TestS25TargetDestroyed` | Criteri di fine attività, stato di missione, postura `destroyed` (F6-B1, capitolo 6 §6.18). 112 esecuzioni (§8.10). |
+| **S26** | `TestS26Bingo` | Il bingo nel modello finale G1-G4 e la controprova di ogni interruttore (capitolo 6 §6.19-6.20). 96 esecuzioni (§8.10). |
+| **S27** | `TestS27DoubleEngagement` | Doppio ingaggio dello stesso aereo: due consumi d'ingaggio, ri-pianificazione dopo ciascun episodio, bingo dopo il secondo con rientro sulla base alternativa (G5). 40 esecuzioni (§8.10). |
 
 Tutti gli scenari condividono la stessa regola: si prende la composizione delle forze e la
 domanda che pongono, mai coefficienti o esiti numerici precalcolati — per S6-S19 la domanda è
@@ -255,20 +266,20 @@ sottoclasse di `Asset` (confrontava il nome classe esatto invece di usare `isins
   le verifiche sulle scorte d'intercettazione avessero casi; S1 con CAS, i Maverick non sono più intercettati
   (`Proposta_Dati_Anti_Missile.md` §6).
 
-## 8.7 Lo strumento di non regressione: `Test/Scenario_Baseline.py` (fase F0, commit `d3af6980`; esteso dalla F4a)
+## 8.7 Lo strumento di non regressione: `Test/Scenario_Baseline.py` (fase F0, commit `d3af6980`; esteso da F4a a G5)
 
 Dalla fase F3 la porta di sessione cambia e servono **numeri** per dimostrare che, a parità di input, il motore
 produce la stessa storia (`Piano_Implementazione_Missione.md`, §0 punto 2 e Fase 0). `Scenario_Baseline.py`
-(693 righe a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
+(901 righe a `a784a9e7`, 693 a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
 `Test_`) esegue gli scenari di sessione esistenti, riassume ogni `SessionOutcome` in una forma deterministica e la
 salva su JSON, oppure la confronta con una fotografia salvata.
 
-**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:149-198`) elenca le "unità" dei
+**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:234-345`) elenca le "unità" dei
 test: per le classi di scenario (S1-S21, S19AD, S21R, validazione) esegue il loro `setUpClass`, che costruisce le
 forze con `Scenario_Fixtures` e lancia tutte le repliche e varianti usate dai test; per
 `Test_Session_Simulator` (nessun `setUpClass`) un elenco scelto di **metodi** di test (`ORC-*`). Le unità S21 e
 S21R sono messe **in coda** alla tabella (nomi stabili: non spostano le chiavi delle altre). Durante
-l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:380-391`) che chiama
+l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:550-561`) che chiama
 l'originale e poi riassume l'esito **e** lo stato reale degli asset (letto subito dopo la chiamata: in S11 e
 nella mini-campagna la sessione successiva muta di nuovo le stesse istanze). Le asserzioni dei test non sono
 eseguite per le classi di scenario; per i metodi un'asserzione fallita è segnalata su stderr ma non impedisce la
@@ -279,7 +290,7 @@ stesso `session_id` nell'unità, tradotto in un nome leggibile dalla tabella (es
 S1; `default`/`press_on`/`resistant` per S5; `split`/`single` per S20; `parked`/`control` per S21). Se un
 `setUpClass` cambia l'ordine delle varianti, le chiavi cambiano: va aggiornata la tabella.
 
-**Cosa registra** (`summarize_run`, `:299-375`): intervallo della sessione, forze dei due lati e parametri di
+**Cosa registra** (`summarize_run`, `:446-545`): intervallo della sessione, forze dei due lati e parametri di
 chiamata riconoscibili, esiti di forza per ingaggio (con tempi, perdite, erosione, shock, soglia e, dalla F4b,
 il `block_id` quando c'è), stato finale per asset (salute, operativo, distrutto, munizioni, scorta per arma,
 intercettori, carburante), munizioni consumate per asset e per arma, intercettazioni per asset e per arma,
@@ -287,13 +298,13 @@ eventi di carburante, conteggi (salve, intercettazioni, danni, distruzioni) e le
 **Dalla F4b la voce `force_outcomes` è chiavata per blocco** (gli esiti delle sue forze d'ingaggio, nell'ordine
 degli ingaggi, `block_id or force_id`): con una missione per blocco ha la stessa forma di prima, e il confronto con
 le fotografie precedenti resta possibile. I float sono arrotondati a 6 decimali
-(`ROUND_DIGITS`, `:103`; `-0.0` normalizzato, `norm`, `:219-243`), le chiavi ordinate: **due catture dello stesso
-codice sono identiche byte per byte**. `FORMAT_VERSION = 1` (`:102`).
+(`ROUND_DIGITS`, `:188`; `-0.0` normalizzato, `norm`, `:366-390`), le chiavi ordinate: **due catture dello stesso
+codice sono identiche byte per byte**. `FORMAT_VERSION = 1` (`:187`).
 
 **Parametri di chiamata dopo la F3**: `run_session` non ha più `routes`; perché la fotografia della Fase 0 resti
 confrontabile, la voce `call.parameters.routes` è **ricostruita dalle missioni** (`Mission_Adapter.mission_routes`,
-`_call_parameters`, `:272-296`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
-`:515-523`).
+`_call_parameters`, `:419-443`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
+`:685-693`).
 
 **Uso** (dalla radice del repository, con l'interprete della macchina):
 
@@ -306,20 +317,31 @@ python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline \
 ```
 
 `--only <regex>` limita il confronto a unità o chiavi; `--compare a.json --against b.json` confronta due file
-già catturati senza eseguire nulla. `compare` (`:526-563`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
+già catturati senza eseguire nulla. `compare` (`:725-773`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
 20 righe di differenza per esecuzione). **`--summary` (dalla F4a)** sostituisce l'elenco grezzo con un riepilogo
-leggibile per esecuzione (`summarize_differences`, `:614-638`, che usa `run_digest`, `:573-611`): per ogni
+leggibile per esecuzione (`summarize_differences`, `:817-845`, che usa `run_digest`, `:776-814`): per ogni
 esecuzione che differisce, le sole grandezze cambiate come `vecchio -> nuovo` — esito per forza (e, per i blocchi
 con più forze d'ingaggio, l'esito di ciascuna: `<mission_id>.mission_outcome`), asset distrutti, colpi,
 intercettazioni, carburante e fine del movimento, istante del primo colpo e del primo danno — poi l'elenco delle
 esecuzioni invariate. Non cambia il formato della fotografia; si può usare solo con `--compare`. Codice d'uscita
-(`main`, `:643-689`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
+(`main`, `:848-897`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
 
-**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (circa 3,6 MB, **370 esecuzioni** a
-`84a47670`, chiavi `errors`/`meta`/`runs`, `errors` vuoto: verificato sul file). Ne è stata fatta la
-cattura iniziale su una copia isolata di `18a772d6` (292 esecuzioni, identica in due catture separate); è stata
-**rigenerata più volte**, sempre dopo un confronto spiegato e con due catture consecutive identiche
-(determinismo). La storia, dal documento delle differenze `Analysis/Document/F4_Differenze_Scenari.md`:
+**Opzione `--ignore KEY`** (dalla F5-B) esclude dal confronto una voce di primo livello: `--ignore postures` (la sola
+postura nell'esito, F5-B), `--ignore actual_etas` (le ETA effettive, F5-C), `--ignore fuel_events` (F6-A: la voce `fuel`
+e i conteggi `counts.fuel_events`/`counts.fuel_exhausted`, cioè la sola *forma* degli eventi di carburante; il carburante
+finale per asset resta nel confronto, quindi un cambio di sostanza resta visibile). Serve ad attribuire le differenze a una
+sola causa. **Voci nuove del riassunto**: `postures` (F5-B, se l'esito le porta) e `actual_etas` (F5-C, `{mission_id: [ETA |
+None]}`, solo se l'esito porta esiti di missione); le fasi F6-B1, F6-B2, G1-G5 **non** aggiungono voci (lo stato di
+missione, i motivi di fine per asset e `crew_recovered` sono nell'esito di missione, che la fotografia non registra: si
+verificano nei test, S25-S27, e con catture estese fuori dal repository). Il G3 aggiunge solo eventi `FuelEvent` con
+`regime` `'engagement'` nella voce `fuel`; il G4a una voce in `engagements` per episodio.
+
+**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (**918 esecuzioni** a `a784a9e7`, contate sul
+file; chiavi `errors`/`meta`/`runs`, `errors` vuoto; 370 a `84a47670`). Ne è stata fatta la cattura iniziale su una copia
+isolata di `18a772d6` (292 esecuzioni, identica in due catture separate); è stata **rigenerata più volte**, sempre dopo un
+confronto spiegato e con due catture consecutive identiche (determinismo). La storia, dal documento delle differenze
+`Analysis/Document/F4_Differenze_Scenari.md` (le righe da F5-A in poi sono nuove di questo aggiornamento; le esecuzioni
+sono quelle della fotografia **installata** nel commit indicato, come risulta da `git log` sul file):
 
 | Passo | Commit | Esecuzioni | Esito del confronto con la fotografia precedente |
 |---|---|---|---|
@@ -330,6 +352,17 @@ cattura iniziale su una copia isolata di `18a772d6` (292 esecuzioni, identica in
 | F4b++, difesa di dominio | `e6f59d21` | 328 | **328 identiche**: nessuno scenario esercita il caso; non rigenerata |
 | S3/S5 riprogettati | `8bf7b11f` | 348 (+20: S5 ×20) | **328 identiche** + 20 nuove; il motore non è toccato |
 | F4c, postura continua | `af2efbe6` | 370 (+22: S21 ×16, S21R ×6) | 346 identiche, **2 cambiate** (`VAL-agn/S7-agn-2` e `S7-agn-3`: A-10C senza missione ora a terra), cambio accettato dall'utente; rigenerata |
+| F5-A, `grounded` nel tempo | `e723e82a` | 370 | **370 identiche**; non rigenerata (cambia la forma, non i dati) |
+| F5-B, presenza e postura | `90f2d4de` | 442 (+72: S22) | storia: 368 identiche, **2 cambiate** (S6-0, S6-2: il gruppo navale resta dopo l'arrivo), accettate dall'utente il 2026-10-12; in tutte le 370 la voce `postures` è nuova; rigenerata |
+| F5-C, attese, TOT | `4da618b1` | 522 (+80: S23) | storia: **442 identiche**; la voce `actual_etas` è nuova in 401; rigenerata. Rifatto il TOT per missione (`03d77640`): in S23-TOT 8 rimosse, 16 cambiate, 8 nuove, le altre 498 identiche; ancora 522 |
+| F6-A, carburante per tratto | `00b6b531` | 610 (+88: S24) | storia: **522 identiche**; 126 cambiate nel carburante (88 solo nella *forma* degli eventi, 32 nel consumo delle attese, 6 per un arrotondamento all'ultima cifra); accettate il 2026-10-12; rigenerata |
+| F6-B1, fine di attività | `15ac3d3d` | 722 (+112: S25) | storia ed esiti di missione: **610 identiche**; 429 cambiate nella sola voce `postures` (1431 asset distrutti passano a `destroyed`); rigenerata |
+| F6-B2, bingo | `6b1b7225` | 722 | **722 identiche** con S24-GLIDE che dichiara `bingo=False`; le 40 esecuzioni nuove di S26 non sono installate in questo commit; con il bingo di default cambierebbero 24 esecuzioni di S24-GLIDE (F6-B3 aperto) |
+| F6-B2bis, ritroso (+G1) | `96942ca7` | 770 (+48: S26 rifatto) | rientro a ritroso con la regola 1,2; installata |
+| G2, soglia e albero | `e5465b31` | 794 | di 770: 762 identiche, **8 cambiate** (S26 'bingo', carburante di test 0,27), 24 nuove; approvato il 2026-10-16 |
+| G3, consumo in ingaggio | `20f0e0db` | 802 (+8) | di 794: 372 identiche, **422 cambiate nelle sole voci di carburante** (verificato chiave per chiave), 8 nuove; approvato il 2026-10-17 |
+| G4a + G4b + uscita di scena | `9de461e0` | 878 (+76) | di 802: **637 identiche, 165 cambiate** (40 per gli episodi: S5 ×36, S6 ×4; 16 per la ri-pianificazione per carburante; 109 per l'uscita di scena), 76 nuove; approvato il 2026-10-17 |
+| G5, S26 riorganizzato + S27 | `6e7a9b81` | 918 (+40: S27) | di 878: **878 identiche** (S26: 96 su 96), 0 cambiate, 40 nuove; il motore non è toccato; approvato il 2026-10-18 |
 
 **Il processo di non regressione, come applicato dalla F4** (ogni passo dichiara la propria differenza prima di
 essere committato): (1) la fotografia *prima* del passo viene ricontrollata **identica** al codice di partenza;
@@ -342,7 +375,7 @@ allora la fotografia è rigenerata (`--capture` nel percorso standard). Una diff
 prevede e il documento la spiega; il piano prevedeva una fotografia identica per la F4c, e il cambio di
 `VAL-agn` è stato quindi sottoposto all'utente prima di rigenerare.
 
-## 8.8 Test aggiunti dopo `6754bf1c` (per modulo)
+## 8.8 Test aggiunti dopo `6754bf1c` (per modulo; per quelli dopo `84a47670` v. §8.10)
 
 | Modulo di test | Cosa copre |
 |---|---|
@@ -362,6 +395,10 @@ prevede e il documento la spiega; il piano prevedeva una fotografia identica per
 | `Test_Mobile.py`, `Test_Military.py`, `Test_Aircraft*.py` | capacità `Anti_Missile`, ordine F, CIWS, task di supporto, dati delle armi aggiunte |
 
 ## 8.9 Scenari e verifiche della fase F4 (2026-10-05/11)
+
+> **Nota (2026-10-18).** Le misure di S3 e S5 riportate in questa sezione sono quelle della riprogettazione dell'11 ottobre
+> (fotografia a 348 esecuzioni). Dopo i passi G4a e G4b (episodi, ri-pianificazione, uscita di scena) alcune sono cambiate —
+> per S5 in modo sostanziale: le nuove misure e le varianti aggiunte sono in §8.10.
 
 Le misure qui riportate vengono da `Analysis/Document/F4_Differenze_Scenari.md` e dai docstring dei moduli di
 test; i test asseriscono sempre **proprietà qualitative o statistiche con soglie dichiarate**, mai un numero
@@ -430,3 +467,158 @@ progetto.
   variante per numero di aerei misurata cade fra il 30 % e il 70 %: 4 → 1/24, 5 → 19/24, 6 e 8 → 24/24).
 - Fotografia: nessuna esecuzione esistente cambiata, 20 nuove (S5-8..11 default e `PRESS_ON`, S5-0..11
   `resistant`), 348 totali.
+
+## 8.10 Scenari e verifiche delle fasi F5, F6 e G1-G5 (2026-10-11/18)
+
+Le misure vengono da `Analysis/Document/F4_Differenze_Scenari.md` (sezioni «F5 passo (a)», «(b)», «(c)-(d)», «F6 passo
+A», «B1», «B2», «B2bis», «G2», «G3», «G4a», «G4b», «G5») e dai docstring dei moduli di test; i test asseriscono sempre
+**proprietà qualitative, strutturali o statistiche con soglie dichiarate**, mai un numero calibrato. Sei scenari nuovi,
+tutti in coda alla tabella `UNITS` di `Scenario_Baseline` (nomi stabili: non spostano le chiavi delle altre unità).
+
+| Scenario | Classe di test | Fase | Cosa esercita | Esecuzioni |
+|---|---|---|---|---|
+| **S22** | `TestS22E1FinishedMissionStaysEngageable`, `TestS22E3LateDepartureIsPresent`, `TestS22AircraftOnTheGround` | F5-B | presenza fuori dalla rotta: unità di terra ferme prima/dopo; aerei a terra fino al decollo e dopo l'atterraggio su una base vera | 72 (E1 16, E3 16, AIR 40) |
+| **S23** | `TestS23CapOrbit`, `TestS23GroundHold`, `TestS23TotPerMission` | F5-C | azione WAIT (orbita di una CAP, sosta di un carro), TOT per missione, ETA effettive | 80 (CAP 32, HOLD 24, TOT 24) |
+| **S24** | `TestS24DryTank`, `TestS24DryAircraft`, `TestS24OrbitExhaustion` | F6-A | carburante per tratto, esaurimento a monte, planata e perdita dell'aereo a secco, orbita che esaurisce il carburante | 88 (E5 32, GLIDE 32, ORBIT 24) |
+| **S25** | `TestS25Winchester`, `TestS25MaxDuration`, `TestS25DestroyedPosture`, `TestS25DamageThreshold`, `TestS25TargetDestroyed` | F6-B1 | criteri di fine attività, stato di missione, postura `destroyed` | 112 (WIN 24, DUR 24, POST 16, DMG 24, TGT 24) |
+| **S26** | `TestS26Bingo` | F6-B2 → G5 | il bingo nel modello finale G1-G4 e la controprova di ogni interruttore | 96 (12 varianti × 8 seed) |
+| **S27** | `TestS27DoubleEngagement` | G5 | doppio ingaggio dello stesso aereo: due consumi d'ingaggio, ri-pianificazione dopo ciascun episodio, bingo dopo il secondo | 40 (5 varianti × 8 seed) |
+
+Metodi di test definiti nei moduli (contati sul codice a `a784a9e7`): S22 13, S23 16, S24 13, S25 12, S26 16, S27 8; i test dei
+mixin di appoggio (`_GroundChecks` in S22, `_EtaChecks` in S23) sono eseguiti una volta per ogni classe che li eredita, quindi gli
+eseguiti sono di più (S22: 16, come dice `F4_Differenze_Scenari.md`). Ogni scenario con un
+interruttore ha una **variante di controllo con l'interruttore spento**, registrata nella fotografia come le altre: è
+come si dimostra che lo scenario *distingue* la fase (con l'interruttore spento molti test falliscono: 7 su 17 per S23,
+10 su 12 per S25, misurati con sonde fuori dal repository).
+
+**S22 — presenza fuori dalla rotta** (F5-B). *S22-E1* (esperimento E1 dell'analisi, 8 seed): 3 BMP-2 fermi con sensore
+`'ground'` dichiarato di 4,2 km contro un M1A2 la cui missione arriva a 4 km e finisce a 800 s; varianti 'finished'
+(la missione è finita) e 'static' (lo stesso carro senza missione, riferimento): Red spara in 8/8 repliche in entrambe, in
+'finished' ogni colpo parte **dopo** l'arrivo (811-828 s) e il carro è messo fuori combattimento in 8/8. *S22-E3*
+(partenza a 1000 s verso l'esterno del sensore; 'not_departed' oltre la fine): Red spara in 7/8, ogni colpo **prima** della
+partenza. *S22-AIR* (5 varianti): Red-Airbase (2 MiG-29S 'CAP' più un deposito, riferimento della base) contro Blue-Strike
+(2 F-16C in sorvolo a 3000 m, fuoco solo sui bersagli parcheggiati): 'parked' (decollo a 900 s, strike a 0) MiG colpiti
+in 8/8 (16/16 danneggiati, 9/16 distrutti), solo da `'test:agm'`, tutti i colpi prima del decollo; 'airborne' (strike a
+1500 s, MiG già usciti di scena) nessun colpo; 'landed' (LAND sul deposito a 240 s) di nuovo a terra e colpiti, postura
+`parking_cold`; 'no_base' (LAND senza riferimento a 30 km) escono di scena, postura `off_scene`; 'base_area' (LAND a
+1,9 km dal deposito, senza riferimento) a terra e colpiti. Con `F5_PRESENCE` spento E1 'finished' e E3 'late' danno 0
+colpi su 8 seed e nessun danno ai MiG in 'parked' e 'landed'.
+
+**S23 — attese, TOT, ETA** (F5-C, rifatto il 2026-10-12 per il TOT per missione). *S23-CAP* (4 varianti: 'during',
+'after', 'no_wait', 'waits_off'): 2 MiG-29S da -75 km al punto O in orbita per 1500 s; bombardieri che non sparano per O
+a 1000 s ('during') o a 2200 s ('after'): la CAP spara in 8/8 (32 lanci tutti fra 877 e 927 s, dentro l'orbita,
+13/16 bombardieri distrutti) solo nel passaggio dentro l'orbita; senza WAIT o con `F5_WAITS` spento nessun lancio. *S23-HOLD*:
+un M1A2 con sosta di 600 s al punto W1 contro 3 BMP-2 con tiro dichiarato senza effetto: i colpi proseguono fino a
+1541 s (con la sosta) contro 941 s (senza), ETA effettive (0, 800, 2600) contro (0, 800, 2000). *S23-TOT*: il caso
+dell'utente, **TOT diversi per missioni della stessa Operazione** — uno *sweep* (2 F-16C 'Fighter_Sweep') anticipa lo
+strike di `SWEEP_LEAD` = 120 s (stima di test), varianti 'own_tot' (partenza 0: attese di 300 s e 180 s al punto di
+partenza), 'derived' (nessuna partenza: derivata), 'waits_off'; ciascuna missione raggiunge il **proprio** TOT.
+
+**S24 — carburante** (F6-A). *S24-E5* (8 seed, 4 varianti): M1A2 con `fuel` = 0,002 (autonomia 426 km: 852 m) su 7 km,
+esaurimento a 85,2 s; 'far' (rotta verso i BMP, fermo a 6,65 km): nessun colpo in 8/8; 'far_off' (vincolo spento,
+l'esperimento E5 di prima): Red spara in 8/8 a 361-363 s, **oltre** il punto di esaurimento; 'near' (fermo a 3,9 km):
+Red spara in 8/8 anche dopo 664 s. Esito: carro non distrutto, `FUEL_EXHAUSTED` a 85,2 s, missione `ABORTED`/`FUEL`.
+*S24-GLIDE* (F-16C con carburante per 50 km a 5000 m, esaurimento a 200 s): 'glide' (base Blue a 20 km) planata fino a
+~277 s e a terra (strike Red lancia solo dopo l'atterraggio); 'no_base' e 'enemy_base' perso a 200 s,
+`DESTROYED`/`FUEL_EXHAUSTED`, salute 0 senza `DamageEvent`, missione `DESTROYED`; 'off' (vincolo spento) rotta completata
+a secco. Le fixture dichiarano `EndCriteria(bingo=False)`: **con il bingo di default cambierebbero 24 esecuzioni di
+S24-GLIDE** (decisione dell'utente da prendere: F6-B3 aperto, capitolo 9 §9.1). *S24-ORBIT* (MiG-29S in orbita):
+'full' tre `FuelEvent` per tratto, la CAP spara in 8/8; 'dry' (carburante per mezza orbita) orbita esaurita dopo 750 s,
+MiG perso, nessun lancio; 'per_leg_off' (`F6_FUEL_PER_LEG` spento) l'orbita non consuma, un solo evento.
+
+**S25 — fine di attività** (F6-B1; ogni scenario ha i controlli 'undeclared' e 'switch_off', identici fra loro). *S25-WIN*:
+F-16C con scorta imposta {AIM-9M: 2, M61A1: 500} (`winchester=('MISSILES_AAM',)`): due salve AIM-9M, poi nessuna, cannone
+intatto, `WINCHESTER` a 16,5 s, missione `ABORTED`/`AMMUNITION`, e **prosegue passivo** (la scorta Red gli lancia contro
+32 salve dopo la fine); i controlli lanciano 12 salve. *S25-DUR*: `max_duration_s` = 120, nessun lancio dopo, `COMPLETED`
+(la durata è una fine regolare). *S25-POST*: postura `destroyed` per i distrutti, `off_scene` per gli altri; spento,
+nessuna `destroyed`. *S25-DMG*: soglia 0,05 con un colpo che graffia, un solo lancio, `DAMAGE` alla prima risoluzione
+(32,5 s), `ABORTED`/`DAMAGE`. *S25-TGT*: 2 F-16C su un deposito bersaglio GROUP, distrutto in 8/8 fra 133 e 149 s, nessun
+lancio successivo sul deposito, `TARGET_DESTROYED`, `COMPLETED`.
+
+**S26 — il bingo nel modello finale** (F6-B2 → G5; riorganizzato il 2026-10-18, **le 96 esecuzioni sono identiche** a quelle
+di prima). *Blue-Flight*: un F-16C 'Strike' (autonomia di crociera del registro col loadout: 1570 km, 'max' 1140 km;
+riserva di disimpegno ~0,085 del pieno) in volo a 5000 m da (10 km, 0) a (310 km, 0) a 250 m/s: rotta 0,191 alla
+crociera (0,263 al regime di combattimento), soglia del G2 ~0,276. *Blue-Base* a (0, 0), ~11,2 km dal punto di comparsa e
+a 10 km dalla rotta (non è una base alternativa); *Red-Site*, un BMP-2 a 260 km con sensore `'air'` dichiarato di 40 km e
+tiro dichiarato senza effetto. Le varianti sono divise per ruolo:
+
+- **modello finale**: 'none' (pieno: nessun bingo, un solo consumo d'ingaggio); 'bingo' (combattimento, 0,27, sotto la
+  soglia: bingo alla partenza, scende subito sulla base, ~42 s, Red non spara mai; il validatore rifiuta);
+  'transfer_return' (`Transport`, 0,15: ritroso e diretto alla base); 'transfer_continue' (`Transport`, 0,27: **continua**,
+  ma se Red spara il consumo d'ingaggio rende il residuo insufficiente e, con la ri-pianificazione, l'aereo è **perso per
+  carburante a fine rotta** con l'equipaggio recuperato); 'no_base' (nessuna base: perso per carburante a ~235,5 km);
+  'bingo_off' (`EndCriteria(bingo=False)`, criterio della missione, non un interruttore: nessun controllo, perdita come
+  'no_base'); 'post_engagement_bingo' (0,28, sopra la soglia alla partenza; secondo sito Red-Near a 100 km e **base
+  alternativa sulla rotta** a (180 km, 2 km), sensore `'ground'` dell'F-16C dichiarato di 20 km perché le finestre dei due
+  siti siano due episodi: dopo l'episodio con Red-Near il residuo è ~0,110 sotto il resto della rotta ~0,106 più la riserva
+  ~0,085: **bingo alla fine dell'episodio**, regola di combattimento, la base alternativa (~42 km lungo la rotta e discesa)
+  batte il ritroso (~145 km), atterraggio ~690 s, `ABORTED(BINGO)`, Red-Site mai incontrato);
+- **controprova degli interruttori** (`SWITCH_CHECKS`): 'switch_off' (`F6_BINGO` spento), 'reverse_off' (`F6_BINGO_REVERSE_ROUTE`
+  e `F6_BINGO_DISENGAGE_RESERVE` spenti: la F6-B2, rientro rettilineo con la riserva 0,1 a x ≈ 146,3 km), 'reserve_off'
+  (`F6_BINGO_DISENGAGE_RESERVE` spento: la F6-B2bis, bingo a x ≈ 203,7 km), 'engagement_fuel_off' (`G3_ENGAGEMENT_FUEL`
+  spento: la regola `'max'` della F6-A), 'replan_off' (`G4_REPLAN` spento, lo scenario di 'post_engagement_bingo': nessuna
+  ri-pianificazione, l'aereo prosegue, incontra Red-Site, consuma due volte e il contatore arriva a zero con la rotta
+  completata: il limite del G3). Un test (`test_variants_split_into_final_model_and_switch_checks`) verifica che le due
+  liste partizionino le varianti; un test per regola storica verifica validatore, istante del bingo, tratti ed esito.
+
+Le costanti di carburante dello scenario (`G2_FUEL` 0,27, `BINGO_FUEL` 0,28, `DRY_FUEL` 0,15) sono **di test**, verificate
+nel test (`test_declared_fuels`) contro la rotta e la riserva ricalcolate dal registro.
+
+**S27 — doppio ingaggio** (G5, 2026-10-18). *Blue-Flight*: un F-16C 'Strike' (consumo d'ingaggio = riserva 0,0852 del
+pieno) in volo a 5000 m da (10 km, 0) a (510 km, 0) a 250 m/s (2000 s; rotta 0,318 alla crociera, 0,439 al regime `'max'`),
+sensore `'ground'` dichiarato di 20 km; *Red-First* (BMP-2 a 100 km) e *Red-Second* (a 300 km), sensore `'air'` dichiarato di
+40 km, tiro marcatore senza effetto; *Blue-Alternate* a (400 km, 2 km), entro 3 km dalla rotta e 60 km oltre la finestra
+di Red-Second. Finestre ~[160, 520] s e ~[1000, 1320] s: **due episodi**. Carburante `DOUBLE_FUEL` = 0,53, dimostrato nel
+test fra rotta + 2 riserve (~0,489) e rotta + 3 riserve (~0,574). Esito per variante (8 seed, in tutti sparano entrambi i
+siti):
+
+| Variante | Interruttore spento | Consumi d'ingaggio | Decisioni dopo l'episodio | Esito | Carburante finale |
+|---|---|---|---|---|---|
+| 'double' | — | 2 | ~524-532 s: nessun bingo (residuo ~0,361); ~1323-1327 s: `BINGO_ALTERNATE` (residuo ~0,149) | `ABORTED(BINGO)`, a terra su Blue-Alternate (`parking_cold`) | 0,1077 |
+| 'transfer' (`Transport`) | — | 2 | nessun bingo; poi `BINGO_CONTINUE` | `COMPLETED`, `off_scene` a fine rotta | 0,0411 |
+| 'replan_off' | `G4_REPLAN` | 2 | nessuna | `COMPLETED` | 0,0411 |
+| 'episodes_off' | `G4_EPISODES` | 1 (un solo ingaggio: la componente connessa) | nessuna | `COMPLETED` | 0,1263 |
+| 'engagement_fuel_off' | `G3_ENGAGEMENT_FUEL` | 0 (movimento al regime `'max'`) | nessuna | `COMPLETED` | 0,0914 |
+
+Mostra: due consumi d'ingaggio dello stesso aereo nella stessa sessione (il limite «un consumo per sessione» del G3 è
+risolto dal G4a, e 'episodes_off' ne è la controprova); la ri-pianificazione dopo **ciascun** episodio con il residuo
+analitico (letta da una spia su `Mission_Adapter.mission_bingo_decision`, nessuna voce nuova nell'esito né nella
+fotografia); il bingo con la regola di combattimento, dove la base alternativa in avanti (~60 km più la discesa) batte il
+ritroso (~340 km, che ripasserebbe sopra entrambi i siti); il trasferimento che, sotto la soglia ma con carburante per la
+rotta, continua consumando la riserva. Scelte: gli «ingaggi» sono di siti terrestri con tiro marcatore, **non di
+intercettori aerei veri** (storia deterministica: nessun danno, nessun disingaggio, che farebbe scattare il rientro
+forzato al posto del bingo); nessuna variante «senza base alternativa» (il ritroso ripasserebbe su Red-Second e
+mescolerebbe due effetti, e il ritroso dopo l'episodio è già coperto da S5 e S24-ORBIT).
+
+**S5 e le altre esecuzioni toccate da G4a e G4b.** Gli episodi (G4a) e la ri-pianificazione con l'uscita di scena (G4b)
+hanno cambiato le esecuzioni in cui un aereo partecipa a più episodi o si disingaggia (in totale 165 delle 802 della
+fotografia del G3; §8.7). S5 passa da tre a **otto varianti** (96 esecuzioni): 'press_on', 'default', 'resistant' più
+'episodes_off' (G4a spento: la vecchia 'default'), 'with_base' e 'with_base_resistant' (una base aerea Blue 10 km dietro il
+punto di comparsa, perché la formazione disingaggiata abbia dove rientrare), 'replan_off' (base, G4b spento) ed 'exit_off'
+(senza base, uscita di scena spenta). Misura su 12 seed, «Blue distrutti» (L1/L2/L3 = strato che li ha distrutti): 'default'
+(G4b + uscita di scena, senza base) 20, L2 spara in 1 replica, esito `ABORTED(DISENGAGED)` in 12; 'resistant' 31, L2 in 9,
+`ABORTED(DISENGAGED)` 8, `COMPLETED` 1, `DESTROYED` 3; 'exit_off' 28, L2 in 12, `COMPLETED` 12; 'with_base' come 'default'
+(storia identica, cambia solo il tratto finale, il carburante e la postura: `parking_cold` invece di `off_scene`);
+'press_on' (non disingaggia) invariata 41; 'episodes_off' invariata 17. Con la dottrina di default e la base la formazione
+disingaggiata a L1 (11 repliche) **rientra** dalla fine dell'episodio lungo la rotta a ritroso fino al punto di comparsa:
+L2 non spara mai; sul ritroso ripassa su L1 (nuovo episodio, passiva) e in alcune repliche perde un altro aereo. Le misure
+di S3 e S5 del §8.9 sono quelle della riprogettazione dell'11 ottobre e **non sono più quelle di oggi** per S5; gli
+invarianti dei test sono stati aggiornati, non la composizione degli scenari (`Scenario_Fixtures.losses_of` somma le
+perdite sugli episodi della stessa forza d'ingaggio; S13/S14/S21 leggono gli esiti per episodio; S7/S18 accettano episodi
+successivi fra le sole forze aeree dopo un disingaggio).
+
+**Test aggiunti dopo `84a47670`, per modulo** (a `a784a9e7`; i test di scenario sono nelle righe precedenti):
+
+| Modulo di test | Cosa copre |
+|---|---|
+| `Test_Fuel_Model.py` (91 test; nuovo contenuto) | `TestLegFuelEvent`, `TestFuelExhaustion`, `TestGlide` (F6-A); `TestBingo`, `TestReverseRouteBingo` (F6-B2, F6-B2bis); `TestDisengagementReserve`, `TestEngagementFuel` (G1, G3); `TestBingoDecision` (G2: soglia, posizioni e residui arbitrari, rami dei due alberi, alternative avanti/indietro, limite 3,0/3,1 km, parità, nessuna base); `TestFuelAt`, `TestExhaustionFromAResidual`, `TestForcedReturn`, `TestExitScene` (G4b) |
+| `Test_Mission_Adapter.py` | `TestHoldsAndEffectiveEtas`, `TestPresenceBeforeAndAfter`, `TestFinalPosture`, `TestF5Switches`, `TestTotPerMission`, `TestAirBaseArea` (F5); `TestBingoValidator`, `TestReverseRouteBingoValidator`, `TestReserveBingoValidator`, `TestMissionFuelMinimum` (i validatori, F6-B2 → G2) |
+| `Test_Session_Simulator.py` | `TestPresenceAndPostures`, `TestWaitsAndEtas`, `TestEndCriteria`, `TestFuelExhaustion` (riscritta), `TestBingo`, `TestReserveBingo`, `TestEngagementFuel`, `TestEpisodes`, `TestEngagementEpisodes`, `TestReplanAfterEpisode` (G4b, con l'uscita di scena) |
+| `Test_Contact_Scheduler.py` | `TestGroundedSchedule`, `TestGroundedTransitionsSplitWindows` (F5-A); il ritaglio `trim_contact_window` e `only_assets` (G4a/G4b) |
+| `Test_Engagement_Resolver.py` | `TestGroundedInTime` (F5-A), `TestActivityEnd` (F6-B1) |
+| `Test_Fire_Control.py`, `Test_Aircraft.py`, `Test_Mission_Types.py` | `TestWeaponCategory`; `emergency_fuel_flow` (3 test); `crew_recovered`, `Operation` senza `tot`, `FUEL_EXHAUSTED` |
+
+**Suite attuale: 4385 test, OK (7 skipped)** (`F4_Differenze_Scenari.md`, sezione G5, verificata dall'utente il 2026-10-18; 10
+in più dei 4375 del G4b: S26 +2, S27 +8). Numeri dichiarati dai documenti attraverso le fasi: 4039 (F4c) → 4072 (F5-A) → 4101 (F5-B) → 4131 (F5-C) → 4133 (TOT per missione) → 4166 (F6-A) → 4195 (F6-B1) → 4224 (F6-B2) → 4245 (F6-B2bis) → 4344 (G4a) → 4368 (G4b) → 4375 (uscita di scena) → 4385 (G5); G1, G2 e G3 non dichiarano un totale nel documento. I conteggi dei test di questo manuale sono quelli dei messaggi di
+commit e di `F4_Differenze_Scenari.md`; **non sono stati rieseguiti** per questo aggiornamento (a differenza della
+fotografia, il cui numero di esecuzioni è stato contato sul file).

@@ -1,13 +1,17 @@
 # Capitolo 7 — Moduli di supporto trasversali
 
-> **Verificato a `84a47670` (2026-10-11).** Dei moduli di questo capitolo (`Utility/Session_Rng.py`,
+> **Verificato a `a784a9e7` (2026-10-18).** Dei moduli di questo capitolo (`Utility/Session_Rng.py`,
 > `Context/Doctrine.py`, `Context/Reaction_Profile.py`, `Block/Military.py`, `Asset/Mobile.py`,
-> `Asset/Aircraft.py`, `Asset/Weapon_Stores.py`, `Context/Air_Defense_Efficacy.py`, `Asset/Aircraft_Rwr_Data.py`,
-> `Logic/Air_Route_Manager.py`, `Logic/Weapon_Delivery.py`) **nessuno è cambiato** dalla fase F4 (`git diff` da
-> `533cd1f5` non li tocca): i loro riferimenti `:riga` sono quelli di prima. Cambiano solo i riferimenti a
-> `Logic/Engagement_Resolver.py` e a `Logic/Session_Simulator.py` (ricalcolati) e il §7.7, perché la F4 ha
-> aggiunto un'estensione facoltativa al protocollo di `fire_control` (`target_grounded`) e due ingressi del
-> risolutore che la sessione ricava dalle missioni (`coordination_of`, `grounded`).
+> `Asset/Weapon_Stores.py`, `Context/Air_Defense_Efficacy.py`, `Asset/Aircraft_Rwr_Data.py`,
+> `Logic/Air_Route_Manager.py`, `Logic/Weapon_Delivery.py`) **nessuno è cambiato** da `84a47670` (`git diff` non li
+> tocca): i loro riferimenti `:riga` sono quelli di prima. **Cambia `Asset/Aircraft.py`**, ma solo con un metodo nuovo
+> (`emergency_fuel_flow`, 31 righe inserite alla riga 391, G1): i riferimenti `:riga` a questo file in §7.6 sono
+> precedenti all'inserzione e restano validi. Cambiano i riferimenti a `Logic/Engagement_Resolver.py` e a
+> `Logic/Session_Simulator.py` (ricalcolati) e i paragrafi sul carburante (§7.6, dati per la riserva di disimpegno) e
+> sui punti di iniezione (§7.7: gli ingressi che la sessione ricava dalle missioni sono ora tre).
+> (Aggiornamento precedente, a `84a47670`: la F4 aveva aggiunto un'estensione facoltativa al protocollo di
+> `fire_control` — `target_grounded` — e due ingressi del risolutore ricavati dalle missioni, `coordination_of` e
+> `grounded`.)
 
 ## 7.1 `Utility/Session_Rng.py` — l'unica sorgente di casualità
 
@@ -179,7 +183,7 @@ documenta latenze navali.
 ## 7.4 Degradazione ambientale della Pd (meteo/notte)
 
 Vive in `Logic/Engagement_Resolver.py` (non in `Reaction_Profile`), perché è un parametro della
-legge di Pd (`Logic/Engagement_Resolver.py:360-372`, `:792-839`):
+legge di Pd (`Logic/Engagement_Resolver.py:408-420`, `:897-944`):
 
 ```
 factor = (NIGHT_DETECTION_FACTOR se notte) * (ADVERSE_WEATHER_DETECTION_FACTOR se avverso)
@@ -196,7 +200,7 @@ richiesta da `resolve_engagement(detection_factor=...)`. `meteo_detection_factor
 date, time)` (`:859-868`) collega le due funzioni a `Logic/Meteo_Analysis.get_meteo_conditions` (oggi un
 placeholder deterministico: nessuna casualità entra da qui).
 
-**Limite noto, dichiarato** (`Logic/Engagement_Resolver.py:362-369`): il fattore è **unico per ogni sensore**. La finestra di
+**Limite noto, dichiarato** (`Logic/Engagement_Resolver.py:410-417`): il fattore è **unico per ogni sensore**. La finestra di
 contatto porta solo la portata migliore fra radar e TVD (`Mobile.detection_range`, default =
 massimo dei due), e il risolutore non sa quale dei due l'ha prodotta: non può quindi risparmiare
 al radar la degradazione notturna che fisicamente non subisce. Il valore notturno è un
@@ -328,6 +332,25 @@ ignoto, autonomia mancante, aereo senza loadout assegnato, propulsione nucleare
 (`NUCLEAR_ENGINE_TYPES`, l'autonomia dichiarata "convenzionalmente 20.000 nm" dal registro è
 trattata come segnaposto, non come dato, `:266-272`).
 
+**Dati di carburante che servono alla riserva di disimpegno (G1, 2026-10-15)**, due metodi di `Aircraft` che
+`Logic/Fuel_Model` interroga per duck typing (capitolo 5 §5.2.6); il primo esisteva già (fase 5 del motore), il secondo è
+nuovo del G1:
+
+- `Aircraft.fuel_capacity_kg()` (`Asset/Aircraft.py:334-390`): la **capacità in kg del loadout assegnato** = carburante
+  interno (`stores['fuel_internal_max']`, verificato sul dato reale: 7348 kg per l'F-14A, pari alle 16 200 lb documentate)
+  più i **serbatoi esterni** del loadout, riconosciuti come terzo elemento delle voci dei piloni `[nome, quantità, massa]`
+  il cui nome non è un'arma di `AIR_WEAPONS` ed è un serbatoio (`_is_external_fuel_tank`). Lettura dichiarata **STIMA**: il
+  campo non è documentato in `Aircraft_Loadouts`, ma i valori corrispondono alla massa in kg del volume nominale (370 gal ≈
+  1120 kg, 600 gal ≈ 1820 kg, 800 L ≈ 640 kg) arrotondata per eccesso; i pod di rifornimento in volo sono esclusi (il terzo
+  campo è carburante *cedibile*, non autonomia propria). `None` se nessun loadout è assegnato o `fuel_internal_max` manca.
+  È ciò che trasforma i kg/h del consumo militare in **frazione del carico pieno**, l'unità del contatore.
+- `Aircraft.emergency_fuel_flow()` (`Asset/Aircraft.py:392-421`): il consumo orario [kg/h] alla massima spinta **militare**,
+  `speed_data['emergency']['consume']` del registro `Aircraft_Data`. **Unità dedotta, non documentata** (kg/h, per coerenza
+  con il regime `sustained` e con dati reali noti), **STIMA non tarata**: per i caccia con postbruciatore il valore è
+  circa la spinta militare o meno e sottostima il postbruciatore pieno di circa 1/6 (F-16A: 4200 contro circa
+  25 000-27 000 kg/h). Indipendente dal loadout. `None` se il modello non è nel registro o il dato manca o non è valido.
+  La correzione del registro (`emergency.consume` e `time` dei 66 aerei) è arretrato dichiarato (capitolo 9 §9.1).
+
 ### `Aircraft.assigned_loadout` (`Asset/Aircraft.py:170-214`)
 
 La scorta di un aereo si ricava dal **loadout assegnato**, non dal modello (`Aircraft_Data` non
@@ -366,7 +389,7 @@ il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo 9)
   quel modello d'arma (capitolo 4, §4.19); una `ShotSpec` singola resta un valore valido.
   `Session_Simulator.run_session` ne passa **una sola** a ogni ingaggio della sessione, non una
   per lato: la callable riceve gli asset reali e può distinguere lato/blocco/modello da sé
-  (`Logic/Session_Simulator.py:186-194`, capitolo 6). Una fabbrica che seleziona davvero l'arma
+  (`Logic/Session_Simulator.py:434-443`, capitolo 6). Una fabbrica che seleziona davvero l'arma
   dai registri, invece di una tabella di ruoli, esiste in
   `Logic/Fire_Control.make_registry_fire_control` (capitolo 4, §4.16). **Dal 2026-10-11 (F4c)** il protocollo ha
   un'estensione **facoltativa**: se la callable dichiara il parametro keyword `target_grounded` (o `**kwargs`) il
@@ -389,9 +412,16 @@ il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo 9)
   `enemy_estimate_for` (capitolo 9 §9.1, §9.6).
 - **Non sono punti di iniezione del chiamante finale, ma ingressi di `resolve_engagement` che `run_session`
   ricava dalle missioni**: `coordination_of` (dominio di coordinamento, calcolato da
-  `Mission_Adapter.coordination_domains`, capitolo 4 §4.28, capitolo 6 §6.13) e `grounded` (aerei a terra,
-  `Mission_Adapter.grounded_assets`, capitolo 4 §4.30, capitolo 6 §6.14). Chi chiama il risolutore direttamente
-  può passarli a mano; senza, il comportamento è quello precedente alla F4b+/F4c.
+  `Mission_Adapter.coordination_domains`, capitolo 4 §4.28, capitolo 6 §6.13), `grounded` (aerei a terra: dalla F5 il
+  programma nel tempo `Mission_Adapter.grounded_schedule`, un `GroundedSchedule`, capitolo 4 §4.30, capitolo 6 §6.14-6.15) e,
+  dalla F6-B1, `activity_criteria` (`{asset_id: ActivityCriteria}`, i criteri di fine di attività costruiti da
+  `EndCriteria`, capitolo 4 §4.31, capitolo 6 §6.18). Chi chiama il risolutore direttamente può passarli a mano; senza, il
+  comportamento è quello precedente alla F4b+/F4c/F6-B1.
+- **Carburante e bingo: nessun punto di iniezione.** Tutte le costanti del modello (`DISENGAGE_TIME`,
+  `ALTERNATE_BASE_MAX_OFFSET`, `GLIDE_RATIO`, `BINGO_RESERVE`, `BINGO_RETURN_FACTOR`) sono costanti di `Logic/Fuel_Model`
+  e i dati vengono dai registri (`Aircraft_Data`, `Aircraft_Loadouts`); `run_session` non ha parametri per il carburante.
+  Il comportamento si modifica solo con gli **interruttori** del modulo (capitolo 6 §6.21), pensati per la controprova negli
+  scenari e non come API di un chiamante finale.
 
 ## 7.8 Il pianificatore di rotta aerea: volumi di rilevamento e intercettazione distinti (`Logic/Air_Route_Manager.py`, decisioni D-1..D-7, 2026-09-26, commit `815dc35f`)
 

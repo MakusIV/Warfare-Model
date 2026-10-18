@@ -1,67 +1,19 @@
 # Capitolo 1 — Scopo e motivazioni
 
-> **Aggiornato al commit `84a47670`** (2026-10-11). Rispetto alla stesura iniziale cambiano tre cose a
+> **Aggiornato al commit `a784a9e7`** (2026-10-18). Rispetto alla stesura iniziale cambiano quattro cose a
 > livello d'architettura: la **Missione** (fasi F0-F3 del piano, capitolo 2 §2.6-2.7 e capitolo 6 §6.10) è il
 > modo in cui un asset riceve rotta, partenza e velocità; dalla fase **F4** (2026-10-05/11) la missione è
 > anche l'**unità d'ingaggio** (capitolo 6 §6.12-6.14, capitolo 4 §4.27), con un **dominio di coordinamento**
 > che condivide fuoco, percezione e difesa di salva fra le missioni dello stesso blocco o della stessa
-> Operazione (capitolo 4 §4.28-4.29) e con la **postura continua** degli asset senza missione (un aereo senza
-> missione è a terra, bersaglio di superficie passivo: capitolo 4 §4.30); lo strato 2 ha inoltre acquisito la
-> soglia di rottura stocastica, la difesa dai missili, la dottrina di tiro e la percezione RWR (capitolo 4
-> §4.21-4.26). Le motivazioni di questo capitolo (§1.1, §1.3, §1.5) non sono cambiate.
-
-## 1.1 Il problema: simulare ore di combattimento in minuti di calcolo
-
-Il design C2 della campagna (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/c2-hierarchy-design.md`)
-prevede sessioni "virtuali" — turni sintetici eseguiti senza un giocatore DCS — che devono
-coprire ore di tempo di gioco in un budget di calcolo dichiarato dall'utente di **fino a
-minuti**. Serviva un motore capace di farlo. Nella fase di analisi (documentata per esteso in
-`Analysis/Document/Architettura_esecuzione_sessioni_virtuali_ANALISI.md`) erano state proposte
-due strategie candidate.
-
-### Perché non il tick a 1 ms
-
-La prima proposta scomponeva il comportamento di ogni asset in quattro fasi di reazione — RIV
-(rilevazione), VAL (valutazione), COM (comando), ATT (attuazione), un OODA loop esplicito — e le
-faceva avanzare con un ciclo a passo fisso di 1 ms, dimensionato sul missile ipersonico. Il
-conto è insostenibile: 2 ore di sessione × 10.000 asset (limite superiore teorico dichiarato
-dall'utente, non un caso tipico) fanno 6,687·10¹⁰ aggiornamenti. Anche al solo costo del loop
-vuoto di CPython (senza fare nulla dentro) servono 3,2 ore; al costo reale di un motore ad agenti
-comparabile (Mesa, 95,7 µs/agente-step) servono **74 giorni**; se il rilevamento fra asset è
-O(N) per asset (come sarebbe con un controllo ingenuo a ogni tick) si arriva a 3,6–21 **anni**.
-Nessun simulatore entity-level reale in letteratura funziona a tick fissi su questa scala: JTLS è
-a passo fisso ma **aggregato** (battaglione/brigata, equazioni di Lanchester); JCATS, BRAWLER,
-AFSIM, ESAMS sono tutti **event-driven**.
-
-Quello che la prima proposta aveva comunque di valido — e che il motore descritto in questo
-manuale conserva — è la decomposizione RIV/VAL/COM/ATT: è l'unica cosa che risponde alla domanda
-"chi spara per primo", cioè all'iniziativa, la cui assenza è ciò che fa fallire empiricamente i
-modelli puramente aggregati a rapporto di forze. Nel motore reale queste latenze non contano
-cicli: sono **parametri per tipo di sistema** che schedulano eventi futuri ("questo asset
-lancerà fra 26 secondi"). V. capitolo 7, `Context/Reaction_Profile.py`.
-
-### Perché non la sola risoluzione probabilistica
-
-La seconda proposta risolveva l'esito di un ingaggio per via probabilistica, senza simulazione
-passo-passo. La direzione è giusta ma la proposta è incompleta: non specifica **quando e se** due
-forze si incontrano affatto. È il buco più grave delle due proposte, e va colmato
-analiticamente — con geometria e tempo, non con un tick — non ignorato.
-
-### La scelta: DES a coda eventi con contatti analitici
-
-Il motore descritto in questo manuale è un **DES (discrete event simulation) a coda eventi**, in
-secondi assoluti, senza alcun tick globale. Non c'è un orologio che avanza a passi fissi: la
-simulazione salta da un evento al successivo (un lancio, un impatto, la fine di un movimento),
-qualunque sia la distanza in tempo fra i due. Un micro-passo fine è ammesso **solo dentro una
-finestra di ingaggio attiva**, mai come passo globale.
-
-Il pezzo che mancava a entrambe le proposte originali — **quando** due forze si incontrano — è
-risolto in modo **analitico**: intersezione rotta↔cilindro di minaccia (via
-`Cylinder.getIntersection`, già esistente) e CPA/TCPA (*closest point of approach* / *time of
-closest approach*) fra mobili con la formula del moto relativo rettilineo uniforme
-`t* = -(Δr·Δv)/|Δv|²`, applicata su ogni tratto a velocità relativa costante di una rotta a
-spezzata. Nessun campionamento nel tempo: si risolve un'equazione, non si itera un ciclo.
-V. capitolo 3, `Logic/Contact_Scheduler.py`.
+> Operazione (capitolo 4 §4.28-4.29) e con la **postura continua** degli asset senza missione; lo strato 2 ha inoltre
+> acquisito la soglia di rottura stocastica, la difesa dai missili, la dottrina di tiro e la percezione RWR (capitolo 4
+> §4.21-4.26). **Dalle fasi F5 e F6 e dai passi G1-G5 (2026-10-11/18)** l'asset di missione ha una **presenza nel
+> tempo** (a terra prima del decollo, attese, TOT per missione: capitolo 6 §6.15-6.16), il **carburante vincola il
+> movimento** e dà origine al **bingo** con rientro, albero di decisione e consumo in ingaggio (capitolo 5 §5.2, capitolo 6
+> §6.17-6.20), i **criteri di fine missione** sono letti dal risolutore (capitolo 4 §4.31) e l'**ingaggio è un episodio nel
+> tempo**, dopo il quale gli aerei sono ri-pianificati e i contatti ricalcolati (capitolo 6 §6.20). Le motivazioni di questo
+> capitolo (§1.1, §1.3, §1.5) non sono cambiate: il motore resta un DES a coda eventi con contatti analitici, deterministico
+> e indifferente al simulatore.
 
 ## 1.2 I quattro strati
 
@@ -79,11 +31,12 @@ L'architettura è a quattro strati, in secondi assoluti dall'inizio della sessio
 2. **Risolutore d'ingaggio** — risponde a **come finisce**: Pd → latenza di reazione → regole
    d'ingaggio (`fire_control`, dottrina di tiro) → salva e saturazione (Hughes, con difesa dai missili per
    salva e tempo di reazione) → danno per colpo → disingaggio (soglia di rottura stocastica).
-3. **Applicazione dello stato** — per-asset (danno, munizioni, carburante) → `SessionOutcome`,
-   in un'unica passata per componente connessa di forze (l'orchestratore, capitolo 6). L'orchestratore
+3. **Applicazione dello stato** — per-asset (danno, munizioni, carburante) → `SessionOutcome`:
+   danno e munizioni subito dopo ogni ingaggio (dal G4a un **episodio** d'ingaggio, prima una componente connessa di forze),
+   il carburante in un passo finale con i tratti definitivi (l'orchestratore, capitolo 6). L'orchestratore
    ricava prima rotta, partenza e velocità di ogni asset dalle missioni (`Logic/Mission_Adapter`) e
    costruisce le **forze d'ingaggio**: una vista per missione, il dominio di coordinamento di ciascuna e
-   l'insieme degli aerei a terra (capitolo 6 §6.12-6.14).
+   il programma degli aerei a terra (capitolo 6 §6.12-6.15).
 
 ```mermaid
 flowchart TD
@@ -124,7 +77,7 @@ flowchart TD
     DOC --> ER
     ADE --> ER
     ER --> DM
-    ER --> FM
+    ORCH --> FM
     DM --> AD
     ORCH --> ST
 ```
@@ -144,21 +97,21 @@ dell'utente registrati"), e si ritrovano nel codice come regole verificabili:
 
 1. **10.000 asset è un limite superiore teorico**, non un caso tipico da ottimizzare al centro
    della distribuzione. La potatura gerarchica a livello `Block`
-   (`Logic/Contact_Scheduler.py:1115-1212`, meccanismo C) esiste proprio per rendere quel limite
+   (`Logic/Contact_Scheduler.py:1277-1374`, meccanismo C) esiste proprio per rendere quel limite
    trattabile senza un confronto O(N²) di tutte le coppie di asset.
 2. **Riproducibilità da seed**, e l'**ordine di risoluzione degli eventi fa parte del
    contratto**: salvare solo il seed non basta, perché un PRNG riproduce la stessa sequenza solo
    a parità di ordine delle chiamate (`Utility/Session_Rng.py:1-9`). Concretamente: le liste di
    `ContactWindow` sono sempre ordinate per tempo e, a parità di tempo, per identificativo di
    dominio (`Logic/Contact_Scheduler.py:58-60`); la coda eventi del risolutore usa un tie-break
-   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:289-294`, `:414-419`); l'RNG di
+   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:332-337`, `:470-475`); l'RNG di
    ogni ingaggio è derivato da una chiave canonica che non dipende dall'ordine di iterazione di
-   un dizionario Python (`Logic/Session_Simulator.py:311-332`, `engagement_event_id`; `:153-184`).
+   un dizionario Python (`Logic/Session_Simulator.py:884-905`, `engagement_event_id`; `:400-432`).
 3. **Perdite e danni per singolo asset**, mai aggregati. È il motivo per cui esiste
    `Logic/Damage_Model.py` (un `DamageEvent` per colpo risolto, non un delta di forza) e per cui
    `Logic/Tactical_Evaluation.calcFightResult` — il modello aggregato a rapporto di forze
    preesistente — resta un **fallback**, mai il risolutore primario
-   (`Logic/Engagement_Resolver.py:323`).
+   (`Logic/Engagement_Resolver.py:366`).
 4. **Budget di calcolo per sessione: fino a minuti.** Non verificato in questo manuale con
    misure a runtime; lo scenario S8 (capitolo 8) è quello dedicato esplicitamente a misurare il
    tempo di calcolo su una scala di decine di blocchi.

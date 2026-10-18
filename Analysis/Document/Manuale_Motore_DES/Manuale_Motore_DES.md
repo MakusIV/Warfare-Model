@@ -5,14 +5,19 @@ discreti (DES, *discrete event simulation*) che risolve le **sessioni virtuali**
 cioè i turni sintetici eseguiti senza un giocatore DCS (e, per costruzione, anche quelli con un
 giocatore: il core non distingue i due casi, v. capitolo 1).
 
-> **Aggiornato al commit `84a47670`** (2026-10-11, "Memoria: F4c completata, prossimo F5"), branch
-> `analysis/dce-dcs-persistence`. Il codice del motore a quel commit è identico a quello di `af2efbe6` ("F4c:
-> postura continua degli asset senza missione"; `84a47670` aggiunge solo la memoria di progetto). Suite di test a
-> `af2efbe6`: **4039 OK** (messaggio del commit). Il manuale descrive **lo stato di `84a47670`**, cioè dopo le
-> fasi F0-F4 del piano di implementazione della Missione (F4 = F4a regola A, F4b la missione è l'unità
-> d'ingaggio, F4b+ dominio di coordinamento, F4b++ difesa di salva per dominio, F4c postura continua); le fasi
-> F5-F9 (F5 presenza e attese, F6 fine missione e carburante nel tempo, F7 bersagli e filtro armi, F8 sessione e
-> campagna, F9 documentazione) sono **da fare** e non sono descritte come codice (capitolo 9 §9.5).
+> **Aggiornato al commit `a784a9e7`** (2026-10-18, "Schema agenti: principale Sonnet high ..."), branch
+> `analysis/dce-dcs-persistence`. Il codice del motore a quel commit è identico a quello di `9de461e0` ("G4a+G4b
+> verificati e approvati"): i commit `6e7a9b81` (G5) e `a784a9e7` toccano solo test, scenari, fotografia, documenti e
+> configurazione degli agenti (verificato con `git diff 9de461e0..HEAD`). Suite di test: **4385 OK** (7 skipped, dichiarata da
+> `F4_Differenze_Scenari.md`, sezione G5, e dal messaggio di `6e7a9b81`; non rieseguita per questo aggiornamento);
+> fotografia di non regressione: **918 esecuzioni** (contate sul file). Il manuale descrive **lo stato di `a784a9e7`**, cioè dopo
+> le fasi F0-F6 del piano di implementazione della Missione (F4 = regola A, missione come unità d'ingaggio, dominio di
+> coordinamento, difesa di salva per dominio, postura continua; F5 = presenza, `grounded` nel tempo, attese, TOT per missione;
+> F6 = carburante per tratto, criteri di fine, stato di missione, bingo e rientro) e i passi **G1-G5** del modello di bingo
+> (riserva di disimpegno, soglia e albero di decisione, consumo in ingaggio, episodi d'ingaggio, ri-pianificazione, uscita di
+> scena senza basi, scenari S26-S27). Le fasi **F7** (bersagli espliciti e filtro armi), **F8** (sessione e campagna) e
+> **F9** (documentazione: questo aggiornamento ne è parte) sono **da fare** e non sono descritte come codice; il **F6-B3**
+> (S24-GLIDE con `bingo=False`) è aperto (capitolo 9 §9.5).
 
 **Stato del codice descritto, storia degli aggiornamenti.** Stesura iniziale al commit `f61aa2b7`
 (2026-09-23); aggiornamenti a `1d0c1127` (2026-09-26), `6754bf1c` (2026-09-27; manuale committato in
@@ -22,7 +27,46 @@ giocatore: il core non distingue i due casi, v. capitolo 1).
 estensione: fino al 2026-09-27 sui moduli satellite che lo alimentano dall'esterno (selezione dell'arma,
 nebbia di guerra, scorta per arma, cannone di bordo, volumi di rilevamento/intercettazione, pianificatore
 d'attacco), dal 2026-09-28 **anche nel risolutore e nella porta di sessione**, e dal 2026-10-05 nella
-**definizione di "forza d'ingaggio"**.
+**definizione di "forza d'ingaggio"**, e dal 2026-10-11 nel **tempo** (presenza, carburante, episodi).
+
+**Aggiornamento 2026-10-11 → 2026-10-18 (da `84a47670` a `a784a9e7`, fasi F5, F6 e passi G1-G5)**, in ordine di capitolo. Il
+codice toccato è `Command/Mission_Types.py`, `Command/Session_Types.py`, `Asset/Aircraft.py`, `Logic/Contact_Scheduler.py`,
+`Logic/Engagement_Resolver.py`, `Logic/Fire_Control.py`, `Logic/Fuel_Model.py` (da 165 a 1576 righe),
+`Logic/Mission_Adapter.py` (da 926 a 1776), `Logic/Session_Simulator.py` (da 937 a 2851), più test, scenari e fotografia;
+`Logic/Damage_Model.py`, `Asset/Asset.py` e tutti i moduli di supporto trasversale restano invariati.
+
+1. **Strato 0, porte** (capitolo 2 §2.3-2.4, §2.6, §2.8): `SessionOutcome.postures` (F5-B) e il parametro `chained` di
+   `assemble_session_outcome` (G4a, niente più warning sui bersagli condivisi); un `ForceOutcome` per forza **e per episodio**;
+   `Operation` senza TOT comune (il TOT è di ogni missione); `AssetMissionOutcome.crew_recovered`, `AssetEndReason` a 12
+   valori (`FUEL_EXHAUSTED`, `DISENGAGED`), `AbortReason` a 7 (`BINGO`, `DISENGAGED`); i validatori del carburante **non**
+   sono chiamati da `run_session`.
+2. **Scheduler** (capitolo 3 §3.6-3.8): `GroundedSchedule` (aerei a terra nel tempo, finestre spezzate a decollo e
+   atterraggio), parametri `legs` e `only_assets` di `schedule_contacts`, `trim_contact_window`.
+3. **Risolutore** (capitolo 4 §4.9, §4.12-4.13, §4.30, nuova §4.31): `grounded` dipendente dal tempo, la **fine di attività**
+   (`ActivityCriteria`, `ActivityEnd`, `activity_criteria`), `Fire_Control.weapon_category`; il risolutore **non legge il
+   carburante** e non sa che l'ingaggio è un episodio.
+4. **Applicazione dello stato** (capitolo 5 §5.2, riscritta): `Fuel_Model` per tratto e nel tempo, esaurimento a monte e
+   residuo analitico, planata, bingo (storia F6-B2/B2bis), riserva di disimpegno (G1), soglia e **albero di decisione** (G2,
+   diagramma D38), consumo in ingaggio (G3), uscita di scena (G4b), tipi (D39).
+5. **Orchestratore** (capitolo 6 §6.1-6.11, §6.14, nuove §6.15-6.21): coda in due passi, episodi, RNG con `counter`;
+   presenza e postura nell'esito (D41), attese e TOT per missione, carburante e vincolo del movimento (D42), fine di attività
+   e regola unica dello stato di missione (D19 aggiornato), bingo in sessione e validatori, consumo in ingaggio, episodi e
+   ri-pianificazione (D40), tabella degli **interruttori** e dei loro default.
+6. **Supporto trasversale** (capitolo 7 §7.6-7.7): `Aircraft.fuel_capacity_kg` e il nuovo `Aircraft.emergency_fuel_flow`
+   (dato non tarato, unità dedotta), nuovi ingressi del risolutore ricavati dalle missioni, assenza di punti di iniezione
+   per il carburante.
+7. **Validazione** (capitolo 8 §8.4, §8.7, §8.10): scenari **S22-S27**, S5 a otto varianti, la fotografia a **918**
+   esecuzioni con la cronologia da 370, l'opzione `--ignore`, i test aggiunti per modulo.
+8. **Limiti** (capitolo 9): superati i limiti su presenza, attese, esito di prima forma, carburante e re-scheduling; nuovi i
+   limiti della deviazione 22 del Piano (dati `emergency` non tarati, regola WW2 non implementata, validatori fuori da
+   `run_session`, nessuna salva dopo il bingo, F6-B3 aperto, S27 senza intercettori aerei veri, ...); stato del piano (§9.5);
+   incoerenze documenti/codice (§9.6, voci 15-21 nuove).
+
+**Riferimenti `:riga`.** Quelli delle sezioni nuove o riscritte sono stati verificati sul codice a `a784a9e7`. Quelli delle
+sezioni preesistenti sono stati **ricalcolati** con un allineamento riga per riga fra `84a47670` e `a784a9e7` (le righe
+invariate seguono lo spostamento, con la verifica che il testo della riga sia identico; i riferimenti a righe riscritte sono
+stati rivisti a mano). Non sono stati ricalcolati i riferimenti ai moduli **non toccati** dal `git diff` (restano validi) né
+quelli storici esplicitamente datati (per esempio «a `533cd1f5` quelle righe erano ...»).
 
 **Aggiornamento 2026-10-05 → 2026-10-11 (da `533cd1f5` a `84a47670`, fase F4 della Missione)**, in ordine di
 capitolo. Il codice toccato è `Command/Session_Types.py`, `Logic/Contact_Scheduler.py`,
@@ -103,7 +147,7 @@ parametro `grounded`.
 ## Convenzioni di questo manuale
 
 - Ogni affermazione su codice è verificata leggendo il file, con riferimento `percorso:riga`
-  valido per `84a47670`. I percorsi sono dati **relativi a `Code/Dynamic_War_Manager/Source/`** (es.
+  valido per `a784a9e7`. I percorsi sono dati **relativi a `Code/Dynamic_War_Manager/Source/`** (es.
   `Logic/Engagement_Resolver.py:2474` sta per
   `Code/Dynamic_War_Manager/Source/Logic/Engagement_Resolver.py:2474`); dentro una sezione una forma breve
   `` `:riga` `` si riferisce al file nominato nell'intestazione del capitolo o della sezione. I documenti di
@@ -118,7 +162,7 @@ parametro `grounded`.
 - Dove il manuale e la wiki di progetto (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/`)
   divergono, prevale il codice; le divergenze trovate sono raccolte nel capitolo 9 (§9.2 per la wiki,
   §9.6 per i documenti di progetto della Missione e delle regole SAM, con lo stato di ciascuna voce).
-- I diagrammi hanno un numero progressivo `D1`-`D36` (elenco in fondo); le didascalie sono nel capitolo
+- I diagrammi hanno un numero progressivo `D1`-`D42` (elenco in fondo); le didascalie sono nel capitolo
   che li contiene.
 
 ## Indice dei capitoli
@@ -130,10 +174,12 @@ parametro `grounded`.
    2026-10-05 le missioni alla porta (`SessionOrder.missions`/`operations`, `mission_outcomes`),
    `Command/Mission_Types.py` (§2.6) e la tassonomia dei tipi di missione di `Context/Context.py` (§2.7); dal
    2026-10-08 `ForceOutcome.block_id` e `SessionOutcome.outcomes_of_block` (§2.3), il `mission_id` nell'RNG
-   (§2.8).
+   (§2.8); **dal 2026-10-12/18** `SessionOutcome.postures`, `chained`, `Operation` senza TOT comune,
+   `crew_recovered` e i nuovi motivi di fine e di aborto (§2.3, §2.4, §2.6).
 3. [Lo strato 1: lo scheduler dei contatti](04_Strato1_Scheduler_Contatti.md) —
    `Logic/Contact_Scheduler.py`: rotta↔cilindro, CPA/TCPA, potatura gerarchica,
-   `ContactWindow`; dal 2026-10-11 il parametro `grounded` per gli aerei a terra (§3.5-3.6).
+   `ContactWindow`; dal 2026-10-11 il parametro `grounded` per gli aerei a terra (§3.5-3.6); **dal 2026-10-12/17**
+   `GroundedSchedule` (§3.7), `legs` e `only_assets` (§3.6), `trim_contact_window` (§3.8).
 4. [Lo strato 2: il risolutore d'ingaggio](05_Strato2_Risolutore_Ingaggio.md) —
    `Logic/Engagement_Resolver.py`: rilevamento, latenze di reazione, salva di Hughes,
    saturazione, disingaggio, ingaggi a N forze; `Logic/Fire_Control.py` (selezione dell'arma dai
@@ -145,18 +191,20 @@ parametro `grounded`.
    D/F/L1/L2/L3 (§4.24), dottrina di tiro contro l'overkill (§4.25), intercettazione con tempo di reazione
    R-INT (§4.26); **dal 2026-10-08 (fase F4 della Missione)**: la forza d'ingaggio è la missione (§4.27), il
    dominio di coordinamento per fuoco e percezione (§4.28), la difesa di salva per dominio (§4.29), gli aerei a
-   terra e la postura continua (§4.30).
+   terra e la postura continua (§4.30, esteso dalla F5 al tempo); **dal 2026-10-12**: la fine di attività dei
+   criteri di missione (§4.31).
 5. [Lo strato 3: applicazione dello stato](06_Strato3_Applicazione_Stato.md) —
-   `Logic/Damage_Model.py`, `Asset.apply_damage`, `Logic/Fuel_Model.py`,
-   `apply_engagement_result` (verificato a `84a47670`: invariato).
+   `Logic/Damage_Model.py`, `Asset.apply_damage`, `Logic/Fuel_Model.py` (riscritta: carburante per tratto, planata, bingo,
+   riserva di disimpegno, albero di decisione, consumo in ingaggio, §5.2), `apply_engagement_result`.
 6. [L'orchestratore: `Session_Simulator.run_session`](07_Orchestratore_Session_Simulator.md) —
-   componenti connesse (anche per dominio), coda eventi di sessione, carburante, sessione aperta; la firma senza
-   `routes`/`starts`/`speeds`, `Logic/Mission_Adapter.py` (§6.10, con la regola A) e l'esito di missione di
-   prima forma (§6.11); le forze d'ingaggio e la vista `MissionForce` (§6.12), il dominio di coordinamento
-   (§6.13), la postura continua e gli aerei a terra (§6.14).
+   componenti connesse e **episodi d'ingaggio**, coda eventi di sessione in due passi, RNG con `counter`; la firma senza
+   `routes`/`starts`/`speeds`, `Logic/Mission_Adapter.py` (§6.10) e l'esito di missione a regola unica (§6.11); le forze
+   d'ingaggio e la vista `MissionForce` (§6.12), il dominio di coordinamento (§6.13), la postura continua (§6.14);
+   **nuove §6.15-6.21**: presenza e postura nell'esito, attese e TOT per missione, carburante e vincolo del movimento, fine di
+   attività, bingo e validatori, consumo in ingaggio / episodi / ri-pianificazione / uscita di scena, interruttori e default.
 7. [Moduli di supporto trasversali](08_Supporto_Trasversale.md) — `Session_Rng`, `Doctrine`,
    `Reaction_Profile`, le dimensioni militari di `Military`, munizioni/carburante su
-   `Mobile`/`Aircraft`, i punti di iniezione meteo (`detection_factor`) e arma
+   `Mobile`/`Aircraft` (con `fuel_capacity_kg` e `emergency_fuel_flow`), i punti di iniezione meteo (`detection_factor`) e arma
    (`fire_control`, con l'estensione facoltativa `target_grounded`) e della soglia di rottura (`morale_for`,
    `enemy_estimate_for`, `fire_doctrine`, `rwr_catalogue`); `Doctrine` con parametri della soglia e dottrina di
    tiro (§7.2); `Asset/Aircraft_Rwr_Data.py` (§7.10), `Context/Air_Defense_Efficacy.py` (§7.11), dati di registro
@@ -164,13 +212,14 @@ parametro `grounded`.
    intercettazione distinti (§7.8, `Logic/Air_Route_Manager.py`) e il pianificatore d'attacco
    a monte del motore (§7.9, `Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`).
 8. [Validazione](09_Validazione.md) — determinismo, test di agnosticismo come test di
-   contratto (esteso alle porte della Missione), la batteria di scenari S1-S21 (S19, S19AD, S20, S21, S21R), la
+   contratto (esteso alle porte della Missione), la batteria di scenari S1-S27 (§8.4), la
    migrazione alle missioni e la regola A negli scenari, lo strumento di non regressione
-   `Test/Scenario_Baseline.py` con il processo di non regressione (§8.7), i test aggiunti (§8.8), gli scenari
-   della fase F4 e la riprogettazione dei test S3 e S5 (§8.9).
+   `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 918 esecuzioni
+   (§8.7), i test aggiunti (§8.8), gli scenari della fase F4 (§8.9), **gli scenari S22-S27 e i test delle fasi F5, F6 e
+   G1-G5 (§8.10)**.
 9. [Limiti noti, punti di estensione e divergenze codice/wiki](10_Limiti_Estensioni_Divergenze.md) —
-   limiti nuovi e superati (compresi quelli introdotti dalla fase F4), stato del piano della Missione F0-F9
-   (§9.5), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce).
+   limiti nuovi e superati (compresi quelli della fase F4 e delle fasi F5, F6 e G1-G5), stato del piano della Missione F0-F9
+   e dei passi G1-G5 (§9.5), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce).
 
 ## Elenco dei diagrammi
 
@@ -194,7 +243,7 @@ parametro `grounded`.
 | D16 | Modello dei tipi della Missione (`Mission`, `MissionAsset`, `MissionWaypoint`, ...) | `classDiagram` | 2 |
 | D17 | Esiti della Missione (`MissionOutcome`, `AssetMissionOutcome`) | `classDiagram` | 2 |
 | D18 | I due assi: postura tattica e tipo di missione | `flowchart LR` | 2 |
-| D19 | Esito di missione, prima forma | `flowchart TD` | 6 |
+| D19 | Esito di missione, regola unica (era: prima forma) | `flowchart TD` | 6 |
 | D20 | Pipeline di `Mission_Adapter` | `flowchart TD` | 6 |
 | D21 | Offset di formazione ai cambi di direzione | `flowchart TD` | 6 |
 | D22 | Composizione della soglia di rottura B(t) | `flowchart TD` | 4 |
@@ -204,7 +253,7 @@ parametro `grounded`.
 | D26 | Dottrina di tiro: bersagli bloccati, attesa, round-robin (saturazione per dominio) | `flowchart TD` | 4 |
 | D27 | Regola R-INT: traccia del colpo e tempo di reazione | `flowchart TD` | 4 |
 | D28 | `Air_Defense_Efficacy`: profili, dati RWR, funzioni | `classDiagram` | 7 |
-| D29 | Fasi F0-F9 del piano della Missione | `flowchart LR` | 9 |
+| D29 | Fasi F0-F9 del piano della Missione e passi G1-G5 | `flowchart LR` | 9 |
 | D30 | La vista di missione `MissionForce` e ciò che il risolutore ne legge | `classDiagram` | 6 |
 | D31 | Come `_engagement_forces` costruisce le forze di un blocco | `flowchart TD` | 6 |
 | D32 | Che cosa condivide un dominio di coordinamento e che cosa resta per forza | `flowchart LR` | 4 |
@@ -212,10 +261,16 @@ parametro `grounded`.
 | D34 | Come l'insieme `grounded` attraversa scheduler, risolutore e fire control | `flowchart TD` | 4 |
 | D35 | Regole di unione di `coordination_domains` | `flowchart TD` | 6 |
 | D36 | Postura continua di un asset senza missione | `flowchart TD` | 6 |
+| D37 | Fine di attività: come il risolutore applica `ActivityCriteria` | `flowchart TD` | 4 |
+| D38 | Albero di decisione al bingo (`Fuel_Model.bingo_decision`) | `flowchart TD` | 5 |
+| D39 | Tipi di `Fuel_Model` (`FuelEvent`, `FuelExhaustion`, `ReturnRule`, `BingoPoint`, `BingoDecision`) | `classDiagram` | 5 |
+| D40 | Ciclo episodio → ri-pianificazione → ri-scheduling dei contatti → contabilità del carburante | `sequenceDiagram` | 6 |
+| D41 | Ciclo di vita di un aereo di missione in sessione | `stateDiagram-v2` | 6 |
+| D42 | Composizione dei tratti di un asset prima dello scheduler (bingo alla partenza, esaurimento) | `flowchart TD` | 6 |
 
-I diagrammi D1, D2, D4, D5, D6, D8 e D9 erano già stati **aggiornati** a `533cd1f5` e lo sono stati di nuovo
-a `84a47670` (nuovi campi, passi e stati della fase F4), così come D29 (stato del piano); a `84a47670` sono stati
-aggiornati anche D10, D20, D23, D24, D25 e D26 (aereo a terra, regola A, percezione, intercettori e saturazione
-per dominio). I diagrammi D30-D36 sono **nuovi** e numerati in
-coda. Il D3 (scheduler: tipi) e il D7 (stati di salute) sono invariati; il D6 cambia solo nella nota sulle forze
-che non possono ritirarsi.
+I diagrammi D30-D36 sono quelli della fase F4 (a `84a47670`). **Aggiornati a `a784a9e7`**: D1 (il carburante è dell'orchestratore,
+non del risolutore), D2 (`postures`), D3 (`GroundedSchedule`), D4 (`ActivityCriteria`, `ActivityEnd`, `activity_ends`), D8 e D9
+(episodi, ri-pianificazione, passo finale del carburante), D17 (`crew_recovered`, `AssetEndReason`, nuovi motivi di aborto),
+D19 (esito di missione a regola unica: sostituisce la «prima forma»), D20 (attese e presenza), D29 (fasi F5, F6, G1-G5 fatte),
+D34 (`GroundedSchedule`), D36 (postura nell'esito). Sono **nuovi** D37-D42. D5, D6, D7, D10-D16, D18, D21-D28 e D30-D33, D35
+sono invariati.
