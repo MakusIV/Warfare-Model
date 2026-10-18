@@ -274,9 +274,19 @@ all'uguaglianza esatta (e al rumore `Fuel_Model._FUEL_EPS`). Il G1 resta il cont
 che annuncia cosa fara' l'esecutore (istante e decisione dell'albero). Il tipo di missione per l'albero e'
 `is_transfer_mission` (categoria TRANSPORT della mappa di Context; ogni altro tipo = combattimento).
 
+**F7a, regole d'ingaggio di missione (decisioni dell'utente del 2026-10-18).** `designated_targets`,
+`weapon_policies` e `target_rules` traducono bersaglio, ROE e armi designate della missione nelle forme che il
+motore consuma (`Fire_Control.WeaponPolicy` per lo strato W, `Engagement_Resolver.TargetRules` per lo strato T):
+il risolutore e la fire control non leggono mai la `Mission`. Bersaglio designato = i NEMICI della missione
+(ASSET: l'asset; GROUP: gli asset del blocco, della missione o l'asset stesso, ristretti da `Target.asset_ids`;
+POINT/AREA/ZONE: area orizzontale con raggio efficace = raggio dichiarato, `TARGET_POINT_RADIUS_M` per un POINT
+senza raggio, piu' l'incertezza di una stima); un gruppo amico (scorta, trasporto) non designa nessuno.
+`attack_point` da' alle regole `priority_designated` il punto ATTACK della missione sulla rotta dell'asset (con
+l'offset di formazione): il risolutore ne ricava il passaggio dai tratti reali (fine dell'attacco).
+
 ## Cosa NON fa
 - Nessun circuito d'orbita (v. sopra); il carburante non e' calcolato qui (`Fuel_Model`, F6-A).
-- Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F6-F7.
+- Non usa ruoli ne' criteri di fine; regole e bersaglio solo per le regole d'ingaggio della F7a (v. sopra).
 - Nessun rientro (RTB) nella rotta: un aereo che non atterra su una base vera esce di scena; il rientro
   al bingo lo costruisce la sessione (F6-B2, `Session_Simulator`, "Bingo"; dal G2 dalla decisione di
   `mission_bingo_decision`).
@@ -298,14 +308,27 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     Operation,
     StartConditionKind,
     StartMode,
+    TargetKind,
+    TargetProvenance,
     WaypointRole,
     route_waypoints,
 )
-from Code.Dynamic_War_Manager.Source.Context.Context import Ground_Action, Mission_Category, Sea_Task, postures_for
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+from Code.Dynamic_War_Manager.Source.Context.Context import (
+    Ground_Action,
+    Mission_Category,
+    Sea_Task,
+    TARGET_CLASS_AIR,
+    WEAPON_RULE_SELF_DEFENCE,
+    mission_weapon_policy,
+    postures_for,
+)
 from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
+from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+from Code.Dynamic_War_Manager.Source.Logic import Fire_Control as FC
 from Code.Dynamic_War_Manager.Source.Logic import Fuel_Model as FM
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class
@@ -360,6 +383,11 @@ DESTROYED_POSTURE = 'destroyed'
 # negli aeroporti delle carte DCS, es. 2900 m) con le installazioni a lato. Da sostituire con il
 # perimetro reale della base quando arrivera' il modulo mappe.
 AIR_BASE_AREA_RADIUS_M = 3_000.0
+
+# Raggio efficace [m] di un bersaglio POINT dichiarato senza raggio (F7a, designazione geometrica, decisione 11
+# del 2026-10-18). STIMA DI PROGETTO, non un dato: ordine di grandezza dell'errore di un punto d'impatto/di
+# posizione per un obiettivo puntiforme (un compound, una batteria); da ricalibrare con i dati di precisione.
+TARGET_POINT_RADIUS_M = 500.0
 
 # F5, due interruttori separati (F5-B, 2026-10-12), cosi' che la fotografia di ogni passo attribuisca
 # le differenze a una sola causa:
@@ -1774,3 +1802,172 @@ def coordination_domains(forces: Mapping[str, object], operations: Iterable[Oper
         members.setdefault(find(('force', force_id)), []).append(force_id)
 
     return {force_id: min(group) for group in members.values() for force_id in group}
+
+
+# ── REGOLE D'INGAGGIO DI MISSIONE (F7a) ───────────────────────────────────────
+
+def _asset_sides(blocks: Mapping[str, object]) -> Dict[str, Optional[str]]:
+    """`{asset_id: lato del blocco proprietario}` di tutti gli asset dei blocchi passati."""
+    sides: Dict[str, Optional[str]] = {}
+
+    for block in blocks.values():
+        side = getattr(block, 'side', None)
+
+        for asset in (getattr(block, 'assets', None) or {}).values():
+            asset_id = _domain_id(asset)
+
+            if asset_id is not None:
+                sides[asset_id] = side
+
+    return sides
+
+
+def designated_targets(mission: Mission, blocks: Mapping[str, object], mission_of: Mapping[str, Mission],
+                       assets: Mapping[str, object], side: Optional[str]
+                       ) -> Tuple[FrozenSet[str], Optional[Tuple[float, float, float]]]:
+    """Il bersaglio designato dalla missione (F7a, v. "F7a" nel docstring): `(id degli asset nemici, area)`.
+
+    Args:
+        mission: la missione; `side` e' il lato dei suoi asset (i nemici sono gli asset di lato diverso).
+        blocks: `{block_id: blocco}` delle forze della sessione; `mission_of`: `{mission_id: Mission}`;
+            `assets`: `{asset_id: asset}` di tutte le forze.
+
+    Returns:
+        ASSET: l'asset `target_id` se nemico. GROUP: gli asset del blocco `target_id`, oppure della missione
+        `target_id`, oppure l'asset stesso, ristretti a `Target.asset_ids` se dichiarato, SEMPRE filtrati ai
+        nemici (un gruppo amico, come la missione protetta di una scorta, non designa nessuno). Id sconosciuto:
+        insieme vuoto con un warning. POINT/AREA/ZONE: `(x, y, raggio efficace)` orizzontali, raggio =
+        `radius_m` (POINT senza raggio: `TARGET_POINT_RADIUS_M`) + `uncertainty_m` se la provenienza e'
+        ESTIMATED; nessun id. NONE: niente.
+    """
+    target = mission.target
+
+    if target.kind is TargetKind.NONE:
+        return frozenset(), None
+
+    if target.kind in (TargetKind.POINT, TargetKind.AREA, TargetKind.ZONE):
+        radius = target.radius_m if target.radius_m else \
+            (TARGET_POINT_RADIUS_M if target.kind is TargetKind.POINT else 0.0)
+
+        if target.provenance is TargetProvenance.ESTIMATED:
+            radius += target.uncertainty_m
+
+        return frozenset(), (float(target.position.x), float(target.position.y), float(radius))
+
+    target_id = target.target_id
+
+    if target.kind is TargetKind.GROUP and target_id in blocks:
+        members = frozenset(asset_id for asset_id in (_domain_id(a) for a in
+                                                      (getattr(blocks[target_id], 'assets', None) or {}).values())
+                            if asset_id is not None)
+    elif target.kind is TargetKind.GROUP and target_id in mission_of:
+        members = frozenset(mission_of[target_id].asset_ids)
+    elif target_id in assets:
+        members = frozenset((target_id,))
+    else:
+        logger.warning(f"designated_targets: mission {mission.mission_id!r}: target {target_id!r} matches no "
+                       f"asset, block or mission passed: it designates nothing")
+        return frozenset(), None
+
+    if target.asset_ids:
+        unknown = sorted(set(target.asset_ids) - members)
+
+        if unknown:
+            logger.warning(f"designated_targets: mission {mission.mission_id!r}: asset_ids {unknown} are not "
+                           f"in the target group {target_id!r}, ignored")
+
+        members = members & frozenset(target.asset_ids)
+
+    sides = _asset_sides(blocks)
+    enemies = frozenset(asset_id for asset_id in members if sides.get(asset_id) != side)
+
+    if members and not enemies:
+        logger.info(f"designated_targets: mission {mission.mission_id!r}: the target {target_id!r} is not "
+                    f"hostile (side {side!r}): it designates nothing")
+
+    return enemies, None
+
+
+def weapon_policies(missions: Iterable[Mission], assets: Mapping[str, object]) -> Dict[str, FC.WeaponPolicy]:
+    """`{asset_id: WeaponPolicy}` degli asset delle missioni la cui politica d'armi ha vincoli (F7a, strato W).
+
+    Solo le missioni aeree hanno una politica (`Context.mission_weapon_policy`; terra e mare None nella F7a).
+    `self_escort` dell'asset viene dal suo loadout ASSEGNATO (`AIRCRAFT_LOADOUTS[modello][loadout]
+    ['self_escort_capability']`), False se manca. Gli asset non passati in `assets` sono saltati.
+    """
+    policies: Dict[str, FC.WeaponPolicy] = {}
+
+    for mission in missions:
+        rules = mission_weapon_policy(mission.domain, mission.mission_type)
+
+        if rules is None:
+            continue
+
+        for mission_asset in mission.assets:
+            asset = assets.get(mission_asset.asset_id)
+
+            if asset is None:
+                continue
+
+            loadout = (AIRCRAFT_LOADOUTS.get(getattr(asset, '_model', None), {})
+                       .get(getattr(asset, 'assigned_loadout', None)) or {})
+            policies[mission_asset.asset_id] = FC.WeaponPolicy(
+                mission_id=mission.mission_id, domain=mission.domain, rules=rules,
+                self_escort=bool(loadout.get('self_escort_capability', False)))
+
+    return policies
+
+
+def attack_point(mission: Mission, mission_asset: MissionAsset) -> Optional[Tuple[float, float, float]]:
+    """Posizione `(x, y, z)` del punto ATTACK della missione sulla rotta DELL'ASSET (con l'offset di formazione),
+    per la fine dell'attacco di `priority_designated` (F7a). Se la missione ha piu' punti ATTACK vale l'ultimo
+    (l'attacco finisce dopo l'ultimo). None se la missione e' senza punto ATTACK o la rotta dell'asset non e'
+    ricavabile: l'aereo resta allora in fase di avvicinamento (comportamento conservativo)."""
+    indices = [index for index, waypoint in enumerate(mission.waypoints) if waypoint.role is WaypointRole.ATTACK]
+
+    if not indices:
+        return None
+
+    try:
+        route, _ = asset_route(mission, mission_asset)
+        points = route_waypoints(route) if route is not None else ()
+    except ValueError:
+        return None
+
+    if len(points) != len(mission.waypoints):
+        return None
+
+    return _xyz(points[indices[-1]].point)
+
+
+def target_rules(missions: Iterable[Mission], blocks: Mapping[str, object], mission_of: Mapping[str, Mission],
+                 assets: Mapping[str, object], side_of: Mapping[str, Optional[str]]
+                 ) -> Dict[str, ER.TargetRules]:
+    """`{asset_id: TargetRules}` per il risolutore (F7a, strato T).
+
+    Crea una regola SOLO per gli asset la cui missione ha una ROE diversa da `weapon_free` OPPURE armi
+    designate (`MissionAsset.designated_weapons`) non vuote: senza, nessuna voce e il risolutore e' identico a
+    quello di prima. `side_of` e' `{block_id: lato}`; `air_self_defence` vale True se la politica d'armi della
+    missione ha l'autodifesa (`self_defence`) per la classe aria.
+    """
+    rules: Dict[str, ER.TargetRules] = {}
+
+    for mission in missions:
+        roe = mission.rules.roe
+        wanted = [mission_asset for mission_asset in mission.assets
+                  if roe != ER.ROE_WEAPON_FREE or mission_asset.designated_weapons]
+
+        if not wanted:
+            continue
+
+        ids, area = designated_targets(mission, blocks, mission_of, assets, side_of.get(mission.block_id))
+        policy = mission_weapon_policy(mission.domain, mission.mission_type)
+        self_defence = policy is not None and policy.get(TARGET_CLASS_AIR) == WEAPON_RULE_SELF_DEFENCE
+
+        for mission_asset in wanted:
+            rules[mission_asset.asset_id] = ER.TargetRules(
+                roe=roe, designated_ids=ids, designated_area=area,
+                designated_weapons=frozenset(mission_asset.designated_weapons), air_self_defence=self_defence,
+                attack_point=attack_point(mission, mission_asset) if roe == ER.ROE_PRIORITY_DESIGNATED else None)
+
+    return rules

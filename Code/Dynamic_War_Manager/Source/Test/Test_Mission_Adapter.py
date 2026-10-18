@@ -1382,3 +1382,206 @@ class TestMissionFuelMinimum(_Base):
 
         self.assertNotIn('check_mission_fuel', inspect.getsource(SS))
 
+
+# ── REGOLE D'INGAGGIO DI MISSIONE (F7a) ───────────────────────────────────────
+
+class _EngagementAsset:
+    def __init__(self, asset_id, model=None, loadout=None):
+        self.id = asset_id
+        self._model = model
+        self.assigned_loadout = loadout
+
+
+class _EngagementBlock:
+    def __init__(self, block_id, side, assets):
+        self.id = block_id
+        self.side = side
+        self.assets = {asset.id: asset for asset in assets}
+
+
+class _EngagementRulesBase(_Base):
+    """Rossi: blocco 'Red-Line' (r1, r2, r3); Blu: 'Blue-CAS' (a1 A-10C, a2 F-16C)."""
+
+    def setUp(self):
+        super().setUp()
+        self.red_assets = [_EngagementAsset(f'r{i}') for i in (1, 2, 3)]
+        self.a1 = _EngagementAsset('a1', 'A-10C Thunderbolt II', 'Maverick/Gun CAS')
+        self.a2 = _EngagementAsset('a2', 'F-16C Block 52d', 'Strike')
+        self.blocks = {'Red-Line': _EngagementBlock('Red-Line', 'Red', self.red_assets),
+                       'Blue-CAS': _EngagementBlock('Blue-CAS', 'Blue', [self.a1, self.a2])}
+        self.assets = {asset.id: asset for block in self.blocks.values() for asset in block.assets.values()}
+        self.side_of = {block_id: block.side for block_id, block in self.blocks.items()}
+
+    @staticmethod
+    def group(target_id, **kwargs):
+        return MT.Target(kind=MT.TargetKind.GROUP, target_id=target_id, provenance=MT.TargetProvenance.OBSERVED,
+                         observed_at=0.0, **kwargs)
+
+    def mission(self, target, mission_id='m1', mission_type='CAS', assets=None, **overrides):
+        route = _route([(0, 0, 3000), (40_000, 0, 3000)])
+        return MT.Mission(mission_id=mission_id, block_id='Blue-CAS', domain='air', mission_type=mission_type,
+                          assets=assets or (MT.MissionAsset('a1', 'lead'), MT.MissionAsset('a2', 'wingman')),
+                          target=target, route=route, waypoints=_plan(route), start_time=0.0,
+                          start_mode=MT.StartMode.AIR, **overrides)
+
+    def designated(self, mission, missions=()):
+        mission_of = {m.mission_id: m for m in (mission,) + tuple(missions)}
+        return MA.designated_targets(mission, self.blocks, mission_of, self.assets, 'Blue')
+
+
+class TestDesignatedTargets(_EngagementRulesBase):
+
+    def test_asset_target(self):
+        target = MT.Target(kind=MT.TargetKind.ASSET, target_id='r2', provenance=MT.TargetProvenance.OBSERVED,
+                           observed_at=0.0)
+        self.assertEqual(self.designated(self.mission(target)), (frozenset({'r2'}), None))
+
+    def test_group_of_a_block_a_mission_or_an_asset(self):
+        self.assertEqual(self.designated(self.mission(self.group('Red-Line'))), (frozenset({'r1', 'r2', 'r3'}), None))
+        red_mission = MT.Mission(mission_id='red-m', block_id='Red-Line', domain='ground', mission_type='Defense',
+                                 assets=(MT.MissionAsset('r1', 'lead'), MT.MissionAsset('r3', 'main')),
+                                 target=MT.Target(kind=MT.TargetKind.ZONE, position=Point3D(0, 0, 0), radius_m=100.0),
+                                 start_time=0.0)
+        self.assertEqual(self.designated(self.mission(self.group('red-m')), (red_mission,)),
+                         (frozenset({'r1', 'r3'}), None))
+        self.assertEqual(self.designated(self.mission(self.group('r3'))), (frozenset({'r3'}), None))
+
+    def test_asset_ids_restrict_the_group(self):
+        mission = self.mission(self.group('Red-Line', asset_ids=('r1', 'r3')))
+        self.assertEqual(self.designated(mission), (frozenset({'r1', 'r3'}), None))
+        # id fuori dal gruppo: ignorato con un warning.
+        outside = self.mission(self.group('Red-Line', asset_ids=('r1', 'ghost')))
+        self.assertEqual(self.designated(outside), (frozenset({'r1'}), None))
+
+    def test_friendly_group_designates_nothing(self):
+        """Scorta (S18, S19): il bersaglio e' la missione protetta, amica."""
+        strike = self.mission(self.group('Blue-CAS'), mission_id='strike')
+        escort = self.mission(self.group('strike'), mission_id='escort', mission_type='Escort')
+        self.assertEqual(self.designated(escort, (strike,)), (frozenset(), None))
+        self.assertEqual(self.designated(self.mission(self.group('Blue-CAS'))), (frozenset(), None))
+
+    def test_unknown_target_designates_nothing(self):
+        self.assertEqual(self.designated(self.mission(self.group('nowhere'))), (frozenset(), None))
+
+    def test_point_with_and_without_radius(self):
+        point = lambda **kw: MT.Target(kind=MT.TargetKind.POINT, position=Point3D(100, 200, 0), **kw)
+        self.assertEqual(self.designated(self.mission(point())), (frozenset(), (100.0, 200.0, MA.TARGET_POINT_RADIUS_M)))
+        self.assertEqual(self.designated(self.mission(point(radius_m=120.0))), (frozenset(), (100.0, 200.0, 120.0)))
+        self.assertEqual(MA.TARGET_POINT_RADIUS_M, 500.0)
+
+    def test_estimated_position_adds_its_uncertainty(self):
+        estimated = MT.Target(kind=MT.TargetKind.POINT, position=Point3D(0, 0, 0),
+                              provenance=MT.TargetProvenance.ESTIMATED, estimated_at=-60.0, uncertainty_m=200.0)
+        self.assertEqual(self.designated(self.mission(estimated))[1], (0.0, 0.0, MA.TARGET_POINT_RADIUS_M + 200.0))
+        area = MT.Target(kind=MT.TargetKind.AREA, position=Point3D(10, 20, 0), radius_m=1_000.0,
+                         provenance=MT.TargetProvenance.ESTIMATED, estimated_at=-60.0, uncertainty_m=300.0)
+        self.assertEqual(self.designated(self.mission(area))[1], (10.0, 20.0, 1_300.0))
+        zone = MT.Target(kind=MT.TargetKind.ZONE, position=Point3D(10, 20, 0), radius_m=20_000.0)
+        self.assertEqual(self.designated(self.mission(zone)), (frozenset(), (10.0, 20.0, 20_000.0)))
+
+    def test_no_target(self):
+        mission = self.mission(MT.Target.none(), mission_type='Recon')
+        self.assertEqual(self.designated(mission), (frozenset(), None))
+
+
+class TestTargetRulesOfMissions(_EngagementRulesBase):
+
+    def rules(self, *missions):
+        mission_of = {m.mission_id: m for m in missions}
+        return MA.target_rules(missions, self.blocks, mission_of, self.assets, self.side_of)
+
+    def test_no_entry_for_weapon_free_without_weapons(self):
+        self.assertEqual(self.rules(self.mission(self.group('Red-Line'))), {})
+
+    def test_roe_and_designation_per_asset(self):
+        mission = self.mission(self.group('Red-Line', asset_ids=('r1',)), rules=MT.MissionRules(roe='only_designated'))
+        rules = self.rules(mission)
+        self.assertEqual(set(rules), {'a1', 'a2'})
+        self.assertEqual(rules['a1'].roe, 'only_designated')
+        self.assertEqual(rules['a1'].designated_ids, frozenset({'r1'}))
+        self.assertTrue(rules['a1'].air_self_defence)      # CAS: autodifesa aerea
+        self.assertEqual(rules['a1'].known_hostile_ids, frozenset())
+
+    def test_designated_weapons_alone_create_the_rule_for_that_asset_only(self):
+        mission = self.mission(self.group('Red-Line'), assets=(MT.MissionAsset('a1', 'lead', weapons=('AGM-65D',)),
+                                                              MT.MissionAsset('a2', 'wingman')))
+        rules = self.rules(mission)
+        self.assertEqual(set(rules), {'a1'})
+        self.assertEqual(rules['a1'].roe, 'weapon_free')
+        self.assertEqual(rules['a1'].designated_weapons, frozenset({'AGM-65D'}))
+
+    def test_attack_profile_weapon_is_implicit(self):
+        from Code.Dynamic_War_Manager.Source.Command.Attack_Types import AttackProfile
+        profile = AttackProfile(target_id=None, target_point=Point3D(0, 0, 0), weapon='Mk-82', feasible=False)
+        mission = self.mission(self.group('Red-Line'), assets=(MT.MissionAsset('a1', 'lead', attack_profile=profile),))
+        self.assertEqual(self.rules(mission)['a1'].designated_weapons, frozenset({'Mk-82'}))
+
+    def test_air_self_defence_follows_the_weapon_policy(self):
+        cap = self.mission(self.group('Red-Line'), mission_type='CAP', rules=MT.MissionRules(roe='only_designated'))
+        self.assertFalse(self.rules(cap)['a1'].air_self_defence)
+
+    def test_area_rule_for_a_point_target(self):
+        zone = MT.Target(kind=MT.TargetKind.ZONE, position=Point3D(10, 20, 0), radius_m=5_000.0)
+        mission = self.mission(zone, mission_type='CAP', rules=MT.MissionRules(roe='only_designated'))
+        rule = self.rules(mission)['a1']
+        self.assertEqual((rule.designated_ids, rule.designated_area), (frozenset(), (10.0, 20.0, 5_000.0)))
+
+
+class TestAttackPoint(_EngagementRulesBase):
+    """F7a: punto ATTACK sulla rotta dell'asset (fine dell'attacco di `priority_designated`)."""
+
+    def mission_with_roles(self, roles, assets=None):
+        route = _route([(0, 0, 3000), (10_000, 0, 3000), (20_000, 0, 3000)][:len(roles)])
+        waypoints = tuple(MT.MissionWaypoint(waypoint=w, role=r) for w, r in zip(MT.route_waypoints(route), roles))
+        return MT.Mission(mission_id='m1', block_id='Blue-CAS', domain='air', mission_type='CAS',
+                          assets=assets or (MT.MissionAsset('a1', 'lead'), MT.MissionAsset('a2', 'wingman', right_m=200.0)),
+                          target=self.group('Red-Line'), route=route, waypoints=waypoints, start_time=0.0,
+                          start_mode=MT.StartMode.AIR, rules=MT.MissionRules(roe='priority_designated'))
+
+    def test_attack_point_with_the_formation_offset(self):
+        mission = self.mission_with_roles([MT.WaypointRole.NAV, MT.WaypointRole.ATTACK, MT.WaypointRole.LAND])
+        self.assertEqual(MA.attack_point(mission, mission.assets[0]), (10_000.0, 0.0, 3000.0))
+        self.assertEqual(MA.attack_point(mission, mission.assets[1]), (10_000.0, -200.0, 3000.0))   # destra = sud
+
+    def test_the_last_attack_waypoint_wins_and_none_without_one(self):
+        two = self.mission_with_roles([MT.WaypointRole.ATTACK, MT.WaypointRole.ATTACK, MT.WaypointRole.LAND])
+        self.assertEqual(MA.attack_point(two, two.assets[0]), (10_000.0, 0.0, 3000.0))
+        none = self.mission_with_roles([MT.WaypointRole.NAV, MT.WaypointRole.NAV, MT.WaypointRole.LAND])
+        self.assertIsNone(MA.attack_point(none, none.assets[0]))
+
+    def test_only_priority_designated_rules_carry_the_attack_point(self):
+        mission = self.mission_with_roles([MT.WaypointRole.NAV, MT.WaypointRole.ATTACK, MT.WaypointRole.LAND])
+        rules = MA.target_rules([mission], self.blocks, {'m1': mission}, self.assets, self.side_of)
+        self.assertEqual(rules['a1'].attack_point, (10_000.0, 0.0, 3000.0))
+        only = self.mission_with_roles([MT.WaypointRole.NAV, MT.WaypointRole.ATTACK, MT.WaypointRole.LAND])
+        only = MT.Mission(**{**only.__dict__, 'rules': MT.MissionRules(roe='only_designated')})
+        self.assertIsNone(MA.target_rules([only], self.blocks, {'m1': only}, self.assets, self.side_of)['a1'].attack_point)
+
+
+class TestWeaponPolicies(_EngagementRulesBase):
+
+    def test_self_escort_comes_from_the_assigned_loadout(self):
+        policies = MA.weapon_policies([self.mission(self.group('Red-Line'))], self.assets)
+        self.assertEqual(set(policies), {'a1', 'a2'})
+        self.assertFalse(policies['a1'].self_escort)       # 'Maverick/Gun CAS': anomalia di dato, decisione 8
+        self.assertTrue(policies['a2'].self_escort)        # F-16C 'Strike'
+        self.assertEqual((policies['a1'].mission_id, policies['a1'].domain), ('m1', 'air'))
+        self.assertEqual(policies['a1'].rules['surface'], frozenset({'CAS', 'Strike'}))
+
+    def test_unknown_loadout_has_no_self_defence_and_unknown_assets_are_skipped(self):
+        stranger = _EngagementAsset('a1', 'A-10C Thunderbolt II', 'No such loadout')
+        mission = self.mission(self.group('Red-Line'))
+        policies = MA.weapon_policies([mission], {'a1': stranger})
+        self.assertEqual(set(policies), {'a1'})
+        self.assertFalse(policies['a1'].self_escort)
+
+    def test_ground_and_sea_missions_have_no_policy(self):
+        ground = MT.Mission(mission_id='g', block_id='Red-Line', domain='ground', mission_type='Defense',
+                            assets=(MT.MissionAsset('r1', 'lead', weapons=('2A42',)),),
+                            target=MT.Target(kind=MT.TargetKind.ZONE, position=Point3D(0, 0, 0), radius_m=100.0),
+                            start_time=0.0)
+        self.assertEqual(MA.weapon_policies([ground], self.assets), {})
+        # le armi designate valgono per tutti i domini (strato T)
+        rules = MA.target_rules([ground], self.blocks, {}, self.assets, self.side_of)
+        self.assertEqual(rules['r1'].designated_weapons, frozenset({'2A42'}))
+

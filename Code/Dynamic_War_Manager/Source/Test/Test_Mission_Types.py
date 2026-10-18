@@ -172,6 +172,32 @@ class TestTarget(_LoggerMock, unittest.TestCase):
         with self.assertRaises(ValueError):
             MT.Target(kind='building')
 
+    # F7a, decisione 9: sottoinsieme esplicito del gruppo
+    def test_asset_ids_only_for_a_group(self):
+        group = MT.Target(kind=MT.TargetKind.GROUP, target_id='Red-Line', provenance='observed', observed_at=0,
+                          asset_ids=['a1', 'a2'])
+        self.assertEqual(group.asset_ids, ('a1', 'a2'))
+        self.assertEqual(MT.Target.none().asset_ids, ())
+
+        with self.assertRaises(ValueError):
+            MT.Target(kind=MT.TargetKind.ASSET, target_id='a', provenance='observed', observed_at=0,
+                      asset_ids=('a1',))
+
+        with self.assertRaises(ValueError):
+            MT.Target(kind=MT.TargetKind.ZONE, position=Point3D(0, 0, 0), radius_m=10, asset_ids=('a1',))
+
+    def test_asset_ids_distinct_non_empty_ids(self):
+        base = dict(kind=MT.TargetKind.GROUP, target_id='g', provenance='observed', observed_at=0)
+
+        with self.assertRaises(ValueError):
+            MT.Target(asset_ids=('a1', 'a1'), **base)
+
+        with self.assertRaises(TypeError):
+            MT.Target(asset_ids=('a1', ''), **base)
+
+        with self.assertRaises(TypeError):
+            MT.Target(asset_ids='a1', **base)
+
 
 # ── Azioni e waypoint ─────────────────────────────────────────────────────────
 
@@ -323,6 +349,36 @@ class TestMissionAsset(_LoggerMock, unittest.TestCase):
 
         with self.assertRaises(TypeError):
             MT.MissionAsset('a1', 'lead', attack_profile='profile')
+
+    # F7a, decisione 10: armi designate
+    def test_weapons_are_distinct_ids(self):
+        self.assertEqual(MT.MissionAsset('a1', 'lead', weapons=['AGM-65D', 'Mk-82']).weapons, ('AGM-65D', 'Mk-82'))
+        self.assertEqual(MT.MissionAsset('a1', 'lead').weapons, ())
+
+        with self.assertRaises(ValueError):
+            MT.MissionAsset('a1', 'lead', weapons=('AGM-65D', 'AGM-65D'))
+
+        with self.assertRaises(TypeError):
+            MT.MissionAsset('a1', 'lead', weapons=('',))
+
+        with self.assertRaises(TypeError):
+            MT.MissionAsset('a1', 'lead', weapons='AGM-65D')
+
+    def test_attack_profile_weapon_must_be_among_the_weapons(self):
+        profile = AttackProfile(target_id=None, target_point=Point3D(0, 0, 0), weapon='Mk-82', feasible=False)
+
+        with self.assertRaises(ValueError):
+            MT.MissionAsset('a1', 'lead', attack_profile=profile, weapons=('AGM-65D',))
+
+        MT.MissionAsset('a1', 'lead', attack_profile=profile, weapons=('AGM-65D', 'Mk-82'))
+
+    def test_designated_weapons_in_the_three_cases(self):
+        profile = AttackProfile(target_id=None, target_point=Point3D(0, 0, 0), weapon='Mk-82', feasible=False)
+        self.assertEqual(MT.MissionAsset('a1', 'lead', weapons=('AGM-65D',)).designated_weapons, ('AGM-65D',))
+        self.assertEqual(MT.MissionAsset('a1', 'lead', attack_profile=profile).designated_weapons, ('Mk-82',))
+        self.assertEqual(MT.MissionAsset('a1', 'lead', attack_profile=profile,
+                                         weapons=('Mk-82', 'AGM-65D')).designated_weapons, ('Mk-82', 'AGM-65D'))
+        self.assertEqual(MT.MissionAsset('a1', 'lead').designated_weapons, ())
 
     def test_bad_id_and_offset(self):
         with self.assertRaises(TypeError):

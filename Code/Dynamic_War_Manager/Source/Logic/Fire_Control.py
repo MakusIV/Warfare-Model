@@ -26,8 +26,9 @@ un elemento), quindi le fire control a tabella non cambiano.
      cannone di bordo (decisione A2, 2026-09-26): il campo `gun` di `Aircraft_Data` ->
      `AIR_WEAPONS` ('CANNONS'/'MACHINE_GUNS'), candidato se il loadout gli assegna colpi
      (`stores['gun_rounds']` > 0, ripartiti da `get_aircraft_gun_rounds`). Arma candidata
-     generica: nessun filtro per tipo di missione (A4). Senza loadout assegnato l'aereo non
-     ha armi candidate.
+     generica: la fire control dei registri non filtra per tipo di missione; lo fa l'involucro
+     `restrict_by_policy` (F7a, v. "Politica d'armi per tipo di missione"). Senza loadout
+     assegnato l'aereo non ha armi candidate.
    * qualunque altro asset (`Structure`, ...): nessuna arma, quindi None.
 2. **Chiave del bersaglio** (classe, dimensione):
    * aereo in volo: la sottoclasse di `Context.get_air_target_class` (dalla category del
@@ -143,6 +144,19 @@ costante nuove). Conseguenze, tutte dalla catena esistente:
   Shilka con 2000 colpi spara 40 raffiche, non 2000), 1 per tutte le altre. Un cannone
   senza `fire_rate` nel registro resta a 1 (non si sa se spari a raffiche).
 
+## Politica d'armi per tipo di missione (F7a, decisioni dell'utente del 2026-10-18)
+
+`Analysis/Document/Proposta_F7_Bersagli_Filtro_Armi.md` §2.4 e §5. Strato W delle regole d'ingaggio di
+missione: `restrict_by_policy(fire_control, policy_of)` e' un involucro PURO attorno a una fire control
+(quella dei registri o una a tabella) che, per i soli tiratori con una `WeaponPolicy` (asset di missioni
+aeree, `Mission_Adapter.weapon_policies`), toglie le opzioni che il tipo di missione non ammette contro la
+CLASSE del bersaglio (`target_class`: aereo, difesa aerea, nave, altra superficie). La tabella e'
+`Context.MISSION_WEAPON_POLICY` (scelta di progetto, non un dato tarato); il confronto e' sui TASK del
+registro d'arma (`weapon_tasks`). Politica del lancio: un'arma assente dai registri (`test:*`) non ha vincoli
+(stessa politica "non modellato = nessun vincolo" di munizioni e carburante); l'autodifesa aria-aria dei
+tipi aria-suolo vale solo se il loadout dichiara `self_escort_capability`. Il resto (bersaglio designato,
+ROE, armi designate) e' lo strato T nel risolutore (`Engagement_Resolver.TargetRules`).
+
 ## Memoizzazione
 
 La scelta e' una funzione PURA di (tiratore: classe, modello, loadout; bersaglio: chiave,
@@ -156,15 +170,18 @@ fredda). Le armi candidate sono memoizzate per (classe, modello, loadout).
 
 - Non modula la Pk con la posizione nell'inviluppo (distanza, aspetto): valori di template.
 - Non conta le munizioni: e' pura, e la scorta per arma la legge il risolutore (v. sopra).
-  L'ordine di preferenza non dipende dalla scorta residua ne' dalla missione (filtro ROE
-  per tipo di missione rimandato all'entita' `Mission`, decisione A4).
+  L'ordine di preferenza non dipende dalla scorta residua ne' dalla missione: il filtro per
+  tipo di missione (A4) e' dalla F7a l'involucro `restrict_by_policy`, che non cambia l'ordine.
 - Non modella il cannone degli aerei senza campo `gun` in Aircraft_Data (nessun cannone
   interno, o cannone non ancora nel registro: v. quel campo).
 - Non distingue stealth, contromisure o ECM (materia del rilevamento).
 - Nessun componente LLM, in nessuna forma; nessun uso del modulo `random`.
 """
 
-from typing import Callable, Dict, List, Optional, Tuple
+import dataclasses
+from collections import abc
+from types import MappingProxyType
+from typing import Callable, Dict, FrozenSet, List, Mapping, Optional, Tuple
 
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data, get_aircraft_gun_rounds
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
@@ -174,6 +191,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
 from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data
 from Code.Dynamic_War_Manager.Source.Context import Context
+from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
 from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import ShotSpec
 from Code.Dynamic_War_Manager.Source.Logic.Weapon_Delivery import bomb_engagement_estimate
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -303,6 +321,21 @@ def weapon_category(domain: str, model: Optional[str]) -> Optional[str]:
             return category
 
     return None
+
+
+def weapon_tasks(domain: str, model: Optional[str]) -> Optional[FrozenSet[str]]:
+    """Task del modello d'arma nel registro del dominio ('air' | 'ground' | 'sea'), con la stessa ricerca di
+    `weapon_category`; None se il modello non e' a registro (arma non modellata, es. `test:*`).
+
+    Un modello a registro senza elenco `task` valido ha l'insieme vuoto (nessun task dichiarato).
+    """
+    category = weapon_category(domain, model)
+
+    if category is None:
+        return None
+
+    tasks = _REGISTRY_BY_MISSION_DOMAIN[domain][category][model].get('task')
+    return frozenset(tasks) if isinstance(tasks, (list, tuple, set, frozenset)) else frozenset()
 
 
 # ── ARMI CANDIDATE ────────────────────────────────────────────────────────────
@@ -543,6 +576,27 @@ def target_key(target, grounded: bool = False) -> Optional[Tuple[Tuple[str, ...]
         return None
 
     return (Context.get_weapon_target_class(classification),), dimension, False
+
+
+def target_class(target, grounded: bool = False) -> str:
+    """Classe del bersaglio per la politica d'armi (F7a, `Context.TARGET_CLASSES`).
+
+    `air`: aereo in volo; `ship`: `Ship`; `air_defence`: `Vehicle` con `isSAM`, `isAAA` o `isEWR`
+    (le navi con SAM restano `ship`); `surface`: ogni altro bersaglio di superficie, compresi gli aerei a
+    terra (`grounded` True, F4c). Il tipo e' letto da `type(target).__name__`, come nel resto del modulo.
+    """
+    name = type(target).__name__
+
+    if name == 'Aircraft':
+        return Context.TARGET_CLASS_SURFACE if grounded else Context.TARGET_CLASS_AIR
+
+    if name == 'Ship':
+        return Context.TARGET_CLASS_SHIP
+
+    if name == 'Vehicle' and any(getattr(target, flag, False) for flag in ('isSAM', 'isAAA', 'isEWR')):
+        return Context.TARGET_CLASS_AIR_DEFENCE
+
+    return Context.TARGET_CLASS_SURFACE
 
 
 # ── FILTRI E SCELTA ───────────────────────────────────────────────────────────
@@ -808,3 +862,119 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
         return spec
 
     return fire_control
+
+
+# ── POLITICA D'ARMI PER TIPO DI MISSIONE (F7a) ───────────────────────────────
+
+@dataclasses.dataclass(frozen=True)
+class WeaponPolicy:
+    """Politica d'armi di UN asset di missione (v. "Politica d'armi per tipo di missione").
+
+    Attributes:
+        mission_id: missione dell'asset (informativo).
+        domain: dominio del registro d'arma in cui cercare i task ('air' | 'ground' | 'sea').
+        rules: `{classe del bersaglio: regola}` (`Context.MISSION_WEAPON_POLICY`): `WEAPON_RULE_ANY`,
+            `WEAPON_RULE_SELF_DEFENCE` o un insieme di task; mapping immutabile.
+        self_escort: il loadout dell'asset ha `self_escort_capability` (autodifesa aria-aria).
+    """
+    mission_id: str
+    domain: str
+    rules: Mapping[str, object]
+    self_escort: bool = False
+
+    def __post_init__(self):
+        object.__setattr__(self, 'rules', MappingProxyType(dict(self.rules)))
+
+    def allows(self, weapon: Optional[str], target_class_name: str) -> bool:
+        """L'arma `weapon` (modello) e' ammessa contro la classe `target_class_name`?
+
+        Arma assente dal registro (o None): True, nessun vincolo. Classe senza regola: False (non
+        ingaggiabile). `any`: True; `self_defence`: `self_escort`; insieme di task: intersezione non vuota
+        con i task dell'arma.
+        """
+        tasks = weapon_tasks(self.domain, weapon)
+
+        if tasks is None:
+            return True
+
+        rule = self.rules.get(target_class_name)
+
+        if rule is None:
+            return False
+
+        if rule == Context.WEAPON_RULE_ANY:
+            return True
+
+        if rule == Context.WEAPON_RULE_SELF_DEFENCE:
+            return self.self_escort
+
+        return bool(tasks & rule)
+
+
+def restrict_by_policy(fire_control: Callable, policy_of: Mapping[str, WeaponPolicy]) -> Callable:
+    """Involucro puro: `fire_control` con le opzioni ristrette dalla politica d'armi del tiratore (F7a).
+
+    Stessa firma della base; dichiara il parametro `target_grounded` solo se la base lo accetta
+    (`Engagement_Resolver.accepts_target_grounded`), cosi' l'introspezione del risolutore resta la stessa, e
+    inoltra `target_grounded=True` solo quando il risolutore lo passa (la chiamata alla base e' quella che il
+    risolutore farebbe da solo).
+
+    * Tiratore senza politica (id di dominio non in `policy_of`): il risultato della base, lo STESSO oggetto.
+    * Altrimenti le opzioni (None, una `ShotSpec` o una sequenza) sono filtrate con
+      `WeaponPolicy.allows(spec.weapon, target_class(target, grounded))`: tutte tenute = lo stesso oggetto
+      della base (memoizzazione e identita' invariate); nessuna tenuta = None; alcune = tupla delle tenute,
+      nello stesso ordine. Una risposta non valida della base e' lasciata passare (la rifiuta il risolutore).
+
+    Raises:
+        TypeError: `fire_control` non chiamabile o `policy_of` non una mappa.
+    """
+    if not callable(fire_control):
+        raise TypeError("fire_control must be callable")
+
+    if not isinstance(policy_of, abc.Mapping):
+        raise TypeError(f"policy_of must be a mapping asset_id -> WeaponPolicy, got {type(policy_of).__name__}")
+
+    def restrict(shooter, target, result, grounded: bool):
+        policy = policy_of.get(_asset_id(shooter))
+
+        if policy is None or result is None:
+            return result
+
+        if isinstance(result, ShotSpec):
+            options = (result,)
+        elif isinstance(result, (str, bytes)) or not isinstance(result, abc.Sequence) \
+                or not all(isinstance(option, ShotSpec) for option in result):
+            return result
+        else:
+            options = tuple(result)
+
+        tclass = target_class(target, grounded)
+        kept = tuple(option for option in options if policy.allows(option.weapon, tclass))
+
+        if len(kept) == len(options):
+            return result
+
+        return kept or None
+
+    if ER.accepts_target_grounded(fire_control):
+        def restricted(shooter, target, target_grounded: bool = False):
+            if target_grounded:
+                return restrict(shooter, target, fire_control(shooter, target, target_grounded=True), True)
+
+            return restrict(shooter, target, fire_control(shooter, target), False)
+    else:
+        def restricted(shooter, target):
+            return restrict(shooter, target, fire_control(shooter, target), False)
+
+    return restricted
+
+
+def _asset_id(asset) -> Optional[str]:
+    """Id di dominio di un asset (id, poi name): stesso criterio di `Engagement_Resolver._domain_id`."""
+    for attribute in ('id', 'name'):
+        value = getattr(asset, attribute, None)
+
+        if isinstance(value, str) and value:
+            return value
+
+    return None

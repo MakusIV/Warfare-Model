@@ -22,10 +22,15 @@ del Tor (12 km), quindi un Tor raggiungibile viene attaccato da fuori zona. Va v
 test unitario a geometria controllata del risolutore: Test_Engagement_Resolver.
   TestLauncherInsideInterceptionZone.
 
-Fire control: i registri veri (`Fire_Control.make_registry_fire_control`), ma l'A-10C spara
-solo AGM-65D. Con il criterio Pk/costo (A5) sceglierebbe la Mk-82AIR del loadout 'Maverick/Gun
-CAS', che non e' intercettabile e renderebbe lo scenario vuoto. Il filtro fa le veci del filtro
-per tipo di missione (A4, rimandato all'entita' Mission): missione anticarro con Maverick.
+Fire control: i registri veri (`Fire_Control.make_registry_fire_control`), senza filtri di test. Con il
+criterio Pk/costo (A5) l'A-10C sceglierebbe la Mk-82AIR del loadout 'Maverick/Gun CAS', che non e'
+intercettabile e renderebbe lo scenario vuoto: dalla F7a (regole d'ingaggio di missione, decisioni dell'utente
+del 2026-10-18) lo scenario dichiara cio' che prima facevano due filtri di test:
+  * missione CAS anticarro con Maverick: `MissionAsset.weapons=('AGM-65D',)` (arma designata: sul bersaglio
+    designato solo quella), con bersaglio GROUP 'Red-Line' (tutto il blocco);
+  * le varianti `_ifv_only` (gli aerei attaccano solo i BMP-2): bersaglio GROUP 'Red-Line' ristretto ai 3 BMP-2
+    (`Target.asset_ids`) e ROE `only_designated`, al posto dello stand-in `ifv_only`.
+La storia degli ingaggi e' identica a quella dei filtri (fotografia `Scenario_Baseline`, 24 esecuzioni).
 
 Dottrina: entrambi i lati ad oltranza (`BOTH_HOLD`), per isolare l'allocazione della difesa
 dal disingaggio alla prima perdita (difetto noto, §5.3 della proposta).
@@ -33,6 +38,7 @@ dal disingaggio alla prima perdita (difetto noto, §5.3 della proposta).
 
 import unittest
 
+from Code.Dynamic_War_Manager.Source.Command.Mission_Types import MissionRules, Target, TargetKind, TargetProvenance
 from Code.Dynamic_War_Manager.Source.Logic.Fire_Control import make_registry_fire_control
 from Code.Dynamic_War_Manager.Source.Test import Scenario_Fixtures as F
 from Code.Dynamic_War_Manager.Source.Test.Test_Session_Scenarios_S10_S18 import BOTH_HOLD
@@ -57,32 +63,7 @@ def _seeds(prefix: str, count: int):
     return [f'{prefix}-{index}' for index in range(count)]
 
 
-def maverick_only_fire_control():
-    """Fire control dei registri; per gli aerei restano le sole opzioni AGM-65D (v. docstring)."""
-    registry = make_registry_fire_control()
-
-    def fire_control(shooter, target):
-        result = registry(shooter, target)
-
-        if result is None or type(shooter).__name__ != 'Aircraft':
-            return result
-
-        options = result if isinstance(result, tuple) else (result,)
-        options = tuple(spec for spec in options if spec.weapon == MAVERICK)
-        return options or None
-
-    return fire_control
-
-
-def ifv_only(fire_control):
-    """Regola d'ingaggio di missione (stand-in di A4): gli aerei attaccano solo i BMP-2."""
-    def restricted(shooter, target):
-        if type(shooter).__name__ == 'Aircraft' and getattr(target, '_model', None) != 'BMP-2':
-            return None
-
-        return fire_control(shooter, target)
-
-    return restricted
+IFV_IDS = tuple(f'Red-Line/ifv{index}' for index in range(3))
 
 
 def build(defence_model: str, defence_x: float, defence_y: float, attackers: int):
@@ -96,18 +77,23 @@ def build(defence_model: str, defence_x: float, defence_y: float, attackers: int
 
 
 def run_variant(session_id: str, defence_model: str, defence_x: float, defence_y: float, attackers: int,
-                points, targets_ifv_only: bool = False):
+                points, targets_ifv_only: bool = False, runner=F.run):
+    """Una sessione della variante; `runner` e' `F.run` (default) o `F.run_with_salvos` (esito + salve)."""
     red, cas = build(defence_model, defence_x, defence_y, attackers)
-    fire_control = maverick_only_fire_control()
+    fire_control = make_registry_fire_control()
 
     if targets_ifv_only:
-        fire_control = ifv_only(fire_control)
+        target = Target(kind=TargetKind.GROUP, target_id='Red-Line', asset_ids=IFV_IDS,
+                        provenance=TargetProvenance.OBSERVED, observed_at=0.0)
+        rules = MissionRules(roe='only_designated')
+    else:
+        target, rules = F.group_target('Red-Line'), None
 
     # Con la rotta di standoff (virata a x = -11 km e ritorno) la formazione TRASLATA di prima
     # non e' un offset nella terna di marcia: ogni A-10C ha una missione propria.
-    missions = F.missions_for(cas, points, mission_type='CAS', target=F.group_target('Red-Line'))
-    outcome = F.run(session_id, [cas], [red], fire_control, duration=DURATION, missions=missions,
-                    thresholds=BOTH_HOLD)
+    missions = F.missions_for(cas, points, mission_type='CAS', target=target, weapons=(MAVERICK,), rules=rules)
+    outcome = runner(session_id, [cas], [red], fire_control, duration=DURATION, missions=missions,
+                     thresholds=BOTH_HOLD)
     return red, cas, outcome
 
 
@@ -222,6 +208,45 @@ class TestS19AirDefenceAllocation(F.LoggerSilencer, unittest.TestCase):
                 self.assertEqual(_interceptions(outcome, self.AD), 0)
 
         self.assertGreater(inside, 0)      # premessa: almeno un lancio da dentro la zona
+
+
+class TestS19MissionRulesReplaceTheTestFilters(F.LoggerSilencer, unittest.TestCase):
+    """F7a: le regole d'ingaggio di missione fanno cio' che facevano i filtri di test."""
+
+    AD = 'Red-Line/ad0'
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # (sessione, difesa, x, y, rotta, solo BMP-2): una per tipo di variante. NON in `Scenario_Baseline`
+        # (i metodi di test non sono eseguiti dalla fotografia).
+        cls.runs = {
+            'ifv_only': run_variant('S19-rules', '9K35-Strela-10', 1_000.0, -300.0, 4, OVERFLIGHT,
+                                    targets_ifv_only=True, runner=F.run_with_salvos),
+            'whole_line': run_variant('S19-rules', '9K35-Strela-10', 1_000.0, -300.0, 4, STANDOFF,
+                                      runner=F.run_with_salvos),
+        }
+
+    def test_aircraft_launch_only_the_designated_weapon(self):
+        """Premessa non vacua (salve degli A-10C) e nessuna arma diversa dal Maverick, in entrambe le varianti."""
+        for label, (_, cas, (_, salvos)) in self.runs.items():
+            with self.subTest(variant=label):
+                fired = [salvo for salvo in salvos if salvo.shooter_id in cas.assets]
+                self.assertTrue(fired)
+                self.assertEqual({salvo.spec.weapon for salvo in fired}, {MAVERICK})
+
+    def test_ifv_only_variant_never_fires_at_the_air_defence(self):
+        """`only_designated` su 3 BMP-2: nessuna salva degli A-10C sulla difesa aerea, e sui BMP si'."""
+        _, cas, (_, salvos) = self.runs['ifv_only']
+        targets = {salvo.target_id for salvo in salvos if salvo.shooter_id in cas.assets}
+        self.assertNotIn(self.AD, targets)
+        self.assertTrue(targets & set(IFV_IDS))
+
+    def test_whole_line_variant_may_target_the_air_defence(self):
+        """Controprova: con tutta la linea designata (ROE di default) la difesa aerea e' ingaggiabile."""
+        _, cas, (_, salvos) = self.runs['whole_line']
+        self.assertIn(self.AD, {salvo.target_id for salvo in salvos if salvo.shooter_id in cas.assets})
+
 
 if __name__ == '__main__':
     unittest.main()

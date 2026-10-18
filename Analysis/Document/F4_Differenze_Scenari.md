@@ -2354,3 +2354,121 @@ carburante per la rotta, continua consumando la riserva; (5) gli interruttori G3
   `test_bingo_after_the_second_episode_lands_on_the_alternate_base`, `test_transfer_continues_after_the_second_episode`,
   `test_switches_off`, `test_switches_do_not_change_who_fires`).
 - Suite completa: 4385 test OK (7 skipped), 10 nuovi rispetto ai 4375 del G4b (S26 +2, S27 +8).
+
+## F7a: regole d'ingaggio di missione (decisioni dell'utente del 2026-10-18)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` installata (918 esecuzioni, G1-G5). **Dopo**: la
+missione decide CHI si ingaggia e CON CHE ARMA (bersaglio designato, ROE, armi designate, politica d'armi per tipo di
+missione); S19AD migrato dai filtri di test alle regole di missione; nuovo S28 in coda alla tabella `UNITS` di
+`Scenario_Baseline.py`. Piano di intervento: `Proposta_F7_Bersagli_Filtro_Armi.md`, §5. `--compare`, 2026-10-18 su
+ProArt P16: **970 esecuzioni**.
+- Contro la fotografia (918): **918 IDENTICHE** (S19AD compreso: 24 su 24), **0 cambiate**, **52 nuove** (S28: 13
+  varianti x 4 seed). Esito atteso dal piano (§5.7): confermato. **Verifica 2026-10-18** (ProArt P16, sessione
+  principale, dopo le correzioni return_fire / priority_designated a due fasi): suite 4489 OK (7 skipped), stesso
+  esito, cattura identica a quella dell'agente. **Approvato dall'utente 2026-10-18**: fotografia 970 installata.
+
+### Il cambio
+
+1. **Due strati con interruttori indipendenti** (`Session_Simulator.F7_WEAPON_POLICY`, `F7_TARGET_RULES`, entrambi
+   attivi): spenti entrambi il comportamento e' esattamente quello precedente alla F7a, anche con missioni che
+   dichiarano ROE e armi.
+   - **Strato W, politica d'armi per tipo di missione** (`Context.MISSION_WEAPON_POLICY`, tabella confermata
+     dall'utente riga per riga; `Fire_Control.WeaponPolicy`, `restrict_by_policy`, `target_class`, `weapon_tasks`;
+     `Mission_Adapter.weapon_policies`): involucro puro della fire control che, per gli asset di missioni AEREE, toglie
+     le opzioni il cui task non e' ammesso contro la classe del bersaglio (aereo, difesa aerea = `Vehicle` SAM/AAA/EWR,
+     nave, altra superficie compresi gli aerei a terra). L'autodifesa aria-aria dei tipi aria-suolo vale solo con
+     `self_escort_capability` del loadout assegnato. Armi assenti dai registri (`test:*`): nessun vincolo. Terra e mare:
+     nessun vincolo d'arma (chiavi presenti con `None`).
+   - **Strato T, regole di bersaglio nel risolutore** (`Engagement_Resolver.TargetRules`, `apply_target_rules`;
+     `Mission_Adapter.designated_targets`, `target_rules`): per gli asset la cui missione dichiara una ROE diversa da
+     `weapon_free` o armi designate (`MissionAsset.weapons`, o l'arma del `AttackProfile`). Bersaglio designato =
+     nemici del `Target` (ASSET; GROUP di blocco, di missione o asset, ristretto da `Target.asset_ids`; POINT/AREA/ZONE
+     come area con raggio efficace = raggio + incertezza ESTIMATED, `TARGET_POINT_RADIUS_M` per un POINT senza raggio).
+     ROE: `weapon_hold` nessun tiro (le intercettazioni restano); `return_fire` solo contro ostili (chi ha gia'
+     lanciato contro il dominio di coordinamento; memoria per sessione e reazione anche nella stessa run: il
+     candidato non ostile e' rimandato, non esaurito, e il lancio di un nuovo ostile risveglia i tiratori del dominio
+     dopo il loro `refire_interval`); `only_designated` solo i designati con l'esenzione d'autodifesa aerea;
+     `priority_designated` (solo aerei) in due fasi (correzione dell'utente del 2026-10-18): in avvicinamento nessun
+     tiro sulle opportunita' di superficie (il designato quando e' rilevato e a portata, i bersagli aerei invariati),
+     dopo l'attacco opportunita' ammesse con le armi residue e precedenza al designato solo se rilevato e a portata
+     (dopo la priorita' L2, prima del round-robin). Fine dell'attacco = designato distrutto o punto ATTACK raggiunto e
+     superato sui tratti REALI (`TargetRules.attack_point`, nessuna ETA pianificata; senza punto ATTACK o con punto mai
+     raggiunto resta l'avvicinamento, conservativo). Armi designate: sul designato solo quelle (nessun ripiego), sui non
+     designati riservate.
+2. **Validazioni nuove** (non dipendono dagli interruttori): `Target.asset_ids` solo con GROUP, distinti;
+   `MissionAsset.weapons` distinti, l'arma del profilo d'attacco fra esse; loadout di missione diverso da
+   `Aircraft.assigned_loadout` = `ValueError` in `_check_missions`.
+3. **S19AD migrato** (`Test_Session_Scenarios_S19_Air_Defence.py`): tolti `maverick_only_fire_control` e `ifv_only`; la
+   fire control e' `make_registry_fire_control()`; missioni CAS con `weapons=('AGM-65D',)` (`F.missions_for(weapons=)`);
+   le varianti `_ifv_only` con bersaglio GROUP 'Red-Line' ristretto ai 3 BMP-2 (`asset_ids`) e `only_designated`
+   (`F.missions_for(rules=)`). Nomi delle varianti invariati. Per costruzione: l'arma designata sul bersaglio
+   designato lascia le sole opzioni AGM-65D nello stesso punto del risolutore (stessa tupla filtrata, stesso ordine);
+   `only_designated` restituisce `None` per la difesa aerea come `ifv_only`. Nuovo test di classe
+   `TestS19MissionRulesReplaceTheTestFilters` (nessuna arma diversa dal Maverick, nessuna salva su `ad0` nelle varianti
+   `_ifv_only`, controprova con tutta la linea designata).
+4. **S28** (`Test_Session_Scenarios_S28.py`, fire control dei registri, dottrina `BOTH_HOLD`, 4 seed per variante):
+   - S28-ROE: 'free', 'priority', 'only', 'hold', 'rules_off' (F-16C 'Strike' su rotta di andata all'ATTACK sopra
+     Red-Column e Red-Depot e ritorno; designato: Red-Depot; 'priority': sorvolo senza tiro all'andata, colonna
+     bombardata con le armi residue al ritorno);
+   - S28-CLASS: 'cap_low'/'cap_low_off', 'sead'/'sead_off', 'self_defence'/'self_defence_off' (`*_off` = politica
+     spenta);
+   - S28-ZONE: 'zone_only', 'zone_free' (bersaglio ZONE di raggio 20 km).
+   Le premesse sono provate dalle varianti libere/spente dello stesso scenario (nessuna asserzione negativa vacua).
+
+### Differenze della fotografia
+
+- **918 identiche, 0 cambiate**: nessuna missione esistente dichiara ROE o armi designate (nessuna `TargetRules`) e la
+  politica d'armi, sonda del piano (a), non scarta nulla negli scenari (40 chiamate della scorta F-16C di S19, mai a
+  portata); nessun controllo nuovo scatta (le fixture copiano il loadout). **S19AD: 24 su 24 identiche** dopo la
+  migrazione (verificato anche da solo con `--only S19AD`).
+- **52 nuove**: S28-ROE 20, S28-CLASS 24, S28-ZONE 8.
+  (Dopo le correzioni dell'utente del 2026-10-18 S28-ROE usa una rotta di andata all'ATTACK e ritorno: le sue 20 esecuzioni
+  differiscono dalla prima cattura; S28-CLASS e S28-ZONE sono identiche a quella.)
+
+### Scelte dove il piano lasciava margine
+
+1. `Target.asset_ids` in `_mission_target_ids` (criterio `target_destroyed`): intersezione con il gruppo risolto
+   (blocco, missione o asset), id fuori dal gruppo ignorati con un warning; il criterio resta senza filtro per lato.
+2. `Mission_Adapter.target_rules(missions, blocks, mission_of, assets, side_of)`: `side_of` e' `{block_id: lato}`; i
+   nemici di `designated_targets` sono gli asset di lato diverso da quello della missione (lato letto dai blocchi).
+3. Fire control a tabella senza `target_grounded`: l'involucro non lo dichiara (introspezione invariata); alla base
+   inoltra `target_grounded=True` solo quando il risolutore lo passa.
+4. Ostili degli episodi precedenti: la sessione li accumula da `result.salvos` (`shooter_id` per dominio di
+   coordinamento del bersaglio) e li passa come `known_hostile_ids` a ogni episodio, solo per i tiratori con regole.
+5. Piccoli scenari di S28: geometria tarata dalle esplorazioni dello sviluppatore (v. docstring di S28): sensori
+   'air' DICHIARATI di test (MiG 8 km, A-10C 30 km) per S28-CLASS 'self_defence'; SEAD a 500 m con uno Strela-10 (col
+   Tor la formazione viene abbattuta prima del cannone); ZONE con le rotte a y = 8 km (F-15C), -5 km (in zona) e 24 km
+   (fuori zona, a 16 km dalla rotta).
+
+### Costanti stimate
+
+- `Mission_Adapter.TARGET_POINT_RADIUS_M` = 500 m (STIMA, decisione 11): raggio efficace di un POINT senza raggio.
+- La tabella `Context.MISSION_WEAPON_POLICY` e' una SCELTA DI PROGETTO confermata dall'utente, non un dato tarato.
+- Costanti di scenario S28 DICHIARATE di test: sensori 'air' dei MiG (8 km) e dell'A-10C (30 km), quote, posizioni e
+  rotte (v. docstring di S28).
+
+### Limiti noti
+
+- **Designazione geometrica valutata alla prima decisione** (LIMITE DICHIARATO, non implementato per decisione dell'utente
+  del 2026-10-18): un bersaglio fuori area alla PRIMA valutazione della coppia e' escluso come un `None` della fire
+  control (candidato esaurito per la finestra), anche se poi entra nell'area; S28-ZONE ha Red-In dentro la zona fin
+  dalla partenza. (Le esclusioni che dipendono dal tempo di `return_fire` e `priority_designated` NON esauriscono il
+  candidato: v. sopra.)
+- Fine dell'attacco di `priority_designated`: il passaggio sul punto ATTACK e' cercato sui tratti reali dell'aereo
+  con tolleranza 1 m (`ATTACK_POINT_TOLERANCE_M`); con piu' punti ATTACK vale l'ultimo; un aereo ri-pianificato prima di
+  raggiungerlo (tratti che non lo toccano) resta in avvicinamento. Un'uscita dall'attacco per DESTRUZIONE vale solo per
+  i designati per id (non per area).
+- Quelli del piano (§7): priorita' solo locale, designazione geometrica approssimata (istante di decisione), winchester
+  e politica d'armi (un'arma sempre esclusa non si esaurisce), `self_escort_capability` dei 5 loadout A-10C con AIM-9M
+  (decisione 8, i registri non sono toccati), scorta senza protezione del gruppo, terra e mare senza restrizioni
+  d'arma. La F7b (fuoco su posizione) non e' implementata.
+
+### Test
+
+- `Test_Context`: `TestMissionWeaponPolicy` (6), `Test_Mission_Types` (+5: `asset_ids`, `weapons`,
+  `designated_weapons`), `Test_Fire_Control` (+19: `weapon_tasks`, `target_class`, `restrict_by_policy`),
+  `Test_Engagement_Resolver.TestTargetRules` (30), `Test_Mission_Adapter` (+20: `designated_targets`, `target_rules`,
+  `weapon_policies`), `Test_Session_Simulator.TestMissionEngagementRules` (8), `Test_Session_Scenarios_S19_Air_Defence`
+  (+3), `Test_Session_Scenarios_S28` (14).
+- Suite completa: 4489 test OK (7 skipped), 104 nuovi rispetto ai 4385 del G5.
+

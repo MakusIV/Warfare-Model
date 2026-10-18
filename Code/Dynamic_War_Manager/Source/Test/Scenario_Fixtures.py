@@ -156,6 +156,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Mobile import DEFAULT_DETECTION_RANGE
 from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     Mission,
     MissionAsset,
+    MissionRules,
     MissionWaypoint,
     StartMode,
     Target,
@@ -595,13 +596,19 @@ def zone_target(center: Sequence[float], radius_m: float) -> Target:
     return Target(kind=TargetKind.ZONE, position=_point(center), radius_m=radius_m)
 
 
-def _mission_waypoints(route: Route, domain: str) -> Tuple[MissionWaypoint, ...]:
+def _mission_waypoints(route: Route, domain: str,
+                       attack_waypoint: Optional[int] = None) -> Tuple[MissionWaypoint, ...]:
     """Piano dei punti di una rotta di scenario: aria NAV ... LAND (semplificazione di scenario:
-    rotta senza rientro, v. docstring), terra/mare DEPARTURE ... OBJECTIVE."""
+    rotta senza rientro, v. docstring), terra/mare DEPARTURE ... OBJECTIVE. `attack_waypoint` (F7a): indice del
+    punto che ha il ruolo ATTACK (default nessuno: gli scenari di prima non ne hanno)."""
     waypoints = route_waypoints(route)
     first, last = ((WaypointRole.NAV, WaypointRole.LAND) if domain == 'air'
                    else (WaypointRole.DEPARTURE, WaypointRole.OBJECTIVE))
     roles = [first] + [WaypointRole.NAV] * (len(waypoints) - 2) + [last]
+
+    if attack_waypoint is not None:
+        roles[attack_waypoint] = WaypointRole.ATTACK
+
     return tuple(MissionWaypoint(waypoint=wp, role=role) for wp, role in zip(waypoints, roles))
 
 
@@ -654,29 +661,39 @@ def _slowest_reference(reference: Route, routes: Sequence[Route]) -> Route:
 
 
 def _scenario_mission(mission_id: str, force, domain: str, mission_type: str, target: Target,
-                      reference: Route, assets: Sequence[MissionAsset]) -> Mission:
+                      reference: Route, assets: Sequence[MissionAsset],
+                      rules: Optional[MissionRules] = None, attack_waypoint: Optional[int] = None) -> Mission:
     return Mission(mission_id=mission_id, block_id=force.id, domain=domain, mission_type=mission_type,
                    target=target, assets=tuple(assets), route=reference,
-                   waypoints=_mission_waypoints(reference, domain), start_time=0.0,
-                   start_mode=StartMode.AIR if domain == 'air' else None)
+                   waypoints=_mission_waypoints(reference, domain, attack_waypoint), start_time=0.0,
+                   start_mode=StartMode.AIR if domain == 'air' else None, rules=rules)
 
 
 def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str, target: Target,
                  name: Optional[str] = None, offset_with_position: bool = True,
-                 speed: Optional[float] = None, only: Optional[Iterable[str]] = None) -> List[Mission]:
+                 speed: Optional[float] = None, only: Optional[Iterable[str]] = None,
+                 weapons: Sequence[str] = (), rules: Optional[MissionRules] = None,
+                 attack_waypoint: Optional[int] = None) -> List[Mission]:
     """Le missioni con ESATTAMENTE la geometria di `routes_for(force, points, ...)`, ciascuna alla
     velocita' del suo mezzo piu' lento (regola A, F4a; v. docstring).
 
     Args:
         force: il blocco (tutti i suoi asset ricevono una missione).
         points/offset_with_position/speed: come `routes_for`.
-        mission_type/target: tipo di missione del dominio e bersaglio (non ancora usato dal
-            motore, F7).
+        mission_type/target: tipo di missione del dominio e bersaglio. Dalla F7a li legge il motore:
+            la politica d'armi per tipo di missione (aerea) e, con `rules`/`weapons`, il bersaglio
+            designato e le armi designate (v. `Session_Simulator`, "Regole d'ingaggio di missione").
         name: radice degli id di missione (default `<force.id>:<mission_type>`); con piu'
             missioni si aggiunge `-<n>`.
         only: se dato, solo questi asset (es. la parte strike e la parte scorta di un pacchetto,
             con tipi di missione diversi); gli offset restano quelli di `routes_for` sull'intera
             forza, quindi la geometria non cambia.
+        weapons: armi designate (`MissionAsset.weapons`, F7a) applicate a TUTTI gli asset delle
+            missioni; il default `()` lascia invariati gli scenari che non le dichiarano.
+        rules: `MissionRules` (ROE, F7a) di tutte le missioni; il default None = regole di
+            default del dominio.
+        attack_waypoint: indice (nei punti della rotta, partenza compresa) del punto con ruolo ATTACK
+            (F7a: fine dell'attacco di `priority_designated`); default None = nessun punto ATTACK.
 
     Returns:
         Lista di `Mission` (start_time 0, aria `start_mode` AIR), una o piu' per blocco (piu'
@@ -722,10 +739,12 @@ def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str,
         for position, (asset_id, offset) in enumerate(members):
             loadout = getattr(force.assets[asset_id], 'assigned_loadout', None) if domain == 'air' else None
             assets.append(MissionAsset(asset_id, _asset_role(domain, position), *offset,
-                                       loadout=loadout if isinstance(loadout, str) else None))
+                                       loadout=loadout if isinstance(loadout, str) else None,
+                                       weapons=tuple(weapons)))
 
         mission_id = root if len(groups) == 1 else f'{root}-{index + 1}'
-        missions.append(_scenario_mission(mission_id, force, domain, mission_type, target, reference, assets))
+        missions.append(_scenario_mission(mission_id, force, domain, mission_type, target, reference, assets,
+                                          rules, attack_waypoint))
 
     return missions
 
@@ -888,6 +907,30 @@ def run(session_id: str, forces_a, forces_b, fire_control: Callable, *, duration
     tali e quali."""
     order = make_order(session_id, duration, t_start, missions=tuple(missions), **dict(order_kwargs or {}))
     return SS.run_session(order, list(forces_a), list(forces_b), fire_control, **run_kwargs)
+
+
+def run_with_salvos(session_id: str, forces_a, forces_b, fire_control: Callable, **kwargs):
+    """`run(...)` e, in piu', le salve (`Engagement_Resolver.Salvo`, con tiratore, bersaglio e `spec.weapon`) di
+    TUTTI gli episodi d'ingaggio della sessione, nell'ordine di risoluzione: `(outcome, [Salvo, ...])`.
+
+    Il `SessionOutcome` non porta il bersaglio delle salve; il risolutore si': l'involucro registra gli
+    `EngagementResult` che `resolve_engagement` restituisce (stessa chiamata, stesso esito) senza toccarli.
+    """
+    results: List = []
+    original = ER.resolve_engagement
+
+    def recording(*args, **recorded_kwargs):
+        result = original(*args, **recorded_kwargs)
+
+        if result is not None:
+            results.append(result)
+
+        return result
+
+    with patch.object(ER, 'resolve_engagement', recording):
+        outcome = run(session_id, forces_a, forces_b, fire_control, **kwargs)
+
+    return outcome, [salvo for result in results for salvo in result.salvos]
 
 
 def timed(function: Callable, *args, **kwargs):

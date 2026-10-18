@@ -3279,5 +3279,419 @@ class TestActivityEnd(unittest.TestCase):
             self._duel(lambda t: None, lambda t: None, criteria={'b1': 0.5})
 
 
+class TestTargetRules(unittest.TestCase):
+    """F7a: regole di bersaglio di missione (`TargetRules`), strato T delle regole d'ingaggio.
+
+    Geometria controllata (stub, finestre costruite a mano, Pd = 1 a distanza nulla): Blue 'b1' contro i
+    Red 'r1' (id minore, "opportunita'") e 'r2' (designato), tutti rilevati da subito. Senza regole 'b1'
+    spara su 'r1' per primo (id minore); le regole cambiano CONTRO CHI e CON CHE ARMA si spara, mai l'RNG.
+    """
+
+    FIGHT_ON = {'Blue': {'erosion': 1.0, 'shock': 1.0}, 'Red': {'erosion': 1.0, 'shock': 1.0}}
+    # Tempo di volo lungo: dopo due colpi in volo su un bersaglio (dottrina "due missili, poi guarda") il
+    # tiratore passa al bersaglio successivo, quindi entrambi sono ingaggiati.
+    AAM = _miss(rounds=1, weapon='AIM-9M', time_of_flight=45.0, cycle_time=10.0)
+    GUN = _miss(rounds=1, weapon='M61A1', stock_per_round=1, time_of_flight=45.0, cycle_time=10.0)
+    SHOT = _miss(rounds=1, time_of_flight=1.0, cycle_time=10.0)
+
+    def setUp(self):
+        patcher = patch(_ER_LOGGER)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _run(self, rules=None, reds=('r1', 'r2'), red_cls=_Asset, blue_stores=None, fire=None, t_end=100.0,
+             windows=None, legs=None, red_fire=None, seed=0):
+        blue = _Force('blue', 'Blue', [_Asset('b1', stores=blue_stores)])
+        red = _Force('red', 'Red', [red_cls(r) for r in reds])
+        windows = windows if windows is not None else [_window('b1', r, t_end=t_end) for r in reds]
+        fire = fire or (lambda shooter, target: self.SHOT)
+
+        def fire_control(shooter, target):
+            if shooter.id == 'b1':
+                return fire(shooter, target)
+
+            return red_fire(shooter, target) if red_fire else None
+
+        return ER.resolve_engagement(blue, red, windows, fire_control, random.Random(seed),
+                                     reaction_profile_for=_profiles({'b1': (2.0, 1.0)}, default=(2.0, 1.0)),
+                                     thresholds=self.FIGHT_ON, target_rules=rules, legs=legs)
+
+    @staticmethod
+    def _targets(result, shooter_id='b1'):
+        return [salvo.target_id for salvo in result.salvos if salvo.shooter_id == shooter_id]
+
+    # -- invarianza senza regole --
+
+    def test_none_and_empty_rules_change_nothing(self):
+        base = self._run()
+        self.assertEqual(self._targets(base)[0], 'r1')
+
+        for rules in (None, {}, {'ghost': ER.TargetRules(roe=ER.ROE_WEAPON_HOLD)}):
+            with self.subTest(rules=rules):
+                self.assertEqual(self._run(rules), base)
+
+    def test_weapon_free_without_weapons_changes_nothing(self):
+        self.assertEqual(self._run({'b1': ER.TargetRules()}), self._run())
+
+    def test_roe_constants_match_the_mission_types_vocabulary(self):
+        from Code.Dynamic_War_Manager.Source.Command import Mission_Types as MT
+        self.assertEqual(ER.ROE_LEVELS, MT.AIR_ROE)
+        self.assertEqual((ER.ROE_WEAPON_FREE, ER.ROE_PRIORITY_DESIGNATED, ER.ROE_ONLY_DESIGNATED,
+                          ER.ROE_RETURN_FIRE, ER.ROE_WEAPON_HOLD), MT.AIR_ROE)
+
+    # -- ROE --
+
+    def test_only_designated_never_fires_at_an_opportunity(self):
+        rules = {'b1': ER.TargetRules(roe=ER.ROE_ONLY_DESIGNATED, designated_ids=frozenset({'r2'}))}
+        result = self._run(rules)
+        self.assertTrue(self._targets(result))
+        self.assertEqual(set(self._targets(result)), {'r2'})
+
+    def test_only_designated_with_nothing_designated_does_not_fire(self):
+        result = self._run({'b1': ER.TargetRules(roe=ER.ROE_ONLY_DESIGNATED)})
+        self.assertEqual(result.salvos, ())
+
+    def test_only_designated_self_defence_exemption_against_aircraft(self):
+        """r1 e' un aereo non designato: sparato solo con l'esenzione d'autodifesa (r2, di superficie, mai)."""
+        def build(self_defence):
+            blue = _Force('blue', 'Blue', [_Asset('b1')])
+            red = _Force('red', 'Red', [Aircraft('r1'), _Asset('r2')])
+            rules = {'b1': ER.TargetRules(roe=ER.ROE_ONLY_DESIGNATED, designated_ids=frozenset({'nobody'}),
+                                          air_self_defence=self_defence)}
+            return ER.resolve_engagement(blue, red, [_window('b1', r, t_end=100.0) for r in ('r1', 'r2')],
+                                         lambda shooter, target: self.SHOT if shooter.id == 'b1' else None,
+                                         random.Random(0),
+                                         reaction_profile_for=_profiles({'b1': (2.0, 1.0)}), thresholds=self.FIGHT_ON,
+                                         target_rules=rules)
+
+        self.assertEqual(build(False).salvos, ())
+        self.assertEqual(set(self._targets(build(True))), {'r1'})
+
+    def test_priority_designated_fires_first_at_the_designated(self):
+        rules = {'b1': ER.TargetRules(roe=ER.ROE_PRIORITY_DESIGNATED, designated_ids=frozenset({'r2'}))}
+        result = self._run(rules)
+        self.assertEqual(self._targets(result)[0], 'r2')
+        self.assertEqual(set(self._targets(result)), {'r2'})      # finche' il designato e' utile, solo lui
+
+    # -- priority_designated: avvicinamento e dopo l'attacco (correzione dell'utente del 2026-10-18) --
+
+    ATTACK_POINT = (100.0, 0.0, 0.0)
+
+    def _flight_legs(self, wait=(50.0, 60.0), reds=('r1', 'r2')):
+        """b1 raggiunge il punto ATTACK a t = wait[0], vi resta fermo fino a wait[1] (attesa) e riparte; i rossi
+        sono fermi nell'origine."""
+        legs = {'b1': [Leg(0.0, wait[0], (0.0, 0.0, 0.0), self.ATTACK_POINT),
+                       Leg(wait[0], wait[1], self.ATTACK_POINT, self.ATTACK_POINT),
+                       Leg(wait[1], 200.0, self.ATTACK_POINT, (300.0, 0.0, 0.0))]}
+        legs.update({r: [Leg(0.0, 200.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))] for r in reds})
+        return legs
+
+    def _priority(self, point='default', **kwargs):
+        point = self.ATTACK_POINT if point == 'default' else point
+        return {'b1': ER.TargetRules(roe=ER.ROE_PRIORITY_DESIGNATED, designated_ids=frozenset({'r2'}),
+                                     attack_point=point, **kwargs)}
+
+    def test_priority_designated_does_not_fire_at_surface_opportunities_while_approaching(self):
+        """Il designato r2 non e' rilevato: in avvicinamento nessun tiro su r1 (opportunita' di superficie, pur
+        rilevata); dopo il passaggio sul punto ATTACK (t = 60 s, fine dell'attesa, sui tratti REALI) si spara a r1."""
+        windows = [_window('b1', 'r1', t_end=200.0, range_a=5_000.0, range_b=5_000.0)]
+        result = self._run(self._priority(), windows=windows, legs=self._flight_legs(), t_end=200.0)
+        launches = [s.t_launch for s in result.salvos if s.shooter_id == 'b1']
+        self.assertTrue(launches)
+        self.assertEqual(set(self._targets(result)), {'r1'})
+        self.assertTrue(all(t >= 60.0 - ER.TIME_EPS for t in launches))
+        # senza regole l'opportunita' e' bersagliata subito (premessa non vacua)
+        free = self._run(None, windows=windows, legs=self._flight_legs(), t_end=200.0)
+        self.assertTrue(any(s.t_launch < 60.0 for s in free.salvos if s.shooter_id == 'b1'))
+
+    def test_the_end_of_the_attack_is_the_real_passage_not_the_planned_one(self):
+        """Stesso piano ma l'aereo resta fermo sul punto fino a 120 s (ritardo/attesa): l'attacco finisce a 120 s."""
+        windows = [_window('b1', 'r1', t_end=200.0, range_a=5_000.0, range_b=5_000.0)]
+        legs = self._flight_legs(wait=(50.0, 120.0))
+        result = self._run(self._priority(), windows=windows, legs=legs, t_end=200.0)
+        self.assertTrue(result.salvos)
+        self.assertTrue(all(s.t_launch >= 120.0 - ER.TIME_EPS for s in result.salvos if s.shooter_id == 'b1'))
+
+    def test_priority_designated_never_ends_the_attack_without_a_reachable_attack_point(self):
+        """Nessun punto ATTACK, o punto mai raggiunto sui tratti reali: resta in avvicinamento (conservativo)."""
+        windows = [_window('b1', 'r1', t_end=200.0, range_a=5_000.0, range_b=5_000.0)]
+
+        for point in (None, (5_000.0, 0.0, 0.0)):
+            with self.subTest(point=point):
+                result = self._run(self._priority(point), windows=windows, legs=self._flight_legs(), t_end=200.0)
+                self.assertEqual(self._targets(result), [])
+
+    def test_priority_designated_still_fires_at_aircraft_while_approaching(self):
+        """I bersagli aerei non sono opportunita' di superficie: autodifesa/combattimento aria-aria invariati."""
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        red = _Force('red', 'Red', [Aircraft('r1'), _Asset('r2')])
+        windows = [_window('b1', r, t_end=100.0) for r in ('r1', 'r2')]
+        result = ER.resolve_engagement(blue, red, windows, lambda s, t: self.SHOT if s.id == 'b1' else None,
+                                       random.Random(0), reaction_profile_for=_profiles({'b1': (2.0, 1.0)}),
+                                       thresholds=self.FIGHT_ON,
+                                       target_rules={'b1': ER.TargetRules(roe=ER.ROE_PRIORITY_DESIGNATED,
+                                                                          designated_ids=frozenset({'nobody'}))})
+        # l'aereo r1 non designato e' bersagliato, l'opportunita' di superficie r2 no
+        self.assertEqual(set(self._targets(result)), {'r1'})
+
+    def test_destroying_the_designated_ends_the_attack(self):
+        """b1 distrugge il designato r2 (colpo certo); da li' in poi spara all'opportunita' r1, mai prima."""
+        def fire(shooter, target):
+            return _kill(time_of_flight=0.5, cycle_time=10.0) if target.id == 'r2' else self.SHOT
+
+        result = self._run(self._priority(None), fire=fire)
+        kill_time = next(e.time for e in result.damage_events if e.target_id == 'r2' and e.destroyed)
+        launches_r1 = [s.t_launch for s in result.salvos if s.shooter_id == 'b1' and s.target_id == 'r1']
+        self.assertTrue(launches_r1)
+        self.assertTrue(all(t >= kill_time - ER.TIME_EPS for t in launches_r1))
+        self.assertEqual([s.target_id for s in result.salvos if s.shooter_id == 'b1'][0], 'r2')
+
+    def test_designated_destroyed_in_a_previous_episode_ends_the_attack(self):
+        result = self._run({'b1': ER.TargetRules(roe=ER.ROE_PRIORITY_DESIGNATED, designated_ids=frozenset({'gone'}),
+                                                known_destroyed_ids=frozenset({'gone'}))})
+        self.assertIn('r1', self._targets(result))
+
+    def test_after_the_attack_the_reserved_weapons_stay_excluded(self):
+        options = (self.AAM, self.GUN)
+        rules = self._priority(designated_weapons=frozenset({'AIM-9M'}))
+        windows = [_window('b1', 'r1', t_end=200.0, range_a=5_000.0, range_b=5_000.0)]
+        result = self._run(rules, windows=windows, legs=self._flight_legs(), t_end=200.0,
+                           blue_stores={'AIM-9M': 3, 'M61A1': 500}, fire=lambda s, t: options)
+        self.assertTrue(result.salvos)
+        self.assertEqual({s.spec.weapon for s in result.salvos if s.shooter_id == 'b1'}, {'M61A1'})
+
+    def test_after_the_attack_the_designated_has_precedence_only_if_in_range(self):
+        """Dopo l'attacco il designato r2 e' rilevato ma fuori portata (50 km, portata 1 km): si spara
+        all'opportunita' r1 senza restare in attesa; con r2 a portata ha la precedenza."""
+        def run(r2_distance):
+            legs = self._flight_legs()
+            legs['r2'] = [Leg(0.0, 200.0, (r2_distance, 0.0, 0.0), (r2_distance, 0.0, 0.0))]
+            windows = [_window(f'b1', r, t_end=200.0, range_a=100_000.0, range_b=100_000.0) for r in ('r1', 'r2')]
+            near = _miss(rounds=1, time_of_flight=1.0, cycle_time=10.0, max_range=1_000.0)
+            return self._run(self._priority(), windows=windows, legs=legs, t_end=200.0,
+                             fire=lambda s, t: near if t.id == 'r2' else self.SHOT)
+
+        far = run(50_000.0)
+        after_attack = [s for s in far.salvos if s.shooter_id == 'b1' and s.t_launch >= 60.0 - ER.TIME_EPS]
+        self.assertTrue(after_attack)
+        self.assertIn('r1', {s.target_id for s in after_attack})
+        close = run(300.0)
+        first_after = min((s for s in close.salvos if s.shooter_id == 'b1' and s.t_launch >= 60.0 - ER.TIME_EPS),
+                          key=lambda s: s.t_launch)
+        self.assertEqual(first_after.target_id, 'r2')
+
+    def test_apply_target_rules_priority_phases(self):
+        options = (self.AAM, self.GUN)
+        rules = ER.TargetRules(roe=ER.ROE_PRIORITY_DESIGNATED)
+        self.assertIsNone(ER.apply_target_rules(rules, options, False, False, False, after_attack=False))
+        self.assertIs(ER.apply_target_rules(rules, options, False, False, False, after_attack=True), options)
+        self.assertIs(ER.apply_target_rules(rules, options, True, False, False, after_attack=False), options)
+        self.assertIs(ER.apply_target_rules(rules, options, False, False, True, after_attack=False), options)
+        self.assertTrue(ER.rules_defer(rules, False, False, False, False))
+        self.assertFalse(ER.rules_defer(ER.TargetRules(roe=ER.ROE_ONLY_DESIGNATED), False, False, False, False))
+
+    def test_priority_designated_still_after_l2_launcher_priority(self):
+        """La priorita' ai designati e' DOPO la L2: un aereo che ha lanciato contro la forza passa avanti al
+        designato; senza il suo lancio il primo bersaglio e' il designato."""
+        def first_target(air_launches):
+            blue = _Force('blue', 'Blue', [_Asset('b1')])
+            red = _Force('red', 'Red', [Aircraft('r_air'), _Asset('r2')])
+            attack = _miss(rounds=1, interceptable=True, time_of_flight=50.0)
+
+            def fire_control(shooter, target):
+                if shooter.id == 'r_air':
+                    return attack if air_launches and target.id == 'b1' else None
+
+                return self.SHOT if shooter.id == 'b1' else None
+
+            rules = {'b1': ER.TargetRules(roe=ER.ROE_PRIORITY_DESIGNATED, designated_ids=frozenset({'r2'}))}
+            windows = [_window('b1', 'r_air', t_end=100.0), _window('b1', 'r2', t_end=100.0)]
+            result = ER.resolve_engagement(blue, red, windows, fire_control, random.Random(0),
+                                           reaction_profile_for=_profiles({'b1': (2.0, 1.0), 'r_air': (1.0, 1.0)}),
+                                           thresholds=self.FIGHT_ON, target_rules=rules)
+            return min((s for s in result.salvos if s.shooter_id == 'b1'), key=lambda s: s.t_launch).target_id
+
+        self.assertEqual(first_target(air_launches=True), 'r_air')
+        self.assertEqual(first_target(air_launches=False), 'r2')
+
+    def test_weapon_hold_never_fires_but_still_intercepts(self):
+        """`weapon_hold`: nessuna salva offensiva, ma l'intercettazione di salva (atto difensivo) resta."""
+        blue_b1 = _Asset('b1', interceptor_stock=10)
+        blue = _Force('blue', 'Blue', [blue_b1], interceptors=[(blue_b1, 3)])
+        red = _Force('red', 'Red', [_Asset('r1')])
+        incoming = _miss(rounds=2, interceptable=True, time_of_flight=REACTION_TOF)
+
+        def fire_control(shooter, target):
+            return incoming if shooter.id == 'r1' else self.SHOT
+
+        windows = [_window('b1', 'r1', t_end=30.0)]
+        base = ER.resolve_engagement(blue, red, windows, fire_control, random.Random(0),
+                                     reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                     thresholds=self.FIGHT_ON)
+        self.assertTrue(self._targets(base))                      # premessa: free, b1 spara
+        blue_b1 = _Asset('b1', interceptor_stock=10)
+        blue = _Force('blue', 'Blue', [blue_b1], interceptors=[(blue_b1, 3)])
+        red = _Force('red', 'Red', [_Asset('r1')])
+        result = ER.resolve_engagement(blue, red, windows, fire_control, random.Random(0),
+                                       reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                       thresholds=self.FIGHT_ON,
+                                       target_rules={'b1': ER.TargetRules(roe=ER.ROE_WEAPON_HOLD)})
+        self.assertEqual(self._targets(result), [])
+        self.assertTrue(result.interception_events)
+
+    def test_return_fire_waits_for_a_hostile(self):
+        """Nessuna salva su chi non ha mai lanciato contro il dominio."""
+        result = self._run({'b1': ER.TargetRules(roe=ER.ROE_RETURN_FIRE)})
+        self.assertEqual(result.salvos, ())
+
+    def test_return_fire_sees_a_launch_against_the_domain_before_a_later_decision(self):
+        """b1 (return_fire) conosce ostile r1 e spara a lui; r2 lancia a t = 3 contro un ALTRO asset Blue (b9):
+        quando r1 e' bloccato (due colpi in volo) e b1 valuta r2, questo e' ostile e b1 gli spara. Se r2 non
+        lancia, b1 non gli spara mai (la regola e' per DOMINIO: il lancio contro b9 conta per b1)."""
+        def run(r2_fires):
+            blue = _Force('blue', 'Blue', [_Asset('b1'), _Asset('b9')])
+            red = _Force('red', 'Red', [_Asset('r1'), _Asset('r2')])
+            windows = [_window('b1', 'r1', t_end=100.0), _window('b1', 'r2', t_end=100.0),
+                       _window('b9', 'r2', t_end=100.0)]
+
+            def fire_control(shooter, target):
+                if shooter.id == 'b1':
+                    return self.AAM
+                return self.SHOT if shooter.id == 'r2' and r2_fires and target.id == 'b9' else None
+
+            rules = {'b1': ER.TargetRules(roe=ER.ROE_RETURN_FIRE, known_hostile_ids=frozenset({'r1'}))}
+            return ER.resolve_engagement(blue, red, windows, fire_control, random.Random(0),
+                                         reaction_profile_for=_profiles({'b1': (2.0, 1.0), 'r2': (1.0, 1.0)}),
+                                         thresholds=self.FIGHT_ON, target_rules=rules)
+
+        self.assertEqual(set(self._targets(run(False))), {'r1'})
+        self.assertIn('r2', self._targets(run(True)))
+
+    def test_return_fire_reacts_within_the_run_to_a_launch_against_the_domain(self):
+        """Nessun ostile noto: r2 lancia a t = 1 contro un altro asset Blu (b9, stesso dominio); b1, che fino ad
+        allora non poteva sparare a nessuno, e' riesaminato dopo il suo refire_interval e spara a r2 (e solo a r2:
+        r1 non ha mai lanciato). Senza il lancio di r2, nessuna salva."""
+        def run(r2_fires):
+            blue = _Force('blue', 'Blue', [_Asset('b1'), _Asset('b9')])
+            red = _Force('red', 'Red', [_Asset('r1'), _Asset('r2')])
+            windows = [_window('b1', 'r1', t_end=100.0), _window('b1', 'r2', t_end=100.0),
+                       _window('b9', 'r2', t_end=100.0)]
+
+            def fire_control(shooter, target):
+                if shooter.id == 'b1':
+                    return self.AAM
+                return self.SHOT if shooter.id == 'r2' and r2_fires and target.id == 'b9' else None
+
+            return ER.resolve_engagement(blue, red, windows, fire_control, random.Random(0),
+                                         reaction_profile_for=_profiles({'b1': (2.0, 1.0), 'r2': (1.0, 1.0)}),
+                                         thresholds=self.FIGHT_ON,
+                                         target_rules={'b1': ER.TargetRules(roe=ER.ROE_RETURN_FIRE)})
+
+        self.assertEqual(self._targets(run(False)), [])
+        result = run(True)
+        self.assertEqual(set(self._targets(result)), {'r2'})
+        first_hostile = min(s.t_launch for s in result.salvos if s.shooter_id == 'r2')
+        self.assertGreaterEqual(min(s.t_launch for s in result.salvos if s.shooter_id == 'b1'), first_hostile + 1.0)
+
+    def test_return_fire_known_hostile_enables_the_fire_at_once(self):
+        rules = {'b1': ER.TargetRules(roe=ER.ROE_RETURN_FIRE, known_hostile_ids=frozenset({'r2'}))}
+        self.assertEqual(set(self._targets(self._run(rules))), {'r2'})
+
+    # -- bersaglio geometrico --
+
+    def test_geometric_designation_uses_the_position_at_the_firing_time(self):
+        """r1 sta nell'area (raggio 500 m) fino a t = 50 s e poi se ne va a 200 m/s (esce a t = 52,5 s):
+        designato prima, non dopo; r2 e' sempre fuori area. Senza regole b1 spara anche dopo."""
+        exit_time = 50.0 + 500.0 / 200.0
+        legs = {'b1': [Leg(0.0, 200.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                'r1': [Leg(0.0, 50.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
+                       Leg(50.0, 150.0, (0.0, 0.0, 0.0), (20_000.0, 0.0, 0.0))],
+                'r2': [Leg(0.0, 200.0, (20_000.0, 0.0, 0.0), (20_000.0, 0.0, 0.0))]}
+        rules = {'b1': ER.TargetRules(roe=ER.ROE_ONLY_DESIGNATED, designated_area=(0.0, 0.0, 500.0))}
+        windows = [_window('b1', r, t_end=150.0, range_a=100_000.0, range_b=100_000.0, distance=0.0)
+                   for r in ('r1', 'r2')]
+        free = self._run(None, windows=windows, legs=legs)
+        result = self._run(rules, windows=windows, legs=legs)
+        launches = [(s.t_launch, s.target_id) for s in result.salvos if s.shooter_id == 'b1']
+        self.assertTrue(any(s.t_launch > exit_time for s in free.salvos if s.shooter_id == 'b1'))   # premessa
+        self.assertTrue(launches)
+        self.assertEqual({target for _, target in launches}, {'r1'})
+        self.assertTrue(all(t <= exit_time for t, _ in launches))
+
+    def test_unknown_position_is_not_designated(self):
+        rules = {'b1': ER.TargetRules(roe=ER.ROE_ONLY_DESIGNATED, designated_area=(0.0, 0.0, 500.0))}
+        self.assertEqual(self._run(rules).salvos, ())
+
+    # -- armi designate --
+
+    def test_designated_weapons_on_the_designated_and_reserved_elsewhere(self):
+        options = (self.AAM, self.GUN)
+        rules = {'b1': ER.TargetRules(designated_ids=frozenset({'r2'}), designated_weapons=frozenset({'AIM-9M'}))}
+        result = self._run(rules, blue_stores={'AIM-9M': 3, 'M61A1': 500}, fire=lambda s, t: options)
+        by_target = {}
+
+        for salvo in result.salvos:
+            by_target.setdefault(salvo.target_id, set()).add(salvo.spec.weapon)
+
+        self.assertEqual(by_target['r2'], {'AIM-9M'})            # sul designato solo l'arma designata
+        self.assertEqual(by_target['r1'], {'M61A1'})             # sul non designato e' riservata
+
+    def test_exhausted_designated_weapon_leaves_the_designated_alone(self):
+        options = (self.AAM, self.GUN)
+        rules = {'b1': ER.TargetRules(roe=ER.ROE_ONLY_DESIGNATED, designated_ids=frozenset({'r2'}),
+                                      designated_weapons=frozenset({'AIM-9M'}))}
+        result = self._run(rules, blue_stores={'AIM-9M': 1, 'M61A1': 500}, fire=lambda s, t: options, t_end=200.0)
+        self.assertEqual([(s.target_id, s.spec.weapon) for s in result.salvos if s.shooter_id == 'b1'],
+                         [('r2', 'AIM-9M')])
+
+    # -- funzione pura --
+
+    def test_apply_target_rules_is_pure(self):
+        options = (self.AAM, self.GUN)
+        free = ER.TargetRules()
+        self.assertIs(ER.apply_target_rules(free, options, True, False, False), options)
+        self.assertIsNone(ER.apply_target_rules(free, None, True, False, False))
+        hold = ER.TargetRules(roe=ER.ROE_WEAPON_HOLD)
+        self.assertIsNone(ER.apply_target_rules(hold, options, True, True, True))
+        only = ER.TargetRules(roe=ER.ROE_ONLY_DESIGNATED, air_self_defence=True)
+        self.assertIsNone(ER.apply_target_rules(only, options, False, False, False))
+        self.assertIs(ER.apply_target_rules(only, options, False, False, True), options)
+        self.assertIs(ER.apply_target_rules(only, options, True, False, False), options)
+        fire_back = ER.TargetRules(roe=ER.ROE_RETURN_FIRE)
+        self.assertIsNone(ER.apply_target_rules(fire_back, options, True, False, False))
+        self.assertIs(ER.apply_target_rules(fire_back, options, False, True, False), options)
+        weapons = ER.TargetRules(designated_weapons=frozenset({'AIM-9M'}))
+        self.assertEqual(ER.apply_target_rules(weapons, options, True, False, False), (self.AAM,))
+        self.assertEqual(ER.apply_target_rules(weapons, options, False, False, False), (self.GUN,))
+        self.assertIsNone(ER.apply_target_rules(weapons, (self.GUN,), True, False, False))
+        self.assertIsNone(ER.apply_target_rules(weapons, self.AAM, False, False, False))
+        self.assertIs(ER.apply_target_rules(weapons, self.GUN, False, False, False), self.GUN)
+
+    def test_target_rules_validation(self):
+        with self.assertRaises(ValueError):
+            ER.TargetRules(roe='shoot_everything')
+
+        with self.assertRaises(ValueError):
+            ER.TargetRules(designated_area=(0.0, 0.0, 0.0))
+
+        with self.assertRaises(TypeError):
+            ER.TargetRules(designated_area=(0.0, 0.0))
+
+        with self.assertRaises(TypeError):
+            ER.TargetRules(designated_ids='r1')
+
+        with self.assertRaises(TypeError):
+            ER.TargetRules(air_self_defence=1)
+
+        self.assertEqual(ER.TargetRules(designated_ids=['a', 'b']).designated_ids, frozenset({'a', 'b'}))
+
+    def test_bad_target_rules_argument_raises(self):
+        with self.assertRaises(TypeError):
+            self._run(rules=['b1'])
+
+        with self.assertRaises(TypeError):
+            self._run(rules={'b1': 'hold'})
+
+
 if __name__ == '__main__':
     unittest.main()

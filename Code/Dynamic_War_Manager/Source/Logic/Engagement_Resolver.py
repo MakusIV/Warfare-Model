@@ -25,7 +25,9 @@ attraverso l'RNG di sessione passato dal chiamante.
    target)` restituisce una `ShotSpec` (accuracy, destroy_capacity, colpi per salva, tempo
    di volo, intercettabilita'), una SEQUENZA di `ShotSpec` in ordine di preferenza, oppure
    None (non ingaggia: ROE, arma inadatta). Con una sequenza il tiratore spara con la prima
-   opzione la cui arma ha ancora scorta nello stato ombra (v. "Scorta per arma").
+   opzione la cui arma ha ancora scorta nello stato ombra (v. "Scorta per arma"). Dalla F7a le
+   regole d'ingaggio di MISSIONE (bersaglio designato, ROE, armi designate) si applicano sopra la
+   risposta della fire control (v. "Regole di bersaglio di missione (F7a)").
 4. **Salva e saturazione (Hughes, R1).** I colpi che arrivano su una forza nello stesso
    evento-salva sono prima confrontati con la capacita' di intercettazione del bersaglio
    (`Military.salvo_interceptors`): i primi N intercettabili sono fermati e non
@@ -293,6 +295,56 @@ sulla rotta pianificata, resta presente e bersaglio. Il risolutore riceve `activ
 Le fini scattate sono in `EngagementResult.activity_ends`. Senza criteri (default) ogni percorso e'
 quello di prima: stesse estrazioni, stessi esiti.
 
+## Regole di bersaglio di missione (F7a, decisioni dell'utente del 2026-10-18)
+
+`Analysis/Document/Proposta_F7_Bersagli_Filtro_Armi.md` §2 e §5. Strato T delle regole d'ingaggio di
+missione (lo strato W, la politica d'armi per tipo di missione, e' un involucro della fire control:
+`Fire_Control.restrict_by_policy`). Il risolutore non legge la missione: riceve `target_rules`
+(`{asset_id: TargetRules}`, costruite dalla sessione, `Mission_Adapter.target_rules`), una struttura per asset
+come `ActivityCriteria`, solo per gli asset la cui missione dichiara una ROE diversa da `weapon_free` o armi
+designate. Senza regole (default) ogni percorso e' quello di prima: stesse chiamate, stesse estrazioni.
+
+* **Dove**: `_fire_control` applica `apply_target_rules` alla risposta della fire control, quindi la regola
+  vale ovunque il risolutore interroga la fire control (scelta del bersaglio, controllo di portata, prelazione
+  L2/L3), nello stesso punto dei filtri della fire control.
+* **Designato**: il bersaglio e' fra gli id designati (`designated_ids`) oppure, con un'area, la sua posizione
+  orizzontale all'istante del tiro e' entro il raggio efficace (`designated_area`, designazione geometrica);
+  posizione ignota = non designato. Un bersaglio non rilevato dal tiratore non e' un candidato: la designazione
+  NON da' rilevamento (niente cueing, come per il resto del modulo).
+* **ROE** (semantica della tabella §2.3, con le correzioni dell'utente del 2026-10-18): `weapon_hold` = nessun
+  tiro (le intercettazioni di salva restano: atto difensivo); `return_fire` = solo contro tiratori OSTILI (che
+  hanno gia' lanciato una salva contro il dominio di coordinamento del tiratore, `hostile_by_domain`, o
+  `known_hostile_ids` degli episodi precedenti); `only_designated` = solo i designati, con l'esenzione
+  dell'autodifesa aria-aria se `air_self_defence`; `weapon_free` = nessuna restrizione; `priority_designated`
+  (solo aerei) in due fasi:
+    * AVVICINAMENTO (prima della fine dell'attacco): nessun tiro sulle opportunita' di SUPERFICIE, anche se
+      rilevate (un aereo che sorvola una colonna andando al bersaglio non spara, non consuma armi e carburante
+      d'ingaggio ne' apre un episodio); il designato si ingaggia quando e' rilevato e a portata; i bersagli aerei
+      (autodifesa e combattimento aria-aria) non cambiano;
+    * DOPO L'ATTACCO: le opportunita' sono ammesse con le armi residue (le armi designate restano riservate); il
+      designato ha la precedenza (`_designated_first`, dopo la priorita' L2 e prima del round-robin) solo se e'
+      rilevato E a portata, altrimenti si spara alle opportunita' (non si resta in attesa).
+  La FINE DELL'ATTACCO e' il designato distrutto (tutti gli id designati distrutti: nella run o, per gli episodi
+  precedenti, `known_destroyed_ids`) OPPURE l'aereo ha EFFETTIVAMENTE raggiunto e superato il punto ATTACK della
+  sua missione (`TargetRules.attack_point`) lungo i suoi tratti REALI (`legs`: attese, ritardi e ri-pianificazioni
+  compresi, non l'ETA pianificata): istante = fine dell'ultimo tratto fermo sul punto dopo l'arrivo
+  (`_attack_pass_time`). Senza punto ATTACK, o con un punto mai raggiunto sui tratti reali (aereo ri-pianificato
+  prima, tratti troncati), l'attacco non finisce mai: l'aereo resta in avvicinamento (comportamento conservativo,
+  dichiarato).
+* **Armi designate** (`designated_weapons`): sul designato solo quelle, nessun ripiego (esaurite, il tiratore non
+  ingaggia il designato); su un non designato sono RISERVATE, cioe' escluse, sotto ogni ROE.
+* **Candidati rimandati, non esauriti**: un candidato escluso da una regola che DIPENDE DAL TEMPO (`return_fire`
+  contro un non ostile, `priority_designated` in avvicinamento contro un'opportunita' di superficie) non e'
+  marcato `exhausted` (`_is_deferred`): resta fuori dalla scelta e il tiratore e' riesaminato da un evento
+  `_WAKE` (nessuna estrazione RNG): al lancio di un nuovo ostile contro il suo dominio, dopo il suo
+  `refire_interval` come la reazione L3 (`_react_to_hostile`); all'istante di passaggio sul punto ATTACK e alla
+  distruzione del designato (`_schedule_phase_wakes`, `_wake_after_destruction`). Un tiratore con un lancio gia'
+  programmato non viene riesaminato (lo fara' dopo il lancio).
+* **Limite dichiarato (designazione geometrica)**: l'appartenenza all'area e' valutata alla prima decisione sulla
+  coppia; un bersaglio fuori area a quell'istante e' escluso come un `None` della fire control (candidato
+  esaurito per la finestra) anche se poi entra nell'area. NON implementato (decisione dell'utente del 2026-10-18).
+  Nessuna estrazione RNG nuova.
+
 ## Forze rotte: per-forza, non un flag globale
 
 Una forza che raggiunge DESTROYED o DISENGAGED entra in `broken_forces`. Da quel momento:
@@ -467,12 +519,28 @@ ACTIVITY_WINCHESTER = 'winchester'
 ACTIVITY_TARGET_DESTROYED = 'target_destroyed'
 ACTIVITY_REASONS = (ACTIVITY_DAMAGE, ACTIVITY_WINCHESTER, ACTIVITY_TARGET_DESTROYED)
 
+# Tolleranza [m] con cui un tratto reale 'finisce sul punto ATTACK' (`_attack_pass_time`): rumore di arrotondamento
+# delle coordinate (le rotte con offset sono arrotondate al micrometro), non un margine fisico.
+ATTACK_POINT_TOLERANCE_M = 1.0
+
+# ROE di missione (F7a): gli stessi VALORI di `Command.Mission_Types.AIR_ROE`/`SURFACE_ROE`, ripetuti qui come
+# stringhe perche' il risolutore non importa `Command` (come ACTIVITY_*; un test ne verifica l'uguaglianza).
+ROE_WEAPON_FREE = 'weapon_free'
+ROE_PRIORITY_DESIGNATED = 'priority_designated'
+ROE_ONLY_DESIGNATED = 'only_designated'
+ROE_RETURN_FIRE = 'return_fire'
+ROE_WEAPON_HOLD = 'weapon_hold'
+ROE_LEVELS = (ROE_WEAPON_FREE, ROE_PRIORITY_DESIGNATED, ROE_ONLY_DESIGNATED, ROE_RETURN_FIRE, ROE_WEAPON_HOLD)
+
 _LAUNCH = 0
 _IMPACT = 1
 _RESOLVE = 2
 # Ridecisione dopo la prelazione (regola L3, 2026-09-28): ultima a parita' d'istante, cosi' che
 # la decisione veda tutti i lanci avvenuti in quell'istante.
 _DECIDE = 3
+# Riesame di un tiratore con candidati rimandati da una regola di bersaglio (F7a, v. `_is_deferred`): ultimo a
+# parita' d'istante, senza generazione (non annulla ne' sostituisce lanci).
+_WAKE = 4
 
 
 # ── TIPI DI SCAMBIO ───────────────────────────────────────────────────────────
@@ -714,6 +782,145 @@ class ActivityEnd:
     time: float
     asset_id: str
     reason: str
+
+
+def _id_set(label: str, value) -> FrozenSet[str]:
+    """frozenset di id (stringhe non vuote) da un iterabile; TypeError se non lo e'."""
+    if isinstance(value, (str, bytes)) or not isinstance(value, abc.Iterable):
+        raise TypeError(f"{label} must be an iterable of non-empty str, got {value!r}")
+
+    items = frozenset(value)
+
+    for item in items:
+        if not isinstance(item, str) or not item:
+            raise TypeError(f"{label} items must be non-empty str, got {item!r}")
+
+    return items
+
+
+@dataclass(frozen=True)
+class TargetRules:
+    """Regole di bersaglio di UN asset nella forma del risolutore (F7a, strato T).
+
+    Le costruisce la sessione dalle regole e dal bersaglio DICHIARATI della missione
+    (`Mission_Adapter.target_rules`); il risolutore non legge la missione. V. "Regole di bersaglio di
+    missione (F7a)" nel docstring del modulo.
+
+    Attributes:
+        roe: una delle ROE (`ROE_LEVELS`), default `weapon_free`.
+        designated_ids: id degli asset NEMICI designati dalla missione (bersaglio ASSET/GROUP).
+        designated_area: `(x, y, raggio)` [m] orizzontali dell'area designata (bersaglio POINT/AREA/ZONE), il
+            raggio e' quello EFFICACE (raggio dichiarato piu' l'incertezza di una stima); None = nessuna area.
+        designated_weapons: modelli d'arma designati (v. "Armi designate").
+        air_self_defence: l'esenzione d'autodifesa aerea di `only_designated` (un aereo nemico si ingaggia
+            anche se non designato): vale per le missioni aria-suolo, la cui politica d'armi ammette
+            l'autodifesa contro gli aerei.
+        known_hostile_ids: asset che hanno gia' lanciato contro il dominio di coordinamento del tiratore in
+            episodi precedenti della sessione (memoria di `return_fire`).
+        attack_point: `(x, y, z)` [m] del punto ATTACK della missione sulla rotta DELL'ASSET (con l'offset di
+            formazione), per la fine dell'attacco di `priority_designated`; None = missione senza punto ATTACK
+            (l'attacco non finisce per passaggio).
+        known_destroyed_ids: id designati gia' distrutti in episodi precedenti (fine dell'attacco per
+            distruzione del designato).
+    """
+    roe: str = ROE_WEAPON_FREE
+    designated_ids: FrozenSet[str] = frozenset()
+    designated_area: Optional[Tuple[float, float, float]] = None
+    designated_weapons: FrozenSet[str] = frozenset()
+    air_self_defence: bool = False
+    known_hostile_ids: FrozenSet[str] = frozenset()
+    attack_point: Optional[Tuple[float, float, float]] = None
+    known_destroyed_ids: FrozenSet[str] = frozenset()
+
+    def __post_init__(self):
+        if self.roe not in ROE_LEVELS:
+            raise ValueError(f"roe must be one of {ROE_LEVELS}, got {self.roe!r}")
+
+        object.__setattr__(self, 'designated_ids', _id_set('designated_ids', self.designated_ids))
+        object.__setattr__(self, 'designated_weapons', _id_set('designated_weapons', self.designated_weapons))
+        object.__setattr__(self, 'known_hostile_ids', _id_set('known_hostile_ids', self.known_hostile_ids))
+        object.__setattr__(self, 'known_destroyed_ids', _id_set('known_destroyed_ids', self.known_destroyed_ids))
+
+        if self.attack_point is not None:
+            point = self.attack_point
+
+            if isinstance(point, (str, bytes)) or not isinstance(point, abc.Sequence) or len(point) != 3 \
+                    or any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+                           for v in point):
+                raise TypeError(f"attack_point must be (x, y, z) numbers, got {point!r}")
+
+            object.__setattr__(self, 'attack_point', (float(point[0]), float(point[1]), float(point[2])))
+
+        if not isinstance(self.air_self_defence, bool):
+            raise TypeError(f"air_self_defence must be a bool, got {self.air_self_defence!r}")
+
+        if self.designated_area is not None:
+            area = self.designated_area
+
+            if isinstance(area, (str, bytes)) or not isinstance(area, abc.Sequence) or len(area) != 3 \
+                    or any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+                           for v in area):
+                raise TypeError(f"designated_area must be (x, y, radius) numbers, got {area!r}")
+
+            if area[2] <= 0:
+                raise ValueError(f"designated_area radius must be > 0, got {area[2]!r}")
+
+            object.__setattr__(self, 'designated_area', (float(area[0]), float(area[1]), float(area[2])))
+
+
+def rules_defer(rules: TargetRules, designated: bool, hostile: bool, air_target: bool, after_attack: bool) -> bool:
+    """True se la regola esclude il bersaglio per una ragione che DIPENDE DAL TEMPO (v. "Candidati rimandati,
+    non esauriti"): `return_fire` contro un non ostile; `priority_designated` in avvicinamento contro
+    un'opportunita' di superficie. Funzione pura."""
+    if rules.roe == ROE_RETURN_FIRE:
+        return not hostile
+
+    if rules.roe == ROE_PRIORITY_DESIGNATED:
+        return not designated and not air_target and not after_attack
+
+    return False
+
+
+def apply_target_rules(rules: TargetRules, result, designated: bool, hostile: bool, air_target: bool,
+                       after_attack: bool = True):
+    """La risposta della fire control (`result`: None, una ShotSpec o una sequenza) ristretta dalle regole
+    di bersaglio di un tiratore contro UN bersaglio (funzione pura, F7a).
+
+    Args:
+        designated: il bersaglio e' designato dalla missione del tiratore (a quell'istante).
+        hostile: il bersaglio ha gia' lanciato contro il dominio del tiratore (`return_fire`).
+        air_target: il bersaglio e' un aereo in volo (esenzione d'autodifesa di `only_designated`; con
+            `priority_designated` i bersagli aerei non sono mai opportunita' di superficie).
+        after_attack: l'attacco e' finito (`priority_designated`): in avvicinamento le opportunita' di
+            superficie sono escluse, dopo l'attacco ammesse. Default True (nessuna restrizione di fase).
+
+    Returns:
+        None (il tiratore non ingaggia), `result` stesso se tutte le opzioni restano, altrimenti la tupla
+        delle opzioni tenute nello stesso ordine.
+    """
+    if rules.roe == ROE_WEAPON_HOLD:
+        return None
+
+    if rules.roe == ROE_ONLY_DESIGNATED and not designated and not (air_target and rules.air_self_defence):
+        return None
+
+    if rules_defer(rules, designated, hostile, air_target, after_attack):
+        return None
+
+    if not rules.designated_weapons:
+        return result
+
+    options = _EngagementRun._options(result)
+
+    if designated:
+        kept = tuple(option for option in options if option.weapon in rules.designated_weapons)
+    else:
+        kept = tuple(option for option in options if option.weapon not in rules.designated_weapons)
+
+    if len(kept) == len(options):
+        return result
+
+    return kept or None
 
 
 @dataclass(frozen=True)
@@ -1437,8 +1644,17 @@ class _EngagementRun:
     def __init__(self, forces, contacts, fire_control, rng, legs, committed, thresholds,
                  reaction_profile_for, detection_factor, salvo_window, provenance,
                  breakpoint_rng=None, morale_for=None, enemy_estimate_for=None, fire_doctrine=None,
-                 rwr_catalogue=None, coordination_of=None, grounded=None, activity_criteria=None):
+                 rwr_catalogue=None, coordination_of=None, grounded=None, activity_criteria=None,
+                 target_rules=None):
         self.fire_control = fire_control
+        # Regole di bersaglio di missione (F7a, v. docstring del modulo): per asset tiratore, e ostili noti
+        # (asset che hanno lanciato almeno una salva contro il dominio di coordinamento, per dominio).
+        self.target_rules: Dict[str, TargetRules] = dict(target_rules or {})
+        self.hostile_by_domain: Dict[str, set] = {}
+        # Istante di passaggio sul punto ATTACK per tiratore (None = mai raggiunto sui tratti reali) e
+        # tiratori gia' risvegliati dalla distruzione del designato (v. `_attack_pass_time`).
+        self.attack_pass: Dict[str, Optional[float]] = {}
+        self.woken_by_destruction: set = set()
         # Fine di attivita' (F6-B1, v. docstring del modulo): criteri per asset, salute all'ingresso
         # nella run, istante di distruzione nella run, fine registrata `{asset: (istante, motivo)}`.
         self.activity_criteria: Dict[str, ActivityCriteria] = dict(activity_criteria or {})
@@ -2126,6 +2342,10 @@ class _EngagementRun:
                     # finestre costruite dal chiamante.
                     continue
 
+                if self.target_rules and self._is_deferred(shooter, target, t_fire):
+                    # Regola di bersaglio che dipende dal tempo (F7a): non esaurito, rimandato (v. `_is_deferred`).
+                    continue
+
                 viable.append((t_fire, index, candidate))
 
             if not viable:
@@ -2141,7 +2361,7 @@ class _EngagementRun:
             # Dottrina di tiro (2026-09-29): fuori i bersagli saturi per il dominio (i lanciatori
             # prioritari ne sono esenti) e quelli su cui il tiratore ha gia' in volo il tetto di
             # colpi; se non resta nulla il tiratore aspetta il primo impatto e ridecide.
-            pool = priority or viable
+            pool = priority or self._designated_first(shooter, viable) or viable
             open_pool = [item for item in pool if not self._blocked(shooter, item[2].target_id, bool(priority))]
 
             if not open_pool:
@@ -2290,7 +2510,183 @@ class _EngagementRun:
         """
         return self.grounded.at(asset_id, 0.5 * (float(window.t_start) + float(window.t_end)))
 
+    def _is_designated(self, rules: TargetRules, target: _Shadow, time: float) -> bool:
+        """Il bersaglio e' designato dalla missione del tiratore all'istante `time` (F7a): id designato,
+        oppure (con un'area) posizione orizzontale entro il raggio efficace; posizione ignota = no."""
+        if target.id in rules.designated_ids:
+            return True
+
+        if rules.designated_area is None:
+            return False
+
+        position = self._position_at(target, time)
+
+        if position is None:
+            return False
+
+        x, y, radius = rules.designated_area
+        return math.hypot(position[0] - x, position[1] - y) <= radius
+
+    def _is_hostile(self, shooter: _Shadow, target_id: str) -> bool:
+        """`target_id` ha gia' lanciato contro il dominio di coordinamento del tiratore (F7a, `return_fire`):
+        nella run (`hostile_by_domain`) o negli episodi precedenti (`TargetRules.known_hostile_ids`)."""
+        return target_id in self.target_rules[shooter.id].known_hostile_ids \
+            or target_id in self.hostile_by_domain.get(self.domain_of[shooter.force_id], ())
+
+    def _attack_pass_time(self, shooter_id: str, rules: TargetRules) -> Optional[float]:
+        """Istante in cui il tiratore ha raggiunto E SUPERATO il punto ATTACK sui suoi tratti REALI, o None.
+
+        Primo tratto che finisce sul punto (arrivo) esteso ai tratti successivi fermi sul punto (attese): la
+        fine dell'ultimo e' l'istante in cui riparte. Nessun punto ATTACK, o punto mai raggiunto (aereo
+        ri-pianificato prima, tratti troncati): None, l'attacco non finisce per passaggio. Memoizzato per run (i
+        tratti non cambiano durante la run).
+        """
+        if shooter_id not in self.attack_pass:
+            passed = None
+            point = rules.attack_point
+
+            if point is not None:
+                for leg in self.legs.get(shooter_id) or ():
+                    if passed is None:
+                        if math.dist(leg.p_end, point) <= ATTACK_POINT_TOLERANCE_M:
+                            passed = leg.t_end
+                    elif math.dist(leg.p_start, point) <= ATTACK_POINT_TOLERANCE_M \
+                            and math.dist(leg.p_end, point) <= ATTACK_POINT_TOLERANCE_M:
+                        passed = leg.t_end
+                    else:
+                        break
+
+            self.attack_pass[shooter_id] = passed
+
+        return self.attack_pass[shooter_id]
+
+    def _designated_destroyed(self, rules: TargetRules) -> bool:
+        """Tutti i bersagli designati per id sono distrutti (nella run o negli episodi precedenti)."""
+        if not rules.designated_ids:
+            return False
+
+        for asset_id in rules.designated_ids:
+            shadow = self.shadows.get(asset_id)
+
+            if asset_id not in rules.known_destroyed_ids and not (shadow is not None and shadow.destroyed):
+                return False
+
+        return True
+
+    def _attack_over(self, shooter_id: str, rules: TargetRules, time: float) -> bool:
+        """Fine dell'attacco di `priority_designated` all'istante `time`: designato distrutto, oppure punto
+        ATTACK raggiunto e superato sui tratti reali."""
+        if self._designated_destroyed(rules):
+            return True
+
+        passed = self._attack_pass_time(shooter_id, rules)
+        return passed is not None and time >= passed - TIME_EPS
+
+    def _is_deferred(self, shooter: _Shadow, target: _Shadow, time: float) -> bool:
+        """La regola di bersaglio del tiratore esclude il bersaglio ORA per una ragione che dipende dal tempo
+        (`rules_defer`): il candidato non e' esaurito, e' solo fuori dalla scelta (v. "Candidati rimandati")."""
+        rules = self.target_rules.get(shooter.id)
+
+        if rules is None or rules.roe not in (ROE_RETURN_FIRE, ROE_PRIORITY_DESIGNATED):
+            return False
+
+        if rules.roe == ROE_RETURN_FIRE:
+            return rules_defer(rules, False, self._is_hostile(shooter, target.id), False, True)
+
+        return rules_defer(rules, self._is_designated(rules, target, time), False,
+                           validate_class(target.asset, 'Aircraft') and not self.grounded.at(target.id, time),
+                           self._attack_over(shooter.id, rules, time))
+
+    def _designated_first(self, shooter: _Shadow, viable) -> list:
+        """Elementi di `viable` il cui bersaglio e' designato a `t_fire` E ingaggiabile a portata (arma con
+        scorta, entro portata: `_in_range_at`), solo se la ROE del tiratore e' `priority_designated` (F7a);
+        altrimenti, o se nessun designato e' a portata, una lista vuota (nessuna precedenza: si spara alle
+        opportunita' ammesse invece di restare in attesa)."""
+        rules = self.target_rules.get(shooter.id)
+
+        if rules is None or rules.roe != ROE_PRIORITY_DESIGNATED:
+            return []
+
+        return [item for item in viable
+                if self._is_designated(rules, self.shadows[item[2].target_id], item[0])
+                and self._in_range_at(shooter, item[1], item[2], item[0])]
+
+    def _react_to_hostile(self, time: float, launcher: _Shadow, target_force_id: str) -> None:
+        """Un nuovo ostile ha lanciato contro un dominio (F7a): i tiratori `return_fire` di quel dominio che lo
+        hanno fra i candidati rimandati sono riesaminati dopo il loro `refire_interval`, il tempo di valutare
+        la minaccia come nella reazione L3 (`_register_launcher`). Chi ha gia' un lancio programmato lo
+        riesaminera' dopo il lancio."""
+        domain = self.domain_of[target_force_id]
+
+        for shooter_id in sorted(self.candidates):
+            rules = self.target_rules.get(shooter_id)
+
+            if rules is None or rules.roe != ROE_RETURN_FIRE:
+                continue
+
+            shooter = self.shadows[shooter_id]
+
+            if self.domain_of[shooter.force_id] != domain or not shooter.operative \
+                    or shooter.force_id in self.broken_forces or shooter_id in self.assigned \
+                    or shooter_id in self.pending_decide:
+                continue
+
+            if any(candidate.target_id == launcher.id and not candidate.exhausted
+                   for candidate in self.candidates[shooter_id]):
+                self._push(time + self._profile(shooter_id).refire_interval, _WAKE, shooter_id, None)
+
+    def _schedule_phase_wakes(self) -> None:
+        """Risveglio dei tiratori `priority_designated` all'istante in cui finisce l'attacco per passaggio sul
+        punto ATTACK (i candidati di superficie rimandati in avvicinamento tornano nella scelta)."""
+        for shooter_id in sorted(self.target_rules):
+            rules = self.target_rules[shooter_id]
+
+            if rules.roe != ROE_PRIORITY_DESIGNATED or shooter_id not in self.candidates:
+                continue
+
+            passed = self._attack_pass_time(shooter_id, rules)
+
+            if passed is not None:
+                self._push(passed, _WAKE, shooter_id, None)
+
+    def _wake_after_destruction(self, time: float) -> None:
+        """Dopo una risoluzione: i tiratori `priority_designated` il cui designato e' ora distrutto (fine
+        dell'attacco) sono riesaminati, una volta."""
+        for shooter_id in sorted(self.target_rules):
+            rules = self.target_rules[shooter_id]
+
+            if rules.roe == ROE_PRIORITY_DESIGNATED and shooter_id in self.candidates \
+                    and shooter_id not in self.woken_by_destruction and self._designated_destroyed(rules):
+                self.woken_by_destruction.add(shooter_id)
+                self._push(time, _WAKE, shooter_id, None)
+
+    def _on_wake(self, time: float, shooter_id: str) -> None:
+        """Riesame di un tiratore dopo un cambio di fase o un nuovo ostile (F7a); non tocca lanci gia'
+        programmati."""
+        shooter = self.shadows[shooter_id]
+
+        if shooter_id in self.assigned or shooter_id in self.pending_decide \
+                or shooter.force_id in self.broken_forces or not shooter.operative:
+            return
+
+        self._schedule_next(shooter_id, time)
+
     def _fire_control(self, shooter: _Shadow, target: _Shadow, time: float):
+        """La fire control iniettata sulla coppia, ristretta dalle regole di bersaglio di missione del
+        tiratore se ne ha (F7a, `apply_target_rules`); senza regole, la chiamata alla fire control e' quella
+        di sempre (`_call_fire_control`)."""
+        result = self._call_fire_control(shooter, target, time)
+        rules = self.target_rules.get(shooter.id)
+
+        if rules is None:
+            return result
+
+        return apply_target_rules(rules, result, self._is_designated(rules, target, time),
+                                  rules.roe == ROE_RETURN_FIRE and self._is_hostile(shooter, target.id),
+                                  validate_class(target.asset, 'Aircraft') and not self.grounded.at(target.id, time),
+                                  rules.roe != ROE_PRIORITY_DESIGNATED or self._attack_over(shooter.id, rules, time))
+
+    def _call_fire_control(self, shooter: _Shadow, target: _Shadow, time: float):
         """La fire control iniettata sulla coppia, con l'estensione `target_grounded` (F4c).
 
         Bersaglio non a terra: `fire_control(shooter, target)`, la chiamata di sempre. Bersaglio
@@ -2542,6 +2938,11 @@ class _EngagementRun:
                       rounds=rounds, spec=spec)
         self.salvos.append(salvo)
         self.in_flight[salvo.salvo_id] = salvo
+        # Ostile (F7a, `return_fire`): chi lancia contro un dominio e' ostile per quel dominio da questo istante,
+        # prima di ogni nuova decisione.
+        hostile_set = self.hostile_by_domain.setdefault(self.domain_of[target.force_id], set())
+        newly_hostile = shooter_id not in hostile_set
+        hostile_set.add(shooter_id)
         self._touch(time)
         self._push(salvo.t_impact, _IMPACT, target.force_id, salvo)
 
@@ -2562,6 +2963,9 @@ class _EngagementRun:
         if validate_class(shooter.asset, 'Aircraft') \
                 and (not validate_class(target.asset, 'Aircraft') or self.grounded.at(target.id, time)):
             self._register_launcher(time, shooter, target.force_id)
+
+        if newly_hostile and self.target_rules:
+            self._react_to_hostile(time, shooter, target.force_id)
 
     # ── fase 3: impatto, saturazione, danno ───────────────────────────────────
 
@@ -2870,6 +3274,9 @@ class _EngagementRun:
                                                 erosion=erosion))
         self._touch(time)
 
+        if self.target_rules:
+            self._wake_after_destruction(time)
+
         if self.activity_criteria:
             # Danno oltre soglia, bersagli distrutti, armi AD consumate dalle intercettazioni (F6-B1).
             self._check_activity(time)
@@ -3157,6 +3564,8 @@ class _EngagementRun:
         for shooter_id in sorted(self.candidates):
             self._schedule_next(shooter_id, float('-inf'))
 
+        self._schedule_phase_wakes()
+
         while self.queue:
             time, kind, key, _, payload = heapq.heappop(self.queue)
             self.now = time
@@ -3167,8 +3576,10 @@ class _EngagementRun:
                 self._on_impact(time, key, payload)
             elif kind == _RESOLVE:
                 self._on_resolve(time, key)
-            else:
+            elif kind == _DECIDE:
                 self._on_decide(time, key, payload)
+            else:
+                self._on_wake(time, key)
 
         return self._result()
 
@@ -3219,7 +3630,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                        rwr_catalogue: Optional[Sequence] = None,
                        coordination_of: Optional[Mapping[str, str]] = None,
                        grounded: Optional[Iterable[str]] = None,
-                       activity_criteria: Optional[Mapping[str, ActivityCriteria]] = None
+                       activity_criteria: Optional[Mapping[str, ActivityCriteria]] = None,
+                       target_rules: Optional[Mapping[str, TargetRules]] = None
                        ) -> Optional[EngagementResult]:
     """Risolve un ingaggio fra due o piu' forze, in un'unica timeline. Non muta alcun asset.
 
@@ -3294,6 +3706,10 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
             v. docstring del modulo): dall'istante in cui uno scatta l'asset non lancia piu' salve
             offensive. None o vuoto (default) = comportamento precedente. In sessione li costruisce
             `Session_Simulator` dai criteri dichiarati delle missioni (`EndCriteria`).
+        target_rules: `{asset_id: TargetRules}`, le regole di bersaglio di missione dei tiratori (F7a, v.
+            "Regole di bersaglio di missione (F7a)" nel docstring del modulo): bersaglio designato, ROE, armi
+            designate. None o vuoto (default) = comportamento precedente. In sessione le costruisce
+            `Session_Simulator` dalle missioni (`Mission_Adapter.target_rules`).
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset
@@ -3303,7 +3719,7 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
     Raises:
         TypeError: `rng` senza `.random()`, `fire_control` non chiamabile o che non
             restituisce una ShotSpec, una sequenza di ShotSpec o None, `coordination_of` che
-            non e' una mappa di stringhe.
+            non e' una mappa di stringhe, `target_rules` che non e' una mappa di `TargetRules`.
         ValueError: `salvo_window` negativo, provenance sconosciuta, forze ripetute o
             con asset in comune, forze di lati diversi nello stesso dominio di coordinamento.
     """
@@ -3338,13 +3754,22 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                 raise TypeError(f"activity_criteria[{asset_id!r}] must be an ActivityCriteria, "
                                 f"got {type(criteria).__name__}")
 
+    if target_rules is not None:
+        if not isinstance(target_rules, abc.Mapping):
+            raise TypeError(f"target_rules must be a mapping asset_id -> TargetRules, "
+                            f"got {type(target_rules).__name__}")
+
+        for asset_id, rules in target_rules.items():
+            if not isinstance(rules, TargetRules):
+                raise TypeError(f"target_rules[{asset_id!r}] must be a TargetRules, got {type(rules).__name__}")
+
     run = _EngagementRun((force_a, force_b) + extra_forces, contacts, fire_control, rng, legs,
                          committed, thresholds, reaction_profile_for, detection_factor,
                          salvo_window, provenance, breakpoint_rng=breakpoint_rng,
                          morale_for=morale_for, enemy_estimate_for=enemy_estimate_for,
                          fire_doctrine=fire_doctrine, rwr_catalogue=rwr_catalogue,
                          coordination_of=coordination_of, grounded=grounded,
-                         activity_criteria=activity_criteria)
+                         activity_criteria=activity_criteria, target_rules=target_rules)
 
     if not run.usable:
         return None

@@ -39,6 +39,12 @@ parcheggio). Restano di PRIMA STESURA (stime di progetto, non dati tarati): `EMC
     fino a `Logic/Session_Simulator.run_session` (che produce i `MissionOutcome`).
   * Condizioni sullo stato e re-scheduling (N2.d opzione C, R4 seconda parte).
 
+## Regole d'ingaggio di missione (F7a)
+Dalla F7a il motore legge `Mission.target` (con `Target.asset_ids`), `Mission.rules.roe` e
+`MissionAsset.weapons` (armi designate; implicite da `AttackProfile.weapon`) per bersaglio designato, ROE e
+armi riservate (`Logic/Mission_Adapter`, `Logic/Engagement_Resolver.TargetRules`), e il tipo di missione per la
+politica d'armi aerea (`Context.MISSION_WEAPON_POLICY`). Questo modulo resta solo validazione strutturale.
+
 Stile di `Command/Attack_Types.py` e `Command/Session_Types.py`: dataclass immutabili, validazione
 in `__post_init__`, mapping resi immutabili con `MappingProxyType`. Dipendenze: sympy, `Context`,
 `DataType` e `Command.Attack_Types`; nessun modulo di `Logic`, quindi nessun ciclo d'import.
@@ -444,6 +450,11 @@ class Target:
         senza incertezza.
     Gli istanti sono in secondi dall'inizio sessione e possono essere NEGATIVI (osservazione o stima
     precedente alla sessione).
+
+    `asset_ids` (F7a, decisione 9 del 2026-10-18, solo GROUP): sottoinsieme ESPLICITO del gruppo
+    `target_id`, id di dominio non vuoti e distinti; vuoto = tutto il gruppo. Dalla F7a il motore
+    legge il bersaglio per le regole d'ingaggio (`Logic/Mission_Adapter.designated_targets`,
+    `Logic/Engagement_Resolver.TargetRules`).
     """
     kind: TargetKind = TargetKind.NONE
     target_id: Optional[str] = None
@@ -453,6 +464,7 @@ class Target:
     observed_at: Optional[float] = None
     estimated_at: Optional[float] = None
     uncertainty_m: Optional[float] = None
+    asset_ids: Tuple[str, ...] = ()
 
     def __post_init__(self):
         kind = _coerce_enum('kind', TargetKind, self.kind)
@@ -470,6 +482,18 @@ class Target:
         object.__setattr__(self, 'estimated_at', _check_time('estimated_at', self.estimated_at, True))
         object.__setattr__(self, 'uncertainty_m',
                            _check_positive('uncertainty_m', self.uncertainty_m, allow_zero=True))
+        asset_ids = _as_tuple('asset_ids', self.asset_ids, str)
+
+        for asset_id in asset_ids:
+            _check_domain_id('asset_ids item', asset_id)
+
+        if len(set(asset_ids)) != len(asset_ids):
+            raise ValueError(f"asset_ids must be distinct, got {asset_ids}")
+
+        if asset_ids and kind is not TargetKind.GROUP:
+            raise ValueError(f"asset_ids applies only to a GROUP target, not {kind.name}")
+
+        object.__setattr__(self, 'asset_ids', asset_ids)
 
         if kind is TargetKind.NONE:
             if any(v is not None for v in (self.target_id, self.position, self.radius_m, provenance,
@@ -693,6 +717,10 @@ class MissionAsset:
             stessa partenza). La `Mission` verifica che il dominio sia l'aria.
         attack_profile: `AttackProfile` dell'asset (solo aria), facoltativo: dipende dall'arma del
             loadout, quindi e' per asset come il loadout.
+        weapons: armi designate dell'asset (F7a, decisione 10 del 2026-10-18), tutti i domini: le armi da
+            usare sul bersaglio designato (id di modello del registro d'arma). Sul designato solo queste, sui
+            non designati sono RISERVATE (escluse). Se manca e c'e' `attack_profile`, vale l'arma del profilo
+            (`designated_weapons`); se ci sono entrambi, l'arma del profilo deve essere fra le `weapons`.
     """
     asset_id: str
     role: str
@@ -701,6 +729,7 @@ class MissionAsset:
     up_m: float = 0.0
     loadout: Optional[str] = None
     attack_profile: Optional[AttackProfile] = None
+    weapons: Tuple[str, ...] = ()
 
     def __post_init__(self):
         _check_domain_id('asset_id', self.asset_id)
@@ -715,6 +744,31 @@ class MissionAsset:
 
         if self.attack_profile is not None and not isinstance(self.attack_profile, AttackProfile):
             raise TypeError(f"attack_profile must be an AttackProfile, got {type(self.attack_profile).__name__}")
+
+        weapons = _as_tuple('weapons', self.weapons, str)
+
+        for weapon in weapons:
+            _check_domain_id('weapons item', weapon)
+
+        if len(set(weapons)) != len(weapons):
+            raise ValueError(f"asset {self.asset_id!r}: weapons must be distinct, got {weapons}")
+
+        if weapons and self.attack_profile is not None and self.attack_profile.weapon not in weapons:
+            raise ValueError(f"asset {self.asset_id!r}: attack_profile.weapon {self.attack_profile.weapon!r} "
+                             f"must be one of weapons {weapons}")
+
+        object.__setattr__(self, 'weapons', weapons)
+
+    @property
+    def designated_weapons(self) -> Tuple[str, ...]:
+        """Armi designate (F7a): `weapons`, altrimenti l'arma di `attack_profile`, altrimenti nessuna."""
+        if self.weapons:
+            return self.weapons
+
+        if self.attack_profile is not None:
+            return (self.attack_profile.weapon,)
+
+        return ()
 
 
 @dataclass(frozen=True)
@@ -739,7 +793,7 @@ class EndCriteria:
 
     Lettura nel motore (F6-B1, `Logic/Session_Simulator`, "Fine di attivita' e stato di missione",
     interruttore `F6_END_CRITERIA`): `winchester`, `damage_threshold`, `target_destroyed` (bersaglio
-    ASSET/GROUP; POINT/AREA solo dalla F7) e `max_duration_s` (contata dalla partenza della missione)
+    ASSET/GROUP, con `Target.asset_ids` se dichiarato; POINT/AREA/ZONE non rappresentabili, decisione 12 della F7a) e `max_duration_s` (contata dalla partenza della missione)
     chiudono l'attivita' dell'asset, che prosegue passivo sulla rotta; motivi WINCHESTER, DAMAGE,
     TARGET_DESTROYED, MAX_DURATION nell'esito per asset. `bingo` (F6-B2, interruttore `F6_BINGO`, solo
     missioni aeree): a priori nel validatore di pianificazione `Mission_Adapter.check_mission_bingo`

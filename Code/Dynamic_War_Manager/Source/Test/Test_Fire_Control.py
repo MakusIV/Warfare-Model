@@ -15,7 +15,9 @@ from Code.Dynamic_War_Manager.Source.Test import Scenario_Fixtures as F
 from Code.Dynamic_War_Manager.Source.Asset import Ground_Weapon_Data as GWD
 from Code.Dynamic_War_Manager.Source.Asset import Ship_Weapon_Data as SWD
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
 from Code.Dynamic_War_Manager.Source.Context import Context as C
+from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
 from Code.Dynamic_War_Manager.Source.Logic import Fire_Control as FC
 from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import ShotSpec
 from Code.Dynamic_War_Manager.Source.Logic import Weapon_Delivery as WD
@@ -700,6 +702,184 @@ class TestWeaponCategory(F.LoggerSilencer, unittest.TestCase):
         self.assertIsNone(FC.weapon_category('air', 'test:aam'))
         self.assertIsNone(FC.weapon_category('air', None))
         self.assertIsNone(FC.weapon_category('space', 'AIM-9M'))
+
+
+class TestWeaponTasks(F.LoggerSilencer, unittest.TestCase):
+    """F7a: task del modello d'arma nel registro del dominio (`weapon_tasks`)."""
+
+    def test_tasks_are_those_of_the_registry(self):
+        self.assertEqual(FC.weapon_tasks('air', 'AIM-9M'), frozenset({'A2A'}))
+        self.assertEqual(FC.weapon_tasks('air', 'AGM-65D'),
+                         frozenset(AWD.AIR_WEAPONS['MISSILES_ASM']['AGM-65D']['task']))
+        self.assertEqual(FC.weapon_tasks('ground', '9K119M'), frozenset({'Anti_Tank'}))
+
+    def test_unknown_model_or_domain_is_none(self):
+        self.assertIsNone(FC.weapon_tasks('air', 'test:aam'))
+        self.assertIsNone(FC.weapon_tasks('air', None))
+        self.assertIsNone(FC.weapon_tasks('space', 'AIM-9M'))
+
+
+class TestTargetClass(_FireControlFixture, unittest.TestCase):
+    """F7a: classe del bersaglio per la politica d'armi (`target_class`)."""
+
+    def test_classes(self):
+        self.assertEqual(FC.target_class(self.aircraft(SU27, 3_000.0)), C.TARGET_CLASS_AIR)
+        self.assertEqual(FC.target_class(self.aircraft(SU27, 0.0), grounded=True), C.TARGET_CLASS_SURFACE)
+        self.assertEqual(FC.target_class(self.ship(BURKE)), C.TARGET_CLASS_SHIP)
+        self.assertEqual(FC.target_class(self.vehicle(STRELA10)), C.TARGET_CLASS_AIR_DEFENCE)
+        self.assertEqual(FC.target_class(self.vehicle(SHILKA)), C.TARGET_CLASS_AIR_DEFENCE)
+        self.assertEqual(FC.target_class(self.vehicle(T72)), C.TARGET_CLASS_SURFACE)
+
+    def test_ewr_is_air_defence(self):
+        ewr = F.make_vehicle(self.red, 'Red/ewr', T72, (0, 0, 0), asset_type='EWR')
+        self.assertTrue(ewr.isEWR)
+        self.assertEqual(FC.target_class(ewr), C.TARGET_CLASS_AIR_DEFENCE)
+
+    def test_other_assets_are_surface(self):
+        self.assertEqual(FC.target_class(object()), C.TARGET_CLASS_SURFACE)
+
+
+class TestRestrictByPolicy(_FireControlFixture, unittest.TestCase):
+    """F7a: politica d'armi per tipo di missione come involucro della fire control."""
+
+    def setUp(self):
+        self.base = FC.make_registry_fire_control()
+
+    def restricted(self, shooter, mission_type, self_escort=None):
+        """Involucro con la politica di `mission_type` per `shooter` (self_escort dal suo loadout)."""
+        if self_escort is None:
+            loadout = AIRCRAFT_LOADOUTS[shooter._model][shooter.assigned_loadout]
+            self_escort = bool(loadout.get('self_escort_capability', False))
+
+        policy = FC.WeaponPolicy('m', 'air', C.mission_weapon_policy('air', mission_type), self_escort)
+        return FC.restrict_by_policy(self.base, {shooter.id: policy})
+
+    @staticmethod
+    def weapons(result):
+        return [spec.weapon for spec in (result or ())]
+
+    def test_cap_does_not_strafe_the_ground(self):
+        eagle = self.aircraft('F-15C Eagle', 5_000.0, loadout='Eagle Sweep', force=self.blue)
+        bmp = F.make_vehicle(self.red, 'Red/bmp', 'BMP-2', (0, 0, 0))
+        self.assertIsNotNone(self.base(eagle, bmp))      # premessa: la base spara al suolo (cannone)
+        self.assertIsNone(self.restricted(eagle, 'CAP')(eagle, bmp))
+
+    def test_cap_against_aircraft_is_the_same_object(self):
+        eagle = self.aircraft('F-15C Eagle', 5_000.0, loadout='Eagle Sweep', force=self.blue)
+        mig = self.aircraft('MiG-29S', 5_000.0, loadout='CAP')
+        expected = self.base(eagle, mig)
+        self.assertTrue(expected)
+        self.assertIs(self.restricted(eagle, 'CAP')(eagle, mig), expected)
+
+    def test_cas_keeps_the_cas_and_strike_weapons_against_the_ground(self):
+        a10 = self.aircraft(A10, 3_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        bmp = F.make_vehicle(self.red, 'Red/bmp', 'BMP-2', (0, 0, 0))
+        expected = self.base(a10, bmp)
+        result = self.restricted(a10, 'CAS')(a10, bmp)
+        self.assertEqual(self.weapons(result), self.weapons(expected))
+        self.assertEqual(set(self.weapons(result)), {'AGM-65D', 'Mk-82AIR', 'GAU-8/A'})
+
+    def test_sead_fires_only_sead_weapons_and_only_at_air_defence(self):
+        f16 = self.aircraft(F16, 3_000.0, loadout='SEAD', force=self.blue)
+        bmp = F.make_vehicle(self.red, 'Red/bmp', 'BMP-2', (0, 0, 0))
+        sam = F.make_vehicle(self.red, 'Red/sam', STRELA10, (0, 0, 0))
+        restricted = self.restricted(f16, 'SEAD')
+        self.assertIsNone(restricted(f16, bmp))
+        result = restricted(f16, sam)
+        self.assertEqual(self.weapons(result), ['AGM-88'])      # il cannone (task Strike) non e' SEAD
+
+        for spec in result:
+            self.assertIn('SEAD', FC.weapon_tasks('air', spec.weapon))
+
+    def test_anti_ship_does_not_attack_a_tank(self):
+        a10 = self.aircraft(A10, 3_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        tank = F.make_vehicle(self.red, 'Red/tank', T72, (0, 0, 0))
+        self.assertIsNone(self.restricted(a10, 'Anti_Ship')(a10, tank))
+
+    def test_air_to_ground_self_defence_depends_on_the_loadout(self):
+        mig = self.aircraft('MiG-29S', 5_000.0, loadout='CAP')
+        f16 = self.aircraft(F16, 5_000.0, loadout='Strike', force=self.blue)
+        a10 = self.aircraft(A10, 5_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        self.assertIn('AIM-9M', self.weapons(self.restricted(f16, 'Strike')(f16, mig)))
+        self.assertIsNone(self.restricted(a10, 'CAS')(a10, mig))
+        self.assertTrue(self.base(a10, mig))      # premessa: senza politica l'A-10C avrebbe il cannone
+
+    def test_weapons_outside_the_registry_are_unconstrained(self):
+        spec = ShotSpec(accuracy=0.5, destroy_capacity=0.5, weapon='test:agm')
+        eagle = self.aircraft('F-15C Eagle', 5_000.0, loadout='Eagle Sweep', force=self.blue)
+        bmp = F.make_vehicle(self.red, 'Red/bmp', 'BMP-2', (0, 0, 0))
+        restricted = FC.restrict_by_policy(lambda shooter, target: (spec,),
+                                           {eagle.id: FC.WeaponPolicy('m', 'air', C.mission_weapon_policy('air', 'CAP'))})
+        result = restricted(eagle, bmp)
+        self.assertEqual(result, (spec,))
+
+    def test_partial_filter_keeps_the_order_and_all_kept_is_the_same_object(self):
+        a10 = self.aircraft(A10, 3_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        bmp = F.make_vehicle(self.red, 'Red/bmp', 'BMP-2', (0, 0, 0))
+        policy = FC.WeaponPolicy('m', 'air', {C.TARGET_CLASS_SURFACE: frozenset({'SEAD'})})
+        agm = ShotSpec(accuracy=0.5, destroy_capacity=0.5, weapon='AGM-88')
+        bomb = ShotSpec(accuracy=0.5, destroy_capacity=0.5, weapon='Mk-82AIR')
+        gun = ShotSpec(accuracy=0.5, destroy_capacity=0.5, weapon='test:gun')
+        mixed = (bomb, agm, gun)
+        restricted = FC.restrict_by_policy(lambda shooter, target: mixed, {a10.id: policy})
+        self.assertEqual(restricted(a10, bmp), (agm, gun))
+        all_kept = (agm, gun)
+        restricted = FC.restrict_by_policy(lambda shooter, target: all_kept, {a10.id: policy})
+        self.assertIs(restricted(a10, bmp), all_kept)
+        single = FC.restrict_by_policy(lambda shooter, target: agm, {a10.id: policy})
+        self.assertIs(single(a10, bmp), agm)
+
+    def test_shooter_without_policy_gets_the_same_object(self):
+        a10 = self.aircraft(A10, 3_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        other = self.aircraft(A10, 3_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        bmp = F.make_vehicle(self.red, 'Red/bmp', 'BMP-2', (0, 0, 0))
+        restricted = self.restricted(a10, 'Anti_Ship')
+        self.assertIs(restricted(other, bmp), self.base(other, bmp))
+
+    def test_target_grounded_is_forwarded_only_if_the_base_accepts_it(self):
+        self.assertTrue(ER.accepts_target_grounded(self.restricted(self.aircraft(F16, 3_000.0, loadout='Strike',
+                                                                                 force=self.blue), 'Strike')))
+        calls = []
+
+        def plain(shooter, target):
+            calls.append('plain')
+            return None
+
+        wrapped = FC.restrict_by_policy(plain, {})
+        self.assertFalse(ER.accepts_target_grounded(wrapped))
+        self.assertIsNone(wrapped(object(), object()))
+        self.assertEqual(calls, ['plain'])
+
+    def test_grounded_aircraft_is_a_surface_target(self):
+        f16 = self.aircraft(F16, 3_000.0, loadout='SEAD', force=self.blue)
+        mig = self.aircraft('MiG-29S', 0.0, loadout='CAP')
+        restricted = self.restricted(f16, 'SEAD')
+        self.assertIsNone(restricted(f16, mig, target_grounded=True))      # SEAD: superficie non ingaggiabile
+        self.assertTrue(self.restricted(f16, 'Strike')(f16, mig, target_grounded=True))
+
+    def test_invalid_arguments(self):
+        with self.assertRaises(TypeError):
+            FC.restrict_by_policy(None, {})
+
+        with self.assertRaises(TypeError):
+            FC.restrict_by_policy(self.base, [])
+
+    def test_policy_rules_are_immutable(self):
+        policy = FC.WeaponPolicy('m', 'air', {C.TARGET_CLASS_AIR: C.WEAPON_RULE_ANY})
+
+        with self.assertRaises(TypeError):
+            policy.rules[C.TARGET_CLASS_SHIP] = C.WEAPON_RULE_ANY
+
+    def test_allows(self):
+        policy = FC.WeaponPolicy('m', 'air', {C.TARGET_CLASS_AIR: C.WEAPON_RULE_SELF_DEFENCE,
+                                              C.TARGET_CLASS_SURFACE: frozenset({'Strike'})}, self_escort=True)
+        self.assertTrue(policy.allows('AIM-9M', C.TARGET_CLASS_AIR))
+        self.assertFalse(policy.allows('AIM-9M', C.TARGET_CLASS_SURFACE))
+        self.assertTrue(policy.allows('Mk-82', C.TARGET_CLASS_SURFACE))
+        self.assertFalse(policy.allows('Mk-82', C.TARGET_CLASS_SHIP))          # classe assente
+        self.assertTrue(policy.allows('test:x', C.TARGET_CLASS_SHIP))          # arma non a registro
+        self.assertTrue(policy.allows(None, C.TARGET_CLASS_SHIP))
+        self.assertFalse(FC.WeaponPolicy('m', 'air', policy.rules, False).allows('AIM-9M', C.TARGET_CLASS_AIR))
 
 
 if __name__ == '__main__':

@@ -1434,5 +1434,62 @@ class TestMissionTypes(unittest.TestCase):
             postures_for('air', 'CAP')
 
 
+class TestMissionWeaponPolicy(unittest.TestCase):
+    """F7a: `MISSION_WEAPON_POLICY` (politica d'armi per tipo di missione) e `mission_weapon_policy`."""
+
+    def test_every_air_mission_type_has_an_entry(self):
+        from Code.Dynamic_War_Manager.Source.Context import Context as C
+        self.assertEqual(set(C.MISSION_WEAPON_POLICY['air']), set(C.MISSION_TYPES['air']))
+
+    def test_classes_and_rules_are_valid(self):
+        from Code.Dynamic_War_Manager.Source.Context import Context as C
+        for mission_type, policy in C.MISSION_WEAPON_POLICY['air'].items():
+            for target_class, rule in policy.items():
+                with self.subTest(mission_type=mission_type, target_class=target_class):
+                    self.assertIn(target_class, C.TARGET_CLASSES)
+                    self.assertTrue(rule in (C.WEAPON_RULE_ANY, C.WEAPON_RULE_SELF_DEFENCE)
+                                    or (isinstance(rule, frozenset) and rule))
+
+    def test_every_task_used_exists_in_the_air_weapon_registry(self):
+        from Code.Dynamic_War_Manager.Source.Context import Context as C
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS
+        registry_tasks = {task for models in AIR_WEAPONS.values() if isinstance(models, dict)
+                          for data in models.values() for task in data.get('task', ())}
+        used = {task for policy in C.MISSION_WEAPON_POLICY['air'].values()
+                for rule in policy.values() if isinstance(rule, frozenset) for task in rule}
+        self.assertTrue(used)
+        self.assertEqual(used - registry_tasks, set())
+
+    def test_ground_and_sea_have_no_constraints(self):
+        from Code.Dynamic_War_Manager.Source.Context import Context as C
+        self.assertIsNone(C.MISSION_WEAPON_POLICY['ground'])
+        self.assertIsNone(C.MISSION_WEAPON_POLICY['sea'])
+        self.assertIsNone(C.mission_weapon_policy('ground', 'Attack'))
+        self.assertIsNone(C.mission_weapon_policy('sea', 'Patrol'))
+
+    def test_table_rows_confirmed_by_the_user(self):
+        from Code.Dynamic_War_Manager.Source.Context import Context as C
+        policy = C.mission_weapon_policy
+        self.assertEqual(policy('air', 'CAP'), {'air': 'any'})
+        self.assertEqual(policy('air', 'CAS')['surface'], frozenset({'CAS', 'Strike'}))
+        self.assertEqual(policy('air', 'CAS')['air'], 'self_defence')
+        self.assertEqual(policy('air', 'Strike')['ship'], frozenset({'Strike'}))
+        self.assertEqual(policy('air', 'SEAD'), {'air': 'self_defence', 'air_defence': frozenset({'SEAD'})})
+        self.assertEqual(policy('air', 'Anti_Ship'), {'air': 'self_defence', 'ship': frozenset({'Anti_Ship'})})
+        self.assertEqual(policy('air', 'Pinpoint_Strike')['air_defence'], frozenset({'Pinpoint_Strike', 'Strike'}))
+
+        for mission_type in ('Recon', 'AWACS', 'Tanker', 'Transport'):
+            self.assertEqual(policy('air', mission_type), {'air': 'self_defence'})
+
+    def test_invalid_arguments_raise(self):
+        from Code.Dynamic_War_Manager.Source.Context import Context as C
+        with self.assertRaises(ValueError):
+            C.mission_weapon_policy('air', 'Attack')
+        with self.assertRaises(ValueError):
+            C.mission_weapon_policy('space', 'CAP')
+        with self.assertRaises(TypeError):
+            C.mission_weapon_policy(None, 'CAP')
+
+
 if __name__ == '__main__':
     unittest.main()

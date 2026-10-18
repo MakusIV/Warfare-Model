@@ -195,8 +195,10 @@ rotta pianificata, resta presente, bersaglio e intercettore (v. "Fine di attivit
     distrutto);
   * `target_destroyed`: bersaglio ASSET (l'asset) o GROUP (gli asset del blocco o della missione con
     quell'id); tutti distrutti (in combattimento, gia' all'inizio o persi per carburante) -> fine
-    all'istante dell'ultima distruzione (non prima della partenza). Bersagli POINT/AREA: non
-    rappresentabili prima della F7 (bersagli espliciti), criterio ignorato con un warning. Nel
+    all'istante dell'ultima distruzione (non prima della partenza); per un GROUP con
+    `Target.asset_ids` solo quel sottoinsieme (F7a). Bersagli POINT/AREA/ZONE: non
+    rappresentabili (F7a, decisione 12 del 2026-10-18: nessun asset da distruggere), criterio ignorato con
+    un warning. Nel
     risolutore il criterio vede le distruzioni degli ingaggi gia' risolti e della propria run;
     l'esito lo valuta sull'intera sessione (`_activity_ends`);
   * `max_duration_s`: fine all'istante partenza della missione + durata (semantica scelta, la piu'
@@ -440,7 +442,36 @@ per lato non aggiungerebbe capacita' ma solo una seconda forma dello stesso cont
 selezione dell'arma dai registri non sta nell'orchestratore: la fa la callable iniettata
 (`Fire_Control.make_registry_fire_control`). Dalla F4c una fire control
 che dichiara la keyword `target_grounded` la riceve per i bersagli a terra (v.
-`resolve_engagement`).
+`resolve_engagement`). Dalla F7a la callable e' avvolta, per gli asset di missioni aeree, dalla politica
+d'armi per tipo di missione (v. "Regole d'ingaggio di missione (F7a)"); il contratto verso il risolutore non
+cambia.
+
+## Regole d'ingaggio di missione (F7a del piano della Missione, decisioni dell'utente del 2026-10-18)
+
+`Analysis/Document/Proposta_F7_Bersagli_Filtro_Armi.md` §5. Due strati, ciascuno col proprio interruttore:
+  * `F7_WEAPON_POLICY` (attivo): strato W. La fire control iniettata e' avvolta da
+    `Fire_Control.restrict_by_policy` con la politica d'armi di ogni asset di missione AEREA
+    (`Mission_Adapter.weapon_policies`, tabella `Context.MISSION_WEAPON_POLICY`): le opzioni d'arma che il
+    tipo di missione non ammette contro la classe del bersaglio (aereo, difesa aerea, nave, altra superficie)
+    sono tolte, con l'autodifesa aria-aria solo per i loadout con `self_escort_capability`. Spento: la fire
+    control iniettata com'e'.
+  * `F7_TARGET_RULES` (attivo): strato T. Per ogni asset la cui missione dichiara una ROE diversa da
+    `weapon_free` o armi designate (`MissionAsset.weapons`, o l'arma del `AttackProfile`) la sessione passa
+    al risolutore una `Engagement_Resolver.TargetRules` (`Mission_Adapter.target_rules`): bersaglio designato
+    (`Target`, con `asset_ids` per un sottoinsieme del gruppo; POINT/AREA/ZONE come area), ROE, armi designate
+    (sul designato solo quelle, sui non designati riservate). La memoria di `return_fire` e' PER SESSIONE:
+    gli asset che hanno lanciato contro un dominio di coordinamento in un episodio gia' risolto sono passati
+    come `known_hostile_ids` agli episodi successivi (dentro la stessa run il risolutore reagisce al lancio di un
+    nuovo ostile). `priority_designated` ha due fasi, avvicinamento senza tiro sulle opportunita' di superficie e
+    dopo l'attacco con le opportunita' ammesse: la fine dell'attacco e' il passaggio sul punto ATTACK della
+    rotta dell'asset (`TargetRules.attack_point`, letto dai tratti REALI di ogni episodio, ri-pianificazioni
+    comprese) o il designato distrutto (`known_destroyed_ids` dagli episodi precedenti). Spento: nessuna regola
+    al risolutore.
+Gli interruttori sono indipendenti; con entrambi spenti il comportamento e' quello precedente alla F7a anche per
+missioni che dichiarano ROE e armi. Le validazioni nuove di `Mission_Types` e la coerenza fra
+`MissionAsset.loadout` e il loadout assegnato all'aereo (`_check_missions`, `ValueError`) NON dipendono dagli
+interruttori. Nessuna estrazione RNG nuova: un filtro che cambia una scelta sposta le estrazioni successive
+dello stesso ingaggio. La F7b (fuoco su posizione) non e' implementata.
 
 ## Carburante (F6-A del piano della Missione, decisioni dell'utente del 2026-10-12)
 
@@ -653,7 +684,7 @@ attivita', con un log. I contatti invece sono cercati solo dentro la sessione.
 
 ## Cosa NON fa
 - Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`.
-- Non seleziona l'arma (lo fa la fire control iniettata), non rifornisce (munizioni o carburante), non ri-instrada le forze
+- Non seleziona l'arma (lo fa la fire control iniettata; la politica d'armi di missione, F7a, la restringe), non rifornisce (munizioni o carburante), non ri-instrada le forze
   TERRESTRI e NAVALI che si disingaggiano (restano segnalate nell'esito e, dal G4a, passive negli episodi
   successivi); dal G4b gli aerei di missione disingaggiati rientrano alla base.
 - Nessun componente LLM, in nessuna forma.
@@ -797,6 +828,16 @@ G4_REPLAN = True
 #     ESCE DI SCENA (`Fuel_Model.BINGO_EXIT`, `BingoEnd.exits`). Spento: `BINGO_NO_BASE`, resta passivo sulla
 #     rotta (il G4b fino al 2026-10-17). Sotto-interruttore per isolarne l'effetto nel confronto degli scenari.
 G4_OFF_SCENE_EXIT = True
+
+# F7a, regole d'ingaggio di missione (decisioni dell'utente del 2026-10-18), due interruttori separati e
+# indipendenti (stessa ragione dei precedenti: la fotografia attribuisce le differenze a una sola causa):
+#   * `F7_WEAPON_POLICY` (ATTIVO): strato W, politica d'armi per tipo di missione come involucro della fire control
+#     (`Fire_Control.restrict_by_policy`, v. "Regole d'ingaggio di missione (F7a)"). Spento: la fire control
+#     iniettata com'e'.
+#   * `F7_TARGET_RULES` (ATTIVO): strato T, bersaglio designato, ROE e armi designate come `TargetRules` nel
+#     risolutore. Spento: nessuna regola al risolutore. Con entrambi spenti: comportamento precedente alla F7a.
+F7_WEAPON_POLICY = True
+F7_TARGET_RULES = True
 
 # Intervallo [s] entro cui due finestre (di una stessa forza o dominio) che non si sovrappongono sono ancora lo
 # stesso episodio. Decisione dell'utente del 2026-10-17: 300 s, cioe' `Fuel_Model.DISENGAGE_TIME`, i 5 minuti del
@@ -1596,34 +1637,53 @@ class ActivityPlan:
     static_end: Optional[Tuple[float, AssetEndReason]] = None
 
 
+def _restrict_to_asset_ids(mission, members: frozenset) -> frozenset:
+    """`members` ristretto a `Target.asset_ids` se la missione lo dichiara (F7a), altrimenti `members`."""
+    wanted = mission.target.asset_ids
+
+    if not wanted:
+        return members
+
+    unknown = sorted(set(wanted) - members)
+
+    if unknown:
+        logger.warning(f"run_session: mission {mission.mission_id!r}: target asset_ids {unknown} are not in the "
+                       f"target group, ignored")
+
+    return members & frozenset(wanted)
+
+
 def _mission_target_ids(mission, blocks: Mapping[str, object], mission_of: Mapping[str, object],
                         assets: Mapping[str, object]) -> frozenset:
     """Asset bersaglio della missione per il criterio `target_destroyed` (F6-B1).
 
     ASSET: l'asset `target_id`. GROUP: gli asset del blocco `target_id` fra quelli passati, oppure della
-    missione `target_id` (un gruppo di missione), oppure l'asset `target_id`. POINT/AREA: il bersaglio
-    non e' un asset del modello (bersagli espliciti: F7), criterio non rappresentabile (warning).
+    missione `target_id` (un gruppo di missione), oppure l'asset `target_id`; con `Target.asset_ids` (F7a)
+    solo quel sottoinsieme del gruppo (gli id fuori dal gruppo sono ignorati con un warning). POINT/AREA/ZONE:
+    il bersaglio non e' un asset del modello (decisione 12 della F7a: nessun asset da distruggere), criterio
+    non rappresentabile (warning). Non filtra per lato (S25-TGT).
     Vuoto (con un warning) se l'id non corrisponde a nulla fra le forze passate.
     """
     target = mission.target
 
     if target.kind not in (TargetKind.ASSET, TargetKind.GROUP):
         logger.warning(f"run_session: mission {mission.mission_id!r} declares target_destroyed on a "
-                       f"{target.kind.name} target: not representable before F7 (explicit targets), ignored")
+                       f"{target.kind.name} target: not representable (no asset to destroy), ignored")
         return frozenset()
 
     target_id = target.target_id
 
     if target.kind is TargetKind.GROUP and target_id in blocks:
-        return frozenset(asset_id for asset_id in (_domain_id(a) for a in (getattr(blocks[target_id], 'assets', None)
-                                                                          or {}).values())
-                         if asset_id is not None)
+        members = frozenset(asset_id for asset_id in (_domain_id(a) for a in (getattr(blocks[target_id], 'assets', None)
+                                                                              or {}).values())
+                            if asset_id is not None)
+        return _restrict_to_asset_ids(mission, members)
 
     if target.kind is TargetKind.GROUP and target_id in mission_of:
-        return frozenset(mission_of[target_id].asset_ids)
+        return _restrict_to_asset_ids(mission, frozenset(mission_of[target_id].asset_ids))
 
     if target_id in assets:
-        return frozenset((target_id,))
+        return _restrict_to_asset_ids(mission, frozenset((target_id,)))
 
     logger.warning(f"run_session: mission {mission.mission_id!r}: target {target_id!r} matches no asset, "
                    f"block or mission passed: target_destroyed ignored")
@@ -1795,8 +1855,9 @@ def _activity_ends(plans: Mapping[str, ActivityPlan], movement_of: Mapping[str, 
 
 
 def _check_missions(order: SessionOrder, blocks: Mapping[str, object]) -> None:
-    """Ogni missione si riferisce a un blocco passato, i suoi asset gli appartengono e nessun suo
-    tratto e' piu' veloce del mezzo piu' lento (regola A, `Mission_Adapter.check_mission_speed`)."""
+    """Ogni missione si riferisce a un blocco passato, i suoi asset gli appartengono, nessun suo
+    tratto e' piu' veloce del mezzo piu' lento (regola A, `Mission_Adapter.check_mission_speed`) e il loadout
+    dichiarato di ogni asset e' quello assegnato all'aereo (F7a, `ValueError`)."""
     for mission in order.missions:
         block = blocks.get(mission.block_id)
 
@@ -1807,6 +1868,15 @@ def _check_missions(order: SessionOrder, blocks: Mapping[str, object]) -> None:
         check_mission_assets(mission, block)
         assets = {_domain_id(asset): asset for asset in (getattr(block, 'assets', None) or {}).values()}
         MA.check_mission_speed(mission, assets, order.t_start)
+
+        for mission_asset in mission.assets:
+            # F7a (decisione 13): il motore usa `Aircraft.assigned_loadout`, la politica d'armi deve leggere lo
+            # stesso loadout che la missione dichiara.
+            if mission_asset.loadout is not None \
+                    and mission_asset.loadout != getattr(assets.get(mission_asset.asset_id), 'assigned_loadout', None):
+                raise ValueError(f"mission {mission.mission_id!r}: asset {mission_asset.asset_id!r} declares "
+                                 f"loadout {mission_asset.loadout!r} but its assigned loadout is "
+                                 f"{getattr(assets.get(mission_asset.asset_id), 'assigned_loadout', None)!r}")
 
         if mission.mission_id in blocks:
             raise ValueError(f"mission {mission.mission_id!r}: its id is also the id of a block passed; "
@@ -2069,7 +2139,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         TypeError: `order` non e' un SessionOrder, `fire_control` non chiamabile.
         ValueError: durata mancante o incoerente, forze/asset duplicati o fuori
             `order.force_ids`, missione di un blocco non passato o con asset di altri blocchi,
-            `mission_id` uguale all'id di un blocco, e gli errori di dominio dei moduli chiamati.
+            `mission_id` uguale all'id di un blocco, loadout di missione diverso da quello assegnato
+            all'aereo (F7a), e gli errori di dominio dei moduli chiamati.
     """
     if not isinstance(order, SessionOrder):
         raise TypeError(f"order must be a SessionOrder, got {type(order).__name__}")
@@ -2112,6 +2183,21 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
 
             if asset_id is not None:
                 assets_by_id[asset_id] = asset
+
+    # F7a: strato W (politica d'armi per tipo di missione) come involucro della fire control, PRIMA di ogni suo
+    # uso (tutti gli episodi e la ri-pianificazione); strato T (regole di bersaglio) per il risolutore.
+    if F7_WEAPON_POLICY:
+        policies = MA.weapon_policies(order.missions, assets_by_id)
+
+        if policies:
+            fire_control = FC.restrict_by_policy(fire_control, policies)
+
+    target_rules = MA.target_rules(order.missions, blocks, {m.mission_id: m for m in order.missions}, assets_by_id,
+                                   {block_id: getattr(block, 'side', None) for block_id, block in blocks.items()}) \
+        if F7_TARGET_RULES else {}
+    # Memoria di `return_fire` per sessione: chi ha lanciato contro ciascun dominio di coordinamento negli
+    # episodi gia' risolti.
+    hostile_of: Dict[str, set] = {}
 
     # Tratti di MOVIMENTO di ogni asset di missione (senza la presenza ferma prima e dopo, che non
     # consuma) e, dalla F6-A, esaurimento del carburante calcolato A MONTE (v. "Carburante").
@@ -2489,6 +2575,26 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         if criteria:
             extra['activity_criteria'] = criteria
 
+        if target_rules:
+            # F7a: regole di bersaglio, con gli ostili noti del dominio di coordinamento di ogni tiratore.
+            rules_now = {}
+
+            for asset_id, rules in target_rules.items():
+                if asset_id not in owner:
+                    continue
+
+                hostile = hostile_of.get(coordination.get(owner[asset_id][1]))
+                # Designati gia' distrutti (episodi precedenti): fine dell'attacco di `priority_designated`.
+                destroyed = frozenset(
+                    designated for designated in rules.designated_ids
+                    if callable(getattr(assets_by_id.get(designated), 'is_destroyed', None))
+                    and assets_by_id[designated].is_destroyed()) if rules.designated_ids else frozenset()
+                rules_now[asset_id] = dataclasses.replace(rules, known_hostile_ids=frozenset(hostile or ()),
+                                                          known_destroyed_ids=destroyed) \
+                    if hostile or destroyed else rules
+
+            extra['target_rules'] = rules_now
+
         result = ER.resolve_engagement(component[0], component[1], group, fire_control,
                                        order.rng(mission_id=None, event_id=event_id, counter=counter),
                                        extra_forces=component[2:],
@@ -2515,6 +2621,11 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         # Applicato SUBITO, a tutte le forze dell'ingaggio: un episodio successivo delle stesse forze (G4a) parte
         # dallo stato gia' consumato (salute e scorte), i `health_before/after` sono concatenati.
         ER.apply_engagement_result(result, *component)
+
+        for salvo in result.salvos:
+            # F7a: ostili noti per `return_fire`, agli episodi successivi.
+            hostile_of.setdefault(coordination.get(salvo.target_force_id, salvo.target_force_id),
+                                  set()).add(salvo.shooter_id)
 
         if not G4_EPISODES:
             return result

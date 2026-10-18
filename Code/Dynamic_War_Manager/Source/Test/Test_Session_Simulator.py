@@ -40,6 +40,7 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     Mission,
     MissionAction,
     MissionAsset,
+    MissionRules,
     MissionStatus,
     MissionWaypoint,
     Operation,
@@ -1746,6 +1747,179 @@ class TestReserveBingo(_Base):
 
         self.assertGreater(planned.time, 0.0)
         self.assertAlmostEqual(outcome.mission_outcomes['M-b1'].asset_outcomes['b1'].end_time, planned.time, delta=1e-6)
+
+
+# ── F7a: REGOLE D'INGAGGIO DI MISSIONE ─────────────────────────────────────────
+
+class TestMissionEngagementRules(_Base):
+    """F7a (`F7_WEAPON_POLICY`, `F7_TARGET_RULES`, attivi): bersaglio designato, ROE e armi designate della
+    missione arrivano al risolutore; il loadout dichiarato dev'essere quello assegnato; con i due interruttori
+    spenti la sessione e' quella di prima."""
+
+    def _spy(self, mission_edit=None, switches=(True, True), **run_kwargs):
+        """Esegue `_scenario` (M-north con `mission_edit` applicata) registrando le chiamate al risolutore:
+        `(outcome, [(kwargs, result), ...])`."""
+        blue, red, missions = self._scenario()
+
+        if mission_edit is not None:
+            missions = tuple(mission_edit(m) if m.mission_id == 'M-north' else m for m in missions)
+
+        calls = []
+        original = ER.resolve_engagement
+
+        def resolve(*args, **kwargs):
+            result = original(*args, **kwargs)
+            calls.append((kwargs, result))
+            return result
+
+        weapon_policy, target_rules = switches
+
+        with patch.object(SS, 'F7_WEAPON_POLICY', weapon_policy), patch.object(SS, 'F7_TARGET_RULES', target_rules), \
+                patch.object(SS.ER, 'resolve_engagement', side_effect=resolve):
+            outcome = SS.run_session(self._order('S-f7a', missions), blue, red, _fire, reaction_profile_for=_profile,
+                                     **run_kwargs)
+
+        return outcome, calls
+
+    @staticmethod
+    def _only_re2(mission):
+        """M-north: bersaglio GROUP 'Red-East' ristretto a 're2', ROE `only_designated`."""
+        target = Target(kind=TargetKind.GROUP, target_id='Red-East', provenance=TargetProvenance.OBSERVED,
+                        observed_at=0.0, asset_ids=('re2',))
+        return dataclasses.replace(mission, target=target, rules=MissionRules(roe='only_designated'))
+
+    @staticmethod
+    def _north_targets(calls):
+        return {salvo.target_id for _, result in calls if result is not None for salvo in result.salvos
+                if salvo.shooter_id in ('bn1', 'bn2')}
+
+    def test_designation_and_roe_reach_the_resolver(self):
+        _, free = self._spy()
+        self.assertTrue(all('target_rules' not in kwargs for kwargs, _ in free))
+        self.assertIn('re1', self._north_targets(free))                      # premessa: senza regole anche re1
+
+        outcome, calls = self._spy(self._only_re2)
+        rules = {asset_id: rule for kwargs, _ in calls for asset_id, rule in kwargs.get('target_rules', {}).items()}
+        self.assertEqual(set(rules), {'bn1', 'bn2'})
+        self.assertEqual(rules['bn1'].roe, 'only_designated')
+        self.assertEqual(rules['bn1'].designated_ids, frozenset({'re2'}))
+        self.assertEqual(self._north_targets(calls), {'re2'})
+        self.assertGreater(len(outcome.ammunition_events), 0)
+
+    def test_both_switches_off_is_the_weapon_free_session(self):
+        free, _ = self._spy()
+        off, calls = self._spy(self._only_re2, switches=(False, False))
+        self.assertTrue(all('target_rules' not in kwargs for kwargs, _ in calls))
+        self.assertEqual(off, free)
+
+    def test_target_rules_switch_alone(self):
+        free, _ = self._spy()
+        no_rules, calls = self._spy(self._only_re2, switches=(True, False))
+        self.assertTrue(all('target_rules' not in kwargs for kwargs, _ in calls))
+        self.assertEqual(no_rules, free)
+        with_rules, _ = self._spy(self._only_re2, switches=(False, True))
+        self.assertNotEqual(with_rules, free)
+
+    def test_mission_loadout_must_be_the_assigned_one(self):
+        blue, red, missions = self._scenario()
+        blue[0].assets['bn1'].assigned_loadout = 'CAS'
+        declared = tuple(dataclasses.replace(m, assets=tuple(dataclasses.replace(a, loadout='Strike')
+                                                             for a in m.assets)) if m.mission_id == 'M-north' else m
+                         for m in missions)
+
+        for switches in ((True, True), (False, False)):         # la validazione non dipende dagli interruttori
+            with self.subTest(switches=switches), patch.object(SS, 'F7_WEAPON_POLICY', switches[0]), \
+                    patch.object(SS, 'F7_TARGET_RULES', switches[1]):
+                with self.assertRaises(ValueError):
+                    SS.run_session(self._order('S-f7a-loadout', declared), blue, red, _fire,
+                                   reaction_profile_for=_profile)
+
+    def test_declared_loadout_equal_to_the_assigned_one_is_accepted(self):
+        blue, red, missions = self._scenario()
+        blue[0].assets['bn1'].assigned_loadout = 'CAS'
+        blue[0].assets['bn2'].assigned_loadout = 'CAS'
+        declared = tuple(dataclasses.replace(m, assets=tuple(dataclasses.replace(a, loadout='CAS')
+                                                             for a in m.assets)) if m.mission_id == 'M-north' else m
+                         for m in missions)
+        SS.run_session(self._order('S-f7a-loadout-ok', declared), blue, red, _fire, reaction_profile_for=_profile)
+
+    def test_target_destroyed_respects_the_asset_ids(self):
+        blue, red, missions = self._scenario()
+        mission = missions[0]
+        subset = dataclasses.replace(mission, end_criteria=EndCriteria(target_destroyed=True),
+                                     target=Target(kind=TargetKind.GROUP, target_id='Red-East',
+                                                   provenance=TargetProvenance.OBSERVED, observed_at=0.0,
+                                                   asset_ids=('re2',)))
+        mission_of = {m.mission_id: m for m in missions}
+        assets = {a.id: a for force in blue + red for a in force.assets.values()}
+        blocks = {force.id: force for force in blue + red}
+        self.assertEqual(SS._mission_target_ids(subset, blocks, mission_of, assets), frozenset({'re2'}))
+        whole = dataclasses.replace(subset, target=Target(kind=TargetKind.GROUP, target_id='Red-East',
+                                                          provenance=TargetProvenance.OBSERVED, observed_at=0.0))
+        self.assertEqual(SS._mission_target_ids(whole, blocks, mission_of, assets), frozenset({'re1', 're2'}))
+
+    def test_return_fire_sees_the_hostiles_of_a_previous_episode(self):
+        """b1 (return_fire) sorvola r1 due volte (andata e ritorno, 550 s > `EPISODE_GAP`: due episodi). Nel primo
+        r1 gli spara; nel secondo r1 e' un ostile NOTO (memoria per sessione: `known_hostile_ids`) e b1 gli spara
+        subito. Nel primo episodio b1 reagisce solo dopo il lancio di r1 (ostile nella run), mai prima."""
+        blue = _force('Blue', 'Blue', [_asset(Aircraft, 'b1', -20_000, 0, speed=200.0, ammunition=200)])
+        red = _force('Red', 'Red', [_asset(Vehicle, 'r1', 0, 0, ammunition=20)])
+        mission = _air_mission('M-b1', blue, _route([(-20_000, 0), (60_000, 0), (-20_000, 0)], 200.0, 'r-b1'),
+                               [('b1', 0.0)])
+        mission = dataclasses.replace(mission, rules=MissionRules(roe='return_fire'))
+        calls = []
+        original = ER.resolve_engagement
+
+        def resolve(*args, **kwargs):
+            result = original(*args, **kwargs)
+            calls.append((kwargs, result))
+            return result
+
+        scratch = ER.ShotSpec(accuracy=1.0, destroy_capacity=0.0, rounds=1, time_of_flight=1.0)
+
+        def fire(shooter, target):
+            return scratch                                       # nessuno distrugge nessuno: due episodi
+
+        with patch.object(SS.ER, 'resolve_engagement', side_effect=resolve):
+            SS.run_session(self._order('S-f7a-hostile', (mission,)), [blue], [red], fire,
+                           reaction_profile_for=_profile)
+
+        self.assertEqual(len(calls), 2)
+        first_rules = calls[0][0]['target_rules']['b1']
+        second_rules = calls[1][0]['target_rules']['b1']
+        self.assertEqual((first_rules.roe, first_rules.known_hostile_ids), ('return_fire', frozenset()))
+        self.assertEqual(second_rules.known_hostile_ids, frozenset({'r1'}))
+        first = calls[0][1]
+        first_hostile = min(s.t_launch for s in first.salvos if s.shooter_id == 'r1')
+        reaction = [s.t_launch for s in first.salvos if s.shooter_id == 'b1' and s.target_id == 'r1']
+        self.assertTrue(reaction)                                   # stessa run: reazione al lancio di r1
+        self.assertTrue(all(t > first_hostile for t in reaction))   # ... mai prima
+        self.assertTrue(any(s.shooter_id == 'b1' and s.target_id == 'r1' for s in calls[1][1].salvos))
+
+    def test_priority_designated_gets_the_attack_point_of_the_asset_route(self):
+        """`TargetRules.attack_point` = punto ATTACK sulla rotta DELL'ASSET (offset di formazione compreso)."""
+        blue, red, missions = self._scenario()
+        north = missions[0]
+        roles = [WaypointRole.NAV, WaypointRole.ATTACK, WaypointRole.LAND]
+        route = _route([(0, -20_000), (0, 0), (0, 20_000)], 200.0, 'r-bn1')
+        waypoints = tuple(MissionWaypoint(wp, role) for wp, role in zip(route_waypoints(route), roles))
+        north = dataclasses.replace(north, route=route, waypoints=waypoints,
+                                    rules=MissionRules(roe='priority_designated'))
+        calls = []
+        original = ER.resolve_engagement
+
+        def resolve(*args, **kwargs):
+            calls.append(kwargs)
+            return original(*args, **kwargs)
+
+        with patch.object(SS.ER, 'resolve_engagement', side_effect=resolve):
+            SS.run_session(self._order('S-f7a-attack', (north, missions[1])), blue, red, _fire,
+                           reaction_profile_for=_profile)
+
+        rules = {asset_id: rule for kwargs in calls for asset_id, rule in kwargs.get('target_rules', {}).items()}
+        self.assertEqual(set(rules), {'bn1', 'bn2'})
+        self.assertEqual(rules['bn1'].attack_point, (0.0, 0.0, 0.0))
+        self.assertEqual(rules['bn2'].attack_point, (500.0, 0.0, 0.0))      # bn2 a 500 m sulla destra (est)
 
 
 if __name__ == '__main__':

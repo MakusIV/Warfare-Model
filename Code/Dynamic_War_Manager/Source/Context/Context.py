@@ -623,6 +623,82 @@ def postures_for(domain: str, mission_type: str) -> Tuple[Tuple[str, ...], str]:
     entry = MISSION_TYPE_POSTURES[domain][mission_type]
     return tuple(entry['admitted']), entry['reference']
 
+
+# ── POLITICA D'ARMI PER TIPO DI MISSIONE (F7a) ───────────────────────────────
+# `Analysis/Document/Proposta_F7_Bersagli_Filtro_Armi.md` §2.4. Strato W delle regole d'ingaggio di missione:
+# quali armi (per i TASK del registro d'arma, `Aircraft_Weapon_Data`) un aereo di una missione di un dato tipo
+# puo' usare contro una data CLASSE di bersaglio. La applica `Fire_Control.restrict_by_policy`.
+
+# Classe del bersaglio (`Fire_Control.target_class`): aereo in volo, difesa aerea (Vehicle SAM/AAA/EWR), nave,
+# ogni altro bersaglio di superficie (compresi gli aerei a terra della F4c).
+TARGET_CLASS_AIR = 'air'
+TARGET_CLASS_AIR_DEFENCE = 'air_defence'
+TARGET_CLASS_SHIP = 'ship'
+TARGET_CLASS_SURFACE = 'surface'
+TARGET_CLASSES = (TARGET_CLASS_AIR, TARGET_CLASS_AIR_DEFENCE, TARGET_CLASS_SHIP, TARGET_CLASS_SURFACE)
+
+# Regole per classe: ANY = tutte le armi; SELF_DEFENCE = tutte le armi solo se il loadout ha
+# `self_escort_capability`, altrimenti nessuna; un insieme di task = solo le armi con almeno un task
+# dell'insieme; classe assente = non ingaggiabile.
+WEAPON_RULE_ANY = 'any'
+WEAPON_RULE_SELF_DEFENCE = 'self_defence'
+
+_ALL_AIR_STRIKE_TARGETS = (TARGET_CLASS_AIR_DEFENCE, TARGET_CLASS_SHIP, TARGET_CLASS_SURFACE)
+
+
+def _strike_policy(tasks: Iterable[str], classes: Iterable[str] = _ALL_AIR_STRIKE_TARGETS) -> Dict[str, object]:
+    """Politica di un tipo di missione aria-suolo: autodifesa contro gli aerei, `tasks` contro `classes`."""
+    policy: Dict[str, object] = {TARGET_CLASS_AIR: WEAPON_RULE_SELF_DEFENCE}
+    policy.update({target_class: frozenset(tasks) for target_class in classes})
+    return policy
+
+
+# Tipo di missione (valore di `MISSION_TYPES`) -> {classe: regola} per l'aria; per terra e mare None = nessun
+# vincolo d'arma nella F7a (valgono solo le ROE), chiavi presenti per una tabella futura (Fire_Support,
+# Shore_Bombardment, decisione 5 del 2026-10-18).
+# SCELTA DI PROGETTO (non un dato tarato), confermata dall'utente il 2026-10-18 riga per riga: il vocabolario dei
+# task d'arma non coincide con quello dei tipi di missione (l'AGM-65D non ha 'CAS'), quindi la CAS ammette
+# {CAS, Strike}; il Maverick sulla CAS lo impone l'arma designata (`MissionAsset.weapons`), non questa tabella.
+MISSION_WEAPON_POLICY: Dict[str, Optional[Dict[str, Dict[str, object]]]] = {
+    'air': {
+        Air_To_Air_Task.CAP.value:           {TARGET_CLASS_AIR: WEAPON_RULE_ANY},
+        Air_To_Air_Task.FIGHTER_SWEEP.value: {TARGET_CLASS_AIR: WEAPON_RULE_ANY},
+        Air_To_Air_Task.INTERCEPT.value:     {TARGET_CLASS_AIR: WEAPON_RULE_ANY},
+        Air_To_Air_Task.ESCORT.value:        {TARGET_CLASS_AIR: WEAPON_RULE_ANY},
+        Air_To_Air_Task.RECON.value:         {TARGET_CLASS_AIR: WEAPON_RULE_SELF_DEFENCE},
+        Air_To_Ground_Task.CAS.value:             _strike_policy((Air_To_Ground_Task.CAS.value, Air_To_Ground_Task.STRIKE.value)),
+        Air_To_Ground_Task.STRIKE.value:          _strike_policy((Air_To_Ground_Task.STRIKE.value,)),
+        Air_To_Ground_Task.PINPOINT_STRIKE.value: _strike_policy((Air_To_Ground_Task.PINPOINT_STRIKE.value,
+                                                                  Air_To_Ground_Task.STRIKE.value)),
+        Air_To_Ground_Task.SEAD.value:            _strike_policy((Air_To_Ground_Task.SEAD.value,),
+                                                                 (TARGET_CLASS_AIR_DEFENCE,)),
+        Air_To_Ground_Task.ANTI_SHIP.value:       _strike_policy((Air_To_Ground_Task.ANTI_SHIP.value,),
+                                                                 (TARGET_CLASS_SHIP,)),
+        Air_Support_Task.AWACS.value:        {TARGET_CLASS_AIR: WEAPON_RULE_SELF_DEFENCE},
+        Air_Support_Task.TANKER.value:       {TARGET_CLASS_AIR: WEAPON_RULE_SELF_DEFENCE},
+        Air_Support_Task.TRANSPORT.value:    {TARGET_CLASS_AIR: WEAPON_RULE_SELF_DEFENCE},
+    },
+    'ground': None,
+    'sea': None,
+}
+
+
+def mission_weapon_policy(domain: str, mission_type: str) -> Optional[Dict[str, object]]:
+    """Politica d'armi del tipo di missione (`MISSION_WEAPON_POLICY`): `{classe: regola}`, o None se il
+    dominio non ha vincoli d'arma (terra e mare nella F7a).
+
+    Raises:
+        TypeError: se domain o mission_type non sono stringhe.
+        ValueError: se domain o mission_type non sono validi (v. MISSION_TYPES).
+    """
+    _check_mission_type(domain, mission_type)
+    table = MISSION_WEAPON_POLICY.get(domain)
+
+    if table is None:
+        return None
+
+    return table.get(mission_type)
+
 BLOCK_CATEGORY = {
 
     'Civilian': 'Civilian',

@@ -149,6 +149,16 @@ Il G5 (chiusura del piano G1-G5) non cambia il motore: aggiunge in coda l'unita'
 episodi d'ingaggio separati, due consumi d'ingaggio, bingo dopo il secondo) con le varianti 'double', 'transfer',
 'replan_off', 'episodes_off', 'engagement_fuel_off'. Nessuna voce nuova; le esecuzioni esistenti non cambiano.
 
+## Regole d'ingaggio di missione dopo la F7a
+
+La F7a (`Session_Simulator.F7_WEAPON_POLICY`, `F7_TARGET_RULES`, decisioni dell'utente del 2026-10-18) non cambia
+le esecuzioni esistenti (nessuna missione esistente dichiara ROE o armi designate, la politica d'armi per tipo di
+missione non scarta nulla negli scenari) ed e' migrata S19AD: i filtri di test `maverick_only`/`ifv_only` sono
+sostituiti da arma designata e bersaglio ristretto + `only_designated` (stessi nomi di variante, stesse 24
+esecuzioni identiche). Aggiunge in coda tre unita' S28: S28-ROE ('free', 'priority', 'only', 'hold', 'rules_off'),
+S28-CLASS ('cap_low', 'cap_low_off', 'sead', 'sead_off', 'self_defence', 'self_defence_off'), S28-ZONE ('zone_only',
+'zone_free'), 4 seed ciascuna: 52 esecuzioni nuove. Nessuna voce nuova nel riassunto.
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -342,6 +352,13 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     # ── S27 (G5: doppio ingaggio dello stesso aereo, due consumi d'ingaggio, bingo dopo il secondo) — in coda ──
     ('S27-DOUBLE', 'Test_Session_Scenarios_S27', 'TestS27DoubleEngagement', None,
      _by_occurrence('double', 'transfer', 'replan_off', 'episodes_off', 'engagement_fuel_off')),
+    # ── S28 (F7a: regole d'ingaggio di missione) — in coda, nomi stabili ──
+    ('S28-ROE', 'Test_Session_Scenarios_S28', 'TestS28RulesOfEngagement', None,
+     _by_occurrence('free', 'priority', 'only', 'hold', 'rules_off')),
+    ('S28-CLASS', 'Test_Session_Scenarios_S28', 'TestS28WeaponPolicyByMissionType', None,
+     _by_occurrence('cap_low', 'cap_low_off', 'sead', 'sead_off', 'self_defence', 'self_defence_off')),
+    ('S28-ZONE', 'Test_Session_Scenarios_S28', 'TestS28ZoneDesignation', None,
+     _by_occurrence('zone_only', 'zone_free')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per
