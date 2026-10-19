@@ -371,9 +371,10 @@ eventi finisce sempre e solo quando la coda si svuota.
   essere *annullato* (lanciatore fuori combattimento, bersaglio gia' fuori combattimento
   o uscito dalla finestra, scorte insufficienti, contatto rotto), mai *riscritto*: la
   decisione successiva e' un nuovo evento con un nuovo payload.
-- **Re-scheduling delle finestre NON implementato (R4, seconda parte, rimandato).** Una
+- **Re-scheduling delle finestre NON implementato nel risolutore (R4, seconda parte).** Una
   forza che si disingaggia e' solo *segnalata* nell'esito; il nuovo instradamento e il
-  ricalcolo delle finestre di contatto spettano a un livello superiore (C2/campagna).
+  ricalcolo delle finestre di contatto non li fa questo modulo: dal G4b li fa la sessione
+  (`Session_Simulator`, ri-pianificazione dopo il disingaggio).
 - **Il risolutore non muta gli asset.** Lavora su uno stato ombra (salute, scorte) che
   evolve durante l'ingaggio e restituisce gli eventi (`DamageEvent`, `AmmunitionEvent`,
   `InterceptionEvent`) in un `EngagementResult` immutabile. Applicarli e' un passo separato ed esplicito
@@ -1674,7 +1675,8 @@ class _EngagementRun:
         self.morale_for = morale_for
         self.enemy_estimate_for = enemy_estimate_for
         # Dominio di coordinamento di ogni forza (2026-10-11, v. "Dominio di coordinamento" nel
-        # docstring del modulo): calcolato in _build_forces, default = la forza stessa.
+        # docstring del modulo): calcolato in _build_domains (chiamato subito dopo _build_forces),
+        # default = la forza stessa.
         self.domain_of: Dict[str, str] = {}
         # Difesa di salva per dominio (F4b++, 2026-10-11): intercettori di tutte le forze di ogni
         # dominio nell'ordine della regola F (rank, poi id), e intercettazioni gia' allocate nello

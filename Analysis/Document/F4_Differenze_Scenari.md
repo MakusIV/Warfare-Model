@@ -855,6 +855,9 @@ nuove (S22), senza `--ignore` le 370 differiscono tutte per la voce `postures`. 
 
 ## F5 passo (c)-(d): attese WAIT, ETA bloccate, TOT comune, ETA effettive (F5-C, deviazione 13)
 
+> **Nota (2026-10-19)**: le parti di questa sezione sul TOT comune d'Operazione sono storia della F5-C: il TOT
+> comune è stato rimosso il 2026-10-12, v. «Correzione: TOT per missione» in fondo alla sezione.
+
 **Base del confronto**: fotografia di F5-B (`Test/baseline/scenario_baseline.json`, 442 esecuzioni;
 ricontrollata IDENTICA al codice di partenza `b63ba53a` prima delle modifiche, 2026-10-12).
 **Dopo**: `Mission_Adapter.F5_WAITS = True` e TOT comune delle Operazioni cablato in sessione. Sulla

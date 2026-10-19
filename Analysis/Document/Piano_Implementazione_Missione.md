@@ -158,7 +158,9 @@ avvio) e **dopo** la fine (nella posizione finale), per tutta la sessione.
 - unità terrestre o navale: difesa secondo ROE e allerta.
 
 **Azione WAIT**: tratto fermo (sosta, Hold) o circuito (orbita) di durata data o fino all'istante t.
-Rende possibili TOT comune, CAP con tempo sulla stazione e sosta a terra.
+Rende possibili TOT per missione, CAP con tempo sulla stazione e sosta a terra. **[Esito: il TOT comune
+d'Operazione previsto qui è stato rimosso il 2026-10-12, decisione dell'utente: il TOT è di ogni missione,
+`Mission.tot`; v. §5, F5-C.]**
 
 **ETA effettive** riportate nel `MissionOutcome`.
 

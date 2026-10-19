@@ -157,7 +157,8 @@ waypoint (posizione e istante di tiro).
 Oggi una rotta non può contenere soste: il tempo di un arco è solo lunghezza / velocità, e un'orbita
 si può rappresentare solo come circuito geometrico [V].
 - **A (R)**: un'azione "**attendi**" su un waypoint, con durata o "fino all'istante t" (orbita,
-  sosta, schieramento in attesa). Serve a sincronizzare le missioni di un'Operazione (TOT comune),
+  sosta, schieramento in attesa). Serve a rispettare il TOT di ogni missione (**[Esito 2026-10-12: nessun
+  TOT comune d'Operazione, il TOT è di ogni missione]**),
   alla CAP (tempo sulla stazione) e a terra (Hold).
 - **B**: nessuna attesa; la sincronizzazione si ottiene solo regolando le velocità.
 

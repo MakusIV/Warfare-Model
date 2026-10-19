@@ -162,8 +162,8 @@ dopo la fine, e se in quei tratti e' un aereo a terra:
   * aereo dopo la fine della rotta: a terra SOLO se l'ultimo punto e' LAND su una base vera
     (`lands_on_air_base`: riferimento del waypoint a un asset di una base, oppure punto nell'area
     di una base del suo lato, `air_base_points` entro `AIR_BASE_AREA_RADIUS_M`, stima); altrimenti
-    esce di scena all'arrivo, come prima (postura
-    `OFF_SCENE_POSTURE`), finche' la F6 non portera' il rientro nella rotta.
+    esce di scena all'arrivo (postura `OFF_SCENE_POSTURE`; dal G4b la stessa postura vale per chi
+    esce di scena per `BINGO_EXIT`).
 `movement_legs` costruisce i tratti (movimento + presenza) che `Session_Simulator` passa a scheduler
 e risolutore, `grounded_schedule` gli intervalli a terra, `session_postures` la postura di ogni
 asset a fine sessione nel `SessionOutcome`. Senza `F5_PRESENCE` i tratti sono quelli della sola
@@ -369,8 +369,8 @@ PARKED_POSTURE = StartMode.PARKING_COLD.value
 GROUND_DEFENSE_POSTURE = Ground_Action.DEFENSE.value
 SEA_DEFENSE_POSTURE = Sea_Task.DEFENSE.value
 # Postura finale (F5, nell'esito di sessione) di un aereo uscito di scena alla fine di una rotta che
-# non termina su una base vera: ETICHETTA PROVVISORIA, finche' la F6 non portera' il rientro (RTB)
-# nella rotta. Non e' un valore di Context ne' una grandezza.
+# non termina su una base vera e, dal G4b, di chi esce di scena per BINGO_EXIT: ETICHETTA (non piu'
+# provvisoria: il rientro portato dalla F6 e' il bingo). Non e' un valore di Context ne' una grandezza.
 OFF_SCENE_POSTURE = 'off_scene'
 # Postura finale (F6-B1, nell'esito di sessione) di un asset DISTRUTTO a fine sessione, in combattimento o
 # per carburante: ETICHETTA, non un valore di Context ne' una grandezza. La assegna

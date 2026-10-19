@@ -161,7 +161,9 @@ class SessionOrder:
         salvo_window: secondi che raggruppano impatti successivi in un unico evento-salva,
             passato tale e quale a `resolve_engagement` (default 0.0, stesso default).
         missions: le `Mission` della sessione (Fase 3 del piano della Missione), default
-            nessuna: gli asset senza missione restano fermi. Vincoli: `mission_id` unici; un
+            nessuna. Gli asset senza missione non si muovono (dalla F4c gli aerei sono a terra e le
+            unita' di superficie in difesa); gli asset di missione, dalla F5, sono presenti anche
+            fuori dalla rotta. Vincoli: `mission_id` unici; un
             asset in AL PIU' una missione della sessione (un blocco puo' invece avere piu'
             missioni nella stessa sessione, regola dell'utente 2026-10-05); `block_id` in
             `force_ids` se `force_ids` non e' vuoto.
