@@ -53,7 +53,9 @@ case "$ACT" in
     if running; then echo "$JOB gia' in corso (pid $(cat "$PID")): usare wait"; exit 0; fi
     rm -f "$RC"; date "+%Y-%m-%d %H:%M:%S" > "$T0"
     echo "avvio $JOB: ${CMD[*]}" > "$LOG"
-    ( "${CMD[@]}" >> "$LOG" 2>&1; echo $? > "$RC" ) &
+    # setsid + nohup: processo in una sessione propria, cosi' sopravvive alla chiusura dello strumento
+    # bash dell'agente (OpenCode termina i processi figli quando il comando finisce)
+    nohup setsid bash -c '"${@:3}" >> "$1" 2>&1; echo $? > "$2"' _ "$LOG" "$RC" "${CMD[@]}" >/dev/null 2>&1 &
     echo $! > "$PID"
     echo "$JOB avviato (pid $(cat "$PID")). Ora: bash tools/ai/verifica.sh $JOB wait"
     ;;
@@ -64,6 +66,7 @@ case "$ACT" in
     if running; then
       echo "IN CORSO $JOB (avviato $(cat "$T0" 2>/dev/null)); ripetere: bash tools/ai/verifica.sh $JOB wait"
     elif [ -f "$RC" ]; then report
+    elif [ -f "$PID" ]; then echo "INTERROTTO $JOB: il processo e' terminato senza esito; rilanciare: bash tools/ai/verifica.sh $JOB start"
     else echo "$JOB mai avviato: bash tools/ai/verifica.sh $JOB start"; fi
     ;;
   *) echo "azione sconosciuta: $ACT"; exit 2 ;;

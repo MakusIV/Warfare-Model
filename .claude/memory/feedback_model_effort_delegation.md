@@ -37,6 +37,13 @@ design si concentra nel piano scritto da Opus, che e' anche il passaggio di cons
   esecuzioni cambiate attese o codice delicato (RNG, interruttori) -> `des-developer`.
 - Il principale prepara il branch `ai/oc-<tema>`, l'utente lancia `oc`; il principale verifica rapporto,
   diff, suite e confronto (`tools/ai/verifica.sh`) prima del merge. Solo il principale scrive la memoria.
+- **Pilota 2026-10-19 RIUSCITO** (`Proposta_Pulizia_Incongruenze_Doc.md`, manuale §9.6 voci 14-18, commit `d1686b28`):
+  oc-developer in 22 min, modifiche identiche al piano carattere per carattere, suite 4490 OK e 970 identiche
+  (rieseguite dal principale), costo 0,12 $ OpenRouter. Il rapporto era veritiero ma TACEVA un intoppo superato
+  (verifica.sh uccisa dallo strumento bash di OpenCode, poi corretto con setsid): nel verificare, guardare anche
+  il log della sessione OpenCode (`.ai-run/pilota_oc.log` o `oc export`), non solo il rapporto.
+- Piano per oc-developer = stile des-planner ma con testi/firme ESATTI dove possibile: piu' il piano e' preciso,
+  meno l'esecutore decide e piu' e' facile verificarlo.
 
 ## Regola precedente (2026-10-08, superata dallo schema sopra salvo le regole di conferma)
 
