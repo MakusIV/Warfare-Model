@@ -1,84 +1,59 @@
 # Warfare-Model Project Memory
 
+Indice compatto (2026-10-19). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
+
 ## Start here
-- [Sessione 2026-10-18 (ProArt P16) — CHIUSA, tutto pushato: G5, manuale DES, F7a, correzione A-10C approvati (fotografia 970, suite 4490); nuovo schema agenti Sonnet/Opus](project_session_2026_10_18_summary.md) — principale Sonnet high da settings di progetto; prossimo F7b (decisione 15 all'inizio), pulizia incongruenze doc, F6-B3, F8
-- [Sessione 2026-10-17 (ProArt P16) — CHIUSA, suite 4375 OK, G3 approvato (802); G4a+G4b+uscita di scena approvati, fotografia 878, pushato](project_session_2026_10_17_summary.md) — disingaggio -> rientro; senza basi -> ritroso ed esce di scena; G2 alla partenza invariato; prossimo G5 (S27)
-- [Sessione 2026-10-16 (osboxes) — CHIUSA, G2 approvato (fotografia 794), suite 4321 OK](project_session_2026_10_16_summary.md) — 2026-10-17 ProArt P16: G3 verificato e APPROVATO, fotografia 802 installata (20f0e0db), 4 decisioni prese; prossimo G4 (analisi architettura, proposta Opus high), poi G5
-- [Sessione 2026-10-15 (osboxes) — CHIUSA, F6-B2bis + G1 + G2 committati e pushati, suite 4298 OK](project_session_2026_10_15_summary.md) — 2026-10-16: G2 verificato, approvato, fotografia 794 installata (e5465b31); prossimo G3 (consumo in ingaggio), G4 (ri-scheduling), G5
-- [Bingo: B2bis + nuovo modello G0-G5 (G0-G4 approvati, prossimo G5)](project_bingo_reverse_route_decision.md) — riserva = 5 min a spinta MILITARE (`emergency.consume` kg/h, strada A), soglia = resto rotta + riserva, albero trasferimento (TRANSPORT) / combattimento, basi alternative entro 3 km dalla rotta; G3 consumo in ingaggio + G4 ri-scheduling necessari
-- [Sessione 2026-10-13 (osboxes) — CHIUSA, F6-B2 fatta (6b1b7225), suite 4224 OK](project_session_2026_10_13_summary.md) — superata dalla sessione 2026-10-15 (baseline B2 sostituita dalla B2bis); restano aperti F6-B3 S24-GLIDE, F7, F8, F9
-- [Sessione 2026-10-11/12 (ProArt P16) — CHIUSA 2026-10-12, tutto pushato (HEAD 15ac3d3d), suite 4195 OK, fotografia 722: F4b+/++, F4c, F5-A/B/C, TOT per missione, F6-A, F6-B1 FATTE](project_session_2026_10_11_summary.md) — RIPRESA SU osboxes con git pull (venv di quella macchina); prossimo F6-B2 (bingo a priori + in volo), poi F7 (prima proposta separata), F8, F9 (manuale: togliere 'TOT comune' in 03 e 10 + documentare F5/F6); orbita/zone CAP DCE rimandati (l'utente rivede codice DCE e .miz); test instabile noto testCalcFightResult
-- [Session 2026-10-08 (osboxes) — CHIUSA, tutto pushato, suite 3951 OK: F4b fatta (a4d8acf0, missione = unità di ingaggio), regola modelli/sforzi](project_session_2026_10_08_summary.md) — ripresa su ProArt P16 con git pull; decisioni su fuoco e test S3/S5 poi prese e chiuse il 2026-10-11
-- [Session 2026-10-05 (ProArt P16) — CHIUSA, tutto pushato, suite 3929 OK: struttura Missione F0-F3+F4a, doc missioni DCS ingerita, manuale DES a 533cd1f5](project_session_2026_10_05_summary.md) — ripresa con git pull; prossimo: F4b (missione = unità di ingaggio), F4c, poi F5-F9
-- [Struttura Missione: decisioni D1-D6/N1-N3 + regola A, piano F0-F9 (F0-F3, F4a, F4b, F4b+/++, test S3/S5 e F4c fatte; ultimo af2efbe6 2026-10-11, prossimo F5)](project_mission_structure_decisions.md) — Operazione ⊃ Missione, MissionWaypoint contiene Waypoint, loadout per asset, postura e tipo di missione su due assi
-- [Session 2026-09-30 (ProArt P16) — CHIUSA, tutto pushato, suite 3753 OK: R-INT intercettazione con reazione (a500fdf3), R-CLS classi RWR (440a8823)](project_session_2026_09_30_summary.md) — ripresa su qualunque macchina con git pull; prossimo: A4 filtro armi per missione (6 decisioni missione), poi rotte→mappe, residui volumi, Fase 0 C2, D9 morale, bug noti, manuale DES
-- [Session 2026-09-29 (osboxes) — CHIUSA, tutto pushato, suite 3735 OK: soglia di rottura stocastica, efficacia antiaerea E(N), RWR per classi/modalità, classificazione SAM, overkill risolto](project_session_2026_09_29_summary.md) — prossima sessione su ProArt P16 (git pull); prossimo: §5.4 intercettazione senza tempo di reazione, poi settori/classi RWR, A4, rotte→mappe, Fase 0 C2
-- [Session 2026-09-28 (ProArt P16) — D4 KMGU-2 chiusa, 39 armi DCS inserite, A6 (D+F+L1+L2+L3) COMPLETA, suite 3668 OK](project_session_2026_09_28_summary.md) — aperti: disingaggio alla prima perdita (§5.3, più visibile in S1), overkill (§5.2), intercettazione senza reazione (§5.4), A4 con Mission, Fase 0 C2
-- [Session 2026-09-27 (ProArt P16) — Proposta B IMPLEMENTATA (Logic/Weapon_Delivery.py, AttackProfile, B6 bombe nel DES), suite 3645 OK; manuale DES aggiornato a 6754bf1c (fb914f0e)](project_session_2026_09_27_summary.md) — tutto committato e pushato; aperto: D4 KGBU, A4/A6, D-4b/c, D-5 opz.2, 6 decisioni missione, Fase 0 C2
-- [Session 2026-09-26 (ProArt P16) — bug munizioni aggregate RISOLTO (Proposta A completa A1/A2/A3/A5), dati rilascio bombe + volumi rilevamento/intercettazione distinti committati e pushati (suite 3597 OK, 8 commit)](project_session_2026_09_26_summary.md) — prossimo in ordine di blocco: 1) Proposta B FATTA 2026-09-27 (v. sopra), 2) D4 sospesa KGBU/KMGU in attesa verifica DCS dell'utente, 3) A4/A6 rimandate, 4) 6 decisioni di `Analisi_Modello_Missione_Sessione.md`, 5) manuale DES FATTO 2026-09-27 (`fb914f0e`), 6) Fase 0 gerarchia militare (mai toccata, la più vecchia in sospeso)
-- [Modulo gestione mappe — FUTURO, dopo i dettagli del calcolo rotte](project_map_module_plan.md) — fonte `Analysis/Document/Documentazione e Guida Mappe DCS World.docx` (non ancora letta); base per volumi con morfologia del terreno e rotte; 2026-10-18 perimetro esteso: servizio orografico/topografico comune a DES, adapter simulatori, logica tattica/strategica, pianificatore missioni
-- [Scorta munizioni per modello d'arma (Weapon_Stores.py) — A1/A2/A3/A5 fatte 2026-09-26, A4/A6 aperte](project_ammunition_per_weapon_stock.md) — bug reale risolto: l'arma scelta da Fire_Control non consumava la propria scorta, un A-10 lanciava 642 Maverick con solo 4 a bordo
-- [Volumi rilevamento/intercettazione distinti nel pianificatore rotte — D-1..D-7 fatte 2026-09-26, D-4b/c/D-5-opz2/D-7-seconda-parte/D-8 aperte](project_detection_interception_volumes.md) — AVOID_DETECTION non deve MAI assumere per costruzione che evitare il rilevamento eviti l'intercettazione, va sempre verificato sui dati dichiarati
-- [Session 2026-09-25 (ProArt P16) — nebbia di guerra (C) FATTA/committata/pushata (suite 3478 OK); analisi gerarchia militare + proposta regole SAM committate](project_session_2026_09_25_summary.md) — decisioni utente aperte in ordine di blocco: 1) munizioni aggregate aerei + bombe senza portata RISOLTE 2026-09-26 (v. sopra), 2) scelta regole SAM (D+B+F raccomandato, ora da rifare sopra la scorta per arma = A6), 3) Fase 0 gerarchia militare (9 decisioni prima di `Command/Formation.py`/`C2_Node.py`), 4-5) bug noti non corretti (`get_blocks_by_criteria`, `Military.is_helibase` mancante); manca ancora il capitolo manuale su B/C
-- [Session 2026-09-24 (osboxes) — manuale DES + scelta arma dai registri + controllo di portata FATTI, committati e pushati (suite 3444 OK)](project_session_2026_09_24_summary.md) — piano in `Analysis/Document/Piano_Lavori_2026_09_24.md`; agenti `des-developer` (opus medium) e `des-manual-writer` (sonnet high)
-- [Session recap 2026-09-23 — SESSIONE CHIUSA: MOTORE DES COMPLETO, tutte e 7 le fasi fatte, verificate, committate e pushate (suite 3371 test OK)](project_session_2026_09_23_summary.md) — prossima sessione probabilmente sulla VM Oracle VirtualBox: fare SEMPRE `git fetch`/pull a inizio sessione comunque; nessun lavoro in sospeso; a fine sviluppo motore (ora): manualetto Markdown con diagrammi UML richiesto dall'utente, da fare con Sonnet effort alto non Opus (v. [[project_virtual_session_engine_design]])
-- [Session recap 2026-09-22 — sessione chiusa per esaurimento tempo](project_session_2026_09_22_summary.md) — crash a metà (nessuna perdita), Fase 2-3 motore DES, Q1-Q3 e 3 punti residui chiusi, ingestione Lanchester (S1-S11), analisi LLM-locale, ingestione Hughes/salvo model; tutto committato e pushato (`7d76d9f8` + commit memoria) su `analysis/dce-dcs-persistence`
-- [Motore sessioni virtuali — Fasi 1-5 FATTE; DA FARE A FINE SVILUPPO (dopo Fase 7): manualetto Markdown con diagrammi UML sull'architettura, con Sonnet effort alto](project_virtual_session_engine_design.md) — tick da 1 ms bocciato (74 giorni per 2 h di sessione); scelto DES a coda eventi con contatti analitici (CPA/TCPA + rotta↔cilindro); `DataType.Route` confermato modello unico, contratto danno per-asset + `Logic/Damage_Model.py` + `Asset.apply_damage`, SAM/AAA/EWR restano a combat power 0 per definizione con `Military.air_defense_power()` come dimensione separata, `Logic/Contact_Scheduler.py`/`Engagement_Resolver.py`/`Session_Types.py`/`Fuel_Model.py` scritti e testati; suite 3115 OK
-- [Modello di rotta unico — DECISO 2026-09-22, piano a 5 fasi, Fase 1 FATTA](project_route_model_unification_plan.md) — `DataType.Route/Edge/Waypoint` vince; i modelli interni ai due Route Manager restano ma come stato di lavoro privato; `Logic/Route_Adapter.py` e' la frontiera, `calcCanonicalRoute`/`find_canonical_route` le uscite pubbliche
-- [C2 hierarchy design (global+regional C2, session model, indirizzo strategico) — AGREED; TASK 1 (per-side doctrine) DONE & pushed, TASK 2 (Fase A) not started](project_c2_hierarchy_design.md) — from user's PDF; two-level C2 per side, interleaved player-driven DCS/virtual session execution (1-2h offset), targeting propose/approve protocol; branch `feature/c2-doctrine-per-side-fase-a` on origin has TASK 1 (2519 tests OK), pull it on any machine to resume with TASK 2 (RegionInfoReport/Meteo_Analysis/limes)
-- [Session recap 2026-09-18](project_session_2026_09_18_summary.md) — sessione di sola analisi/documentazione: analisi DCE completa, debrief.log reale analizzato, documentazione asset ingerita, vincolo core simulator-agnostic; aperto: campione debrief.log multiplayer, moduli ATO_* non analizzati (~630 KB)
-- [VINCOLO ARCHITETTURALE: core Python indifferente al simulatore, campagna possibile con sole sessioni sintetiche](feedback_core_simulator_agnostic.md) — dichiarato 2026-09-18; test: cancellando l'adapter DCS la campagna deve girare lo stesso; definire prima il contratto SessionOrder/SessionOutcome, poi il SyntheticResolver, e SOLO DOPO l'adapter DCS; il pezzo mancante è la risoluzione dell'ingaggio
-- [Analisi DCE (Dynamic Campaign Engine) — COMPLETATA 2026-09-18](project_dce_analysis.md) — due documenti in `Analysis/Document/documentazione_dcs/`: `ANALISI_DCE.md` + `COMPRENSIONE_PERSISTENZA_DCS.md`; DCE gira FUORI da DCS in `luae.exe`, non usa il `debrief.log` nativo, il `.miz` è l'unica interfaccia di scrittura; `DC_Weather.lua` pronto a sostituire il placeholder `Meteo_Analysis.py`, `DC_Tactical.commander()` è il riferimento per `Strategical_Evaluation.py`; leggere con la lente del vincolo simulator-agnostic (riga sopra). Dati di riferimento ingeriti in `documentazione_dcs/estratti/` (tabella minacce SAM, tassonomie veicoli)
-- [Testing inside a git worktree gives false failures on this project](project_worktree_pythonpath_test_gotcha.md) — absolute imports + hardcoded PYTHONPATH make a worktree's tests silently run the main checkout's stale code; always test from the main checkout, not `.claude/worktrees/*`
-- [Region.py strategic/tactical refactor — 8-phase plan COMPLETE 2026-09-16](project_region_tactical_refactor_plan.md) — extracted 16 tactical functions into new Tactical_Analysis.py (8 analysis fns) + Tactical_Evaluation.py (7 scoring fns) + new Context/Doctrine.py; all @lru_cache removed from moved functions (design decision, see memory for why); Region.py 1678→910 lines; 2519 tests OK; next: build the still-stubbed strategic/tactical analyzer+evaluator+planner in Strategical_Evaluation.py
-- [Fase 2 (fog-of-war combat power) — 6-phase plan COMPLETE 2026-09-16](project_fase2_recon_combat_power_plan.md) — C2 fix, action-based combat power, real Aircraft dimensions, Combat_Power_Estimation.py module, real researched `users` field (64 Vehicle + 23 Ship), AND use_recon wired end-to-end into Region.update_military_priorities, all done & tested (2516 OK); use_recon defaults False everywhere, not yet enabled by any production caller
-- [Session recap 2026-09-14](project_session_2026_09_14_summary.md) — producer-duplication refactor + get_target_report no-visibility fix shipped & pushed (commit 3fe680c4, 2465 tests OK); asset_type/category conflict and no-visibility-priority policy decided but not implemented, see linked memories
-- [Region/Military combat-power & priority-calc redesign — IN PROGRESS](project_priority_calc_combat_power_redesign.md) — 2026-09-11: Fase 0+1 done (full suite 2332 OK/5 skipped) — Vehicle/Ship/Aircraft combat power all working for real; mil_category priority-list split implemented 2026-09-14 (commit 3fe680c4); Fase 2 plan ready, see the dedicated memory above
-- [Air priority: target-specific loadout selection — COMPLETE, committed & pushed](project_air_priority_target_specific_loadout.md) — items 3-7+8 committed/pushed 2026-09-12; 2026-09-14 added producer-duplication fix (shared `Context.classify_asset_dimension`) + `get_target_report` no-visibility fix, full suite 2465 OK, committed & pushed (3fe680c4)
-- [Vehicle/Ship/Aircraft asset_type vs category — RESOLVED & IMPLEMENTED 2026-09-15](project_vehicle_asset_type_category_conflict.md) — normalized all 3 Mobile asset classes: asset_type=general class (Ground/Sea/Air_Asset_Type), category=granular sub-class (only exists for Vehicle); also fixed Context.classify_asset_dimension's Aircraft branch (was reading category); found but did NOT fix a pre-existing unrelated bug in Ship/Aircraft.loadAssetDataFromContext (flat dict + missing .items()); full suite 2465 OK/5 skipped, committed & pushed 3e94d468
-- [No-visibility → LOW priority (not high)](feedback_no_visibility_low_priority.md) — 2026-09-14 design decision, reverses the naive "unknown = high risk" framing; applies to future Fase 2 target_cp estimate only, `_target_affinity` stays neutral
-- [Combat-power action-selection guidance](feedback_combat_power_action_selection.md) — use 'Attack' task specifically for attack-priority ratio, not sum/avg; user wants a per-action priority vector eventually (Attack/Defense/Maintain/Retreat) feeding a later tactical decision layer
-- [Block.get_recon_efficiency removed — 2026-09-10](project_block_get_recon_efficiency_removed.md) — was dead code shadowed by Military's override; Test_Block.py updated; full suite 2311/OK (skipped=5)
-- [Region.py unattributed dead-code removal — RESOLVED](project_region_unattributed_dead_code_removal.md) — was the user's own live editor autosave, confirmed 2026-09-10, committed 74065590
-- [Session recap 2026-09-08 — read this first](project_session_2026_09_08_summary.md) — Sabin/wargaming research saved, memory-vs-wiki boundary + transfer procedure defined, core DCS-vs-synthetic-events campaign architecture recorded. No code changes. Next: design the synthetic-events turn structure.
-- [Session recap 2026-08-26](project_session_2026_08_26_summary.md) — ProArt P16 verified sync with VM: pulled LoggerClass cwd fix + git-sync hook (5a417765), full suite reconfirmed 2315 tests/OK (skipped=5)/0 errors. Verification-only session, no new work.
-- [Session recap 2026-08-21](project_session_2026_08_21_summary.md) — WIKI merge, Test_Air_Route_Manager fully fixed, Fase 2 (all 9 design decisions) closed, DataType.Route/Edge/Waypoint made to actually work end-to-end.
+- [Sessione 2026-10-18 ProArt — CHIUSA, pushato](project_session_2026_10_18_summary.md) — G5, F7a, A-10C; fotografia 970, suite 4490; prossimo F7b (decisione 15), pulizia doc, F6-B3, F8
+- [Sessione 2026-10-17 ProArt — CHIUSA](project_session_2026_10_17_summary.md) — G3, G4a/b, uscita di scena; fotografia 878
+- [Sessione 2026-10-16 osboxes — CHIUSA](project_session_2026_10_16_summary.md) — G2 approvato, fotografia 794
+- [Sessione 2026-10-15 osboxes — CHIUSA](project_session_2026_10_15_summary.md) — F6-B2bis, G1, G2
+- [Sessione 2026-10-13 osboxes — CHIUSA](project_session_2026_10_13_summary.md) — F6-B2; aperti F6-B3 S24-GLIDE, F7, F8, F9
+- Sessioni precedenti (2026-05-05 … 2026-10-11): vedi archivio
 
-## Campaign temporal model (core architecture — substantially resolved 2026-09-17, see Start here)
-- [DCS sessions vs. synthetic sessions — background/history, superseded by project_c2_hierarchy_design for current design](project_campaign_temporal_model_dcs_vs_synthetic.md) — original DCS-vs-synthetic framing + Blue/Red Igo-Ugo draft; the open turn-structure question is now answered, see the C2 hierarchy memory above
+## Piani e decisioni di design
+- [Bingo G0-G5](project_bingo_reverse_route_decision.md) — riserva 5 min spinta MILITARE, soglia = resto rotta + riserva, basi alternative
+- [Struttura Missione D1-D6/N1-N3, piano F0-F9](project_mission_structure_decisions.md) — Operazione ⊃ Missione; F0-F6 fatte
+- [Motore DES sessioni virtuali](project_virtual_session_engine_design.md) — DES a coda eventi, contatti analitici CPA/TCPA; completo 2026-09-23
+- [Modello di rotta unico](project_route_model_unification_plan.md) — DataType.Route/Edge/Waypoint; Route_Adapter è la frontiera
+- [Gerarchia C2](project_c2_hierarchy_design.md) — C2 globale+regionale per lato; TASK 1 fatto, Fase 0/TASK 2 mai iniziati
+- [Modulo mappe — FUTURO](project_map_module_plan.md) — servizio orografico comune; fonte docx non ancora letta
+- [Scorta munizioni per arma](project_ammunition_per_weapon_stock.md) — A1/A2/A3/A5 fatte, A4/A6 aperte
+- [Volumi rilevamento/intercettazione](project_detection_interception_volumes.md) — D-1..D-7 fatte; non assumere mai evitare rilevamento = evitare intercettazione
+- [Analisi DCE](project_dce_analysis.md) — DCE gira fuori da DCS; .miz unica interfaccia di scrittura
+- [Modello temporale DCS vs sintetico (storico)](project_campaign_temporal_model_dcs_vs_synthetic.md) — superato dal design C2
+- [Refactor Region tattico/strategico](project_region_tactical_refactor_plan.md) — completo 2026-09-16
+- [Fase 2 combat power con nebbia di guerra](project_fase2_recon_combat_power_plan.md) — completa; use_recon default False
+- [Fase 2 decisioni di design](project_fase2_design_decisions.md) — tutte chiuse (#6, #7 rinviate)
+- [Redesign combat power/priorità](project_priority_calc_combat_power_redesign.md) — Fase 0+1 fatte
+- [Priorità aria: loadout per bersaglio](project_air_priority_target_specific_loadout.md) — completo, pushato
+- [Vehicle/Ship/Aircraft asset_type vs category](project_vehicle_asset_type_category_conflict.md) — risolto 2026-09-15
 
-## Project & environment
-- [Key modules & paths](project_key_modules.md) — root/paths, Vehicle_Data/Ground_Weapon_Data overview, known bugs, PDF/test inventory
-- [Dev environment & machines](project_dev_environment.md) — 3 machines, git remote, memory sync workflow; SessionStart hook (2026-08-25) reports if local is behind origin, no auto-pull
-- [Python venv per machine](feedback_venv.md) — always use the machine-specific interpreter path, never bare `python3`
+## Progetto e ambiente
+- [Moduli chiave e percorsi](project_key_modules.md)
+- [Ambiente e macchine](project_dev_environment.md) — 3 macchine, hook SessionStart su allineamento con origin
+- [Worktree: falsi esiti nei test](project_worktree_pythonpath_test_gotcha.md) — testare sempre dal checkout principale
+- [Audit moduli](project_module_audit.md) — Fase 1 completa 2026-08-21
+- [Test_Air_Route_Manager — risolto](project_test_air_route_manager_mismatches.md)
+- [LoggerClass cwd — risolto](project_loggerclass_cwd_fix.md)
+- [Block.get_recon_efficiency rimosso](project_block_get_recon_efficiency_removed.md)
+- [Region dead code — risolto](project_region_unattributed_dead_code_removal.md)
+- [Analysis/ e Obsidian](project_analysis_symlink_decision.md) — Obsidian nativo su ProArt
+- [WIKI_LLM_SIMULATION fusa in Analysis/](project_wiki_llm_simulation_merge.md)
+- [Rinomina_Campaign_State.py — NON cancellare](project_rinomina_campaign_state.md)
 
-## Module audit (completed 2026-08-16) — Fase 1 fully done 2026-08-21
-- [Module audit — read this first for project status](project_module_audit.md) — ALL 17 remaining test errors resolved 2026-08-21; suite is 2315 tests/0 errors/0 failures; Fase 2 now 8 of 9 design decisions open (was 9)
-- [Test_Air_Route_Manager mismatches — RESOLVED](project_test_air_route_manager_mismatches.md) — fixed 2026-08-21 (commit 9460733c); 48/48 green
-- [Fase 2 design decisions — ALL CLOSED](project_fase2_design_decisions.md) — 2026-08-21: 7 resolved-and-actioned (#1,2,3,4,5,8,9), 2 explicitly deferred (#6,#7). #3 (Route/Edge/Waypoint canonical: DataType wins for ground) required fixing ~10 mechanical bugs across Waypoint/Edge/Route/Military/Tactical_Evaluation to actually make DataType.Route constructible — verified end-to-end with real objects, full suite still 2315/0/0. 00_Sintesi.md updated in place with status markers. Ground_Route_Manager.py still needs to actually produce DataType.Route objects (Fase 3, not started).
-- [LoggerClass/Utility.py cwd bug — FIXED 2026-08-25](project_loggerclass_cwd_fix.md) — was: resolved log dir as `os.getcwd()/logs`, crashed if cwd != repo root. Now anchored to `__file__`, pushed (9a7342a1). Also fixed, machine-local to `osboxes` only (not checked on VM/Notebook/ProArt P16): numpy2/matplotlib ABI conflict, and stale apt `python3-matplotlib`/`python-matplotlib-data` shadowing `mpl_toolkits`/Axes3D (both resolved).
+## Fatti di sottosistema
+- [Aircraft_Data / Loadouts](project_aircraft_data_facts.md) · [Ship_Weapon_Data](project_ship_weapon_scoring.md) · [Air_Resources_Assigner](project_mra_state.md)
+- [Campaign_State](project_campaign_persistence.md) · [Mobile/Military 2026-05-22](project_asset_military_2026_05_22.md) · [UML](project_uml_generation.md)
 
-## Standing reminders (no action needed unless relevant)
-- [Analysis/ Obsidian decision — RESOLVED](project_analysis_symlink_decision.md) — Option C chosen: Obsidian installed natively on ProArt P16 (WSL2); still needs installing on VM/Notebook too
-- [WIKI_LLM_SIMULATION merged into Analysis/](project_wiki_llm_simulation_merge.md) — moved 2026-08-20, fully complete (old GitHub repo deleted, confirmed)
-- [Rinomina_Campaign_State.py — reserved, do not delete](project_rinomina_campaign_state.md) — looks dead but user will reuse/rename it later
+## Riferimenti esterni
+- [WIKI_LLM_SIMULATION](reference_wiki_llm_simulation.md) — per questioni concettuali
+- [Sabin, Simulating War](reference_philip_sabin_simulating_war.md) — Force/Space/Time/Command, Igo-Ugo
 
-## External references
-- [WIKI_LLM_SIMULATION — also consult for conceptual/design questions](reference_wiki_llm_simulation.md) — standing pointer to Analysis/WIKI_LLM_SIMULATION (conceptual simulation-theory wiki), complementary to (not above) project memory; wiki never references this project's memory back
-- [Philip Sabin (KCL) wargame-design theory](reference_philip_sabin_simulating_war.md) — Force/Space/Time/Command framework, Igo-Ugo turn-design rationale; interim copy, slim to a pointer once merged into the wiki at Fase 3
-
-## Subsystem facts
-- [Aircraft_Data / Aircraft_Loadouts facts](project_aircraft_data_facts.md) — API, scoring quirks, known bugs (BUG BLA3), logger mocking
-- [Ship_Weapon_Data scoring](project_ship_weapon_scoring.md) — accuracy×destroy_capacity principle, corrected templates
-- [Air_Resources_Assigner (ex Military_Resources_Assigner)](project_mra_state.md) — get_aircraft_mission, directive weights, derating formula
-- [Campaign_State & Target_Status_History](project_campaign_persistence.md) — snapshot/persistence API facts
-- [Mobile/Military 2026-05-22 update](project_asset_military_2026_05_22.md) — combat_range, air_defense_volume, combat_state, Region metric helper pattern
-- [2026-05-05 refactor session](project_session_2026_05_05.md) — Block/Asset/Military/Region bug fixes, circular import discovery
-- [UML generation workflow](project_uml_generation.md) — PlantUML tool, folder structure, diagram types already documented
-
-## Feedback (how to work in this repo)
-- [Modelli e sforzi: dal 2026-10-18 principale Sonnet high (settings di progetto), des-planner Opus high = analisi e piano, des-developer Sonnet high = esecuzione](feedback_model_effort_delegation.md) — proporre in una riga agente/modello/sforzo prima di delegare, attendere conferma; deroghe in riga dedicata
-- [Parallel agents + verification before commit](feedback_parallel_agents_verification.md) — multiple des-developer agents on non-overlapping files works well; always verify git status/stash-list/suite yourself before committing, don't just trust the report
-- [Test base class pattern](feedback_test_base_class.md) — test base classes must NOT inherit from unittest.TestCase
-- [Circular import workaround](feedback_circular_import_workaround.md) — stub-class and sys.modules pre-injection patterns for Aircraft/Vehicle/Ship
-- [Test patterns & conventions](feedback_test_patterns.md) — logger mocking, patch timing, CLI flags, import-path convention
+## Feedback (come lavorare qui)
+- [Modelli e sforzi](feedback_model_effort_delegation.md) — principale Sonnet high, des-planner Opus high, des-developer Sonnet high; proporre e attendere conferma
+- [Agenti paralleli + verifica pre-commit](feedback_parallel_agents_verification.md) — verificare sempre di persona
+- [Core indifferente al simulatore](feedback_core_simulator_agnostic.md) — VINCOLO: la campagna gira senza adapter DCS
+- [Nessuna visibilità → priorità BASSA](feedback_no_visibility_low_priority.md)
+- [Combat power: selezione per azione](feedback_combat_power_action_selection.md)
+- [venv per macchina](feedback_venv.md) — mai `python3` nudo
+- [Classi base dei test](feedback_test_base_class.md) · [Pattern dei test](feedback_test_patterns.md) · [Import circolari](feedback_circular_import_workaround.md)
