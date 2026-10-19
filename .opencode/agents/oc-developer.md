@@ -28,6 +28,11 @@ permission:
     "git add*": allow
     "git commit*": allow
     "grep*": allow
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "sed -n*": allow
+    "find *": allow
     "ls*": allow
     "wc*": allow
     "git push*": deny
