@@ -1,6 +1,6 @@
 ---
 name: feedback-model-effort-delegation
-description: "Regola modelli/sforzi: dal 2026-10-18 principale Sonnet high (settings di progetto), des-planner Opus high per analisi e piano, des-developer Sonnet high per eseguire il piano; come proporre le deleghe all'utente"
+description: "Regola modelli/sforzi: dal 2026-10-18 principale Sonnet high, des-planner Opus high = piano, esecuzione a scelta des-developer Sonnet high oppure (dal 2026-10-19) oc-developer OpenCode; come proporre le deleghe"
 metadata:
   node_type: memory
   type: feedback
@@ -26,6 +26,17 @@ metadata:
 
 **Why:** il principale porta tutto il contesto della sessione ed e' il consumo maggiore; il giudizio di
 design si concentra nel piano scritto da Opus, che e' anche il passaggio di consegne verso Sonnet.
+
+## Corsia OpenCode (dal 2026-10-19, protocollo in AGENTS.md/CLAUDE.md)
+- **Opzione in piu', non sostitutiva**: per eseguire un piano gia' approvato si sceglie OGNI VOLTA tra
+  `des-developer` (Claude, come oggi) e `oc-developer` (OpenCode, `openrouter/deepseek/deepseek-v4-pro`,
+  costo in $ OpenRouter, nessun consumo del piano Pro). Compiti meccanici: `oc-helper` (locale su Game_PC,
+  richiede `attiva_llm`). Seconda opinione su un diff: `oc-reviewer` (`openrouter/z-ai/glm-5.3`).
+- Proposta all'utente nella solita riga "compito -> agente, modello, motivo", attendere conferma.
+- Criterio indicativo: piano dettagliato e a basso rischio -> `oc-developer`; piano con zone grigie, molte
+  esecuzioni cambiate attese o codice delicato (RNG, interruttori) -> `des-developer`.
+- Il principale prepara il branch `ai/oc-<tema>`, l'utente lancia `oc`; il principale verifica rapporto,
+  diff, suite e confronto (`tools/ai/verifica.sh`) prima del merge. Solo il principale scrive la memoria.
 
 ## Regola precedente (2026-10-08, superata dallo schema sopra salvo le regole di conferma)
 

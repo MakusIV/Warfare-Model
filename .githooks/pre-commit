@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Protocollo multi-LLM (AGENTS.md, "Proprieta' dei file"): gli agenti non-Claude committano solo su
+# branch ai/* e non toccano i file riservati a Claude e all'utente. MULTILLM_AGENT e' impostata dai
+# lanciatori degli agenti alternativi (es. `oc`); le sessioni Claude Code e l'utente non la hanno.
+[ -z "${MULTILLM_AGENT:-}" ] && exit 0
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+case "$branch" in
+  ai/*) ;;
+  *) echo "pre-commit: $MULTILLM_AGENT puo' committare solo su branch ai/* (branch attuale: $branch)." >&2; exit 1 ;;
+esac
+
+protected="$(git diff --cached --name-only | grep -E '^(\.claude/|CLAUDE\.md$|AGENTS\.md$|\.opencode/|opencode\.json$|\.githooks/|tools/ai/)')"
+if [ -n "$protected" ]; then
+  echo "pre-commit: $MULTILLM_AGENT non puo' modificare file riservati a Claude/utente:" >&2
+  echo "$protected" | sed 's/^/  - /' >&2
+  echo "Toglierli dal commit (git restore --staged <file>) e segnalare la necessita' nel rapporto." >&2
+  exit 1
+fi
+exit 0

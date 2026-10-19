@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Provenienza: ogni commit di un agente non-Claude porta il trailer "AI-Agent:".
+# Se l'agente non l'ha scritto, lo aggiunge l'hook con il valore di MULTILLM_AGENT.
+[ -z "${MULTILLM_AGENT:-}" ] && exit 0
+grep -qiE '^AI-Agent:' "$1" || git interpret-trailers --in-place --trailer "AI-Agent: $MULTILLM_AGENT" "$1"
+exit 0

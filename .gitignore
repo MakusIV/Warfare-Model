@@ -32,3 +32,6 @@ Analysis/Document/documentazione_dcs/DCS_-_Overview_Vehicles/*.pptx
 Analysis/Document/documentazione_dcs/1975 Georgian War/DCE/Missions/Campaigns/1975 Georgian War/Images/
 # artefatti NTFS di Windows (alternate data stream) creati dalla copia dei file
 *:Zone.Identifier
+
+# Log e catture degli agenti (tools/ai/verifica.sh)
+.ai-run/

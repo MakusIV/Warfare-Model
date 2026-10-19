@@ -50,7 +50,7 @@ Indice compatto (2026-10-19). Descrizioni estese e sessioni precedenti al 2026-1
 - [Sabin, Simulating War](reference_philip_sabin_simulating_war.md) — Force/Space/Time/Command, Igo-Ugo
 
 ## Feedback (come lavorare qui)
-- [Modelli e sforzi](feedback_model_effort_delegation.md) — principale Sonnet high, des-planner Opus high, des-developer Sonnet high; proporre e attendere conferma
+- [Modelli e sforzi](feedback_model_effort_delegation.md) — principale Sonnet high, des-planner Opus high; esecuzione: des-developer (Claude) o oc-developer (OpenCode), a scelta; proporre e attendere conferma
 - [Agenti paralleli + verifica pre-commit](feedback_parallel_agents_verification.md) — verificare sempre di persona
 - [Core indifferente al simulatore](feedback_core_simulator_agnostic.md) — VINCOLO: la campagna gira senza adapter DCS
 - [Nessuna visibilità → priorità BASSA](feedback_no_visibility_low_priority.md)
