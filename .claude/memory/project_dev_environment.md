@@ -29,3 +29,8 @@ Three machines: **VM** (VirtualBox Ubuntu), **Notebook** (Ubuntu), **ProArt P16*
 See [[feedback_venv]] for which interpreter path to use.
 - **ProArt P16 (2026-06-28):** direnv 2.37.1 + Python 3.12.13 (deadsnakes PPA); `.envrc`: `layout python python3.12`; venv at `.direnv/python-3.12/`; hook in `~/.bashrc`. The classic `venv/` folder present in the repo on this machine is stale/broken (its `python3` symlink resolves to system Python 3.14, missing project dependencies) — always use `.direnv/python-3.12/bin/python3` here.
 - **VM/Notebook:** venv classico in `venv/` (escluso da git tramite `.gitignore`)
+
+## Aggiornamento 2026-10-20 (sistema multi-LLM)
+- Macchine attive nel protocollo (`AGENTS.md`): **ProArt P16** e **VM osboxes** (hostname `osboxes`, Ubuntu nativo, kernel 6.8, nessun venv: v. [[feedback-venv]]). Il Notebook non e' citato dal protocollo. **Game_PC** (RTX 3090, LAN, acceso su richiesta) ospita solo Ollama per `oc-helper`; non e' una macchina di sviluppo del repo.
+- Su ogni macchina, una volta dopo `git pull`: `git config core.hooksPath .githooks` (ATTENZIONE: con uno spazio prima di `.githooks`; senza spazio il comando non imposta nulla). Verifica: `git config --get core.hooksPath` deve stampare `.githooks`. Fatto su osboxes il 2026-10-20 (al primo tentativo era stato digitato senza spazio).
+- Gli hook agiscono solo se `MULTILLM_AGENT` e' impostata (agenti OpenCode); non toccano le sessioni Claude o dell'utente.

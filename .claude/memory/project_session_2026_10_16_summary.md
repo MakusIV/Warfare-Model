@@ -1,6 +1,6 @@
 ---
 name: project-session-2026-10-16-summary
-description: "Sessione 2026-10-16 (osboxes) CHIUSA: G2 verificato/approvato, fotografia 794 installata (e5465b31); G3 (consumo carburante in ingaggio) implementato e committato DA APPROVARE, fotografia NON installata; alla ripresa: --compare G3, 4 decisioni utente, installazione fotografia; poi G4"
+description: "Sessione 2026-10-16 (osboxes) CHIUSA: G2 verificato/approvato, fotografia 794 installata (e5465b31); G3 (consumo carburante in ingaggio) implementato e committato; poi verificato e approvato il 2026-10-17 su ProArt (fotografia 802, 20f0e0db)"
 metadata:
   node_type: memory
   type: project
