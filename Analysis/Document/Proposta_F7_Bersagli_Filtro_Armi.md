@@ -298,6 +298,11 @@ Se c'è `attack_profile` e `weapons` è vuoto, vale `(attack_profile.weapon,)`.
 > Decisione 8: la F7a non tocca i registri; la correzione di `self_escort_capability` dei 5 loadout dell'A-10C
 > con AIM-9M si fara' a parte, dopo una verifica dell'utente in DCS. Decisione 15 (scelte della F7b) RIMANDATA
 > all'inizio della F7b, dopo l'approvazione della F7a.
+>
+> **DECISO dall'utente il 2026-10-20**: decisione 15, punti (a)-(g), accettati TUTTI come raccomandati e
+> descritti in §6 (solo terra e mare; raggio letale 0,25 m/mm con ripiego 25 m; dispersione minima 50 m; niente
+> fuoco amico; nessuna intercettazione, armi `missile` escluse; un solo evento all'impatto; nessun effetto
+> dottrinale sul lato colpito). Le costanti restano STIME da dichiarare come tali nel codice e nel rapporto.
 
 1. **Scomposizione**: F7a (regole d'ingaggio) e poi F7b (fuoco su posizione), ognuna con interruttore,
    confronto e approvazione separati. (R: sì.)
@@ -629,7 +634,7 @@ Se c'è `attack_profile` e `weapons` è vuoto, vale `(attack_profile.weapon,)`.
 
 ## 6. Piano di intervento: F7b (fuoco su posizione)
 
-Da avviare dopo l'approvazione della F7a e delle decisioni del punto 15.
+F7a approvata (`9f87a3ad`) e decisione 15 presa il 2026-10-20 (v. riquadro DECISO in §4): il piano e' eseguibile.
 
 ### 6.1 Regola
 
