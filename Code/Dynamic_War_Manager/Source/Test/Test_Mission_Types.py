@@ -915,5 +915,87 @@ class TestMissionOutcome(_LoggerMock, unittest.TestCase):
             MT.MissionOutcome('m', 'completed', actual_etas='100')
 
 
+# ── Fuoco su posizione (F7b) ──────────────────────────────────────────────────
+
+def _fire_action(**params):
+    return MT.MissionAction(MT.ActionKind.TASK, MT.FIRE_AT_POINT_ACTION, params={'rounds': 10, **params})
+
+
+def _with_action(mission, action, index=2):
+    """Copia di `mission` con `action` sul waypoint `index` (rivalida la missione)."""
+    plan = tuple(dataclasses.replace(mw, actions=(action,)) if i == index else mw
+                 for i, mw in enumerate(mission.waypoints))
+    return dataclasses.replace(mission, waypoints=plan)
+
+
+class TestFireAtPoint(_LoggerMock, unittest.TestCase):
+
+    def test_the_action_name_is_the_domain_constant(self):
+        self.assertEqual(MT.FIRE_AT_POINT_ACTION, 'Fire_At_Point')
+
+    def test_valid_on_ground_and_sea_with_point_or_area(self):
+        point = MT.Target(kind=MT.TargetKind.POINT, position=Point3D(5000, 5000, 0))
+        area = MT.Target(kind=MT.TargetKind.AREA, position=Point3D(5000, 5000, 0), radius_m=300.0)
+
+        for target in (point, area):
+            with self.subTest(target=target.kind.name):
+                mission = _with_action(_ground_mission(target=target, mission_type='Fire_Support'), _fire_action())
+                self.assertEqual(mission.waypoints[2].actions[0].params['rounds'], 10)
+
+        sea = _with_action(_ground_mission(target=point, mission_type='Attack'), _fire_action(weapon='Mk-45-5in'))
+        self.assertEqual(sea.waypoints[2].actions[0].params['weapon'], 'Mk-45-5in')
+
+    def test_start_conditions_are_free(self):
+        point = MT.Target(kind=MT.TargetKind.POINT, position=Point3D(5000, 5000, 0))
+
+        for start in (MT.StartCondition.on_arrival(), MT.StartCondition.at_time(900.0),
+                      MT.StartCondition.after_duration(30.0)):
+            action = MT.MissionAction(MT.ActionKind.TASK, MT.FIRE_AT_POINT_ACTION, params={'rounds': 4}, start=start)
+            _with_action(_ground_mission(target=point), action)
+
+    def test_rejected_on_an_air_mission(self):
+        route, plan = _air_plan()
+        air = _air_mission(route=route, waypoints=plan,
+                           target=MT.Target(kind=MT.TargetKind.POINT, position=Point3D(1, 1, 0)))
+
+        with self.assertRaisesRegex(ValueError, 'ground and sea'):
+            _with_action(air, _fire_action(), index=1)
+
+    def test_rejected_without_a_point_or_area_target(self):
+        for target in (MT.Target(kind=MT.TargetKind.ZONE, position=Point3D(1, 1, 0), radius_m=500.0),
+                       MT.Target(kind=MT.TargetKind.GROUP, target_id='g', provenance='observed', observed_at=0.0)):
+            with self.subTest(target=target.kind.name), self.assertRaisesRegex(ValueError, 'POINT or AREA'):
+                _with_action(_ground_mission(target=target), _fire_action())
+
+    def test_rounds_must_be_a_positive_int(self):
+        point = MT.Target(kind=MT.TargetKind.POINT, position=Point3D(5000, 5000, 0))
+        base = _ground_mission(target=point)
+
+        for rounds in (0, -3, 2.5, True, '4', None):
+            with self.subTest(rounds=rounds), self.assertRaisesRegex(ValueError, 'rounds'):
+                _with_action(base, MT.MissionAction(MT.ActionKind.TASK, MT.FIRE_AT_POINT_ACTION,
+                                                    params={} if rounds is None else {'rounds': rounds}))
+
+    def test_weapon_is_optional_but_a_domain_id(self):
+        point = MT.Target(kind=MT.TargetKind.POINT, position=Point3D(5000, 5000, 0))
+        base = _ground_mission(target=point)
+
+        with self.assertRaises(TypeError):
+            _with_action(base, MT.MissionAction(MT.ActionKind.TASK, MT.FIRE_AT_POINT_ACTION,
+                                                params={'rounds': 1, 'weapon': ''}))
+
+    def test_the_action_must_be_a_task(self):
+        point = MT.Target(kind=MT.TargetKind.POINT, position=Point3D(5000, 5000, 0))
+
+        with self.assertRaises(ValueError):
+            _with_action(_ground_mission(target=point),
+                         MT.MissionAction(MT.ActionKind.COMMAND, MT.FIRE_AT_POINT_ACTION, params={'rounds': 1}))
+
+    def test_other_actions_are_not_checked(self):
+        route, plan = _air_plan()
+        air = _air_mission(route=route, waypoints=plan)
+        _with_action(air, MT.MissionAction(MT.ActionKind.TASK, 'Attack_Target', params={'rounds': 0}), index=2)
+
+
 if __name__ == '__main__':
     unittest.main()

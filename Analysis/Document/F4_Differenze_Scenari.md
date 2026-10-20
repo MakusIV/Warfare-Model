@@ -2463,7 +2463,7 @@ ProArt P16: **970 esecuzioni**.
   i designati per id (non per area).
 - Quelli del piano (§7): priorita' solo locale, designazione geometrica approssimata (istante di decisione), winchester
   e politica d'armi (un'arma sempre esclusa non si esaurisce), scorta senza protezione del gruppo, terra e mare senza restrizioni
-  d'arma. La F7b (fuoco su posizione) non e' implementata.
+  d'arma. La F7b (fuoco su posizione) e' una fase separata: v. "F7b".
 
 ### Test
 
@@ -2488,4 +2488,100 @@ AIM-9M in `Asset/Aircraft_Loadouts.py` ('Low Level Bomb Run', senza AIM-9, resta
   opzione aria-aria) con un loadout di TEST dello stesso A-10C col flag False (`patch.dict`), caso positivo sui loadout
   reali; S28 'self_defence' diventa il caso positivo (F-16C e A-10C si difendono con l'AIM-9M), nome della variante e
   geometria invariati.
+
+## F7b: fuoco su posizione (decisione 15 dell'utente del 2026-10-20)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` installata (970 esecuzioni, F7a e correzione A-10C). **Dopo**:
+una missione di terra o di mare con bersaglio POINT o AREA e un'azione `Fire_At_Point` spara sulla posizione STIMATA del
+bersaglio come evento di sessione `AREA_FIRE_EVENT`, separato dal risolutore; nuovo scenario S29 in coda alla tabella
+`UNITS` di `Scenario_Baseline.py`. Piano di intervento: `Proposta_F7_Bersagli_Filtro_Armi.md`, §6. `--compare`, 2026-10-20
+(osboxes, python3 di sistema, 1091 s): **982 esecuzioni**.
+- Contro la fotografia (970): **970 IDENTICHE**, **0 cambiate**, **12 nuove** (S29-AREA: 3 varianti x 4 seed). Esito
+  atteso dal piano (§6.4): confermato (nessuno scenario esistente dichiara `Fire_At_Point`, gli stream di ingaggio e di
+  tempra non cambiano).
+
+### Il cambio
+
+1. **Interruttore** `Session_Simulator.F7_AREA_FIRE` (attivo): spento, le azioni sono ignorate con un warning (come
+   prima, nessun codice le leggeva). Nuova costante `Mission_Types.FIRE_AT_POINT_ACTION = 'Fire_At_Point'`.
+2. **Validazione** (`Mission._validate_fire_actions`, non dipende dall'interruttore): l'azione e' un TASK, solo su
+   missioni di terra o di mare, con bersaglio POINT o AREA, `params['rounds']` intero >= 1 (bool escluso), `params['weapon']`
+   facoltativa (id di dominio). Aria, bersaglio ASSET/GROUP/ZONE/NONE, rounds non valido: `ValueError`.
+3. **`Logic/Area_Fire.py`** (nuovo, puro): `FireOrder`, `fire_orders(mission, movement, t0)` (istante di tiro = arrivo
+   al waypoint con le attese di `Mission_Adapter.waypoint_times`, poi ON_ARRIVAL / AT_TIME `max(arrivo, t0 + time)` /
+   AFTER_DURATION; punto mirato = `target.position`; dispersione `max(radius_m, uncertainty_m se ESTIMATED, 50 m)`),
+   `area_fire_event_id`, `plan_shot`, `impact_time`, `lethal_radius`, `resolve_area_fire` (v. docstring del modulo per la
+   regola completa: colpi `min(rounds, scorta // stock_per_round)`, per colpo 2 estrazioni per il punto d'impatto uniforme nel
+   disco e per ogni nemico non distrutto entro il raggio letale a `t_impact` 1 estrazione e
+   `Damage_Model.resolve_hit(1.0, destroy_capacity, draw)`).
+4. **`Logic/Fire_Control.py`**: `AreaWeapon`, `area_fire_weapon(shooter, distance_m, weapon, stock_of)` (solo `Vehicle` e
+   `Ship`, niente `missile`; dichiarata o prima con task Artillery / Naval_Gunfire_Support / Land_Attack con portata e
+   scorta) e `area_fire_pk(weapon, target, grounded)` (riga del template con la catena `target_key`/`_cell`).
+5. **`Logic/Session_Simulator.py`**: `AREA_FIRE_EVENT` fra `ENGAGEMENT_EVENT` e `MOVEMENT_EVENT` (`MOVEMENT_EVENT` da 1 a 2:
+   nessun uso per valore nel codice o nei test); gli ordini sono pianificati a monte (arma senza scorta per l'istante
+   d'impatto che li ordina) e risolti da `fire_due` fra gli episodi (con `G4_EPISODES` spento nella coda degli ingaggi);
+   stream `order.rng(mission_id=<missione>, event_id=area_fire_event_id(ordine), counter=0)` (primo uso dello slot
+   `mission_id`); esito applicato subito a tutti i blocchi e accodato a `results`/`resolved`; le distruzioni entrano in
+   `_known_destructions`; `inactive_from` = il piu' vecchio fra distruzione, `passive_from`, fine di attivita' nota a monte e
+   fine del carburante.
+6. **S29-AREA** (`Test_Session_Scenarios_S29.py`, fire control dei registri, 4 seed): Red-Art (1 2S19-Msta) con missione
+   `Fire_Support` e `Fire_At_Point` (40 colpi, AT_TIME 600 s) su un POINT ESTIMATED (`estimated_at` -1800 s,
+   `uncertainty_m` 200 m) in (0, 0), dove stava Blue-Col; Blue-Stay (2 BMP-2) fermo nel punto; Blue-Col (4 BMP-2): 'stale' si
+   sposta di 3 km e vi resta, 'on_target' resta nel punto, 'switch_off' come 'stale' con `F7_AREA_FIRE` spento (premessa:
+   nessuno e' colpito, nessuna munizione consumata, nessun ingaggio).
+
+### Differenze della fotografia
+
+- **970 identiche, 0 cambiate**: nessuna missione esistente dichiara `Fire_At_Point` (nessun ordine di fuoco, nessuna
+  estrazione, nessuno stream cambiato).
+- **12 nuove**: S29-AREA 12 ('stale', 'on_target', 'switch_off' x 4 seed). L'evento compare in `engagement_outcomes` come un
+  ingaggio con zero forze (`counts.engagements` = 1; nessun ingaggio vero: nessun contatto fra Red-Art e i blu).
+
+### Scelte dove il piano lasciava margine
+
+1. `fire_orders(mission, movement, t0)`: il piano scriveva `fire_orders(mission, movement, asset)`; `asset` e' ridondante
+   (l'id e' in `movement.asset_id`) e manca `t0`, necessario per le condizioni AT_TIME, relative all'inizio sessione.
+2. `area_fire_weapon(..., stock_of=None)`: parametro in piu' per scegliere "la prima arma con scorta e portata" senza far
+   conoscere la scorta alla fire control (funzione pura): `Mobile.stock_of` dalla risoluzione; per l'istante d'impatto che
+   ordina l'evento la scorta non e' considerata (se all'impatto l'arma preferita e' esaurita e ne subentra un'altra con un
+   tempo di volo diverso, l'esito porta il suo istante). Restituisce un `AreaWeapon` (modello, calibro, portata, tempo di
+   volo, scorta per colpo) invece del record privato `_Weapon`.
+3. Ordine delle estrazioni: PER COLPO, 2 per il punto d'impatto e poi 1 per ogni nemico a segno (non tutti i punti prima e
+   poi i danni); ordine dei nemici per id.
+4. `resolve_area_fire(..., *, inactive_from=None, grounded_at=None)`: la sessione calcola l'istante da cui il tiratore e'
+   passivo (`inactive_from`) e, per un aereo a terra, lo dice con `grounded_at` (bersaglio di superficie come nella fire
+   control). Un aereo IN VOLO non e' mai colpito (`area_fire_pk` None: un impatto al suolo non lo raggiunge); il piano non
+   lo diceva.
+5. Il nemico e' l'altro schieramento (A/B) rispetto al tiratore, non il `side` del blocco (come il combattimento).
+6. "A secco" = fine del carburante (`FuelEnd.time`, FUEL_HALT) a `t_fire` o prima: l'asset fermo nel punto non spara.
+7. `Scenario_Fixtures.missions_for(actions={indice: [MissionAction]})` (default None, scenari invariati) e il logger di
+   `Logic.Area_Fire` fra quelli silenziati.
+8. Il warning a interruttore spento e' emesso una volta per sessione se esiste almeno un'azione `Fire_At_Point` (prima non
+   c'era alcun warning: nessun codice leggeva le azioni).
+
+### Costanti stimate
+
+- `Area_Fire.AREA_FIRE_MIN_DISPERSION_M` = 50 m (STIMA, decisione 15c): dispersione minima attorno al punto mirato.
+- `Area_Fire.AREA_FIRE_LETHAL_RADIUS_PER_MM` = 0,25 m/mm (STIMA, 15b): raggio letale per mm di calibro (152 mm: 38 m).
+- `Area_Fire.AREA_FIRE_LETHAL_RADIUS_M` = 25 m (STIMA, 15b): ripiego senza calibro nel registro.
+- Costanti di scenario S29 DICHIARATE di test: 40 colpi, AT_TIME 600 s, incertezza 200 m, posizioni e rotte.
+
+### Limiti noti
+
+- Quelli del piano (§7): dispersione uniforme, letalita' a soglia, niente fuoco amico, niente intercettazione, niente effetti
+  dottrinali sul colpito, aerei esclusi (tiratori e, in volo, bersagli), un solo evento all'impatto (la scorta e' consumata
+  nell'ordine di applicazione anche se l'evento di munizioni porta l'istante `t_fire`).
+- L'istante d'impatto che ordina l'evento e' stimato senza la scorta (v. scelta 2); un nemico distrutto da un episodio gia'
+  risolto con un impatto posteriore a quello dell'evento e' visto come gia' distrutto.
+- `target_destroyed` per POINT/AREA resta non rappresentabile (decisione 12 della F7a).
+
+### Test
+
+- `Test_Area_Fire` (nuovo, 49): ordini di fuoco, dispersione, risoluzione (nessuno nel disco, bersaglio nel punto con la
+  frequenza attesa su 200 seed, posizione letta all'impatto, stream deterministico, ordine delle estrazioni, salute
+  concatenata, scorta limitante, fuori portata, tiratore passivo, arma dichiarata e calibro, aerei), `area_fire_weapon` e
+  `area_fire_pk`, l'evento in sessione (costanti d'ordine, applicazione agli asset, `G4_EPISODES` spento, interruttore,
+  postura `destroyed`, fine di attivita', tiratore distrutto, tiro oltre la fine, impatto oltre la fine);
+  `Test_Mission_Types.TestFireAtPoint` (9); `Test_Session_Scenarios_S29` (7).
+- Suite completa: 4555 test OK (7 skipped), 65 nuovi rispetto ai 4490 della F7a.
 

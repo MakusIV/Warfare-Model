@@ -186,7 +186,7 @@ LOGGER_TARGETS = tuple(_SOURCE + name + '.logger' for name in (
     'Asset.Structure', 'Block.Block', 'Block.Military', 'Block.Production', 'Block.Transport',
     'Block.Storage', 'Block.Urban', 'DataType.State', 'Logic.Air_Route_Manager',
     'Logic.Engagement_Resolver', 'Logic.Contact_Scheduler', 'Logic.Fuel_Model',
-    'Logic.Damage_Model', 'Logic.Session_Simulator', 'Logic.Fire_Control', 'Logic.Weapon_Delivery',
+    'Logic.Damage_Model', 'Logic.Session_Simulator', 'Logic.Fire_Control', 'Logic.Weapon_Delivery', 'Logic.Area_Fire',
     'Command.Session_Types', 'Command.Mission_Types', 'Logic.Mission_Adapter',
     'Context.Reaction_Profile', 'Context.Doctrine'))
 
@@ -596,11 +596,12 @@ def zone_target(center: Sequence[float], radius_m: float) -> Target:
     return Target(kind=TargetKind.ZONE, position=_point(center), radius_m=radius_m)
 
 
-def _mission_waypoints(route: Route, domain: str,
-                       attack_waypoint: Optional[int] = None) -> Tuple[MissionWaypoint, ...]:
+def _mission_waypoints(route: Route, domain: str, attack_waypoint: Optional[int] = None,
+                       actions: Optional[Mapping[int, Sequence]] = None) -> Tuple[MissionWaypoint, ...]:
     """Piano dei punti di una rotta di scenario: aria NAV ... LAND (semplificazione di scenario:
     rotta senza rientro, v. docstring), terra/mare DEPARTURE ... OBJECTIVE. `attack_waypoint` (F7a): indice del
-    punto che ha il ruolo ATTACK (default nessuno: gli scenari di prima non ne hanno)."""
+    punto che ha il ruolo ATTACK (default nessuno: gli scenari di prima non ne hanno). `actions` (F7b): `{indice del
+    punto: azioni}` (`MissionAction`), default nessuna."""
     waypoints = route_waypoints(route)
     first, last = ((WaypointRole.NAV, WaypointRole.LAND) if domain == 'air'
                    else (WaypointRole.DEPARTURE, WaypointRole.OBJECTIVE))
@@ -609,7 +610,8 @@ def _mission_waypoints(route: Route, domain: str,
     if attack_waypoint is not None:
         roles[attack_waypoint] = WaypointRole.ATTACK
 
-    return tuple(MissionWaypoint(waypoint=wp, role=role) for wp, role in zip(waypoints, roles))
+    return tuple(MissionWaypoint(waypoint=wp, role=role, actions=tuple((actions or {}).get(index, ())))
+                 for index, (wp, role) in enumerate(zip(waypoints, roles)))
 
 
 def _asset_role(domain: str, index: int) -> str:
@@ -662,10 +664,11 @@ def _slowest_reference(reference: Route, routes: Sequence[Route]) -> Route:
 
 def _scenario_mission(mission_id: str, force, domain: str, mission_type: str, target: Target,
                       reference: Route, assets: Sequence[MissionAsset],
-                      rules: Optional[MissionRules] = None, attack_waypoint: Optional[int] = None) -> Mission:
+                      rules: Optional[MissionRules] = None, attack_waypoint: Optional[int] = None,
+                      actions: Optional[Mapping[int, Sequence]] = None) -> Mission:
     return Mission(mission_id=mission_id, block_id=force.id, domain=domain, mission_type=mission_type,
                    target=target, assets=tuple(assets), route=reference,
-                   waypoints=_mission_waypoints(reference, domain, attack_waypoint), start_time=0.0,
+                   waypoints=_mission_waypoints(reference, domain, attack_waypoint, actions), start_time=0.0,
                    start_mode=StartMode.AIR if domain == 'air' else None, rules=rules)
 
 
@@ -673,7 +676,8 @@ def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str,
                  name: Optional[str] = None, offset_with_position: bool = True,
                  speed: Optional[float] = None, only: Optional[Iterable[str]] = None,
                  weapons: Sequence[str] = (), rules: Optional[MissionRules] = None,
-                 attack_waypoint: Optional[int] = None) -> List[Mission]:
+                 attack_waypoint: Optional[int] = None,
+                 actions: Optional[Mapping[int, Sequence]] = None) -> List[Mission]:
     """Le missioni con ESATTAMENTE la geometria di `routes_for(force, points, ...)`, ciascuna alla
     velocita' del suo mezzo piu' lento (regola A, F4a; v. docstring).
 
@@ -694,6 +698,8 @@ def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str,
             default del dominio.
         attack_waypoint: indice (nei punti della rotta, partenza compresa) del punto con ruolo ATTACK
             (F7a: fine dell'attacco di `priority_designated`); default None = nessun punto ATTACK.
+        actions: `{indice del punto: [MissionAction, ...]}` (F7b, es. `Fire_At_Point`) applicate a TUTTE le
+            missioni; il default None lascia invariati gli scenari che non le dichiarano.
 
     Returns:
         Lista di `Mission` (start_time 0, aria `start_mode` AIR), una o piu' per blocco (piu'
@@ -744,7 +750,7 @@ def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str,
 
         mission_id = root if len(groups) == 1 else f'{root}-{index + 1}'
         missions.append(_scenario_mission(mission_id, force, domain, mission_type, target, reference, assets,
-                                          rules, attack_waypoint))
+                                          rules, attack_waypoint, actions))
 
     return missions
 

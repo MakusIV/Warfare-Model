@@ -1,6 +1,6 @@
 # Piano di implementazione dell'entità Missione
 
-**Stato**: APPROVATO (2026-10-05, Q1-Q4 sì) e IN CORSO: fatte F0, F1, F2, F3, F4a, F4b, F4b+, F4b++, la riprogettazione dei test S3/S5, F4c e (2026-10-18) F7a (v. §5 "Stato di avanzamento").
+**Stato**: APPROVATO (2026-10-05, Q1-Q4 sì) e IN CORSO: fatte F0, F1, F2, F3, F4a, F4b, F4b+, F4b++, la riprogettazione dei test S3/S5, F4c, (2026-10-18) F7a e (2026-10-20) F7b, in attesa di approvazione (v. §5 "Stato di avanzamento").
 **Base**: le decisioni D1-D6 e N1-N3 di `Proposta_Struttura_Missione_Decisioni.md` (tutte prese;
 N2.a = C, N3.f = B).
 **Convenzioni**:
@@ -192,7 +192,7 @@ asset (D2.d).
 ### Fase 7: bersagli espliciti e filtro armi per missione (N3.d/e, A4)
 
 **Proposta di dettaglio (Q3)**: `Proposta_F7_Bersagli_Filtro_Armi.md`. La fase e' divisa in **F7a** (regole d'ingaggio
-di missione: FATTA 2026-10-18, v. §5 deviazione 23) e **F7b** (fuoco su posizione, da fare). Il testo che segue e'
+di missione: FATTA 2026-10-18, v. §5 deviazione 23) e **F7b** (fuoco su posizione: FATTA 2026-10-20, v. §5 deviazione 24). Il testo che segue e'
 quello del piano originale.
 
 **Involucro di `fire_control` per missione**, sullo stesso schema di `ifv_only` di S19 [V]:
@@ -208,7 +208,7 @@ sono verso un asset: **domanda Q3**, la proposta di dettaglio va fatta all'inizi
 
 **Fatto quando**:
 - S19 senza filtro di test dà lo stesso esito di prima;
-- uno scenario di fuoco d'artiglieria su posizione stimata superata colpisce solo chi c'è.
+- uno scenario di fuoco d'artiglieria su posizione stimata superata colpisce solo chi c'è. (FATTO dalla F7b: S29-AREA).
 
 ### Fase 8: sessione e campagna (D4, D6, D1.d)
 
@@ -300,7 +300,8 @@ su cui poggia la successiva.
 | G4b (nuovo modello di bingo) | verificata e approvata 2026-10-17 (fotografia 878, con G4a e uscita di scena) | | deviazione 21 (con l'uscita di scena senza basi, `G4_OFF_SCENE_EXIT`, del 2026-10-17): ri-pianificazione dopo l'episodio d'ingaggio: alla fine di ogni episodio gli aerei di missione in volo che vi hanno consumato (G3) o la cui forza si e' disingaggiata sono ri-pianificati dal residuo ANALITICO (`Fuel_Model.fuel_at`): a secco regole della F6-A dal punto a fine episodio (sostituisce il "solo contatore a zero" del G3), sotto la soglia bingo con l'albero del G2 (basi alternative comprese), forza disingaggiata = rientro forzato con la regola di combattimento indipendentemente dal carburante (`bingo_decision(forced=True)`, decisione dell'utente del 2026-10-17; nuovi motivi `AssetEndReason.DISENGAGED` / `AbortReason.DISENGAGED`), esaurimento ricalcolato sui nuovi tratti (`fuel_exhaustion(fuel=)`); tratti, programma a terra e contatti non ancora risolti ricalcolati (`schedule_contacts(only_assets=)`), episodi rimasti ricostruiti; interruttore `G4_REPLAN`; S5 + 'with_base', 'with_base_resistant', 'replan_off'; S26 + 'post_engagement_bingo', 'replan_off'; v. `F4_Differenze_Scenari.md`, "G4b" |
 | G5 (nuovo modello di bingo) | FATTA, verificata e approvata 2026-10-18 (fotografia 918) | | deviazione 22: chiusura del piano G1-G5, nessun cambio del motore. S26 riorganizzato sul modello finale (docstring, varianti divise in modello finale e controprova degli interruttori, `FINAL_MODEL`/`SWITCH_CHECKS`; nomi, ordine e scenari invariati: 96 esecuzioni identiche); nuovo scenario S27-DOUBLE (doppio ingaggio dello stesso aereo: due consumi d'ingaggio, ri-pianificazione dopo ciascun episodio, bingo solo dopo il secondo con rientro sulla base alternativa; trasferimento che continua; controprova `G4_REPLAN`/`G4_EPISODES`/`G3_ENGAGEMENT_FUEL`; 40 esecuzioni); `--compare` contro la fotografia 878: 878 IDENTICHE, 0 cambiate, 40 nuove; fotografia NON rigenerata; v. `F4_Differenze_Scenari.md`, "G5" |
 | F7a (regole d'ingaggio di missione) | FATTA, verificata e approvata 2026-10-18 (fotografia 970) | | deviazione 23: la missione decide chi si ingaggia e con che arma, su due strati con interruttori `F7_WEAPON_POLICY` (politica d'armi per tipo di missione come involucro della fire control, `Context.MISSION_WEAPON_POLICY`) e `F7_TARGET_RULES` (bersaglio designato, ROE e armi designate come `TargetRules` nel risolutore); `Target.asset_ids`, `MissionAsset.weapons`, loadout di missione coerente con quello assegnato; S19AD senza filtri di test; nuovo S28 (52 esecuzioni); `--compare` contro la fotografia 918: 918 IDENTICHE, 0 cambiate, 52 nuove; fotografia NON rigenerata; v. `Proposta_F7_Bersagli_Filtro_Armi.md` §5 e `F4_Differenze_Scenari.md`, "F7a" |
-| F7b-F9 | DA FARE | | F7b = fuoco su posizione (`Proposta_F7_Bersagli_Filtro_Armi.md` §6, decisione 15 da prendere all'inizio); F8 = sessione e campagna (validatore di sessione, che potra' chiamare il bingo a priori; prontezza; posizione persistente); F9 = documentazione (manuale DES, togliere il 'TOT comune' nei capitoli 03 e 10, documentare F5/F6); `abort_on_threat` fuori dal Piano di F6 |
+| F7b (fuoco su posizione) | FATTA (da verificare e approvare) | | deviazione 24: una missione di terra o di mare con bersaglio POINT o AREA e un'azione `Fire_At_Point` spara sulla posizione STIMATA del bersaglio come evento di sessione `AREA_FIRE_EVENT` (`Logic/Area_Fire`, interruttore `F7_AREA_FIRE`), separato dal risolutore: nessun rilevamento, nessuna forza d'ingaggio, solo geometria e RNG di sessione; costanti STIMATE (dispersione 50 m, raggio letale 0,25 m/mm, ripiego 25 m); nuovo S29 (12 esecuzioni); suite 4555 OK (7 skipped); `--compare` contro la fotografia 970: 970 IDENTICHE, 0 cambiate, 12 nuove; fotografia NON rigenerata; v. `Proposta_F7_Bersagli_Filtro_Armi.md` §6 e `F4_Differenze_Scenari.md`, "F7b" |
+| F8-F9 | DA FARE | | F8 = sessione e campagna (validatore di sessione, che potra' chiamare il bingo a priori; prontezza; posizione persistente); F9 = documentazione (manuale DES, togliere il 'TOT comune' nei capitoli 03 e 10, documentare F5/F6); `abort_on_threat` fuori dal Piano di F6 |
 
 **Deviazioni decise durante il lavoro**:
 1. `mission_id` **non** entra nell'RNG in F3 ma in F4b. Le estrazioni sono per ingaggio fra forze, e finché la forza è il blocco un ingaggio può coinvolgere più missioni. Così F3 è rimasta pura struttura, verificata con fotografia identica.
@@ -429,8 +430,8 @@ su cui poggia la successiva.
     - Dettagli, S27 e confronto in `F4_Differenze_Scenari.md`, "G5".
 
 23. **F7a: regole d'ingaggio di missione (decisioni dell'utente del 2026-10-18, proposta `Proposta_F7_Bersagli_Filtro_Armi.md` §2-§5)**.
-    - **Scomposizione e architettura** (decisioni 1-2): la F7 e' divisa in F7a (qui) e F7b (fuoco su posizione, NON
-      implementata); la F7a ha due strati: (W) politica d'armi per tipo di missione come involucro della fire control
+    - **Scomposizione e architettura** (decisioni 1-2): la F7 e' divisa in F7a (qui) e F7b (fuoco su posizione, fatta
+      dopo: deviazione 24); la F7a ha due strati: (W) politica d'armi per tipo di missione come involucro della fire control
       (`Fire_Control.restrict_by_policy`, conosce i registri) e (T) `Engagement_Resolver.TargetRules` per asset nel
       risolutore (il risolutore continua a non leggere la missione). Interruttori `Session_Simulator.F7_WEAPON_POLICY`
       e `F7_TARGET_RULES` (attivi, indipendenti; spenti entrambi il comportamento e' quello di prima).
@@ -463,16 +464,39 @@ su cui poggia la successiva.
       esecuzioni identiche; nuovo S28 (ROE con andata/ritorno e punto ATTACK, politica d'armi, ZONE), 52 esecuzioni nuove.
     - **Limiti** (v. `F4_Differenze_Scenari.md`, "F7a"): la designazione geometrica (area) e' valutata alla prima
       decisione sulla coppia e il candidato fuori area e' esaurito per la finestra: un bersaglio che entra nell'area dopo
-      la prima valutazione non e' ingaggiato (LIMITE DICHIARATO, non implementato per decisione dell'utente); F7b non
-      implementata.
+      la prima valutazione non e' ingaggiato (LIMITE DICHIARATO, non implementato per decisione dell'utente); la F7b
+      (deviazione 24) e' fatta.
     - **Limite "self_escort A-10C non corretto" CHIUSO** (decisione 8, 2026-10-18): `self_escort_capability` = True sui
       5 loadout A-10C II con AIM-9M in `Aircraft_Loadouts.py` ('Low Level Bomb Run', senza AIM-9, resta False);
       4 esecuzioni di S28 cambiate (`S28-CLASS/*/self_defence`), v. `F4_Differenze_Scenari.md`, "Correzione dati A-10C".
     - Dettagli, scelte e confronto in `F4_Differenze_Scenari.md`, "F7a".
+
+24. **F7b: fuoco su posizione (decisione 15 dell'utente del 2026-10-20, proposta `Proposta_F7_Bersagli_Filtro_Armi.md` §6)**.
+    - **Regola**: missione di terra o di mare con bersaglio POINT o AREA e azione `MissionAction(TASK, 'Fire_At_Point',
+      params={'rounds', 'weapon'})` su un waypoint (validata in `Mission`); istante di tiro = arrivo al waypoint e
+      condizione d'avvio (ON_ARRIVAL / AT_TIME / AFTER_DURATION); impatto a `t_fire + time_of_flight` (formula di
+      `shot_spec_for`); punto mirato = posizione STIMATA (N3.e), dispersione uniforme nel disco di raggio `max(radius_m,
+      uncertainty_m ESTIMATED, 50 m)`, letalita' a soglia (raggio 0,25 m/mm x calibro, ripiego 25 m, con la sola
+      `destroy_capacity` della riga del template): colpisce solo chi c'e' davvero nel disco all'impatto, non dove il
+      bersaglio si e' spostato (comportamento osservato in `ground_sea_mission.miz`).
+    - **Scelte 15a-15g** (tutte come raccomandate): solo terra e mare (aerei esclusi e armi `missile` escluse); raggio letale
+      STIMA 0,25 m/mm con ripiego 25 m; dispersione minima 50 m (STIMA); niente fuoco amico; nessuna intercettazione; un solo
+      evento all'impatto; nessun effetto dottrinale (tempra, disingaggio, shock) sul lato colpito (l'esito ha zero forze).
+    - **Architettura**: terzo tipo di evento di sessione `AREA_FIRE_EVENT` (ENGAGEMENT < AREA_FIRE < MOVEMENT), risolto
+      fra gli episodi d'ingaggio; RNG `order.rng(mission_id=<missione>, event_id='area_fire|<missione>|<asset>|<wp>|<azione>',
+      counter=0)` (primo uso dello slot `mission_id`); esito applicato subito e accodato a `results`/`resolved`
+      (`EngagementResult` con `forces=()`); le distruzioni entrano nelle conoscenze degli episodi successivi. Interruttore
+      `F7_AREA_FIRE` (attivo; spento le azioni sono ignorate con un warning).
+    - **Scenario**: S29-AREA ('stale', 'on_target', 'switch_off', 4 seed = 12 esecuzioni nuove): l'artiglieria che spara dove
+      i blu erano colpisce solo chi c'e' ancora (criterio della Fase 7, "Fatto quando").
+    - **Limiti** (v. `F4_Differenze_Scenari.md`, "F7b"): modello volutamente semplice (costanti STIMATE non tarate);
+      l'istante d'impatto che ordina l'evento e' stimato senza la scorta; `target_destroyed` per POINT/AREA resta non
+      rappresentabile (decisione 12 della F7a).
+    - Dettagli, scelte e confronto in `F4_Differenze_Scenari.md`, "F7b".
 
 **Punti aperti rilevati dall'aggiornamento del manuale** (capitolo 10 §9.6 del manuale DES):
 - docstring obsoleti in `Session_Simulator` (dicono ancora che la selezione dell'arma resta fuori dall'orchestratore);
 - `run_session` non inoltra `rwr_catalogue` al risolutore;
 - nessun codice di produzione fornisce `morale_for` / `enemy_estimate_for` (solo i test);
 - una missione sul posto risulta `FAILED` perché manca uno stato "in corso" (D4.e);
-- ruoli e criteri di fine: i ruoli restano validati ma non letti da `Logic`; bersaglio e regole (ROE, armi designate) sono letti dalla F7a (F5-F6 per i criteri di fine); `Operation` è letta dalla F4b+ (`coordination_domains`: `Operation.mission_ids` e `Mission.operation_id`).
+- ruoli e criteri di fine: i ruoli restano validati ma non letti da `Logic`; bersaglio e regole (ROE, armi designate) sono letti dalla F7a e le azioni `Fire_At_Point` dalla F7b (F5-F6 per i criteri di fine); `Operation` è letta dalla F4b+ (`coordination_domains`: `Operation.mission_ids` e `Mission.operation_id`).

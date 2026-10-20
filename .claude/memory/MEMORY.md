@@ -1,8 +1,9 @@
 # Warfare-Model Project Memory
 
-Indice compatto (2026-10-19). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
+Indice compatto (2026-10-20). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
+- [Sessione 2026-10-20 osboxes — CHIUSA: F7b approvata, fotografia 982, suite 4555](project_session_2026_10_20_summary.md) — fuoco su posizione (Area_Fire, S29); hooksPath corretto; OpenCode NON installato su osboxes (da fare da ProArt, progetto ai-multimodel); main invariato
 - [Sessione 2026-10-19 ProArt — CHIUSA, pushato: sistema multi-LLM (OpenCode) integrato, pilota riuscito](project_session_2026_10_19_summary.md) — AGENTS.md/CLAUDE.md, oc-developer come alternativa a des-developer; suite 4490, fotografia 970; prossimo F7b
 - [Sessione 2026-10-18 ProArt — CHIUSA, pushato](project_session_2026_10_18_summary.md) — G5, F7a, A-10C; fotografia 970, suite 4490; prossimo F7b (decisione 15), pulizia doc, F6-B3, F8
 - [Sessione 2026-10-17 ProArt — CHIUSA](project_session_2026_10_17_summary.md) — G3, G4a/b, uscita di scena; fotografia 878

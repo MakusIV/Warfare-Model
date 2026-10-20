@@ -413,6 +413,26 @@ Sono limiti del **modello** scelti consapevolmente o conseguenze di dati non tar
 - A fine sessione un aereo ancora in volo sul rientro ha come postura il tipo di missione, non una postura di rientro
   (`_postures_after_bingo`, `:1543-1557`).
 
+### Fuoco su posizione (F7b, 2026-10-20: decisione 15 dell'utente, `Logic/Area_Fire`)
+
+Modello **volutamente semplice**, con costanti STIMATE dichiarate nel codice (`Area_Fire.py`) e non tarate: dispersione
+uniforme nel disco di raggio `max(radius_m, uncertainty_m se ESTIMATED, AREA_FIRE_MIN_DISPERSION_M = 50 m)`, letalità **a
+soglia** (un colpo a segno entro il raggio letale `AREA_FIRE_LETHAL_RADIUS_PER_MM` = 0,25 m/mm x calibro, ripiego
+`AREA_FIRE_LETHAL_RADIUS_M` = 25 m, con la sola `destroy_capacity` della riga del template). Limiti dichiarati:
+
+- **solo terra e mare** (artiglieria, fuoco navale): l'aereo che bombarda un punto resta fuori, e le armi `missile` sono
+  escluse; **niente fuoco amico** (solo i nemici dell'altro schieramento), **niente intercettazione**, **niente effetti
+  dottrinali** (tempra, disingaggio, shock) sul lato colpito: l'esito ha zero forze d'ingaggio;
+- gli aerei **in volo** non sono mai colpiti (un impatto al suolo non li raggiunge); un aereo a terra è un bersaglio di
+  superficie, come nella fire control;
+- **un solo evento all'impatto**: un bersaglio distrutto da un altro episodio fra `t_fire` e `t_impact` è già distrutto
+  all'impatto (corretto), ma la scorta è consumata nell'ordine di applicazione anche se l'evento di munizioni porta
+  l'istante `t_fire`; un nemico distrutto da un episodio già risolto con un impatto posteriore a quello dell'evento è visto
+  come già distrutto;
+- l'istante d'impatto che **ordina** l'evento è stimato con l'arma preferita senza la scorta: se all'impatto quell'arma è
+  esaurita e subentra un'altra con un tempo di volo diverso, l'esito porta il suo istante e non quello d'ordinamento;
+- `target_destroyed` per POINT/AREA resta non rappresentabile (decisione 12 della F7a).
+
 ### Limiti del pianificatore di rotta e del pianificatore d'attacco (2026-09-26/27, commit `815dc35f`/`6754bf1c`)
 
 Non fanno parte del motore DES in senso stretto (v. capitolo 7, §7.8-7.9), ma ne alimentano

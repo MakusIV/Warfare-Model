@@ -157,6 +157,18 @@ registro d'arma (`weapon_tasks`). Politica del lancio: un'arma assente dai regis
 tipi aria-suolo vale solo se il loadout dichiara `self_escort_capability`. Il resto (bersaglio designato,
 ROE, armi designate) e' lo strato T nel risolutore (`Engagement_Resolver.TargetRules`).
 
+## Arma per il fuoco su posizione (F7b, decisione 15 dell'utente del 2026-10-20)
+
+Il fuoco su posizione (`Logic/Area_Fire`, azione `Fire_At_Point`) non passa dalla fire control iniettata nel risolutore
+(nessun bersaglio rilevato): usa le due funzioni di questa sezione, che leggono gli stessi registri.
+  * `area_fire_weapon(shooter, distance_m, weapon=None, stock_of=None)` -> `AreaWeapon`: solo `Vehicle` e `Ship`; fra le
+    armi candidate (stesso ordine di `_candidate_weapons`) di kind diverso da `missile` quella DICHIARATA, altrimenti la
+    prima con un task in `AREA_FIRE_TASKS` (Artillery, Naval_Gunfire_Support, Land_Attack), con la portata che copre la
+    distanza (la maggiore fra tiro diretto e indiretto) e, se `stock_of` e' dato, con scorta per un colpo;
+    `time_of_flight` e `stock_per_round` con le formule di `shot_spec_for`;
+  * `area_fire_pk(weapon, target, grounded=False)`: la `destroy_capacity` della riga del template per la classe del
+    bersaglio (`target_key`, `_cell`); None per un bersaglio non classificabile, con Pk nulla o un aereo IN VOLO.
+
 ## Memoizzazione
 
 La scelta e' una funzione PURA di (tiratore: classe, modello, loadout; bersaglio: chiave,
@@ -967,6 +979,102 @@ def restrict_by_policy(fire_control: Callable, policy_of: Mapping[str, WeaponPol
             return restrict(shooter, target, fire_control(shooter, target), False)
 
     return restricted
+
+
+# ── ARMA PER IL FUOCO SU POSIZIONE (F7b) ──────────────────────────────────────
+
+# Task d'arma dei registri che identificano il fuoco indiretto su una posizione (F7b, decisione 15 del 2026-10-20):
+# artiglieria di terra (`Ground_Weapon_Data`), fuoco navale d'appoggio e attacco a terra (`Ship_Weapon_Data`). Le armi
+# `missile` sono escluse (15e): il fuoco su posizione di un missile (intercettabile, guidato) non e' modellato.
+AREA_FIRE_TASKS = frozenset({'Artillery', 'Naval_Gunfire_Support', 'Land_Attack'})
+
+
+@dataclasses.dataclass(frozen=True)
+class AreaWeapon:
+    """Arma scelta per il fuoco su posizione (F7b), con i campi che servono a `Logic/Area_Fire`.
+
+    Attributes:
+        model: modello d'arma di dominio (chiave del registro).
+        caliber_mm: calibro [mm] dal registro, None se non dichiarato (o non positivo).
+        max_range_m: portata massima [m] dal registro (per le armi terrestri la maggiore fra tiro diretto e
+            indiretto), None = nessun vincolo di portata.
+        time_of_flight: secondi fra tiro e impatto (la formula di `shot_spec_for`).
+        stock_per_round: unita' di scorta consumate da UN colpo (`ShotSpec.stock_per_round`, A3).
+        entry: il record candidato (`_Weapon`), per le righe d'efficacia del template (`area_fire_pk`).
+    """
+    model: str
+    caliber_mm: Optional[float]
+    max_range_m: Optional[float]
+    time_of_flight: float
+    stock_per_round: int
+    entry: object = dataclasses.field(repr=False, compare=False, default=None)
+
+
+def area_fire_weapon(shooter, distance_m: float, weapon: Optional[str] = None,
+                     stock_of: Optional[Callable] = None) -> Optional[AreaWeapon]:
+    """L'arma con cui `shooter` spara una posizione a `distance_m` [m] in orizzontale (F7b), o None.
+
+    Solo tiratori `Vehicle` e `Ship` (un aereo non spara su posizione nella F7b, 15a). Candidate: le armi del
+    registro del tiratore (stesso ordine di `_candidate_weapons`) di kind diverso da `missile` (15e) e
+    * con `weapon` dichiarata (`params['weapon']` dell'azione): solo quel modello, qualunque siano i suoi task;
+    * altrimenti con almeno un task in `AREA_FIRE_TASKS`.
+    Fra queste la prima con la portata che copre `distance_m` (nessun vincolo se il registro non la dichiara) e,
+    se `stock_of` e' dato (`modello -> unita' | None`, `Mobile.stock_of`), con scorta per almeno un colpo (None =
+    nessun vincolo di scorta). Senza `stock_of` la scorta non e' considerata (scelta per l'ordinamento a monte).
+    """
+    shooter_key = _shooter_key(shooter)
+
+    if shooter_key is None or shooter_key[0] not in ('Vehicle', 'Ship'):
+        return None
+
+    for entry in _candidate_weapons(shooter_key):
+        if entry.kind == 'missile':
+            continue
+
+        if weapon is not None:
+            if entry.model != weapon:
+                continue
+        elif not entry.tasks or not entry.tasks & AREA_FIRE_TASKS:
+            continue
+
+        if entry.range_m is not None and distance_m > entry.range_m:
+            continue
+
+        spec = shot_spec_for(entry, 1.0, 1.0)
+
+        if stock_of is not None:
+            stock = stock_of(entry.model)
+
+            if stock is not None and stock < spec.stock_per_round:
+                continue
+
+        caliber = _positive(entry.data.get('caliber'))
+        return AreaWeapon(model=entry.model, caliber_mm=caliber, max_range_m=entry.range_m,
+                          time_of_flight=spec.time_of_flight, stock_per_round=spec.stock_per_round, entry=entry)
+
+    return None
+
+
+def area_fire_pk(weapon: AreaWeapon, target, grounded: bool = False) -> Optional[float]:
+    """`destroy_capacity` della riga del template di `weapon` per la classe del `target` (F7b), con la stessa catena
+    `target_key` / `_cell` della fire control; None se il bersaglio non e' classificabile, non ha riga, ha Pk
+    (accuracy x destroy_capacity) nulla, oppure e' un aereo IN VOLO (un impatto al suolo non lo colpisce)."""
+    t_key = target_key(target, grounded=grounded)
+
+    if t_key is None:
+        return None
+
+    keys, dimension, is_air = t_key
+
+    if is_air:
+        return None
+
+    cell = _cell(weapon.entry, keys, dimension)
+
+    if cell is None or cell[0] * cell[1] <= 0.0:
+        return None
+
+    return cell[1]
 
 
 def _asset_id(asset) -> Optional[str]:

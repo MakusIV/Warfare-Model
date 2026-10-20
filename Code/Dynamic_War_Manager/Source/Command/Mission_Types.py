@@ -39,6 +39,11 @@ parcheggio). Restano di PRIMA STESURA (stime di progetto, non dati tarati): `EMC
     fino a `Logic/Session_Simulator.run_session` (che produce i `MissionOutcome`).
   * Condizioni sullo stato e re-scheduling (N2.d opzione C, R4 seconda parte).
 
+## Fuoco su posizione (F7b)
+Dalla F7b l'azione `MissionAction(kind=TASK, name=FIRE_AT_POINT_ACTION, params={'rounds', 'weapon'})` su un waypoint di
+una missione di terra o di mare con bersaglio POINT o AREA e' una missione di fuoco (`Logic/Area_Fire`,
+`Logic/Session_Simulator`, interruttore `F7_AREA_FIRE`). Qui solo la validazione strutturale (`Mission`).
+
 ## Regole d'ingaggio di missione (F7a)
 Dalla F7a il motore legge `Mission.target` (con `Target.asset_ids`), `Mission.rules.roe` e
 `MissionAsset.weapons` (armi designate; implicite da `AttackProfile.weapon`) per bersaglio designato, ROE e
@@ -293,6 +298,11 @@ TARGET_KINDS_BY_CATEGORY: Mapping[Mission_Category, Tuple[TargetKind, ...]] = Ma
 
 ALTITUDE_REFERENCES: Tuple[str, ...] = ('MSL', 'AGL')
 WAIT_MODES: Tuple[str, ...] = ('hold', 'orbit')
+
+# Nome dell'azione TASK di fuoco su posizione (F7b, decisione 15 del 2026-10-20): su un waypoint di una missione di
+# terra o di mare con bersaglio POINT o AREA, `params = {'rounds': int >= 1, 'weapon': str (facoltativo)}`, avvio con
+# la `StartCondition` dell'azione. La legge `Logic/Area_Fire`.
+FIRE_AT_POINT_ACTION = 'Fire_At_Point'
 
 
 # ── VALIDATORI ────────────────────────────────────────────────────────────────
@@ -793,7 +803,7 @@ class EndCriteria:
 
     Lettura nel motore (F6-B1, `Logic/Session_Simulator`, "Fine di attivita' e stato di missione",
     interruttore `F6_END_CRITERIA`): `winchester`, `damage_threshold`, `target_destroyed` (bersaglio
-    ASSET/GROUP, con `Target.asset_ids` se dichiarato; POINT/AREA/ZONE non rappresentabili, decisione 12 della F7a) e `max_duration_s` (contata dalla partenza della missione)
+    ASSET/GROUP, con `Target.asset_ids` se dichiarato; POINT/AREA/ZONE non rappresentabili, decisione 12 della F7a: nemmeno per una missione di fuoco su posizione, F7b, il cui bersaglio e' una posizione e non un asset) e `max_duration_s` (contata dalla partenza della missione)
     chiudono l'attivita' dell'asset, che prosegue passivo sulla rotta; motivi WINCHESTER, DAMAGE,
     TARGET_DESTROYED, MAX_DURATION nell'esito per asset. `bingo` (F6-B2, interruttore `F6_BINGO`, solo
     missioni aeree): a priori nel validatore di pianificazione `Mission_Adapter.check_mission_bingo`
@@ -967,6 +977,7 @@ class Mission:
 
         _check_priority('priority', self.priority)
         self._validate_route_and_waypoints(domain)
+        self._validate_fire_actions(domain)
         self._validate_start(domain)
         self._validate_times()
 
@@ -1032,6 +1043,32 @@ class Mission:
 
         if domain == 'air' and not waypoints:
             raise ValueError("an air mission needs waypoints (departure ... landing, D2.c)")
+
+    def _validate_fire_actions(self, domain: str) -> None:
+        """Azioni `FIRE_AT_POINT_ACTION` (F7b): solo missioni di terra o di mare con bersaglio POINT o AREA, `rounds`
+        intero >= 1 (bool escluso), `weapon` facoltativa (id di dominio)."""
+        for index, waypoint in enumerate(self.waypoints):
+            for action in waypoint.actions:
+                if action.name != FIRE_AT_POINT_ACTION:
+                    continue
+
+                label = f"waypoint {index} action {FIRE_AT_POINT_ACTION!r}"
+
+                if action.kind is not ActionKind.TASK:
+                    raise ValueError(f"{label} must be a TASK action, got {action.kind.name}")
+
+                if domain == 'air':
+                    raise ValueError(f"{label} applies only to ground and sea missions, not 'air'")
+
+                if self.target.kind not in (TargetKind.POINT, TargetKind.AREA):
+                    raise ValueError(f"{label} needs a POINT or AREA target, got {self.target.kind.name}")
+
+                rounds = action.params.get('rounds')
+
+                if isinstance(rounds, bool) or not isinstance(rounds, int) or rounds < 1:
+                    raise ValueError(f"{label}: params['rounds'] must be an int >= 1, got {rounds!r}")
+
+                _check_optional_id(f"{label} params['weapon']", action.params.get('weapon'))
 
     def _validate_start(self, domain: str) -> None:
         start_mode = DEFAULT_START_MODE[domain] if self.start_mode is None else \

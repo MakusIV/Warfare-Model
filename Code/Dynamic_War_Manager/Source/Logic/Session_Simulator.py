@@ -20,7 +20,7 @@ consumi. Ogni numero che produce viene da uno dei moduli chiamati.
 
 ## La coda eventi
 
-Due tipi di evento di sessione, con chiave `(t, tipo, id, sequenza)`:
+Tre tipi di evento di sessione (il terzo dalla F7b), con chiave `(t, tipo, id, sequenza)`:
 
 - **ENGAGEMENT** — dal G4a uno per EPISODIO d'ingaggio (v. "Episodi d'ingaggio (G4a)"): le finestre legate
   perche' condividono una forza (o il dominio di coordinamento) e si sovrappongono entro `EPISODE_GAP`;
@@ -30,6 +30,8 @@ Due tipi di evento di sessione, con chiave `(t, tipo, id, sequenza)`:
   `event_id`). Con `G4_EPISODES` spento, uno per componente connessa di forze (v. sotto): le forze legate,
   direttamente o per tramite di altre, da almeno una `ContactWindow`, con istante = inizio della prima finestra
   fra QUALUNQUE coppia della componente (un `heapq`, come prima).
+- **AREA_FIRE** (F7b) — uno per azione `Fire_At_Point` di un asset di missione di terra o di mare, all'istante d'impatto
+  (v. "Fuoco su posizione (F7b)"); fra ENGAGEMENT e MOVEMENT a parita' d'istante. Senza azioni non c'e' nessun evento.
 - **MOVEMENT** — uno per asset con rotta schedulabile nella sessione; istante = fine del
   suo movimento dentro la sessione (dalla F6-A troncato all'esaurimento del carburante). Produce e
   applica i `FuelEvent` del tragitto, uno per tratto (v. "Carburante").
@@ -471,7 +473,33 @@ Gli interruttori sono indipendenti; con entrambi spenti il comportamento e' quel
 missioni che dichiarano ROE e armi. Le validazioni nuove di `Mission_Types` e la coerenza fra
 `MissionAsset.loadout` e il loadout assegnato all'aereo (`_check_missions`, `ValueError`) NON dipendono dagli
 interruttori. Nessuna estrazione RNG nuova: un filtro che cambia una scelta sposta le estrazioni successive
-dello stesso ingaggio. La F7b (fuoco su posizione) non e' implementata.
+dello stesso ingaggio.
+
+## Fuoco su posizione (F7b del piano della Missione, decisione 15 dell'utente del 2026-10-20)
+
+`Analysis/Document/Proposta_F7_Bersagli_Filtro_Armi.md` §6, `Logic/Area_Fire`. Interruttore `F7_AREA_FIRE` (attivo). Una
+missione di terra o di mare con bersaglio POINT o AREA e un'azione `Fire_At_Point` (`Mission_Types.FIRE_AT_POINT_ACTION`,
+`params = {'rounds', 'weapon'}`) su un waypoint spara sulla posizione STIMATA del bersaglio (N3.e) anche se nessuno e' stato
+rilevato lassu': l'artiglieria che spara dove i blu erano. E' un terzo tipo di evento di sessione, `AREA_FIRE_EVENT`
+(a parita' d'istante ENGAGEMENT < AREA_FIRE < MOVEMENT), NON un ingaggio: nessuna finestra di contatto, nessuna forza
+d'ingaggio (`EngagementResult.forces` vuoto: niente tempra, disingaggio o shock sul colpito). Per ogni asset della missione
+`Area_Fire.fire_orders` ricava un ordine (istante dal waypoint e dalla condizione d'avvio); la sessione stima a monte
+l'istante d'impatto (`t_fire + time_of_flight` dell'arma scelta senza la scorta) e risolve l'evento in ordine di tempo fra
+gli episodi d'ingaggio (prima di quelli che cominciano dopo l'impatto; con `G4_EPISODES` spento nella coda degli
+ingaggi). All'impatto la scorta e' letta e le condizioni sono quelle di `Area_Fire.resolve_area_fire` (tiratore non
+distrutto, passivo o a secco a `t_fire`: `inactive_from`, dal piu' vecchio fra distruzione, `passive_from`, fine di attivita'
+nota a monte e esaurimento del carburante; arma con scorta e portata; nemici del tiratore dell'altro schieramento, mai
+fuoco amico). Estrazioni dall'RNG di sessione con `order.rng(mission_id=<missione>, event_id=area_fire_event_id(ordine),
+counter=0)`: stream separato da quelli degli ingaggi e della tempra, quindi le sessioni senza l'azione sono identiche a
+prima. L'esito e' applicato subito agli asset reali (tutti i blocchi) e accodato a `results`/`resolved`: i `DamageEvent`
+sono a `t_impact`, gli `AmmunitionEvent` a `t_fire`, le distruzioni entrano nelle conoscenze degli episodi successivi
+(`_known_destructions`) e nell'esito per missione. In `SessionOutcome.engagement_outcomes` l'evento compare come un
+ingaggio con zero forze. Spento: le azioni sono ignorate con un warning.
+Limiti dichiarati: l'istante d'impatto che ordina l'evento e' stimato con l'arma preferita senza la scorta (se all'impatto
+quell'arma e' esaurita e ne subentra un'altra con un tempo di volo diverso, l'esito porta il suo istante e non quello
+d'ordinamento); un nemico distrutto da un episodio gia' risolto con un impatto POSTERIORE a quello dell'evento e' visto come
+gia' distrutto; modello volutamente semplice (dispersione uniforme, letalita' a soglia, costanti STIMATE, aerei esclusi,
+niente intercettazione).
 
 ## Carburante (F6-A del piano della Missione, decisioni dell'utente del 2026-10-12)
 
@@ -684,7 +712,8 @@ attivita', con un log. I contatti invece sono cercati solo dentro la sessione.
 
 ## Cosa NON fa
 - Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`.
-- Non seleziona l'arma (lo fa la fire control iniettata; la politica d'armi di missione, F7a, la restringe), non rifornisce (munizioni o carburante), non ri-instrada le forze
+- Non seleziona l'arma (lo fa la fire control iniettata; la politica d'armi di missione, F7a, la restringe; per il fuoco su
+  posizione della F7b la sceglie `Fire_Control.area_fire_weapon`), non rifornisce (munizioni o carburante), non ri-instrada le forze
   TERRESTRI e NAVALI che si disingaggiano (restano segnalate nell'esito e, dal G4a, passive negli episodi
   successivi); dal G4b gli aerei di missione disingaggiati rientrano alla base.
 - Nessun componente LLM, in nessuna forma.
@@ -699,7 +728,9 @@ from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import DEFAULT_DETECTION_RANGE_TYPE
 from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
+    FIRE_AT_POINT_ACTION,
     AbortReason,
+    ActionKind,
     AssetEndReason,
     AssetMissionOutcome,
     AssetState,
@@ -713,6 +744,7 @@ from Code.Dynamic_War_Manager.Source.Command.Session_Types import (
     SessionOutcome,
     assemble_session_outcome,
 )
+from Code.Dynamic_War_Manager.Source.Logic import Area_Fire as AF
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
 from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
@@ -727,9 +759,11 @@ logger = Logger(module_name=__name__, class_name='Session_Simulator').logger
 
 # ── COSTANTI ──────────────────────────────────────────────────────────────────
 
-# Tipi di evento di sessione, nell'ordine di risoluzione a parita' d'istante (v. docstring).
+# Tipi di evento di sessione, nell'ordine di risoluzione a parita' d'istante (v. docstring). `AREA_FIRE_EVENT` (F7b,
+# fuoco su posizione) sta fra l'ingaggio e il movimento: ENGAGEMENT < AREA_FIRE < MOVEMENT.
 ENGAGEMENT_EVENT = 0
-MOVEMENT_EVENT = 1
+AREA_FIRE_EVENT = 1
+MOVEMENT_EVENT = 2
 
 # Etichetta del primo elemento dell'event_id di un ingaggio (v. engagement_event_id).
 ENGAGEMENT_EVENT_TAG = 'engagement'
@@ -838,6 +872,13 @@ G4_OFF_SCENE_EXIT = True
 #     risolutore. Spento: nessuna regola al risolutore. Con entrambi spenti: comportamento precedente alla F7a.
 F7_WEAPON_POLICY = True
 F7_TARGET_RULES = True
+
+# F7b, fuoco su posizione (decisione 15 dell'utente del 2026-10-20), interruttore dedicato (stessa ragione dei precedenti):
+#   * `F7_AREA_FIRE` (ATTIVO): le azioni `Fire_At_Point` delle missioni di terra e di mare con bersaglio POINT o AREA
+#     sono risolte come eventi di sessione (`Logic/Area_Fire`, v. "Fuoco su posizione (F7b)"). Spento: le azioni sono
+#     ignorate con un warning, come prima della F7b. Nessuno scenario precedente alla F7b dichiara l'azione, quindi
+#     con l'interruttore acceso nessuna sessione precedente cambia.
+F7_AREA_FIRE = True
 
 # Intervallo [s] entro cui due finestre (di una stessa forza o dominio) che non si sovrappongono sono ancora lo
 # stesso episodio. Decisione dell'utente del 2026-10-17: 300 s, cioe' `Fuel_Model.DISENGAGE_TIME`, i 5 minuti del
@@ -2346,6 +2387,89 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     charges_of: Dict[str, List[Tuple[float, float]]] = {}
     replanning = G4_EPISODES and G4_REPLAN
 
+    # F7b: fuoco su posizione (v. "Fuoco su posizione (F7b)"). Gli ordini di fuoco delle azioni `Fire_At_Point` delle
+    # missioni di terra e di mare, per istante d'impatto stimato A MONTE (arma scelta senza la scorta, che e' letta al
+    # momento della risoluzione) e id: un evento di sessione per ordine, risolto in ordine di tempo fra gli episodi
+    # d'ingaggio (ENGAGEMENT < AREA_FIRE < MOVEMENT a parita' d'istante).
+    area_events: List[Tuple[float, str, AF.FireOrder]] = []
+
+    def position_of(asset_id, time):
+        legs = all_legs.get(asset_id)
+        return CS.position_on_legs(legs, time) if legs else None
+
+    def inactive_from(asset_id):
+        """Istante dal quale l'asset non spara piu': distrutto, passivo (disingaggio, fine di attivita' scattata in un
+        episodio gia' risolto), fine di attivita' nota a monte (durata massima, winchester) o a secco; None = attivo."""
+        instants = []
+        destroyed = _destruction_times(results, assets_by_id, t0)
+
+        if asset_id in destroyed:
+            instants.append(destroyed[asset_id])
+
+        if asset_id in passive_from:
+            instants.append(passive_from[asset_id])
+
+        plan = activity_plans.get(asset_id)
+
+        if plan is not None and plan.static_end is not None:
+            instants.append(plan.static_end[0])
+
+        fuel_end = fuel_ends.get(asset_id)
+
+        if fuel_end is not None:
+            instants.append(fuel_end.time)
+
+        return min(instants) if instants else None
+
+    def fire_area(fire_order: AF.FireOrder) -> None:
+        shooter = assets_by_id.get(fire_order.asset_id)
+        side = block_owner[fire_order.asset_id][0]
+        # Solo i nemici del tiratore (l'altro schieramento): niente fuoco amico (decisione 15d).
+        enemies = [asset for asset_id, asset in assets_by_id.items()
+                   if asset_id in block_owner and block_owner[asset_id][0] != side]
+        event_id = AF.area_fire_event_id(fire_order)
+        result = AF.resolve_area_fire(fire_order, shooter, enemies, position_of,
+                                      order.rng(mission_id=fire_order.mission_id, event_id=event_id, counter=0),
+                                      provenance, inactive_from=inactive_from(fire_order.asset_id),
+                                      grounded_at=lambda asset_id, time: grounded.at(asset_id, time))
+
+        if result is None:
+            return
+
+        results.append(result)
+        resolved.append((result.t_end, event_id, result))
+        # Applicato SUBITO, a tutti i blocchi: tiratore (scorta) e colpiti (salute); le distruzioni entrano nelle
+        # conoscenze degli episodi successivi (`_known_destructions` sui `results`).
+        ER.apply_engagement_result(result, *blocks.values())
+
+    def fire_due(before: Optional[float] = None) -> None:
+        """Risolve gli eventi di fuoco su posizione con istante d'impatto STRETTAMENTE anteriore a `before` (a parita'
+        d'istante l'ingaggio precede, v. AREA_FIRE_EVENT), o tutti quelli rimasti con `before` None."""
+        while area_events and (before is None or area_events[0][0] < before - CS.TIME_EPS):
+            fire_area(area_events.pop(0)[2])
+
+    if F7_AREA_FIRE:
+        for asset_id, movement in movement_of.items():
+            mission = mission_of[movement.mission_id]
+            shooter = assets_by_id.get(asset_id)
+
+            for fire_order in AF.fire_orders(mission, movement, t0):
+                weapon = AF.plan_shot(fire_order, shooter, position_of) if shooter is not None else None
+
+                if weapon is None or fire_order.t_fire > session_end + CS.TIME_EPS:
+                    logger.warning(f"run_session: {AF.area_fire_event_id(fire_order)!r} not scheduled: no usable "
+                                   f"weapon, range or position at t={fire_order.t_fire:.1f}, or after the session end")
+                    continue
+
+                area_events.append((AF.impact_time(fire_order, weapon), AF.area_fire_event_id(fire_order),
+                                    fire_order))
+
+        area_events.sort(key=lambda event: (event[0], event[1]))
+    elif any(action.kind is ActionKind.TASK and action.name == FIRE_AT_POINT_ACTION
+             for mission in order.missions for waypoint in mission.waypoints for action in waypoint.actions):
+        logger.warning(f"run_session: F7_AREA_FIRE is off: the {FIRE_AT_POINT_ACTION!r} actions of the missions "
+                       f"are ignored")
+
     def replan(result) -> Dict[str, float]:
         """G4b: ri-pianifica, alla fine dell'episodio risolto `result`, gli aerei di missione in volo che vi hanno
         consumato o la cui forza si e' disingaggiata; aggiorna rientri, esaurimenti, tratti e programma a terra.
@@ -2710,6 +2834,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
 
         while pending:
             force_ids, group = pending.pop(0)
+            # F7b: i fuochi su posizione che colpiscono prima dell'inizio dell'episodio (a parita' d'istante dopo).
+            fire_due(min(w.t_start for w in group))
             result = engage(min(w.t_start for w in group), force_ids, group, engagement_event_id(*force_ids))
             done = {id(window) for window in group}
 
@@ -2737,6 +2863,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             if _trim_busy(touched, busy_until, all_legs):
                 left.update(touched)
                 pending = _episodes({pair: windows for pair, windows in left.items() if windows}, coordination)
+
+        fire_due()
     else:
         # Prima del G4a: un evento per COMPONENTE connessa di forze d'ingaggio, cioe' di missioni (F4b).
         queue: List = []
@@ -2748,8 +2876,20 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             heapq.heappush(queue, (min(w.t_start for w in group), ENGAGEMENT_EVENT, event_id,
                                    sequence, (force_ids, group)))
 
+        for impact, event_id, fire_order in area_events:
+            sequence += 1
+            heapq.heappush(queue, (impact, AREA_FIRE_EVENT, event_id, sequence, fire_order))
+
+        area_events.clear()
+
         while queue:
-            time, _, key, _, (force_ids, group) = heapq.heappop(queue)
+            time, kind, key, _, payload = heapq.heappop(queue)
+
+            if kind == AREA_FIRE_EVENT:
+                fire_area(payload)
+                continue
+
+            force_ids, group = payload
             engage(time, force_ids, group, key)
 
     # Tratti di MOVIMENTO definitivi (G4b: dopo le ri-pianificazioni) per la contabilita' del carburante.

@@ -614238,6 +614238,2657 @@
     "t_start": 0.0
    }
   },
+  "S29-AREA/S29-AREA-0/on_target": {
+   "actual_etas": {
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Art/art0": {
+     "2A64-152mm": 40
+    }
+   },
+   "ammunition_events": [
+    [
+     600.0,
+     "Red-Art/art0",
+     "2A64-152mm",
+     40
+    ]
+   ],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 70,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 70,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 10,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 10
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 4,
+    "destroyed_events": 2,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 40,
+    "salvos": 1
+   },
+   "damage_events": [
+    [
+     615.246914,
+     "Blue-Stay/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Col/ifv2",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Stay/ifv1",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     615.246914,
+     "Blue-Col/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    []
+   ],
+   "force_outcomes": {},
+   "fuel": {
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "destroyed",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "destroyed",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-0",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-0/stale": {
+   "actual_etas": {
+    "Blue-Col:Movement": [
+     0.0,
+     196.363636
+    ],
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Art/art0": {
+     "2A64-152mm": 40
+    }
+   },
+   "ammunition_events": [
+    [
+     600.0,
+     "Red-Art/art0",
+     "2A64-152mm",
+     40
+    ]
+   ],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 70,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 10,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 10
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Col/ifv0",
+      "Blue-Col/ifv1",
+      "Blue-Col/ifv2",
+      "Blue-Col/ifv3",
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 2,
+    "destroyed_events": 1,
+    "engagements": 1,
+    "fuel_events": 5,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 40,
+    "salvos": 1
+   },
+   "damage_events": [
+    [
+     615.246914,
+     "Blue-Stay/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Stay/ifv1",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    []
+   ],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Col/ifv0": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv1": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv2": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv3": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "destroyed",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-0",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-0/switch_off": {
+   "actual_etas": {
+    "Blue-Col:Movement": [
+     0.0,
+     196.363636
+    ],
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 50,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 50
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Col/ifv0",
+      "Blue-Col/ifv1",
+      "Blue-Col/ifv2",
+      "Blue-Col/ifv3",
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 5,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Col/ifv0": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv1": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv2": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv3": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "Defense",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-0",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-1/on_target": {
+   "actual_etas": {
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Art/art0": {
+     "2A64-152mm": 40
+    }
+   },
+   "ammunition_events": [
+    [
+     600.0,
+     "Red-Art/art0",
+     "2A64-152mm",
+     40
+    ]
+   ],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 70,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 10,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 10
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 4,
+    "destroyed_events": 1,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 40,
+    "salvos": 1
+   },
+   "damage_events": [
+    [
+     615.246914,
+     "Blue-Col/ifv2",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Col/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Col/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     70,
+     40,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Col/ifv1",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    []
+   ],
+   "force_outcomes": {},
+   "fuel": {
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "destroyed",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "Defense",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-1",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-1/stale": {
+   "actual_etas": {
+    "Blue-Col:Movement": [
+     0.0,
+     196.363636
+    ],
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Art/art0": {
+     "2A64-152mm": 40
+    }
+   },
+   "ammunition_events": [
+    [
+     600.0,
+     "Red-Art/art0",
+     "2A64-152mm",
+     40
+    ]
+   ],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 10,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 10
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Col/ifv0",
+      "Blue-Col/ifv1",
+      "Blue-Col/ifv2",
+      "Blue-Col/ifv3",
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 5,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 40,
+    "salvos": 1
+   },
+   "damage_events": [],
+   "engagements": [
+    []
+   ],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Col/ifv0": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv1": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv2": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv3": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "Defense",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-1",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-1/switch_off": {
+   "actual_etas": {
+    "Blue-Col:Movement": [
+     0.0,
+     196.363636
+    ],
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 50,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 50
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Col/ifv0",
+      "Blue-Col/ifv1",
+      "Blue-Col/ifv2",
+      "Blue-Col/ifv3",
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 5,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Col/ifv0": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv1": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv2": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv3": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "Defense",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-1",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-2/on_target": {
+   "actual_etas": {
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Art/art0": {
+     "2A64-152mm": 40
+    }
+   },
+   "ammunition_events": [
+    [
+     600.0,
+     "Red-Art/art0",
+     "2A64-152mm",
+     40
+    ]
+   ],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 70,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 10,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 10
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 2,
+    "destroyed_events": 1,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 40,
+    "salvos": 1
+   },
+   "damage_events": [
+    [
+     615.246914,
+     "Blue-Stay/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Stay/ifv1",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    []
+   ],
+   "force_outcomes": {},
+   "fuel": {
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "destroyed",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-2",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-2/stale": {
+   "actual_etas": {
+    "Blue-Col:Movement": [
+     0.0,
+     196.363636
+    ],
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Art/art0": {
+     "2A64-152mm": 40
+    }
+   },
+   "ammunition_events": [
+    [
+     600.0,
+     "Red-Art/art0",
+     "2A64-152mm",
+     40
+    ]
+   ],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 70,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 10,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 10
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Col/ifv0",
+      "Blue-Col/ifv1",
+      "Blue-Col/ifv2",
+      "Blue-Col/ifv3",
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 2,
+    "destroyed_events": 1,
+    "engagements": 1,
+    "fuel_events": 5,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 40,
+    "salvos": 1
+   },
+   "damage_events": [
+    [
+     615.246914,
+     "Blue-Stay/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Stay/ifv1",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    []
+   ],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Col/ifv0": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv1": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv2": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv3": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "destroyed",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-2",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-2/switch_off": {
+   "actual_etas": {
+    "Blue-Col:Movement": [
+     0.0,
+     196.363636
+    ],
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 50,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 50
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Col/ifv0",
+      "Blue-Col/ifv1",
+      "Blue-Col/ifv2",
+      "Blue-Col/ifv3",
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 5,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Col/ifv0": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv1": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv2": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv3": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "Defense",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-2",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-3/on_target": {
+   "actual_etas": {
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Art/art0": {
+     "2A64-152mm": 40
+    }
+   },
+   "ammunition_events": [
+    [
+     600.0,
+     "Red-Art/art0",
+     "2A64-152mm",
+     40
+    ]
+   ],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 70,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 70,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 70,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 10,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 10
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 4,
+    "destroyed_events": 1,
+    "engagements": 1,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 40,
+    "salvos": 1
+   },
+   "damage_events": [
+    [
+     615.246914,
+     "Blue-Stay/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Col/ifv2",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     615.246914,
+     "Blue-Col/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Stay/ifv1",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ]
+   ],
+   "engagements": [
+    []
+   ],
+   "force_outcomes": {},
+   "fuel": {
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "destroyed",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "Defense",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-3",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-3/stale": {
+   "actual_etas": {
+    "Blue-Col:Movement": [
+     0.0,
+     196.363636
+    ],
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {
+    "Red-Art/art0": {
+     "2A64-152mm": 40
+    }
+   },
+   "ammunition_events": [
+    [
+     600.0,
+     "Red-Art/art0",
+     "2A64-152mm",
+     40
+    ]
+   ],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 10,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 10
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Col/ifv0",
+      "Blue-Col/ifv1",
+      "Blue-Col/ifv2",
+      "Blue-Col/ifv3",
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 4,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 5,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 40,
+    "salvos": 1
+   },
+   "damage_events": [
+    [
+     615.246914,
+     "Blue-Stay/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Stay/ifv1",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     100,
+     70,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Stay/ifv0",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     70,
+     40,
+     false
+    ],
+    [
+     615.246914,
+     "Blue-Stay/ifv1",
+     "Red-Art/art0",
+     "2A64-152mm",
+     "damage",
+     70,
+     40,
+     false
+    ]
+   ],
+   "engagements": [
+    []
+   ],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Col/ifv0": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv1": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv2": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv3": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "Defense",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-3",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
+  "S29-AREA/S29-AREA-3/switch_off": {
+   "actual_etas": {
+    "Blue-Col:Movement": [
+     0.0,
+     196.363636
+    ],
+    "Red-Art:Fire_Support": [
+     0.0,
+     36.0
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Col/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv2": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Col/ifv3": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 0.995,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv0": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Blue-Stay/ifv1": {
+     "ammunition": 504,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A42-30mm": 500,
+      "9M113-Konkurs": 4
+     }
+    },
+    "Red-Art/art0": {
+     "ammunition": 50,
+     "destroyed": false,
+     "fuel": 0.999,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "2A64-152mm": 50
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Red-Art"
+    ],
+    "forces_b": [
+     "Blue-Stay",
+     "Blue-Col"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Col/ifv0",
+      "Blue-Col/ifv1",
+      "Blue-Col/ifv2",
+      "Blue-Col/ifv3",
+      "Red-Art/art0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 5,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Col/ifv0": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv1": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv2": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Blue-Col/ifv3": [
+     {
+      "amount": 0.005,
+      "distance": 3000.0,
+      "distance_covered": 3000.0,
+      "exhausted": false,
+      "fuel_after": 0.995,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 196.363636
+     }
+    ],
+    "Red-Art/art0": [
+     {
+      "amount": 0.001,
+      "distance": 500.0,
+      "distance_covered": 500.0,
+      "exhausted": false,
+      "fuel_after": 0.999,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 36.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Col/ifv0": "Defense",
+    "Blue-Col/ifv1": "Defense",
+    "Blue-Col/ifv2": "Defense",
+    "Blue-Col/ifv3": "Defense",
+    "Blue-Stay/ifv0": "Defense",
+    "Blue-Stay/ifv1": "Defense",
+    "Red-Art/art0": "Defense"
+   },
+   "session": {
+    "order_t_end": 1200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S29-AREA-3",
+    "t_end": 1200.0,
+    "t_start": 0.0
+   }
+  },
   "S3/S3-0/control": {
    "actual_etas": {
     "Blue-Stealth:Fighter_Sweep": [

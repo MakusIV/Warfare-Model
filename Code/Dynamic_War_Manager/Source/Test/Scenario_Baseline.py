@@ -159,6 +159,14 @@ esecuzioni identiche). Aggiunge in coda tre unita' S28: S28-ROE ('free', 'priori
 S28-CLASS ('cap_low', 'cap_low_off', 'sead', 'sead_off', 'self_defence', 'self_defence_off'), S28-ZONE ('zone_only',
 'zone_free'), 4 seed ciascuna: 52 esecuzioni nuove. Nessuna voce nuova nel riassunto.
 
+## Fuoco su posizione dopo la F7b
+
+La F7b (`Session_Simulator.F7_AREA_FIRE`, `Logic/Area_Fire`, decisione 15 dell'utente del 2026-10-20) non cambia le
+esecuzioni esistenti (nessuna missione esistente dichiara l'azione `Fire_At_Point`, nessuno stream d'ingaggio o di
+tempra cambia). Aggiunge in coda l'unita' S29-AREA ('stale', 'on_target', 'switch_off'), 4 seed ciascuna: 12 esecuzioni
+nuove. L'evento di fuoco su posizione compare in `SessionOutcome.engagement_outcomes` come un ingaggio con zero forze
+(`engagements` ha una voce vuota, `counts.engagements` la conta); nessuna voce nuova nel riassunto.
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -359,6 +367,9 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
      _by_occurrence('cap_low', 'cap_low_off', 'sead', 'sead_off', 'self_defence', 'self_defence_off')),
     ('S28-ZONE', 'Test_Session_Scenarios_S28', 'TestS28ZoneDesignation', None,
      _by_occurrence('zone_only', 'zone_free')),
+    # ── S29 (F7b: fuoco su posizione) — in coda, nomi stabili ──
+    ('S29-AREA', 'Test_Session_Scenarios_S29', 'TestS29AreaFire', None,
+     _by_occurrence('stale', 'on_target', 'switch_off')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

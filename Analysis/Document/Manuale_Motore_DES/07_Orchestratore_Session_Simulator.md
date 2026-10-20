@@ -119,6 +119,24 @@ contatore, il loadout e i registri). E serve, perché il G4b conosce i tratti de
 episodio. A parità d'istante `ENGAGEMENT_EVENT(0) < MOVEMENT_EVENT(1)`, poi l'id (stringa canonica, mai l'ordine di un
 dizionario Python).
 
+**Dalla F7b un terzo tipo di evento, `AREA_FIRE_EVENT`** (fuoco su posizione, decisione 15 dell'utente del 2026-10-20,
+interruttore `F7_AREA_FIRE`): `ENGAGEMENT_EVENT = 0`, `AREA_FIRE_EVENT = 1`, `MOVEMENT_EVENT = 2` (il valore di
+`MOVEMENT_EVENT` è passato da 1 a 2 per far stare l'evento nuovo in mezzo; nessun test né documento lo usa per valore), e a
+parità d'istante `ENGAGEMENT < AREA_FIRE < MOVEMENT`. Una missione di terra o di mare con bersaglio POINT o AREA e
+un'azione `Fire_At_Point` su un waypoint spara sulla **posizione stimata** del bersaglio anche se nessuno vi è stato
+rilevato (l'artiglieria che spara dove i blu erano): `Logic/Area_Fire.fire_orders` ricava un ordine per asset (istante dal
+waypoint e dalla condizione d'avvio), la sessione ne stima a monte l'istante d'impatto (`t_fire + time_of_flight` dell'arma
+preferita, senza la scorta) e li risolve in ordine di tempo **fra gli episodi** (`fire_due`, prima dell'episodio che comincia
+dopo l'impatto; con `G4_EPISODES` spento nella coda degli ingaggi). Non è un ingaggio: nessuna finestra di contatto, nessuna
+forza d'ingaggio (`EngagementResult.forces` vuoto, quindi niente tempra, disingaggio o shock sul colpito), nessuna
+intercettazione, solo le estrazioni dell'RNG di sessione con `order.rng(mission_id=<missione>, event_id=
+'area_fire|<missione>|<asset>|<wp>|<azione>', counter=0)` (primo uso dello slot `mission_id`): gli stream degli ingaggi e della
+tempra non cambiano, quindi una sessione senza l'azione è identica a prima. L'esito (`AmmunitionEvent` a `t_fire`,
+`DamageEvent` a `t_impact`) è applicato subito a tutti i blocchi e accodato a `results`/`resolved`: nel carburante passa come un
+ingaggio senza salve, le distruzioni entrano in `_known_destructions` e nell'esito per missione, in
+`SessionOutcome.engagement_outcomes` compare come un ingaggio con zero forze. Regola, costanti STIMATE e limiti: capitolo 9
+§9.1, «Fuoco su posizione (F7b)».
+
 ## 6.3 Forze impegnate su più fronti: componenti connesse (e, dal G4a, episodi)
 
 **Prima del 2026-09-23**: un ingaggio per coppia (lato A, lato B), applicato subito. Restava un
@@ -1319,6 +1337,10 @@ esattamente il comportamento della fase precedente.
 | `G4_EPISODES` | `Session_Simulator` (`:783`) | `True` | G4a | l'ingaggio è la componente connessa di forze (§6.3) |
 | `G4_REPLAN` | `Session_Simulator` (`:793`) | `True` | G4b | il G4a esattamente: bingo valutato solo alla partenza, esaurimento in ingaggio nel solo contatore; **letto solo** con `G4_EPISODES` (`replanning`, `:2261`) |
 | `G4_OFF_SCENE_EXIT` | `Session_Simulator` (`:799`) | `True` | G4b (uscita) | `BINGO_NO_BASE`: l'aereo senza basi resta passivo sulla rotta (il G4b prima dell'uscita di scena); **letto solo** con `G4_REPLAN` |
+| `F7_AREA_FIRE` | `Session_Simulator` | `True` | F7b | le azioni `Fire_At_Point` sono ignorate con un warning (come prima della F7b); nessuno scenario precedente le dichiara |
+
+(Gli interruttori della F7a, `F7_WEAPON_POLICY` e `F7_TARGET_RULES`, non sono ancora descritti in questo manuale, che
+si ferma a `a784a9e7`: v. `F4_Differenze_Scenari.md`, «F7a».)
 
 Costanti non-interruttore che il modulo definisce: `EPISODE_GAP = FM.DISENGAGE_TIME` (`:805`), le etichette
 `FUEL_HALT`/`FUEL_GLIDE`/`FUEL_CRASH` (`:808-810`) e i regimi `CRUISE_REGIME`/`COMBAT_REGIME` (`:710-711`).
