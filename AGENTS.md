@@ -11,7 +11,8 @@ nella lingua del codice circostante.
 - Repo pubblico su GitHub, usato da piu' macchine (ProArt P16, VM osboxes) sincronizzate con git.
 
 ## Verifiche: sempre con `tools/ai/verifica.sh`
-Suite completa (~10 minuti) e confronto con la "fotografia" girano in background; ogni chiamata dura al
+Suite completa e confronto con la "fotografia" girano in background, **mai in parallelo tra loro**
+(suite ~10 minuti sul ProArt; sulla VM osboxes suite ~21 e confronto ~17); ogni chiamata dura al
 massimo ~2 minuti. Ripeti `wait` finche' non compare `ESITO`:
 ```
 bash tools/ai/verifica.sh suite start        bash tools/ai/verifica.sh suite wait

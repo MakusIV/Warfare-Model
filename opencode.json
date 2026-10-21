@@ -19,7 +19,14 @@
       "git push*": "deny",
       "git stash*": "deny",
       "git worktree*": "deny",
-      "git config*": "deny"
+      "git config*": "deny",
+      "pip*": "deny",
+      "pip3*": "deny",
+      "*pip install*": "deny",
+      "*-m pip *": "deny",
+      "sudo*": "deny",
+      "apt*": "deny",
+      "apt-get*": "deny"
     }
   }
 }

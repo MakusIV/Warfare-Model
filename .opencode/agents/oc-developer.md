@@ -44,6 +44,12 @@ permission:
     "git worktree*": deny
     "pip*": deny
     "rm -rf*": deny
+    "pip3*": deny
+    "*pip install*": deny
+    "*-m pip *": deny
+    "sudo*": deny
+    "apt*": deny
+    "apt-get*": deny
   webfetch: deny
   websearch: deny
 ---

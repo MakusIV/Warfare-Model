@@ -24,6 +24,13 @@ permission:
     "git reset*": deny
     "git checkout*": deny
     "git switch*": deny
+    "pip*": deny
+    "pip3*": deny
+    "*pip install*": deny
+    "*-m pip *": deny
+    "sudo*": deny
+    "apt*": deny
+    "apt-get*": deny
   webfetch: deny
   websearch: deny
 ---
