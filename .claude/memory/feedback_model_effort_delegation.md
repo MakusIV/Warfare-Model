@@ -27,6 +27,24 @@ metadata:
 **Why:** il principale porta tutto il contesto della sessione ed e' il consumo maggiore; il giudizio di
 design si concentra nel piano scritto da Opus, che e' anche il passaggio di consegne verso Sonnet.
 
+## Tabella dei ruoli (dal 2026-10-21, decisa dall'utente; dettagli in ai-multimodel/docs/Valutazione_Ruoli_DeepSeek.md §5)
+Primario / alternativa 1 / alternativa 2. Modelli Claude SOLO nel Pro (mai Opus/Sonnet via OpenRouter);
+DeepSeek e GLM sempre con effort high (`variant: high`). Smistamento e giudizio restano al principale + conferma utente.
+- regista: principale Sonnet high (Pro)
+- planner-difficult: des-planner Opus high / oc-planner GLM 5.3 / oc-planner V4 Pro
+- planner-normal: des-planner con Sonnet high (deroga di modello da proporre) / oc-planner V4 Pro / oc-planner GLM 5.3
+- developer-difficult (RNG, interruttori, zone grigie): des-developer Sonnet high / oc-developer V4 Pro / oc-developer GLM 5.3
+- developer-normal (piano preciso, basso rischio): oc-developer V4 Pro / V4.1 Flash (dopo pilota U4a) / GLM 5.3-flash
+- reviewer (+qa): oc-reviewer GLM 5.3 (famiglia diversa dall'esecutore) / V4 Pro se l'esecutore era GLM / Opus nel Pro solo diff critici
+- debugger: oc-debugger V4 Pro (sola lettura, Diagnosi_*.md) / GLM 5.3 / escalation Opus high nel Pro
+- writer: des-manual-writer Sonnet high per il manuale / oc-writer V4.1 Flash (bozze in Analysis/Document/Bozze/) / oc-helper locale
+- simple-worker: oc-helper locale / V4.1 Flash (Game_PC spento) / Haiku 5.5 via OpenRouter
+- ui-developer: agente globale oc-ui-developer GLM 5.3 (DISATTIVATO in questo progetto)
+- tester = verifica.sh + developer; qa = oc-reviewer; nessun resolver automatico (U7 rimandata)
+Comandi OpenCode: `/piano`, `/esegui`, `/rivedi`, `/diagnosi`, `/bozza` (TUI) o `oc run --command <nome> ...`;
+i comandi usano SEMPRE il modello predefinito dell'agente (`-m` ignorato con --command, verificato 2026-10-21);
+modello alternativo: `oc run --agent <agente> -m openrouter/<id> "<compito>"`. Proposta sempre in una riga "compito -> agente, modello, motivo".
+
 ## Corsia OpenCode (dal 2026-10-19, protocollo in AGENTS.md/CLAUDE.md)
 - **Opzione in piu', non sostitutiva**: per eseguire un piano gia' approvato si sceglie OGNI VOLTA tra
   `des-developer` (Claude, come oggi) e `oc-developer` (OpenCode, `openrouter/deepseek/deepseek-v4-pro`,

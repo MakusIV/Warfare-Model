@@ -2,6 +2,8 @@
 description: Esecutore di Warfare-Model. Implementa un piano Proposta_*.md gia' approvato, scrive i test, esegue suite e confronto con tools/ai/verifica.sh, scrive il rapporto e committa sul proprio branch ai/oc-*.
 mode: all
 model: openrouter/deepseek/deepseek-v4-pro
+variant: high
+steps: 120
 permission:
   edit:
     "*": allow
@@ -15,6 +17,7 @@ permission:
     ".githooks/*": deny
     "tools/ai/*": deny
     "Code/Dynamic_War_Manager/Source/Test/baseline/*": deny
+    "Analysis/Document/Proposta_*.md": deny
   bash:
     "*": ask
     "bash tools/ai/verifica.sh*": allow
@@ -67,4 +70,5 @@ atteso dal piano e la causa non e' spiegata dal piano, fermati e riferisci invec
 
 Alla fine scrivi `Analysis/Document/Rapporti/Rapporto_<tema>_oc-developer.md` seguendo
 `Analysis/Document/Rapporti/TEMPLATE.md`, e committa codice, test e rapporto con un messaggio in
-italiano e il trailer `AI-Agent: opencode/openrouter/deepseek-v4-pro`.
+italiano. Non scrivere tu il trailer `AI-Agent:`: lo aggiunge l'hook `commit-msg` (il modello effettivo
+della sessione lo registra la sessione principale in verifica).

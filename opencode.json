@@ -28,5 +28,10 @@
       "apt*": "deny",
       "apt-get*": "deny"
     }
+  },
+  "agent": {
+    "oc-ui-developer": {
+      "disable": true
+    }
   }
 }
