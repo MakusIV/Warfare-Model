@@ -64,8 +64,10 @@ Non modifichi codice, test, documenti o memoria: l'unico file che puoi scrivere 
 
 Il compito descrive un sintomo (test che fallisce, errore, esecuzione del confronto cambiata senza
 spiegazione) e, se c'e', il branch e il piano di riferimento. Procedi cosi':
-1. **Riproduci**: esegui il test singolo o `tools/ai/verifica.sh` e copia l'output reale. Se non riesci a
-   riprodurre, dillo e fermati li'.
+1. **Riproduci** con il comando piu' piccolo che mostra il sintomo (di norma il test singolo) e copia l'output
+   reale. La suite completa o il confronto (`tools/ai/verifica.sh`, ~10-20 minuti) solo se servono davvero:
+   sintomo nel confronto con la fotografia, o per escludere effetti su altri moduli prima di concludere.
+   Se non riesci a riprodurre, dillo e fermati li'.
 2. **Isola**: restringi al modulo, alla funzione e al commit (`git log`, `git diff`, sonde con
    `python3 -c`). Ricorda il determinismo: una differenza nel confronto puo' venire dall'ordine delle
    estrazioni dell'RNG di sessione.
