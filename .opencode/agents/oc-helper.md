@@ -2,6 +2,7 @@
 description: Aiutante locale (Game_PC, costo zero) per compiti meccanici e ben delimitati di Warfare-Model - ricerche nel codice, test a schema fisso, inserimento dati da tabella, bozze di documentazione. Richiede attiva_llm su Game_PC.
 mode: all
 model: ollama-3090/qwen3.8-27b:latest
+steps: 60
 permission:
   edit:
     "*": ask
@@ -15,6 +16,7 @@ permission:
     ".githooks/*": deny
     "tools/ai/*": deny
     "Code/Dynamic_War_Manager/Source/Test/baseline/*": deny
+    "Analysis/Document/Proposta_*.md": deny
   bash:
     "*": ask
     "bash tools/ai/verifica.sh*": allow

@@ -45,9 +45,23 @@ identiche/cambiate/nuove e' in `.ai-run/confronto.log` (cercalo con `grep -E '^(
 |---|---|---|
 | `.claude/` (memoria di Claude, agenti, hook), `CLAUDE.md` | solo Claude Code con modello Claude | leggono solo se il compito lo cita |
 | `AGENTS.md`, `.opencode/`, `opencode.json`, `.githooks/`, `tools/ai/` | l'utente (o Claude su sua richiesta) | sola lettura |
-| `Analysis/Document/Proposta_*.md` | l'agente che pianifica (`des-planner`) | sola lettura: e' il contratto |
-| `Analysis/Document/Rapporti/` | l'agente esecutore, un rapporto per compito | — |
+| `Analysis/Document/Proposta_*.md` | l'agente che pianifica (`des-planner` o `oc-planner`) | sola lettura: e' il contratto |
+| `Analysis/Document/Rapporti/` | ogni agente il proprio file: `Rapporto_*` (esecutori), `Revisione_*` (`oc-reviewer`), `Diagnosi_*` (`oc-debugger`) | — |
+| `Analysis/Document/Bozze/` | `oc-writer` (bozze, poi integrate da `des-manual-writer` o dalla sessione principale) | — |
+| `Analysis/Document/Manuale_Motore_DES/` | `des-manual-writer` | sola lettura |
 | codice e test | l'esecutore, **solo sul proprio branch** | — |
+
+## Agenti OpenCode del progetto (`.opencode/agents/`)
+| Agente | Modello predefinito | Scrive | Committa | Comando |
+|---|---|---|---|---|
+| `oc-planner` | DeepSeek V4 Pro high | solo `Proposta_*.md` | no | `/piano <richiesta>` |
+| `oc-developer` | DeepSeek V4 Pro high | codice, test, rapporto | si', solo `ai/*` | `/esegui <Proposta>` |
+| `oc-reviewer` | GLM 5.3 high | solo `Revisione_*.md` | no | `/rivedi <branch> <Proposta>` |
+| `oc-debugger` | DeepSeek V4 Pro high | solo `Diagnosi_*.md` | no | `/diagnosi <sintomo>` |
+| `oc-writer` | DeepSeek V4.1 Flash high | bozze e documenti `.md` non riservati, rapporto | si', solo `ai/*` | `/bozza <tema>` |
+| `oc-helper` | Qwen3.8 27B locale (Game_PC) | su conferma | no | — |
+
+L'agente globale `oc-ui-developer` e' disattivato in questo progetto (`opencode.json`).
 
 Lo stato del progetto (decisioni, avanzamento, memoria) lo aggiorna **solo** la sessione principale di
 Claude, dopo aver verificato il lavoro: un agente esecutore non scrive mai "fatto/approvato" altrove che
@@ -63,7 +77,8 @@ nel proprio rapporto.
 3. Scelte minori non coperte dal piano (nomi locali, struttura interna di un test) sono tue: elencale.
 4. Esegui suite e confronto con `tools/ai/verifica.sh`.
 5. Scrivi `Analysis/Document/Rapporti/Rapporto_<tema>_<agente>.md` seguendo `Rapporti/TEMPLATE.md`.
-6. Committa codice, test e rapporto sul tuo branch, con trailer `AI-Agent: opencode/<provider>/<modello>`.
+6. Committa codice, test e rapporto sul tuo branch. Il trailer `AI-Agent:` lo aggiunge l'hook
+   `commit-msg`; non scriverlo tu.
 
 Vietato agli esecutori: `git push`, `git stash`, `git reset --hard`, `git checkout`/`switch` di altri
 branch, `git config`, installare pacchetti, modificare i file riservati sopra (un hook git rifiuta il

@@ -2,6 +2,8 @@
 description: Revisore indipendente di Warfare-Model (sola lettura). Esamina il diff di un branch ai/oc-* rispetto al piano Proposta_*.md e scrive solo il proprio rapporto di revisione.
 mode: all
 model: openrouter/z-ai/glm-5.3
+variant: high
+steps: 60
 permission:
   edit:
     "*": deny
@@ -44,7 +46,9 @@ Il compito indica il piano (`Proposta_*.md`), il branch dell'esecutore e il bran
 - correttezza, regressioni e casi limite;
 - vincoli di AGENTS.md (determinismo/RNG di sessione, interruttori con default retrocompatibile, core
   indifferente al simulatore, costanti stimate dichiarate, import completi);
-- qualita' e copertura dei test rispetto a quelli richiesti dal piano;
+- qualita' e copertura dei test (parte "qa"): test richiesti dal piano e mancanti, casi limite e rami
+  nuovi senza test, asserzioni troppo deboli (es. solo "non solleva eccezioni"); riportali in una
+  sezione dedicata "Copertura dei test" con priorita' alta/media/bassa;
 - veridicita' del rapporto dell'esecutore (i numeri dichiarati coincidono con gli ESITO in `.ai-run/`?).
 
 Riporta prima i problemi concreti ordinati per gravita', ciascuno con `file:riga`, scenario e correzione
