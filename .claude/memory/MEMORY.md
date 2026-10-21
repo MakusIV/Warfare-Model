@@ -3,6 +3,7 @@
 Indice compatto (2026-10-21). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
+- [Sessione 2026-10-21 ProArt (ai-multimodel) — CHIUSA, pushato: ruoli multi-agente ridefiniti, prove U4 4/4, osboxes pronta](project_session_2026_10_21_multillm_summary.md) — voci 11 e 23 del manuale chiuse dal Piano allineato; ora si assegnano gli esecutori F8
 - [Sessione 2026-10-21 ProArt — CHIUSA, pushato: manuale DES a dcedc541, Proposta F8 decisa (17-27)](project_session_2026_10_21_summary.md) — F8d logistica non fatta; esecutori F8 da assegnare dopo la ridefinizione dei ruoli multi-agente; Game_PC/Ollama verificato
 - [Sessione 2026-10-20 osboxes — CHIUSA: F7b approvata, fotografia 982, suite 4555](project_session_2026_10_20_summary.md) — fuoco su posizione (Area_Fire, S29); hooksPath corretto; OpenCode NON installato su osboxes (da fare da ProArt, progetto ai-multimodel); main invariato
 - [Sessione 2026-10-19 ProArt — CHIUSA, pushato: sistema multi-LLM (OpenCode) integrato, pilota riuscito](project_session_2026_10_19_summary.md) — AGENTS.md/CLAUDE.md, oc-developer come alternativa a des-developer; suite 4490, fotografia 970; prossimo F7b
