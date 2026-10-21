@@ -110,3 +110,5 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
 - Manuale DES aggiornato a 533cd1f5 (F3) e committato; F4a non ancora nel manuale.
 
 - **F7 COMPLETA (2026-10-20)**: F7a (regole d'ingaggio, `9f87a3ad`) + F7b (fuoco su posizione `Logic/Area_Fire`, interruttore `F7_AREA_FIRE`, S29, fotografia 982, suite 4555). Resta F8, F9 e il manuale (v. [[project-session-2026-10-20-summary]]).
+
+- **F8 pianificata e decisa (2026-10-21)**: `Analysis/Document/Proposta_F8_Sessione_Campagna.md` (decisioni 17-27 come raccomandate, F8d logistica esclusa); esecuzione F8a-F8c da assegnare (v. [[project-session-2026-10-21-summary]]).
