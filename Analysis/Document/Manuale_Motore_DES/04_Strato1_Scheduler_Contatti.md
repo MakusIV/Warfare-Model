@@ -2,7 +2,12 @@
 
 Modulo: `Logic/Contact_Scheduler.py`.
 
-> **Aggiornato a `a784a9e7` (2026-10-18).** Fino a `533cd1f5` il modulo era invariato rispetto a `6754bf1c`; la
+> **Verificato a `dcedc541` (2026-10-20): il modulo è invariato da `a784a9e7`** (`Logic/Contact_Scheduler.py` non compare nel
+> `git diff a784a9e7 HEAD`, 1578 righe come prima); i riferimenti `:riga` a questo file sono quindi quelli di `a784a9e7`, mentre sono
+> stati ricalcolati su `dcedc541` quelli ai moduli che cambiano (`Session_Simulator`). La fase F7 non tocca lo scheduler: il fuoco su
+> posizione non passa dallo scheduler (nessun contatto, capitolo 6 §6.23) e usa solo `Contact_Scheduler.position_on_legs` (`Logic/Contact_Scheduler.py:508-531`: posizione a un istante lungo i tratti, saturata agli estremi) per le posizioni.
+>
+> *Aggiornato a `a784a9e7` (2026-10-18).* Fino a `533cd1f5` il modulo era invariato rispetto a `6754bf1c`; la
 > fase **F4c** (`af2efbe6`) gli aveva dato il primo concetto nuovo, l'**aereo a terra** come insieme di id. Da
 > `84a47670` a `a784a9e7` (Logic/Contact_Scheduler.py passa da 1332 a 1578 righe) le novità sono quattro, tutte
 > additive e a comportamento invariato quando non sono usate: (1) **`GroundedSchedule`**, lo stato "a terra"
@@ -16,7 +21,7 @@ Modulo: `Logic/Contact_Scheduler.py`.
 > §6.12). Gli argomenti `routes`/`starts`/`speeds` di `schedule_contacts` li produce
 > `Logic/Mission_Adapter.session_movements` a partire dalle `Mission` dell'ordine (capitolo 6 §6.10); dalla F5-B
 > la sessione passa però allo scheduler anche i tratti completi (`legs`), che hanno la precedenza. I riferimenti
-> `:riga` di questo capitolo sono ricalcolati su `a784a9e7`.
+> `:riga` di questo capitolo sono ricalcolati su `a784a9e7` (e restano validi a `dcedc541`).
 
 ## 3.1 Scopo e confine
 
@@ -159,7 +164,7 @@ prima la potatura a livello blocco (C), poi il CPA solo sulle coppie di asset su
 rotta in `routes` non è ignorato: se ha una posizione, è trattato come **fermo** per tutta la finestra
 (`static_legs`, ricaduta finale di `_asset_legs`, `:1578`) — il caso più comune in campagna (un sito SAM, un
 deposito, una base). Dal 2026-10-05 le tre mappe `routes`/`starts`/`speeds` arrivano a `schedule_contacts` da
-`Mission_Adapter.session_movements` (`Logic/Session_Simulator.py:2100`, `:2215-2217`): un asset senza missione è
+`Mission_Adapter.session_movements` (`Logic/Session_Simulator.py:2212`, `:2342-2344`): un asset senza missione è
 "senza rotta", cioè fermo. Tre parametri facoltativi, tutti a comportamento invariato se omessi:
 
 - **`grounded`** (F4c, esteso dalla F5): oggi è un iterabile di id (l'insieme della F4c: sempre a terra), una

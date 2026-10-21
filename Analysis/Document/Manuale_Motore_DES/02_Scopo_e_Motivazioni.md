@@ -1,6 +1,7 @@
 # Capitolo 1 — Scopo e motivazioni
 
-> **Aggiornato al commit `a784a9e7`** (2026-10-18). Rispetto alla stesura iniziale cambiano quattro cose a
+> **Aggiornato al commit `dcedc541`** (2026-10-20; rispetto a `a784a9e7` del 2026-10-18 cambiano la fase F7, v. sotto, e i
+> riferimenti `:riga`). Rispetto alla stesura iniziale cambiano quattro cose a
 > livello d'architettura: la **Missione** (fasi F0-F3 del piano, capitolo 2 §2.6-2.7 e capitolo 6 §6.10) è il
 > modo in cui un asset riceve rotta, partenza e velocità; dalla fase **F4** (2026-10-05/11) la missione è
 > anche l'**unità d'ingaggio** (capitolo 6 §6.12-6.14, capitolo 4 §4.27), con un **dominio di coordinamento**
@@ -13,7 +14,10 @@
 > §6.17-6.20), i **criteri di fine missione** sono letti dal risolutore (capitolo 4 §4.31) e l'**ingaggio è un episodio nel
 > tempo**, dopo il quale gli aerei sono ri-pianificati e i contatti ricalcolati (capitolo 6 §6.20). Le motivazioni di questo
 > capitolo (§1.1, §1.3, §1.5) non sono cambiate: il motore resta un DES a coda eventi con contatti analitici, deterministico
-> e indifferente al simulatore.
+> e indifferente al simulatore. **Dalla fase F7 (2026-10-18/20)** la missione decide anche **contro chi** e **con che arma** si
+> spara (bersaglio designato, ROE, armi designate, politica d'armi per tipo di missione: capitolo 4 §4.32-4.33, capitolo 6
+> §6.22) e un'artiglieria o una nave possono **sparare su una posizione stimata** senza che nessuno vi sia stato rilevato (fuoco
+> su posizione, un terzo tipo di evento di sessione: capitolo 6 §6.23, nuovo modulo `Logic/Area_Fire.py`).
 
 ## 1.2 I quattro strati
 
@@ -52,6 +56,7 @@ flowchart TD
 
     subgraph S2["Strato 2 — COME FINISCE"]
         ER["Logic/Engagement_Resolver.py<br/>resolve_engagement"]
+        FC["Logic/Fire_Control.py<br/>fire control dai registri, politica d'armi,<br/>arma per il fuoco su posizione"]
         RP["Context/Reaction_Profile.py<br/>RIV+VAL+COM+ATT"]
         DOC["Context/Doctrine.py<br/>soglia di rottura, dottrina di tiro"]
         ADE["Context/Air_Defense_Efficacy.py<br/>E(N), RWR, classi SAM"]
@@ -65,11 +70,17 @@ flowchart TD
 
     ORCH["Logic/Session_Simulator.py<br/>run_session (orchestratore)"]
     MA["Logic/Mission_Adapter.py<br/>rotta, partenza, velocita' per asset"]
+    AF["Logic/Area_Fire.py<br/>fuoco su posizione (F7b)"]
 
     MT --> ST
     ST --> ORCH
     ORCH --> MA
-    MA -.->|MissionForce, coordination_of, grounded| ER
+    MA -.->|MissionForce, coordination_of, grounded, TargetRules| ER
+    MA -.->|WeaponPolicy| FC
+    FC -.->|fire_control iniettata| ER
+    ORCH --> AF
+    AF --> FC
+    AF --> DM
     RNG --> ST
     ORCH --> CS
     CS --> ER
@@ -85,9 +96,13 @@ flowchart TD
 *Nota sul diagramma D1*: la freccia da `ORCH` a `ST` rappresenta l'uscita
 (`assemble_session_outcome`, che produce il `SessionOutcome`), non una dipendenza a tempo di
 import. La freccia tratteggiata da `MA` a `ER` non è un import: `Mission_Adapter` produce le viste di
-missione (`MissionForce`), la mappa dei domini di coordinamento (`coordination_of`) e l'insieme degli aerei
-a terra (`grounded`) che l'orchestratore passa a `resolve_engagement` (capitolo 6 §6.12-6.14); il
-risolutore non importa `Mission_Adapter`.
+missione (`MissionForce`), la mappa dei domini di coordinamento (`coordination_of`), l'insieme degli aerei
+a terra (`grounded`) e, dalla F7a, le regole di bersaglio (`TargetRules`) che l'orchestratore passa a
+`resolve_engagement` (capitolo 6 §6.12-6.14, §6.22); il risolutore non importa `Mission_Adapter` né `Fire_Control`
+(è `Fire_Control` che importa il risolutore, per `ShotSpec`). Le frecce tratteggiate `FC` → `ER` e `MA` → `FC` sono
+iniezione di dati o di callable, non import del risolutore. `Area_Fire` (F7b) è usato dal solo orchestratore: importa
+`Fire_Control` (per l'arma), `Damage_Model` (per il colpo), `Mission_Adapter` (per gli istanti d'arrivo) e il tipo
+`EngagementResult` del risolutore, ma **non** chiama `resolve_engagement`.
 
 ## 1.3 I vincoli di progetto, non negoziabili
 
@@ -104,14 +119,14 @@ dell'utente registrati"), e si ritrovano nel codice come regole verificabili:
    a parità di ordine delle chiamate (`Utility/Session_Rng.py:1-9`). Concretamente: le liste di
    `ContactWindow` sono sempre ordinate per tempo e, a parità di tempo, per identificativo di
    dominio (`Logic/Contact_Scheduler.py:58-60`); la coda eventi del risolutore usa un tie-break
-   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:332-337`, `:470-475`); l'RNG di
+   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:385-390`, `:536-544`); l'RNG di
    ogni ingaggio è derivato da una chiave canonica che non dipende dall'ordine di iterazione di
-   un dizionario Python (`Logic/Session_Simulator.py:884-905`, `engagement_event_id`; `:400-432`).
+   un dizionario Python (`Logic/Session_Simulator.py:966-987`, `engagement_event_id`; `:404-436`).
 3. **Perdite e danni per singolo asset**, mai aggregati. È il motivo per cui esiste
    `Logic/Damage_Model.py` (un `DamageEvent` per colpo risolto, non un delta di forza) e per cui
    `Logic/Tactical_Evaluation.calcFightResult` — il modello aggregato a rapporto di forze
    preesistente — resta un **fallback**, mai il risolutore primario
-   (`Logic/Engagement_Resolver.py:366`).
+   (`Logic/Engagement_Resolver.py:419`).
 4. **Budget di calcolo per sessione: fino a minuti.** Non verificato in questo manuale con
    misure a runtime; lo scenario S8 (capitolo 8) è quello dedicato esplicitamente a misurare il
    tempo di calcolo su una scala di decine di blocchi.

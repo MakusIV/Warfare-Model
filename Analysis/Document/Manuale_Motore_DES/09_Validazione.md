@@ -6,9 +6,13 @@ come test di contratto), `Test/Test_Session_Scenarios.py` (S1-S9), `Test/
 Test_Session_Scenarios_S10_S18.py` (S10-S18), `Test/Test_Session_Scenarios_S19.py` e
 `Test/Test_Session_Scenarios_S19_Air_Defence.py` (S19, S19AD), `Test/Test_Session_Scenarios_S20.py` (S20) e
 `Test/Test_Session_Scenarios_S21.py` (S21, S21R), `Test/Test_Session_Scenarios_S22.py` ... `_S27.py` (S22-S27, §8.10),
+`Test/Test_Session_Scenarios_S28.py` e `_S29.py` (S28, S29, §8.11),
 più lo strumento di non regressione `Test/Scenario_Baseline.py` (§8.7). Suite finale della Fase 7: **3371 test, OK
-(skipped=5)** (wiki `decisions/virtual-session-engine-des`, sezione Fase 7). **Suite a `a784a9e7`: 4385 test, OK
-(skipped=7)**; fotografia di non regressione: **918 esecuzioni** (§8.7, §8.10).
+(skipped=5)** (wiki `decisions/virtual-session-engine-des`, sezione Fase 7). **Suite a `dcedc541`: 4555 test, OK
+(skipped=7)** (messaggio del commit `dcedc541` e `F4_Differenze_Scenari.md`, sezione F7b, verificata dalla sessione principale e
+approvata dall'utente il 2026-10-20; **non rieseguita** per questo aggiornamento); fotografia di non regressione: **982
+esecuzioni** (§8.7, §8.11; contate sul file `Test/baseline/scenario_baseline.json`: chiavi `errors`/`meta`/`runs`, `errors` vuoto).
+*(Suite a `a784a9e7`: 4385 test, OK (skipped=7); fotografia a 918 esecuzioni.)*
 
 **Aggiornamento rispetto alla stesura iniziale**: le estensioni successive alla Fase 7 (selezione
 arma dai registri, nebbia di guerra, scorta per modello d'arma, cannone di bordo, finestre di
@@ -17,7 +21,10 @@ v. capitolo 4 §4.16-4.20 e capitolo 7 §7.6-7.9) hanno portato la suite a **364
 (skipped=5)** al commit `6754bf1c` (2026-09-27), tutte nello stesso harness di questo capitolo. **Aggiornamento a `533cd1f5`** (2026-10-05): la suite è a
 **3922 test, OK (skipped=7)** (messaggio del commit `533cd1f5`), con le estensioni del 2026-09-28/30 (soglia
 di rottura stocastica, E(N), RWR, A6, dottrina di tiro, R-INT) e le fasi F0-F3 della Missione; i moduli di
-test nuovi e le classi aggiunte sono elencati in §8.8. **Aggiornamento a `a784a9e7`** (2026-10-18): la suite è a **4385 test, OK (skipped=7)** (`F4_Differenze_Scenari.md`,
+test nuovi e le classi aggiunte sono elencati in §8.8. **Aggiornamento a `dcedc541`** (2026-10-20): la suite è a **4555 test, OK (skipped=7)** (4385 → 4489 con la F7a, → 4490 con la
+correzione dei dati A-10C, → 4555 con la F7b), con la fase F7 della Missione (regole d'ingaggio di missione e fuoco su
+posizione); due scenari nuovi (S28, S29, §8.11), S19AD migrato dai filtri di test alle regole di missione e un modulo di test nuovo,
+`Test/Test_Area_Fire.py` (49 test). **Aggiornamento a `a784a9e7`** (2026-10-18): la suite è a **4385 test, OK (skipped=7)** (`F4_Differenze_Scenari.md`,
 sezione G5, verificata dall'utente il 2026-10-18; i totali intermedi sono in §8.10), con le fasi F5 (presenza, attese,
 `grounded` nel tempo), F6 (carburante per tratto, criteri di fine, bingo) e i passi G1-G5 del modello di bingo (riserva di
 disimpegno, soglia e albero, consumo in ingaggio, episodi, ri-pianificazione, uscita di scena); sei scenari nuovi (S22-S27,
@@ -49,7 +56,7 @@ id sempre esplicito — `Asset.__init__` genererebbe altrimenti un suffisso casu
 (`make_force`, `add_assets`, `build_force`); infrastrutture reali (`make_infrastructure`,
 `make_structure`: `Production`/`Storage`/`Transport`/`Urban`, costruibili solo dal 2026-09-23 dopo
 la correzione di 5 bug preesistenti nei loro costruttori, v. §8.4); rotte
-(`straight_route`, `route_for`, `routes_for`, `:513-574`); **missioni** (`missions_for`, `:664-730`, dal
+(`straight_route`, `route_for`, `routes_for`, `:514-575`); **missioni** (`missions_for`, `:675-755`, dal
 2026-10-05, v. sotto); un `fire_control` di riferimento (`make_fire_control`, §8.2);
 esecuzione (`run(...)`, `Scenario.run(session_id)`, `combined_arms_scenario()`); letture
 dell'esito (`losses_of`, `damage_by_source`, ...).
@@ -68,7 +75,7 @@ in difesa, tiro invariato; un *aereo* senza missione è a terra, ruolo `'parked'
   velocità diverse e diventavano **due missioni dello stesso blocco**); **dalla F4a vale la regola A**
   (capitolo 6 §6.10): `missions_for` riunisce gli asset che differiscono *solo* per velocità in una missione la
   cui rotta di riferimento ha, tratto per tratto, la velocità **minima** fra quelle dei suoi asset
-  (`_slowest_reference`, `Test/Scenario_Fixtures.py:639-653`). Gli offset di formazione sono quelli di F3 (la
+  (`_slowest_reference`, `Test/Scenario_Fixtures.py:648-662`). Gli offset di formazione sono quelli di F3 (la
   velocità non entra nell'offset): la geometria non cambia, cambia solo la velocità degli asset più veloci, che
   procedono al passo del più lento. Chi vuole velocità diverse chiama `missions_for` più volte con `only=`
   (missioni separate). Restano divisi in più missioni i blocchi con tipi di missione diversi (S7, S18, S19) o
@@ -83,20 +90,20 @@ in difesa, tiro invariato; un *aereo* senza missione è a terra, ruolo `'parked'
   fasi F5-F6.
 
 Anche `Scenario` ha ora `missions` al posto di `routes` (`routes` resta come proprietà di sola lettura
-derivata, `:921-925`) e `run(...)` accetta `missions=` (`:884-890`).
+derivata, `:970-974`) e `run(...)` accetta `missions=` (`:909-915`).
 
 **Aggiunte della F4** (`Test/Scenario_Fixtures.py`):
 
-- **ruolo `'parked'`** (`PARKED_ROLE`, `:792`; `role_of(asset, roles, grounded=False)`, `:795`): un aereo a terra
+- **ruolo `'parked'`** (`PARKED_ROLE`, `:817`; `role_of(asset, roles, grounded=False)`, `:820`): un aereo a terra
   è un bersaglio di superficie come `'structure'` (lo colpiscono `'ground'`, `'artillery'`, `'air'`, `'strike'`;
   mai `'sam'`, `'aaa'`, `'fighter'`, `'sead'`) e non spara mai. `make_fire_control` dichiara il parametro
-  `target_grounded` (`:843`), quindi `role_of` lo classifica `'parked'` solo quando il risolutore glielo dice
+  `target_grounded` (`:868`), quindi `role_of` lo classifica `'parked'` solo quando il risolutore glielo dice
   (capitolo 4 §4.4, §4.30);
-- **letture dell'esito per forze d'ingaggio**: `force_outcome(outcome, force_id)` (`:987`) accetta un `mission_id`
+- **letture dell'esito per forze d'ingaggio**: `force_outcome(outcome, force_id)` (`:1036`) accetta un `mission_id`
   o l'id di un blocco con **una sola** forza d'ingaggio che ha combattuto, e solleva `ValueError` per un blocco con
   più missioni in combattimento (l'esito del blocco non è unico: chiedere quello della missione);
-  `engagement_blocks(outcome)` (`:1008`) restituisce per ogni ingaggio i **blocchi** coinvolti (dal `block_id`
-  degli esiti, con gli stessi valori attesi di prima della F4b) e `engagement_forces(outcome)` (`:1019`) gli id
+  `engagement_blocks(outcome)` (`:1057`) restituisce per ogni ingaggio i **blocchi** coinvolti (dal `block_id`
+  degli esiti, con gli stessi valori attesi di prima della F4b) e `engagement_forces(outcome)` (`:1068`) gli id
   delle forze d'ingaggio (missioni). Le verifiche di struttura "quali blocchi combattono nello stesso ingaggio"
   leggono i blocchi, quelle sugli id di forza le missioni.
 
@@ -183,7 +190,7 @@ dello stato, non gli esiti, e passano.
 Quando l'adapter DCS esisterà, questo stesso test diventerà eseguibile alla lettera; fino ad
 allora è il suo equivalente verificabile (`Test/Test_Session_Validation.py:44-47`).
 
-## 8.4 La batteria di scenari S1-S27
+## 8.4 La batteria di scenari S1-S29
 
 Origine: S1-S5 adattano le composizioni di forza dei documenti Lanchester ingeriti (**senza i
 loro numeri**: solo composizione e domanda, v. wiki
@@ -215,7 +222,7 @@ prossimità `Urban`, scala gerarchica, rete `Transport` multi-nodo).
 | **S17** | `TestS17HierarchicalScaleSweep` | La composizione di S1 (senza CAS) ripetuta alle taglie gerarchiche di `MILITARY_CATEGORY['Ground_Base']` (Company→Division), con asset per Block scalati. Parametrizzazione, non scenario narrativo: verifica che il motore si risolva senza errori a ogni taglia. |
 | **S18** | `TestS18TransportNetworkInterdiction` | Missione aerea scortata contro **più nodi fissi** di una rete `Transport` (ferrovia, rete elettrica, strada) lungo una rotta, con una CAP avversaria in pattugliamento. |
 | **S19** | `TestS19RegistryFireControl` | Sessione con la `fire_control` **dei registri** (`make_registry_fire_control`, capitolo 4 §4.16) invece della tabella a ruoli: 2 A-10C, 2 F-16C CAP e 1 B-52H in transito a 3000 m su una difesa rossa (Buk, Strela-10, Shilka, 2 BMP-2); dottrina ad oltranza. Verifica riproducibilità, armi reali del registro del tiratore, solo armi con righe aeree sugli aerei e mai SAM/AAM sulla superficie, filtro di quota (l'AZP-23, tetto 1500 m, non colpisce aerei a 3000 m), fuoco prodotto, controllo di portata. |
-| **S19AD** | `TestS19AirDefenceAllocation` | Allocazione della difesa aerea fra intercettazione e tiro sul lanciatore (A6, capitolo 4 §4.24): 3 BMP-2 con una difesa a corto raggio, 1-4 A-10C con i soli AGM-65D, quattro varianti (Strela-10 in sorvolo, Strela-10 in standoff, Tor arretrato, Tor avanzato). Esito qualitativo, mai numerico. Nella variante standoff i 4 A-10C sono 4 missioni dello stesso blocco: dalla F4b+ condividono ripartizione del fuoco e saturazione nel dominio (test `test_standoff_missions_share_the_fire`, §8.9). |
+| **S19AD** | `TestS19AirDefenceAllocation` | Allocazione della difesa aerea fra intercettazione e tiro sul lanciatore (A6, capitolo 4 §4.24): 3 BMP-2 con una difesa a corto raggio, 1-4 A-10C con i soli AGM-65D (**dalla F7a** per *arma designata* e *bersaglio ristretto*, non più per filtri di test, §8.6), quattro varianti (Strela-10 in sorvolo, Strela-10 in standoff, Tor arretrato, Tor avanzato). Esito qualitativo, mai numerico. Nella variante standoff i 4 A-10C sono 4 missioni dello stesso blocco: dalla F4b+ condividono ripartizione del fuoco e saturazione nel dominio (test `test_standoff_missions_share_the_fire`, §8.9). |
 | **S20** | `TestS20TwoMissionsOfOneBlock` | Due missioni dello stesso blocco ingaggiano e disingaggiano separatamente (F4b, capitolo 4 §4.27): la composizione di S1 senza CAS, con Blue-Armor in due missioni d'attacco sulla stessa rotta ('Blue-Armor:Tanks', 3 M1A2; 'Blue-Armor:IFV', 2 M2) contro la stessa linea Red; variante 'single' con una sola missione. 6 seed (§8.9). |
 | **S21** | `TestS21ParkedAircraftStrike` | Attacco a una base con aerei parcheggiati (F4c, capitolo 4 §4.30), tabella a ruoli: Red-Airbase (4 MiG-29S sul piazzale, Strela-10, Shilka, nessuna missione) contro Blue-Strike (4 F-16C in missione Strike, sorvolo a 3000 m); variante di controllo senza aerei. 8 seed (§8.9). |
 | **S21R** | `TestS21RParkedAircraftRegistry` | Come S21 con la `fire_control` dei **registri**: Red-Apron (4 MiG-29S a terra, un blocco di soli bersagli passivi) + Red-AD (Strela-10 + Shilka) contro 2 A-10C 'Maverick/Gun CAS'. 6 seed (§8.9). |
@@ -225,6 +232,8 @@ prossimità `Urban`, scala gerarchica, rete `Transport` multi-nodo).
 | **S25** | `TestS25Winchester`, `TestS25MaxDuration`, `TestS25DestroyedPosture`, `TestS25DamageThreshold`, `TestS25TargetDestroyed` | Criteri di fine attività, stato di missione, postura `destroyed` (F6-B1, capitolo 6 §6.18). 112 esecuzioni (§8.10). |
 | **S26** | `TestS26Bingo` | Il bingo nel modello finale G1-G4 e la controprova di ogni interruttore (capitolo 6 §6.19-6.20). 96 esecuzioni (§8.10). |
 | **S27** | `TestS27DoubleEngagement` | Doppio ingaggio dello stesso aereo: due consumi d'ingaggio, ri-pianificazione dopo ciascun episodio, bingo dopo il secondo con rientro sulla base alternativa (G5). 40 esecuzioni (§8.10). |
+| **S28** | `TestS28RulesOfEngagement`, `TestS28WeaponPolicyByMissionType`, `TestS28ZoneDesignation` | Regole d'ingaggio di missione (F7a, capitolo 4 §4.32-4.33): ROE e armi designate (S28-ROE), politica d'armi per tipo di missione (S28-CLASS), designazione geometrica (S28-ZONE). 52 esecuzioni (§8.11). |
+| **S29** | `TestS29AreaFire` | Fuoco su posizione (F7b, capitolo 6 §6.23): un'artiglieria spara sulla posizione stimata dove i blu erano. 12 esecuzioni (§8.11). |
 
 Tutti gli scenari condividono la stessa regola: si prende la composizione delle forze e la
 domanda che pongono, mai coefficienti o esiti numerici precalcolati — per S6-S19 la domanda è
@@ -253,9 +262,15 @@ sottoclasse di `Asset` (confrontava il nome classe esatto invece di usare `isins
   missili agli aerei in sorvolo e li conserva in standoff; **le quattro missioni dello standoff si dividono il
   fuoco** (`test_standoff_missions_share_the_fire`, F4b+: 8-10 Maverick lanciati e Red-Line distrutta, Strela
   compreso, in tutti e 6 i seed; senza il dominio di coordinamento erano 16 e lo Strela restava in piedi);
-  il Tor arretrato intercetta lanci da fuori zona; il Tor avanzato spara ai lanciatori. Due stand-in di A4 (filtro armi per missione, rimandato alla
-  F7): `maverick_only_fire_control` (l'A-10C usa solo AGM-65D, altrimenti il criterio Pk/costo sceglierebbe la
-  Mk-82AIR, non intercettabile) e `ifv_only` (gli aerei attaccano solo i BMP-2). Con lo standoff ogni A-10C ha
+  il Tor arretrato intercetta lanci da fuori zona; il Tor avanzato spara ai lanciatori. **Fino a `a784a9e7` due stand-in di A4**
+  (filtro armi per missione, rimandato alla F7): `maverick_only_fire_control` (l'A-10C usa solo AGM-65D, altrimenti il
+  criterio Pk/costo sceglierebbe la Mk-82AIR, non intercettabile) e `ifv_only` (gli aerei attaccano solo i BMP-2).
+  **La F7a li ha sostituiti con le regole di missione** (`9f87a3ad`): la fire control è `make_registry_fire_control()`, le missioni CAS
+  hanno `weapons=('AGM-65D',)` (`F.missions_for(weapons=)`) e le varianti `_ifv_only` il bersaglio `GROUP` 'Red-Line' ristretto ai 3
+  BMP-2 (`Target.asset_ids`) con la ROE `only_designated` (`F.missions_for(rules=)`); nomi delle varianti invariati e **24
+  esecuzioni su 24 identiche** alla fotografia (§8.11). Dopo la migrazione la classe `TestS19MissionRulesReplaceTheTestFilters` (3 test)
+  prova che nessun aereo spara un'arma diversa dal Maverick, che le varianti `_ifv_only` non tirano su `ad0` e che con tutta la linea
+  designata (ROE di default) `ad0` torna bersaglio. Con lo standoff ogni A-10C ha
   una missione propria (la rotta cambia direzione, §8.1): dalla F4b l'ingaggio e il disingaggio sono per
   missione, dalla F4b+ la ripartizione del fuoco è per dominio (stesso blocco, capitolo 4 §4.28).
 - **S10** verifica il meccanismo del disingaggio con soglie **fisse** (`FIXED_THRESHOLDS`, `Test_Session_Scenarios_S10_S18.py:117`)
@@ -270,16 +285,16 @@ sottoclasse di `Asset` (confrontava il nome classe esatto invece di usare `isins
 
 Dalla fase F3 la porta di sessione cambia e servono **numeri** per dimostrare che, a parità di input, il motore
 produce la stessa storia (`Piano_Implementazione_Missione.md`, §0 punto 2 e Fase 0). `Scenario_Baseline.py`
-(901 righe a `a784a9e7`, 693 a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
+(929 righe a `dcedc541`, 901 a `a784a9e7`, 693 a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
 `Test_`) esegue gli scenari di sessione esistenti, riassume ogni `SessionOutcome` in una forma deterministica e la
 salva su JSON, oppure la confronta con una fotografia salvata.
 
-**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:234-345`) elenca le "unità" dei
+**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:252-373`) elenca le "unità" dei
 test: per le classi di scenario (S1-S21, S19AD, S21R, validazione) esegue il loro `setUpClass`, che costruisce le
 forze con `Scenario_Fixtures` e lancia tutte le repliche e varianti usate dai test; per
 `Test_Session_Simulator` (nessun `setUpClass`) un elenco scelto di **metodi** di test (`ORC-*`). Le unità S21 e
 S21R sono messe **in coda** alla tabella (nomi stabili: non spostano le chiavi delle altre). Durante
-l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:550-561`) che chiama
+l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:578-589`) che chiama
 l'originale e poi riassume l'esito **e** lo stato reale degli asset (letto subito dopo la chiamata: in S11 e
 nella mini-campagna la sessione successiva muta di nuovo le stesse istanze). Le asserzioni dei test non sono
 eseguite per le classi di scenario; per i metodi un'asserzione fallita è segnalata su stderr ma non impedisce la
@@ -290,7 +305,7 @@ stesso `session_id` nell'unità, tradotto in un nome leggibile dalla tabella (es
 S1; `default`/`press_on`/`resistant` per S5; `split`/`single` per S20; `parked`/`control` per S21). Se un
 `setUpClass` cambia l'ordine delle varianti, le chiavi cambiano: va aggiornata la tabella.
 
-**Cosa registra** (`summarize_run`, `:446-545`): intervallo della sessione, forze dei due lati e parametri di
+**Cosa registra** (`summarize_run`, `:474-573`): intervallo della sessione, forze dei due lati e parametri di
 chiamata riconoscibili, esiti di forza per ingaggio (con tempi, perdite, erosione, shock, soglia e, dalla F4b,
 il `block_id` quando c'è), stato finale per asset (salute, operativo, distrutto, munizioni, scorta per arma,
 intercettori, carburante), munizioni consumate per asset e per arma, intercettazioni per asset e per arma,
@@ -298,13 +313,13 @@ eventi di carburante, conteggi (salve, intercettazioni, danni, distruzioni) e le
 **Dalla F4b la voce `force_outcomes` è chiavata per blocco** (gli esiti delle sue forze d'ingaggio, nell'ordine
 degli ingaggi, `block_id or force_id`): con una missione per blocco ha la stessa forma di prima, e il confronto con
 le fotografie precedenti resta possibile. I float sono arrotondati a 6 decimali
-(`ROUND_DIGITS`, `:188`; `-0.0` normalizzato, `norm`, `:366-390`), le chiavi ordinate: **due catture dello stesso
-codice sono identiche byte per byte**. `FORMAT_VERSION = 1` (`:187`).
+(`ROUND_DIGITS`, `:206`; `-0.0` normalizzato, `norm`, `:394-418`), le chiavi ordinate: **due catture dello stesso
+codice sono identiche byte per byte**. `FORMAT_VERSION = 1` (`:205`).
 
 **Parametri di chiamata dopo la F3**: `run_session` non ha più `routes`; perché la fotografia della Fase 0 resti
 confrontabile, la voce `call.parameters.routes` è **ricostruita dalle missioni** (`Mission_Adapter.mission_routes`,
-`_call_parameters`, `:419-443`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
-`:685-693`).
+`_call_parameters`, `:447-471`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
+`:713-721`).
 
 **Uso** (dalla radice del repository, con l'interprete della macchina):
 
@@ -317,14 +332,16 @@ python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline \
 ```
 
 `--only <regex>` limita il confronto a unità o chiavi; `--compare a.json --against b.json` confronta due file
-già catturati senza eseguire nulla. `compare` (`:725-773`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
+già catturati senza eseguire nulla. `compare` (`:753-801`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
 20 righe di differenza per esecuzione). **`--summary` (dalla F4a)** sostituisce l'elenco grezzo con un riepilogo
-leggibile per esecuzione (`summarize_differences`, `:817-845`, che usa `run_digest`, `:776-814`): per ogni
+leggibile per esecuzione (`summarize_differences`, `:845-873`, che usa `run_digest`, `:804-842`): per ogni
 esecuzione che differisce, le sole grandezze cambiate come `vecchio -> nuovo` — esito per forza (e, per i blocchi
 con più forze d'ingaggio, l'esito di ciascuna: `<mission_id>.mission_outcome`), asset distrutti, colpi,
 intercettazioni, carburante e fine del movimento, istante del primo colpo e del primo danno — poi l'elenco delle
 esecuzioni invariate. Non cambia il formato della fotografia; si può usare solo con `--compare`. Codice d'uscita
-(`main`, `:848-897`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
+(`main`, `:876-925`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
+
+**Dalla F7b** l'evento di fuoco su posizione compare in `engagements` come un ingaggio **con zero forze** (`counts.engagements` lo conta; nessuna voce nuova nel riassunto), come in `SessionOutcome.engagement_outcomes`.
 
 **Opzione `--ignore KEY`** (dalla F5-B) esclude dal confronto una voce di primo livello: `--ignore postures` (la sola
 postura nell'esito, F5-B), `--ignore actual_etas` (le ETA effettive, F5-C), `--ignore fuel_events` (F6-A: la voce `fuel`
@@ -336,8 +353,8 @@ missione, i motivi di fine per asset e `crew_recovered` sono nell'esito di missi
 verificano nei test, S25-S27, e con catture estese fuori dal repository). Il G3 aggiunge solo eventi `FuelEvent` con
 `regime` `'engagement'` nella voce `fuel`; il G4a una voce in `engagements` per episodio.
 
-**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (**918 esecuzioni** a `a784a9e7`, contate sul
-file; chiavi `errors`/`meta`/`runs`, `errors` vuoto; 370 a `84a47670`). Ne è stata fatta la cattura iniziale su una copia
+**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (**982 esecuzioni** a `dcedc541`, contate sul
+file; chiavi `errors`/`meta`/`runs`, `errors` vuoto; 918 a `a784a9e7`, 370 a `84a47670`). Ne è stata fatta la cattura iniziale su una copia
 isolata di `18a772d6` (292 esecuzioni, identica in due catture separate); è stata **rigenerata più volte**, sempre dopo un
 confronto spiegato e con due catture consecutive identiche (determinismo). La storia, dal documento delle differenze
 `Analysis/Document/F4_Differenze_Scenari.md` (le righe da F5-A in poi sono nuove di questo aggiornamento; le esecuzioni
@@ -363,6 +380,9 @@ sono quelle della fotografia **installata** nel commit indicato, come risulta da
 | G3, consumo in ingaggio | `20f0e0db` | 802 (+8) | di 794: 372 identiche, **422 cambiate nelle sole voci di carburante** (verificato chiave per chiave), 8 nuove; approvato il 2026-10-17 |
 | G4a + G4b + uscita di scena | `9de461e0` | 878 (+76) | di 802: **637 identiche, 165 cambiate** (40 per gli episodi: S5 ×36, S6 ×4; 16 per la ri-pianificazione per carburante; 109 per l'uscita di scena), 76 nuove; approvato il 2026-10-17 |
 | G5, S26 riorganizzato + S27 | `6e7a9b81` | 918 (+40: S27) | di 878: **878 identiche** (S26: 96 su 96), 0 cambiate, 40 nuove; il motore non è toccato; approvato il 2026-10-18 |
+| F7a, regole d'ingaggio di missione | `9f87a3ad` | 970 (+52: S28) | di 918: **918 identiche** (S19AD compreso: 24 su 24), 0 cambiate, 52 nuove (S28-ROE 20, S28-CLASS 24, S28-ZONE 8); approvato il 2026-10-18 |
+| Correzione dati A-10C | `3cbb4226` | 970 | di 970: **966 identiche, 4 cambiate** (`S28-CLASS/S28-CLASS-{0,1,2,3}/self_defence`: l'A-10C in CAS ora ha l'autodifesa aria-aria), 0 nuove; nessun cambio di codice; approvato il 2026-10-18 |
+| F7b, fuoco su posizione | `dcedc541` | 982 (+12: S29) | di 970: **970 identiche**, 0 cambiate, 12 nuove (S29-AREA: 3 varianti × 4 seed); approvato il 2026-10-20 (confronto su osboxes, 1091 s) |
 
 **Il processo di non regressione, come applicato dalla F4** (ogni passo dichiara la propria differenza prima di
 essere committato): (1) la fotografia *prima* del passo viene ricontrollata **identica** al codice di partenza;
@@ -618,7 +638,97 @@ successivi fra le sole forze aeree dopo un disingaggio).
 | `Test_Engagement_Resolver.py` | `TestGroundedInTime` (F5-A), `TestActivityEnd` (F6-B1) |
 | `Test_Fire_Control.py`, `Test_Aircraft.py`, `Test_Mission_Types.py` | `TestWeaponCategory`; `emergency_fuel_flow` (3 test); `crew_recovered`, `Operation` senza `tot`, `FUEL_EXHAUSTED` |
 
-**Suite attuale: 4385 test, OK (7 skipped)** (`F4_Differenze_Scenari.md`, sezione G5, verificata dall'utente il 2026-10-18; 10
+**Suite a `a784a9e7` (v. §8.11 per quella attuale): 4385 test, OK (7 skipped)** (`F4_Differenze_Scenari.md`, sezione G5, verificata dall'utente il 2026-10-18; 10
 in più dei 4375 del G4b: S26 +2, S27 +8). Numeri dichiarati dai documenti attraverso le fasi: 4039 (F4c) → 4072 (F5-A) → 4101 (F5-B) → 4131 (F5-C) → 4133 (TOT per missione) → 4166 (F6-A) → 4195 (F6-B1) → 4224 (F6-B2) → 4245 (F6-B2bis) → 4344 (G4a) → 4368 (G4b) → 4375 (uscita di scena) → 4385 (G5); G1, G2 e G3 non dichiarano un totale nel documento. I conteggi dei test di questo manuale sono quelli dei messaggi di
 commit e di `F4_Differenze_Scenari.md`; **non sono stati rieseguiti** per questo aggiornamento (a differenza della
 fotografia, il cui numero di esecuzioni è stato contato sul file).
+
+## 8.11 Scenari e verifiche della fase F7 (F7a 2026-10-18, F7b 2026-10-20)
+
+Le misure vengono da `Analysis/Document/F4_Differenze_Scenari.md` (sezioni «F7a», «Correzione dati A-10C», «F7b») e dai docstring
+di `Test_Session_Scenarios_S28.py` e `_S29.py`; come sempre i test asseriscono proprietà **qualitative o strutturali**, mai un numero
+calibrato, e ogni asserzione negativa ha una **premessa** provata dalla variante «libera» o «a interruttore spento» dello stesso
+scenario (nessuna asserzione negativa vacua). Due scenari nuovi, in coda alla tabella `UNITS` di `Scenario_Baseline` (nomi stabili),
+fire control dei **registri** (`make_registry_fire_control`), dottrina ad oltranza (`BOTH_HOLD`) per S28, 4 seed per variante.
+
+| Scenario | Classe di test | Fase | Cosa esercita | Esecuzioni |
+|---|---|---|---|---|
+| **S28-ROE** | `TestS28RulesOfEngagement` | F7a | ROE e armi designate (capitolo 4 §4.32) | 20 (5 varianti × 4 seed) |
+| **S28-CLASS** | `TestS28WeaponPolicyByMissionType` | F7a | politica d'armi per tipo di missione (capitolo 4 §4.33) | 24 (6 varianti × 4 seed) |
+| **S28-ZONE** | `TestS28ZoneDesignation` | F7a | designazione geometrica con bersaglio `ZONE` | 8 (2 varianti × 4 seed) |
+| **S29-AREA** | `TestS29AreaFire` | F7b | fuoco su posizione (capitolo 6 §6.23) | 12 (3 varianti × 4 seed) |
+
+**S28-ROE.** Blue-Flight: 2 F-16C Block 52d 'Strike' (Mk-83, Mk-82, AIM-9M) a 3000 m da (-40 km, 0) al punto `ATTACK` (14 km, 0) e ritorno a
+(-40 km, 0) lungo la stessa rotta (il waypoint `ATTACK` è l'indice 1); Red-Column (3 BMP-2) in (0, 0), **sulla rotta** all'andata e al
+ritorno, e Red-Depot (3 BMP-2) in (12 km, 0), poco prima del punto `ATTACK`; sensore visivo dichiarato dei BMP-2 (come S19). Bersaglio
+della missione: `GROUP` 'Red-Depot'. Varianti (nomi stabili): **'free'** (ROE di default: la colonna è un'opportunità e viene
+bombardata già all'andata: premessa); **'priority'** (`priority_designated`, arma designata Mk-82): all'andata il volo *sorvola* la
+colonna senza sparare e bombarda il deposito con la sola Mk-82; passato il punto `ATTACK` (sui tratti reali) e al ritorno bombarda la
+colonna con le armi residue (Mk-83: la Mk-82, riservata, resta esclusa); **'only'** (`only_designated`): nessuna salva sulla colonna né
+all'andata né al ritorno, almeno una sul deposito; **'hold'** (`weapon_hold`): nessuna salva offensiva; **'rules_off'** (come 'only'
+con `F7_TARGET_RULES` spento): identica a 'free', evento per evento. Test: 6 (`test_free_bombs_the_column_as_an_opportunity`,
+`test_only_designated_never_fires_at_the_column`, `test_free_bombs_the_column_while_approaching_premise`,
+`test_priority_overflies_the_column_on_the_way_in_and_bombs_it_on_the_way_out`, `test_weapon_hold_fires_nothing`,
+`test_switch_off_is_the_free_session_event_by_event`).
+
+**S28-CLASS** (`*_off` = `F7_WEAPON_POLICY` spento). **'cap_low'/'cap_low_off'**: 2 F-15C in CAP a 300 m sopra 3 BMP-2: con la politica il
+CAP non mitraglia il suolo, senza il cannone spara (premessa). **'sead'/'sead_off'**: 2 F-16C 'SEAD' (AGM-88) a 500 m contro Red-AD (2 BMP-2
+e **uno Strela-10**, non un SAM a radar come il Tor, che abbatte la formazione prima che il cannone possa sparare: premessa non
+ottenibile): con la politica solo l'AGM-88 e solo sul SAM, senza il cannone spara anche ai BMP-2. **'self_defence'/'self_defence_off'**: un F-16C
+'Strike' e un A-10C 'Maverick/Gun CAS' (entrambi con `self_escort_capability` `True`, per l'A-10C dopo la correzione dei dati,
+capitolo 4 §4.33) incrociano 2 MiG-29S 'CAP': con la politica entrambi si difendono con l'AIM-9M, senza anche l'A-10C spara ai MiG;
+sensore 'air' dell'A-10C (30 km) e dei MiG (8 km) **dichiarato di test** (col sensore del registro i MiG sparerebbero per primi da 30 km
+e abbatterebbero i Blu prima della portata dell'AIM-9M). Il caso *negativo* dell'autodifesa (loadout senza capacità = nessuna opzione
+aria-aria) è provato nei test unitari con un loadout di test (`patch.dict`). 6 test.
+
+**S28-ZONE.** 1 F-15C 'Eagle Sweep' in CAP con bersaglio `ZONE` di raggio 20 km in (0, 0) su una rotta a y = 8 km; Red-In (un MiG-29S)
+parte dentro la zona e la attraversa a y = -5 km, Red-Out (un MiG-29S) passa a y = 24 km, sempre fuori zona ma a portata dell'AIM-9M (16 km
+dalla rotta). 'zone_free': salve su entrambi (premessa); 'zone_only' (`only_designated`): nessuna salva su Red-Out, almeno una su
+Red-In. **Limite verificato**: la designazione è valutata alla prima decisione sulla coppia, quindi Red-In deve essere in zona già
+alla partenza (capitolo 4 §4.32). 2 test.
+
+**S29-AREA.** Red-Art: 1 2S19-Msta (152 mm, 50 colpi) in (-15 km, 0), missione `Fire_Support` con un breve tratto `DEPARTURE` (-15 km, 0)
+→ `OBJECTIVE` (-14,5 km, 0) e, sull'`OBJECTIVE`, `Fire_At_Point` di 40 colpi con avvio `AT_TIME` a 600 s, sul bersaglio `POINT` in (0, 0)
+con provenienza `ESTIMATED` (`estimated_at` = -1800 s, `uncertainty_m` = 200 m): è dove stava Blue-Col mezz'ora prima della sessione.
+Nessuno ha rilevato nessuno (i registri non dichiarano sensori di terra per carri e artiglieria): l'unico fuoco è quello su posizione.
+Blue-Stay (2 BMP-2) è fermo nel punto; Blue-Col (4 BMP-2) vi era, e: **'stale'**, dalla partenza si sposta di 3 km verso est e vi
+resta (all'impatto, 600 s più il tempo di volo, è a 3 km dal punto, fuori dal disco di dispersione di 200 m); **'on_target'**, non ha
+missione, resta nel punto stimato; **'switch_off'**, come 'stale' con `F7_AREA_FIRE` spento (premessa: nessuno è colpito, nessuna
+munizione consumata, nessun ingaggio). Le costanti d'impatto sono **STIME** (capitolo 6 §6.23): qui si verificano solo effetti
+qualitativi, aggregando sui seed dove l'esito è casuale. 7 test: la premessa dell'interruttore spento; 'stale' colpisce chi è rimasto e
+mai chi se n'è andato; 'on_target' colpisce la colonna; l'evento porta gli istanti dichiarati (munizioni a `t_fire` = 600 s, danni
+all'impatto, 40 colpi pagati alla scorta, `engagement_outcomes == ((),)`); la scorta dell'artiglieria cala dei colpi sparati; il replay
+con lo stesso `session_id` è identico; un `session_id` diverso cambia gli impatti.
+
+**Strumenti nuovi di `Scenario_Fixtures`** (F7a/F7b; tutti con default che lasciano invariati gli scenari preesistenti): `missions_for(...,
+weapons=, rules=, attack_waypoint=, actions=)` — le armi designate (applicate a tutti gli asset delle missioni), la `MissionRules` (ROE)
+di tutte le missioni, l'indice del punto con ruolo `ATTACK` e le azioni per punto (es. `Fire_At_Point`); `run_with_salvos` — `run(...)` più
+le salve (`Salvo`, con tiratore, bersaglio e `spec.weapon`) di tutti gli episodi, registrate avvolgendo `resolve_engagement` senza
+toccarne l'esito (il `SessionOutcome` non porta il bersaglio delle salve); e il logger di `Logic.Area_Fire` fra quelli silenziati.
+
+**La fotografia** (§8.7): F7a 918 → 970 esecuzioni (918 identiche, 0 cambiate, 52 nuove); correzione A-10C 970 (966 identiche, 4 cambiate, tutte
+`S28-CLASS/*/self_defence`); F7b 970 → 982 (970 identiche, 0 cambiate, 12 nuove). **Nessuna esecuzione preesistente alla F7 cambia**: nessuna
+missione degli scenari preesistenti dichiara ROE, armi designate o azioni `Fire_At_Point` (salvo S19AD, migrato alle regole di missione e identico), la politica d'armi non scarta nulla negli scenari (sonda
+dichiarata da `F4_Differenze_Scenari.md`, non rieseguita), e gli stream degli ingaggi e della tempra non cambiano.
+
+**Test aggiunti dalla F7**, per modulo (contati sul codice a `dcedc541`: metodi `test_` aggiunti nei commit `9f87a3ad` e `dcedc541`):
+
+| Modulo di test | Cosa copre | Test |
+|---|---|---|
+| `Test_Context.py` | `TestMissionWeaponPolicy`: tabella della politica d'armi e `mission_weapon_policy` | 6 |
+| `Test_Mission_Types.py` | `Target.asset_ids`, `MissionAsset.weapons`, `designated_weapons` (F7a, 5); `TestFireAtPoint`: validazione dell'azione `Fire_At_Point` (F7b, 9) | 5 + 9 |
+| `Test_Fire_Control.py` | `weapon_tasks`, `target_class`, `restrict_by_policy`, `WeaponPolicy` | 19 |
+| `Test_Engagement_Resolver.py` | `TestTargetRules` (ROE, designato per id e per area, fasi di `priority_designated`, `return_fire`, armi designate, `apply_target_rules` pura, validazione di `TargetRules`) | 29 |
+| `Test_Mission_Adapter.py` | `designated_targets`, `target_rules`, `weapon_policies` (F7a) | 20 |
+| `Test_Session_Simulator.py` | `TestMissionEngagementRules`: cablaggio e interruttori (F7a) | 8 |
+| `Test_Session_Scenarios_S19_Air_Defence.py` | `TestS19MissionRulesReplaceTheTestFilters` | 3 |
+| `Test_Session_Scenarios_S28.py` (nuovo) | S28-ROE 6, S28-CLASS 6, S28-ZONE 2 | 14 |
+| `Test_Area_Fire.py` (nuovo) | `TestDispersion` 3, `TestFireOrders` 7, `TestResolveAreaFire` 23, `TestAreaFireWeapon` 7, `TestAreaFireInSession` 9 (costanti d'ordine, applicazione agli asset, `G4_EPISODES` spento, interruttore, postura `destroyed`, fine di attività, tiratore distrutto, tiro e impatto oltre la fine) | 49 |
+| `Test_Session_Scenarios_S29.py` (nuovo) | S29-AREA | 7 |
+
+I conteggi per classe sono quelli dei metodi `test_` definiti; sommano a **104** per la F7a (contro i 4385 → 4489 dichiarati) e a **65** per la F7b
+(4490 → 4555), più 1 netto per la correzione A-10C (4489 → 4490: riscritti i test che si appoggiavano al dato errato, caso negativo con un
+loadout di test, caso positivo sui loadout reali, `S28 'self_defence'` caso positivo). **Divergenza minore**: `F4_Differenze_Scenari.md` elenca
+`TestTargetRules (30)`, ma la classe definisce **29** metodi e la somma 104 torna solo con 29. Come per le fasi precedenti i totali di
+suite sono quelli dei messaggi di commit e di `F4_Differenze_Scenari.md`; **non sono stati rieseguiti** (la fotografia è stata contata
+sul file: 982).

@@ -5,29 +5,73 @@ discreti (DES, *discrete event simulation*) che risolve le **sessioni virtuali**
 cioè i turni sintetici eseguiti senza un giocatore DCS (e, per costruzione, anche quelli con un
 giocatore: il core non distingue i due casi, v. capitolo 1).
 
-> **Aggiornato al commit `a784a9e7`** (2026-10-18, "Schema agenti: principale Sonnet high ..."), branch
-> `analysis/dce-dcs-persistence`. Il codice del motore a quel commit è identico a quello di `9de461e0` ("G4a+G4b
-> verificati e approvati"): i commit `6e7a9b81` (G5) e `a784a9e7` toccano solo test, scenari, fotografia, documenti e
-> configurazione degli agenti (verificato con `git diff 9de461e0..HEAD`). Suite di test: **4385 OK** (7 skipped, dichiarata da
-> `F4_Differenze_Scenari.md`, sezione G5, e dal messaggio di `6e7a9b81`; non rieseguita per questo aggiornamento);
-> fotografia di non regressione: **918 esecuzioni** (contate sul file). Il manuale descrive **lo stato di `a784a9e7`**, cioè dopo
-> le fasi F0-F6 del piano di implementazione della Missione (F4 = regola A, missione come unità d'ingaggio, dominio di
-> coordinamento, difesa di salva per dominio, postura continua; F5 = presenza, `grounded` nel tempo, attese, TOT per missione;
-> F6 = carburante per tratto, criteri di fine, stato di missione, bingo e rientro) e i passi **G1-G5** del modello di bingo
-> (riserva di disimpegno, soglia e albero di decisione, consumo in ingaggio, episodi d'ingaggio, ri-pianificazione, uscita di
-> scena senza basi, scenari S26-S27). Le fasi **F7** (bersagli espliciti e filtro armi), **F8** (sessione e campagna) e
-> **F9** (documentazione: questo aggiornamento ne è parte) sono **da fare** e non sono descritte come codice; il **F6-B3**
-> (S24-GLIDE con `bingo=False`) è aperto (capitolo 9 §9.5).
+> **Aggiornato al commit `dcedc541`** (2026-10-20, "F7b verificata e approvata: fuoco su posizione ..."), branch
+> `analysis/dce-dcs-persistence`; HEAD del repository al momento dell'aggiornamento: `f2d19dd0` (un commit di configurazione
+> degli agenti OpenCode, che non tocca il motore). Il manuale descrive **lo stato di `dcedc541`**, cioè dopo le fasi F0-F7 del
+> piano di implementazione della Missione (F4 = regola A, missione come unità d'ingaggio, dominio di coordinamento, difesa di salva
+> per dominio, postura continua; F5 = presenza, `grounded` nel tempo, attese, TOT per missione; F6 = carburante per tratto,
+> criteri di fine, stato di missione, bingo e rientro; **F7 = regole d'ingaggio di missione e fuoco su posizione**) e i passi
+> **G1-G5** del modello di bingo (riserva di disimpegno, soglia e albero di decisione, consumo in ingaggio, episodi d'ingaggio,
+> ri-pianificazione, uscita di scena senza basi, scenari S26-S27). Suite di test: **4555 OK** (7 skipped; dichiarata dal messaggio di
+> `dcedc541` e da `F4_Differenze_Scenari.md`, sezione F7b; **non rieseguita** per questo aggiornamento); fotografia di non
+> regressione: **982 esecuzioni** (contate sul file `Test/baseline/scenario_baseline.json`). Le fasi **F8** (sessione e campagna) e
+> **F9** (documentazione: questo aggiornamento ne è parte) sono **da fare** e non sono descritte come codice; il **F6-B3** (S24-GLIDE
+> con `bingo=False`) è aperto (capitolo 9 §9.5). *(Stato precedente: `a784a9e7`, 2026-10-18, suite 4385 e 918 esecuzioni.)*
+
+**Aggiornamento 2026-10-18 → 2026-10-20 (da `a784a9e7` a `dcedc541`, fase F7: F7a e F7b)**, in ordine di capitolo. I commit
+sono `9f87a3ad` (F7a), `3cbb4226` (correzione dei dati dei loadout A-10C), `d1686b28` (pulizia documentale: commenti e docstring,
+voci 14-18 di §9.6), `dcedc541` (F7b); gli altri commit del tratto (`234071d3`, il manuale precedente; `35c1336d`, `4f6fa196`, `6c3be1e9`,
+`40c2813a`, proposta e decisioni della F7; `75c5b6c3`, `cac668d5`, `61c094e5`, `9b788342`, `256fb256`, `96a01bb4`, `f2d19dd0`, memoria,
+protocollo multi-LLM e strumenti) non toccano nessun file sotto `Code/` (verificato con `git show --name-only` su ciascuno). Il codice
+toccato è `Command/Mission_Types.py` (1250 → 1341 righe), `Context/Context.py` (2149 → 2225), `Logic/Engagement_Resolver.py` (3445 → 3872),
+`Logic/Fire_Control.py` (810 → 1088), `Logic/Mission_Adapter.py` (1776 → 1973), `Logic/Session_Simulator.py` (2851 → 3102),
+`Command/Session_Types.py` (556 → 558, un docstring) e il dato `Asset/Aircraft_Loadouts.py` (5 righe), più il **modulo nuovo**
+`Logic/Area_Fire.py` (326 righe) e test, scenari e fotografia. `Logic/Contact_Scheduler.py`, `Logic/Damage_Model.py`, `Logic/Fuel_Model.py`,
+`Asset/Asset.py` e tutti i moduli di supporto trasversale restano invariati.
+
+1. **Strato 0, porte e tipi della Missione** (capitolo 2 §2.2, §2.6-2.8): le porte non cambiano; `Target.asset_ids`,
+   `MissionAsset.weapons` e `designated_weapons`, `FIRE_AT_POINT_ACTION` e la sua validazione; la tabella
+   `Context.MISSION_WEAPON_POLICY` (politica d'armi per tipo di missione, dato non tarato); lo slot `mission_id` dell'RNG ora usato.
+2. **Scheduler** (capitolo 3): **invariato**.
+3. **Risolutore e fire control** (capitolo 4 §4.4, §4.11-4.12, §4.14, §4.16, nuove **§4.32-4.34**): `TargetRules` e le regole di
+   bersaglio (strato T: bersaglio designato, cinque ROE, armi designate, `priority_designated` a due fasi, `return_fire`, candidati
+   rimandati e tipo di evento `_WAKE`); la politica d'armi come involucro della fire control (strato W: `restrict_by_policy`,
+   `WeaponPolicy`, `target_class`); `area_fire_weapon` e `area_fire_pk` per il fuoco su posizione.
+4. **Applicazione dello stato** (capitolo 5): invariata; `apply_engagement_result` accetta già un esito con `forces=()` (fuoco su posizione).
+5. **Orchestratore** (capitolo 6 §6.1-6.2, §6.7-6.10, §6.18, §6.21, nuove **§6.22-6.23**): il **terzo tipo di evento di sessione**
+   (`ENGAGEMENT=0 < AREA_FIRE=1 < MOVEMENT=2`), il cablaggio delle regole d'ingaggio (`weapon_policies`, `target_rules`, memoria di
+   `return_fire`), le quattro funzioni nuove di `Mission_Adapter`, il controllo del loadout, `Logic/Area_Fire.py` con le costanti
+   STIMATE, **tre interruttori nuovi** (14 nel modulo).
+6. **Supporto trasversale** (capitolo 7 §7.7, §7.12): la `fire_control` avvolta dall'involucro, `target_rules` come ingresso ricavato
+   dalle missioni, la correzione dei dati A-10C (`self_escort_capability`).
+7. **Validazione** (capitolo 8 §8.4, §8.6-8.7, nuova **§8.11**): scenari **S28** (52 esecuzioni) e **S29** (12), S19AD migrato dai
+   filtri di test alle regole di missione, fotografia a **982** esecuzioni con la cronologia da 918, `Test_Area_Fire` (49 test).
+8. **Limiti** (capitolo 9): nuovi limiti della F7a e della F7b (costanti STIMATE del fuoco su posizione); superati «nessun filtro
+   per missione/bersaglio», «salva su area non rappresentabile»; stato del piano (§9.5) con F7a e F7b fatte; incoerenze (§9.6):
+   **voci 14-18 chiuse**, voci 11, 12, 19, 21 riverificate (12 chiusa; 11, 19, 21 aperte), nuove 22-23.
+
+**Riferimenti `:riga`.** Quelli delle sezioni nuove o riscritte sono stati verificati sul codice a `dcedc541`. Quelli delle sezioni
+preesistenti sono stati **ricalcolati** con un allineamento riga per riga fra `a784a9e7` e `dcedc541`: per ogni modulo cambiato si è
+costruita la mappa delle righe dai blocchi di `git diff -U0`, e un riferimento è stato spostato solo se la riga (o l'estremo
+dell'intervallo) cade fuori da un blocco modificato e il testo della riga è identico nelle due versioni; per un intervallo la cui
+fine coincide con un'inserzione *in coda* a un blocco (per esempio una proprietà aggiunta a una classe) l'estremo è stato rivisto a
+mano; i riferimenti a righe riscritte (docstring della F7a o della pulizia `d1686b28`) sono stati rivisti a mano. Il modulo a cui un
+riferimento senza percorso (`` `:riga` ``) si riferisce è stato dedotto dal contesto e controllato sull'identificatore citato; i
+riferimenti a moduli non cambiati (per esempio `Contact_Scheduler`, `Fuel_Model`, `Doctrine`) sono rimasti quelli di prima. **Non è stato
+rifatto un controllo indipendente di ogni riferimento già scorretto prima dell'allineamento**: ne è emerso uno, `_fire_control` a
+`:2058-2079` nel capitolo 4 §4.4 (a `a784a9e7` il metodo stava a `:2293`), corretto.
 
 **Stato del codice descritto, storia degli aggiornamenti.** Stesura iniziale al commit `f61aa2b7`
 (2026-09-23); aggiornamenti a `1d0c1127` (2026-09-26), `6754bf1c` (2026-09-27; manuale committato in
-`fb914f0e`), `533cd1f5` (2026-10-05; manuale committato in `004d26e8`) e, ora, a `84a47670`. Il motore è
+`fb914f0e`), `533cd1f5` (2026-10-05; manuale committato in `004d26e8`), `84a47670` (2026-10-11; manuale committato in `355b1017`), `a784a9e7`
+(2026-10-18; manuale committato in `234071d3`) e, ora, `dcedc541` (2026-10-20). Il motore è
 **completo** nelle sue 7 fasi originali (wiki
 `Analysis/WIKI_LLM_SIMULATION/wiki/decisions/virtual-session-engine-des.md`); tutto ciò che è venuto dopo è
 estensione: fino al 2026-09-27 sui moduli satellite che lo alimentano dall'esterno (selezione dell'arma,
 nebbia di guerra, scorta per arma, cannone di bordo, volumi di rilevamento/intercettazione, pianificatore
 d'attacco), dal 2026-09-28 **anche nel risolutore e nella porta di sessione**, e dal 2026-10-05 nella
-**definizione di "forza d'ingaggio"**, e dal 2026-10-11 nel **tempo** (presenza, carburante, episodi).
+**definizione di "forza d'ingaggio"**, dal 2026-10-11 nel **tempo** (presenza, carburante, episodi) e dal 2026-10-18 nelle **regole
+d'ingaggio di missione** (contro chi e con che arma si spara) e nel **fuoco su posizione**.
 
 **Aggiornamento 2026-10-11 → 2026-10-18 (da `84a47670` a `a784a9e7`, fasi F5, F6 e passi G1-G5)**, in ordine di capitolo. Il
 codice toccato è `Command/Mission_Types.py`, `Command/Session_Types.py`, `Asset/Aircraft.py`, `Logic/Contact_Scheduler.py`,
@@ -147,7 +191,7 @@ parametro `grounded`.
 ## Convenzioni di questo manuale
 
 - Ogni affermazione su codice è verificata leggendo il file, con riferimento `percorso:riga`
-  valido per `a784a9e7`. I percorsi sono dati **relativi a `Code/Dynamic_War_Manager/Source/`** (es.
+  valido per `dcedc541`. I percorsi sono dati **relativi a `Code/Dynamic_War_Manager/Source/`** (es.
   `Logic/Engagement_Resolver.py:2474` sta per
   `Code/Dynamic_War_Manager/Source/Logic/Engagement_Resolver.py:2474`); dentro una sezione una forma breve
   `` `:riga` `` si riferisce al file nominato nell'intestazione del capitolo o della sezione. I documenti di
@@ -162,7 +206,7 @@ parametro `grounded`.
 - Dove il manuale e la wiki di progetto (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/`)
   divergono, prevale il codice; le divergenze trovate sono raccolte nel capitolo 9 (§9.2 per la wiki,
   §9.6 per i documenti di progetto della Missione e delle regole SAM, con lo stato di ciascuna voce).
-- I diagrammi hanno un numero progressivo `D1`-`D42` (elenco in fondo); le didascalie sono nel capitolo
+- I diagrammi hanno un numero progressivo `D1`-`D50` (elenco in fondo); le didascalie sono nel capitolo
   che li contiene.
 
 ## Indice dei capitoli
@@ -175,7 +219,8 @@ parametro `grounded`.
    `Command/Mission_Types.py` (§2.6) e la tassonomia dei tipi di missione di `Context/Context.py` (§2.7); dal
    2026-10-08 `ForceOutcome.block_id` e `SessionOutcome.outcomes_of_block` (§2.3), il `mission_id` nell'RNG
    (§2.8); **dal 2026-10-12/18** `SessionOutcome.postures`, `chained`, `Operation` senza TOT comune,
-   `crew_recovered` e i nuovi motivi di fine e di aborto (§2.3, §2.4, §2.6).
+   `crew_recovered` e i nuovi motivi di fine e di aborto (§2.3, §2.4, §2.6); **dal 2026-10-18/20** `Target.asset_ids`,
+   `MissionAsset.weapons`, l'azione `Fire_At_Point` e la tabella della politica d'armi per tipo di missione (§2.6, §2.7).
 3. [Lo strato 1: lo scheduler dei contatti](04_Strato1_Scheduler_Contatti.md) —
    `Logic/Contact_Scheduler.py`: rotta↔cilindro, CPA/TCPA, potatura gerarchica,
    `ContactWindow`; dal 2026-10-11 il parametro `grounded` per gli aerei a terra (§3.5-3.6); **dal 2026-10-12/17**
@@ -192,7 +237,9 @@ parametro `grounded`.
    R-INT (§4.26); **dal 2026-10-08 (fase F4 della Missione)**: la forza d'ingaggio è la missione (§4.27), il
    dominio di coordinamento per fuoco e percezione (§4.28), la difesa di salva per dominio (§4.29), gli aerei a
    terra e la postura continua (§4.30, esteso dalla F5 al tempo); **dal 2026-10-12**: la fine di attività dei
-   criteri di missione (§4.31).
+   criteri di missione (§4.31); **dal 2026-10-18/20 (fase F7 della Missione)**: le regole di bersaglio di missione nel risolutore
+   (§4.32), la politica d'armi per tipo di missione come involucro della fire control (§4.33) e l'arma per il fuoco su posizione
+   (§4.34).
 5. [Lo strato 3: applicazione dello stato](06_Strato3_Applicazione_Stato.md) —
    `Logic/Damage_Model.py`, `Asset.apply_damage`, `Logic/Fuel_Model.py` (riscritta: carburante per tratto, planata, bingo,
    riserva di disimpegno, albero di decisione, consumo in ingaggio, §5.2), `apply_engagement_result`.
@@ -201,25 +248,29 @@ parametro `grounded`.
    `routes`/`starts`/`speeds`, `Logic/Mission_Adapter.py` (§6.10) e l'esito di missione a regola unica (§6.11); le forze
    d'ingaggio e la vista `MissionForce` (§6.12), il dominio di coordinamento (§6.13), la postura continua (§6.14);
    **nuove §6.15-6.21**: presenza e postura nell'esito, attese e TOT per missione, carburante e vincolo del movimento, fine di
-   attività, bingo e validatori, consumo in ingaggio / episodi / ri-pianificazione / uscita di scena, interruttori e default.
+   attività, bingo e validatori, consumo in ingaggio / episodi / ri-pianificazione / uscita di scena, interruttori e default;
+   **nuove §6.22-6.23 (F7)**: le regole d'ingaggio di missione in sessione e il fuoco su posizione (`Logic/Area_Fire.py`, terzo
+   tipo di evento di sessione).
 7. [Moduli di supporto trasversali](08_Supporto_Trasversale.md) — `Session_Rng`, `Doctrine`,
    `Reaction_Profile`, le dimensioni militari di `Military`, munizioni/carburante su
    `Mobile`/`Aircraft` (con `fuel_capacity_kg` e `emergency_fuel_flow`), i punti di iniezione meteo (`detection_factor`) e arma
    (`fire_control`, con l'estensione facoltativa `target_grounded`) e della soglia di rottura (`morale_for`,
    `enemy_estimate_for`, `fire_doctrine`, `rwr_catalogue`); `Doctrine` con parametri della soglia e dottrina di
    tiro (§7.2); `Asset/Aircraft_Rwr_Data.py` (§7.10), `Context/Air_Defense_Efficacy.py` (§7.11), dati di registro
-   aggiunti (§7.12); il pianificatore di rotta aerea con volumi di rilevamento e
+   aggiunti (§7.12, compresa la correzione dei loadout A-10C); la `fire_control` avvolta dalla politica d'armi e `target_rules`
+   come ingresso ricavato dalle missioni (§7.7); il pianificatore di rotta aerea con volumi di rilevamento e
    intercettazione distinti (§7.8, `Logic/Air_Route_Manager.py`) e il pianificatore d'attacco
    a monte del motore (§7.9, `Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`).
 8. [Validazione](09_Validazione.md) — determinismo, test di agnosticismo come test di
-   contratto (esteso alle porte della Missione), la batteria di scenari S1-S27 (§8.4), la
+   contratto (esteso alle porte della Missione), la batteria di scenari S1-S29 (§8.4), la
    migrazione alle missioni e la regola A negli scenari, lo strumento di non regressione
-   `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 918 esecuzioni
-   (§8.7), i test aggiunti (§8.8), gli scenari della fase F4 (§8.9), **gli scenari S22-S27 e i test delle fasi F5, F6 e
-   G1-G5 (§8.10)**.
+   `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 982 esecuzioni
+   (§8.7), i test aggiunti (§8.8), gli scenari della fase F4 (§8.9), gli scenari S22-S27 e i test delle fasi F5, F6 e
+   G1-G5 (§8.10), **gli scenari S28-S29 e i test della fase F7 (§8.11)**.
 9. [Limiti noti, punti di estensione e divergenze codice/wiki](10_Limiti_Estensioni_Divergenze.md) —
-   limiti nuovi e superati (compresi quelli della fase F4 e delle fasi F5, F6 e G1-G5), stato del piano della Missione F0-F9
-   e dei passi G1-G5 (§9.5), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce).
+   limiti nuovi e superati (compresi quelli della fase F4, delle fasi F5, F6, G1-G5 e della fase F7, con le costanti STIMATE
+   del fuoco su posizione), stato del piano della Missione F0-F9 e dei passi G1-G5 (§9.5), incoerenze trovate fra documenti di
+   progetto e codice (§9.6, con lo stato di ciascuna voce: voci 14-18 chiuse, voci 22-23 nuove).
 
 ## Elenco dei diagrammi
 
@@ -267,6 +318,14 @@ parametro `grounded`.
 | D40 | Ciclo episodio → ri-pianificazione → ri-scheduling dei contatti → contabilità del carburante | `sequenceDiagram` | 6 |
 | D41 | Ciclo di vita di un aereo di missione in sessione | `stateDiagram-v2` | 6 |
 | D42 | Composizione dei tratti di un asset prima dello scheduler (bingo alla partenza, esaurimento) | `flowchart TD` | 6 |
+| D43 | Come `_fire_control` e `_schedule_next` applicano le regole di bersaglio di missione | `flowchart TD` | 4 |
+| D44 | Le due fasi di `priority_designated` | `stateDiagram-v2` | 4 |
+| D45 | `return_fire`: attesa di un ostile e risveglio `_WAKE` | `sequenceDiagram` | 4 |
+| D46 | `WeaponPolicy.allows`: un'opzione d'arma contro una classe di bersaglio | `flowchart TD` | 4 |
+| D47 | I tipi nuovi della F7 (`TargetRules`, `WeaponPolicy`, `AreaWeapon`) e chi li consuma | `classDiagram` | 4 |
+| D48 | Il cablaggio delle regole d'ingaggio di missione in `run_session` (F7a) | `flowchart TD` | 6 |
+| D49 | `resolve_area_fire`: dalla condizione di tiro alle estrazioni | `flowchart TD` | 6 |
+| D50 | Il fuoco su posizione nella coda di sessione | `sequenceDiagram` | 6 |
 
 I diagrammi D30-D36 sono quelli della fase F4 (a `84a47670`). **Aggiornati a `a784a9e7`**: D1 (il carburante è dell'orchestratore,
 non del risolutore), D2 (`postures`), D3 (`GroundedSchedule`), D4 (`ActivityCriteria`, `ActivityEnd`, `activity_ends`), D8 e D9
@@ -274,3 +333,8 @@ non del risolutore), D2 (`postures`), D3 (`GroundedSchedule`), D4 (`ActivityCrit
 D19 (esito di missione a regola unica: sostituisce la «prima forma»), D20 (attese e presenza), D29 (fasi F5, F6, G1-G5 fatte),
 D34 (`GroundedSchedule`), D36 (postura nell'esito). Sono **nuovi** D37-D42. D5, D6, D7, D10-D16, D18, D21-D28 e D30-D33, D35
 sono invariati.
+
+**Aggiornati a `dcedc541`** (fase F7): D1 (nodi `Fire_Control` e `Area_Fire`, iniezione di `WeaponPolicy` e `TargetRules`), D8 e D9 (politica
+d'armi, regole di bersaglio, fuochi su posizione intercalati agli episodi), D16 (`Target.asset_ids`, `MissionAsset.weapons`),
+D29 (F7a e F7b fatte, F8 prossima). Sono **nuovi** D43-D50. Gli altri diagrammi sono invariati (D4 non mostra i tipi nuovi della F7,
+raccolti in D47; D5 resta quello dell'ingaggio senza regole di bersaglio, il testo di §4.14 dice dove si inseriscono).

@@ -1,6 +1,13 @@
 # Capitolo 7 — Moduli di supporto trasversali
 
-> **Verificato a `a784a9e7` (2026-10-18).** Dei moduli di questo capitolo (`Utility/Session_Rng.py`,
+> **Verificato a `dcedc541` (2026-10-20).** Dei moduli di questo capitolo (elenco sotto) **nessuno è cambiato da `a784a9e7`**
+> (`git diff a784a9e7 HEAD` non li tocca); cambiano soltanto i moduli *citati* da questo capitolo, di cui i riferimenti
+> `:riga` sono ricalcolati: `Logic/Engagement_Resolver.py`, `Logic/Session_Simulator.py`, `Logic/Fire_Control.py`,
+> `Logic/Mission_Adapter.py`. Novità della fase F7 che toccano questo capitolo: la `fire_control` può essere avvolta da un
+> involucro che applica la politica d'armi per tipo di missione (§7.7), un ingresso in più del risolutore ricavato dalle
+> missioni (`target_rules`, §7.7) e un dato di registro corretto (`self_escort_capability` dei loadout A-10C, §7.12).
+>
+> *Verifica a `a784a9e7` (2026-10-18).* Dei moduli di questo capitolo (`Utility/Session_Rng.py`,
 > `Context/Doctrine.py`, `Context/Reaction_Profile.py`, `Block/Military.py`, `Asset/Mobile.py`,
 > `Asset/Weapon_Stores.py`, `Context/Air_Defense_Efficacy.py`, `Asset/Aircraft_Rwr_Data.py`,
 > `Logic/Air_Route_Manager.py`, `Logic/Weapon_Delivery.py`) **nessuno è cambiato** da `84a47670` (`git diff` non li
@@ -183,7 +190,7 @@ documenta latenze navali.
 ## 7.4 Degradazione ambientale della Pd (meteo/notte)
 
 Vive in `Logic/Engagement_Resolver.py` (non in `Reaction_Profile`), perché è un parametro della
-legge di Pd (`Logic/Engagement_Resolver.py:408-420`, `:897-944`):
+legge di Pd (`Logic/Engagement_Resolver.py:461-473`, `:1105-1152`):
 
 ```
 factor = (NIGHT_DETECTION_FACTOR se notte) * (ADVERSE_WEATHER_DETECTION_FACTOR se avverso)
@@ -200,7 +207,7 @@ richiesta da `resolve_engagement(detection_factor=...)`. `meteo_detection_factor
 date, time)` (`:859-868`) collega le due funzioni a `Logic/Meteo_Analysis.get_meteo_conditions` (oggi un
 placeholder deterministico: nessuna casualità entra da qui).
 
-**Limite noto, dichiarato** (`Logic/Engagement_Resolver.py:410-417`): il fattore è **unico per ogni sensore**. La finestra di
+**Limite noto, dichiarato** (`Logic/Engagement_Resolver.py:463-470`): il fattore è **unico per ogni sensore**. La finestra di
 contatto porta solo la portata migliore fra radar e TVD (`Mobile.detection_range`, default =
 massimo dei due), e il risolutore non sa quale dei due l'ha prodotta: non può quindi risparmiare
 al radar la degradazione notturna che fisicamente non subisce. Il valore notturno è un
@@ -389,9 +396,13 @@ il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo 9)
   quel modello d'arma (capitolo 4, §4.19); una `ShotSpec` singola resta un valore valido.
   `Session_Simulator.run_session` ne passa **una sola** a ogni ingaggio della sessione, non una
   per lato: la callable riceve gli asset reali e può distinguere lato/blocco/modello da sé
-  (`Logic/Session_Simulator.py:434-443`, capitolo 6). Una fabbrica che seleziona davvero l'arma
+  (`Logic/Session_Simulator.py:438-449`, capitolo 6; il docstring è stato esteso alla F7a con la frase sull'involucro). Una fabbrica che seleziona davvero l'arma
   dai registri, invece di una tabella di ruoli, esiste in
-  `Logic/Fire_Control.make_registry_fire_control` (capitolo 4, §4.16). **Dal 2026-10-11 (F4c)** il protocollo ha
+  `Logic/Fire_Control.make_registry_fire_control` (capitolo 4, §4.16). **Dalla F7a (2026-10-18)**, per gli asset delle missioni
+  aeree, `run_session` la avvolge con `Fire_Control.restrict_by_policy` (politica d'armi per tipo di missione, capitolo 4 §4.33,
+  capitolo 6 §6.22): l'involucro ha la stessa firma, dichiara `target_grounded` solo se la base lo dichiara, e restituisce lo
+  *stesso oggetto* della base quando non toglie nulla, quindi memoizzazione e introspezione del risolutore restano quelle di
+  prima. **Dal 2026-10-11 (F4c)** il protocollo ha
   un'estensione **facoltativa**: se la callable dichiara il parametro keyword `target_grounded` (o `**kwargs`) il
   risolutore lo passa a `True` quando il bersaglio è un aereo a terra (capitolo 4 §4.4, §4.30); una fire control
   che non lo dichiara riceve la chiamata di sempre, con un warning per run se il bersaglio è a terra. La fire
@@ -415,8 +426,10 @@ il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo 9)
   `Mission_Adapter.coordination_domains`, capitolo 4 §4.28, capitolo 6 §6.13), `grounded` (aerei a terra: dalla F5 il
   programma nel tempo `Mission_Adapter.grounded_schedule`, un `GroundedSchedule`, capitolo 4 §4.30, capitolo 6 §6.14-6.15) e,
   dalla F6-B1, `activity_criteria` (`{asset_id: ActivityCriteria}`, i criteri di fine di attività costruiti da
-  `EndCriteria`, capitolo 4 §4.31, capitolo 6 §6.18). Chi chiama il risolutore direttamente può passarli a mano; senza, il
-  comportamento è quello precedente alla F4b+/F4c/F6-B1.
+  `EndCriteria`, capitolo 4 §4.31, capitolo 6 §6.18) e, dalla F7a, `target_rules` (`{asset_id: TargetRules}`, le regole di
+  bersaglio di missione ricavate da `Mission_Adapter.target_rules`, capitolo 4 §4.32, capitolo 6 §6.22). Chi chiama il
+  risolutore direttamente può passarli a mano; senza, il comportamento è quello precedente alla F4b+/F4c/F6-B1/F7a. Il
+  fuoco su posizione (F7b) non è un ingresso del risolutore: ha un evento di sessione proprio (capitolo 6 §6.23).
 - **Carburante e bingo: nessun punto di iniezione.** Tutte le costanti del modello (`DISENGAGE_TIME`,
   `ALTERNATE_BASE_MAX_OFFSET`, `GLIDE_RATIO`, `BINGO_RESERVE`, `BINGO_RETURN_FACTOR`) sono costanti di `Logic/Fuel_Model`
   e i dati vengono dai registri (`Aircraft_Data`, `Aircraft_Loadouts`); `run_session` non ha parametri per il carburante.
@@ -829,3 +842,11 @@ Modifiche ai registri d'arma e d'aereo, senza codice consumatore nuovo ma con ef
 - **Task `Anti_Missile`** su 6 armi terrestri e `rounds_per_mount` sui 3 CIWS navali (`37ca477e`, §7.6).
 - **Rename `Retrait` → `Retreat`** (`1d5dc863`) e nuovi task aerei di supporto (`4e18d7d8`): capitolo 2 §2.7.
 - **Tu-95MS**: campo `avionics` allineato a L-150 Pastel (`1c087a37`, §7.10).
+- **Correzione dati A-10C** (`3cbb4226`, decisione 8 della F7, 2026-10-18; `Asset/Aircraft_Loadouts.py`): `self_escort_capability`
+  portata da `False` a `True` sui **cinque loadout dell'A-10C con AIM-9M** — tre del modello `'A-10C Thunderbolt II'` (`Maverick/Gun CAS`,
+  `GBU Precision Strike`, `Heavy CAS`, righe 1679, 1713, 1746) e due di `'A-10C II Thunderbolt II'` (`Maverick/Gun CAS`, `Precision Strike`,
+  righe 1784, 1818); il dato era incoerente (portano un AIM-9M), e la politica d'armi della F7a lo legge per l'autodifesa
+  aria-aria (capitolo 4 §4.33). Nessun cambio di codice; 4 esecuzioni della fotografia cambiate (`S28-CLASS/*/self_defence`).
+  I documenti di progetto (`F4_Differenze_Scenari.md`, `Piano_Implementazione_Missione.md`) dicono «5 loadout A-10C II» e
+  citano `Low Level Bomb Run` come l'eccezione rimasta `False`: nel registro i cinque loadout sono ripartiti in **due
+  modelli** e `Low Level Bomb Run` è un loadout dell'**A-20G Havoc**, non dell'A-10C (capitolo 9 §9.6, voce 22).
