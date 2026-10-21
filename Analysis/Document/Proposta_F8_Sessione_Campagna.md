@@ -1,6 +1,8 @@
 # Proposta F8: sessione e campagna (validatore di sessione, prontezza, posizione persistente, esito d'Operazione)
 
-**Stato**: PROPOSTA (2026-10-21), da approvare. Nessun codice modificato.
+**Stato**: DECISO dall'utente il 2026-10-21 (decisioni 17-27, tutte come raccomandate, v. riquadro in §3); piano eseguibile.
+Nessun codice modificato. **L'assegnazione dell'esecuzione ai singoli agenti e' RINVIATA** alla ridefinizione dei ruoli nel
+sistema multi-agente in corso: la colonna «Esecutore consigliato» di §4.0 e' solo indicativa.
 **Base**: HEAD `dcedc541` del branch `analysis/dce-dcs-persistence` (F0-F7b fatte; suite 4555 OK; fotografia 982 esecuzioni).
 **Fonti**: `Piano_Implementazione_Missione.md` (Fase 8 a :213-233, tabella §5 a :304, limite a :421-422);
 `Proposta_Struttura_Missione_Decisioni.md` (D1.d :417-420, D2.d-e :362-374, D4 :429-468, D6 :472-505);
@@ -315,7 +317,28 @@ Persistenza su disco: `CampaignState.restore(..., restore_position=False)`: con 
 
 ---
 
-## 3. Decisioni aperte per l'utente
+## 3. Decisioni per l'utente
+
+> **DECISO dall'utente il 2026-10-21**: decisioni **17-27 tutte accettate come raccomandate**, in particolare:
+> - 17, 18, 19: come raccomandato (la tabella dei valori di §4.4 e' confermata come STIMA provvisoria, da sostituire con
+>   la ricerca F8-R);
+> - 20, 21: come raccomandato, quindi **riparazione, riarmo e rifornimento senza logistica** in questa fase. La
+>   **F8d (logistica) NON si realizza**; resta un limite dichiarato (§5). Annotazione per il lavoro futuro: l'utente
+>   chiede che le capacita' di riparazione, riarmo e rifornimento dipendano in seguito dalle risorse della base, usando
+>   la struttura logistica del progetto (blocchi `Production`, `Transport`, `Storage`, componente
+>   `Component/Resource_Manager.py`). Stato verificato il 2026-10-21: `Resource_Manager` gestisce un `Payload` di sei voci
+>   generiche (`goods`, `energy`, `hr`, `hc`, `hs`, `hb`) senza legame con munizioni, carburante dei velivoli o
+>   ricambi; il suo ciclo di gestione (`run_management_cycle`) non ha chiamanti di produzione; manca il legame
+>   asset -> blocco di servizio; `Campaign_State` salva e ripristina i magazzini. Servirebbero una tabella di
+>   conversione (STIMA), la regola del blocco che serve un asset, il comportamento a scorte esaurite e il momento in cui
+>   il ciclo gira nella campagna: da piano separato;
+> - 23: **`F8_IN_PROGRESS` a True** (eccezione dichiarata alla lettera della regola dei default di AGENTS.md: cambia solo
+>   l'esito di missione di S22-E3 seed 3 e 4 e il test `test_route_cut_by_the_session_end_fails`; la fotografia non lo
+>   registra);
+> - 24: tabella dell'esito d'Operazione (H1) come in §2.H;
+> - 26: F6-B3 chiusa senza cambi (I1: una riga di docstring in S24-GLIDE);
+> - 27: `final_positions`, `movement_ends` e `operation_outcomes` NON registrati nella fotografia;
+> - 22 e 25: non commentate dall'utente, la raccomandazione e' assunta; da riconfermare all'avvio dell'esecuzione.
 
 17. **Dove si chiama il validatore** (§2.A): (R) A1, funzione fuori da `run_session`, chiamata dal conduttore di
     campagna e dal futuro pianificatore; `run_session` solo un warning per le missioni oltre la fine. Alternative A2, A3.
@@ -359,6 +382,9 @@ Persistenza su disco: `CampaignState.restore(..., restore_position=False)`: con 
 | **F8-R** | ricerca dei tempi di turnaround e riparazione | nessuno | — | agente di ricerca (Sonnet, come per le RWR); in parallelo a F8a/F8b |
 | **F8c** | prontezza, ciclo di campagna, posizione persistente, `CampaignState`, scenario S30 | nuovi moduli di campagna, nessun cambio di `run_session` | 982 IDENTICHE, **4 NUOVE** (S30) | **des-developer** (integrazione di piu' moduli e scenario nuovo) |
 | **F6-B3** | secondo la decisione 26 | — | I1: identica | sessione principale (una riga di docstring) |
+
+**Assegnazione degli esecutori rinviata** (v. Stato): la scelta fra `des-developer` e gli agenti OpenCode si fara' dopo la
+ridefinizione dei ruoli nel sistema multi-agente.
 
 Ordine: F8a -> F8b -> F8c (F8c usa i tipi di F8a e i campi di F8b). F8-R in parallelo; il suo esito entra con un
 commit di soli dati dopo F8c (cambiano solo le 4 esecuzioni di S30, v. §4.7). Ogni passo: suite e confronto con
@@ -939,7 +965,7 @@ Se compare una qualunque esecuzione cambiata fuori da quelle elencate, l'esecuto
 | Rischio / limite | Mitigazione o dichiarazione |
 |---|---|
 | Tempi di turnaround e riparazione inventati | dichiarati STIMA nel codice e nel rapporto; ricerca F8-R; test relativi alle costanti (non ai numeri) |
-| Logistica assente: riarmo, rifornimento e riparazione senza consumo delle scorte del blocco ne' risorse della base | limite dichiarato; la logistica (`Resource_Manager`) e' un lavoro separato |
+| Logistica assente: riarmo, rifornimento e riparazione senza consumo delle scorte del blocco ne' risorse della base | limite dichiarato; la logistica (`Resource_Manager`, blocchi `Production`/`Transport`/`Storage`) e' un lavoro separato, richiesto dall'utente per il futuro (v. riquadro DECISO in §3) |
 | Turnaround uguale per chi ha volato 10 minuti e chi ha volato 2 ore; per un reparto che si e' solo spostato | semplificazione dichiarata (un tempo per classe e per dominio, D6.b/d) |
 | Il turnaround corre dentro la sessione: un aereo atterrato e colpito sul parcheggio somma riparazione e turnaround dall'ultimo danno | regola 5 di §4.4, dichiarata |
 | Aereo `off_scene`: torna "alla base" senza sapere quale | posizione invariata (decisione 22); la base vera e' del modulo mappe/C2 |
