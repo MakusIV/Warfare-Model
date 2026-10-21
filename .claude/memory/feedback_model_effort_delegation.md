@@ -34,13 +34,16 @@ DeepSeek e GLM sempre con effort high (`variant: high`). Smistamento e giudizio 
 - planner-difficult: des-planner Opus high / oc-planner GLM 5.3 / oc-planner V4 Pro
 - planner-normal: des-planner con Sonnet high (deroga di modello da proporre) / oc-planner V4 Pro / oc-planner GLM 5.3
 - developer-difficult (RNG, interruttori, zone grigie): des-developer Sonnet high / oc-developer V4 Pro / oc-developer GLM 5.3
-- developer-normal (piano preciso, basso rischio): oc-developer V4 Pro / V4.1 Flash (dopo pilota U4a) / GLM 5.3-flash
+- developer-normal (piano preciso, basso rischio): oc-developer V4 Pro / V4.1 Flash (PROVATO U4a su piano a testi esatti: identico al piano, 0,019 $ vs 0,12 $ di V4 Pro; per piani con codice ancora da provare) / GLM 5.3-flash
 - reviewer (+qa): oc-reviewer GLM 5.3 (famiglia diversa dall'esecutore) / V4 Pro se l'esecutore era GLM / Opus nel Pro solo diff critici
 - debugger: oc-debugger V4 Pro (sola lettura, Diagnosi_*.md) / GLM 5.3 / escalation Opus high nel Pro
 - writer: des-manual-writer Sonnet high per il manuale / oc-writer V4.1 Flash (bozze in Analysis/Document/Bozze/) / oc-helper locale
 - simple-worker: oc-helper locale / V4.1 Flash (Game_PC spento) / Haiku 5.5 via OpenRouter
 - ui-developer: agente globale oc-ui-developer GLM 5.3 (DISATTIVATO in questo progetto)
 - tester = verifica.sh + developer; qa = oc-reviewer; nessun resolver automatico (U7 rimandata)
+Prove U4 (2026-10-21, ai-multimodel/registro_pilota.md): 4/4 riuscite, ~0,35 $. oc-debugger V4 Pro: diagnosi esatta ma 0,26 $
+(evitare la suite completa se basta il test singolo); oc-writer V4.1 Flash: 16/16 riferimenti esatti, 0,044 $; Haiku 5.5 in oc-helper: ok.
+In `oc run` i comandi fuori elenco devono essere `deny` (un `ask` rifiutato interrompe la sessione): gia' cosi' negli agenti.
 Comandi OpenCode: `/piano`, `/esegui`, `/rivedi`, `/diagnosi`, `/bozza` (TUI) o `oc run --command <nome> ...`;
 i comandi usano SEMPRE il modello predefinito dell'agente (`-m` ignorato con --command, verificato 2026-10-21);
 modello alternativo: `oc run --agent <agente> -m openrouter/<id> "<compito>"`. Proposta sempre in una riga "compito -> agente, modello, motivo".
