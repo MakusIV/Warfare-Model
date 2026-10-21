@@ -1,12 +1,11 @@
 ---
 name: project-session-2026-10-21-summary
-description: "Sessione 2026-10-21 (ProArt) : manuale DES aggiornato a dcedc541 (35b5d052), Proposta F8 scritta e decisioni 17-27 prese (fc267b1b), Game_PC/Ollama verificato; esecuzione F8 da assegnare dopo la ridefinizione dei ruoli multi-agente"
+description: "Sessione 2026-10-21 (ProArt) CHIUSA e pushata: manuale DES aggiornato a dcedc541 (35b5d052), Proposta F8 scritta e decisioni 17-27 prese (fc267b1b), Game_PC/Ollama verificato; esecuzione F8 da assegnare dopo la ridefinizione dei ruoli multi-agente"
 metadata:
   type: project
 ---
 - **Sincronizzazione**: branch `analysis/dce-dcs-persistence` allineato a origin; `main` = `origin/main` (`f4799477`),
-  antenato del branch. Commit di questa sessione, NON pushati al momento della scrittura: `35b5d052`, `eaa2bfba`,
-  `fc267b1b`.
+  antenato del branch. Commit di questa sessione, PUSHATI (`f2d19dd0..96039b82`): `35b5d052`, `eaa2bfba`, `fc267b1b`, memoria `96039b82`.
 - **Multi-LLM verificato**: OpenCode 1.19.3, credenziale OpenRouter presente, modelli degli agenti nel catalogo;
   nessuna chiamata a pagamento di prova. Game_PC: all'inizio porta 11434 rifiutata (Ollama non attivo); dopo il riavvio
   dell'utente Ollama 0.34.0 risponde, `qwen3.8-27b:latest` in VRAM con contesto 65536, tool-calling OK via `/v1`
@@ -28,5 +27,5 @@ metadata:
   ai-multimodel). Proporre l'esecutore solo dopo, v. [[feedback-model-effort-delegation]].
 - **Da verificare**: la memoria dice che il TASK 2 C2 non e' mai iniziato, ma `main` contiene "C2 design TASK 2 (Fase A)"
   (`f4799477`); una delle due e' vecchia (v. [[project-c2-hierarchy-design]]).
-- **Prossimo**: push (su richiesta), voce 23 del manuale (riga F7b del Piano ancora "da verificare"), esecuzione F8a-F8c,
+- **Prossimo**: su osboxes `git pull`; voce 23 del manuale (riga F7b del Piano ancora "da verificare"), esecuzione F8a-F8c,
   voci §9.6 aperte (11, 19, 21).
