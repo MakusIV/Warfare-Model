@@ -18,7 +18,7 @@ permission:
     "Code/Dynamic_War_Manager/Source/Test/baseline/*": deny
     "Analysis/Document/Proposta_*.md": deny
   bash:
-    "*": ask
+    "*": deny
     "bash tools/ai/verifica.sh*": allow
     "*python3 -m unittest*": allow
     "git status*": allow

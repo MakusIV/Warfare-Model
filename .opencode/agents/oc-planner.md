@@ -19,7 +19,7 @@ permission:
     "tools/ai/*": deny
     "Code/Dynamic_War_Manager/Source/Test/baseline/*": deny
   bash:
-    "*": ask
+    "*": deny
     "git status*": allow
     "git diff*": allow
     "git log*": allow

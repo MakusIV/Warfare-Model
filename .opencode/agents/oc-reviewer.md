@@ -9,7 +9,7 @@ permission:
     "*": deny
     "Analysis/Document/Rapporti/Revisione_*.md": allow
   bash:
-    "*": ask
+    "*": deny
     "git status*": allow
     "git diff*": allow
     "git log*": allow
