@@ -26,6 +26,7 @@ permission:
     "git log*": allow
     "git branch --show-current": allow
     "grep*": allow
+    "rg*": allow
     "ls*": allow
     "wc*": allow
     "git push*": deny

@@ -80,6 +80,11 @@ nel proprio rapporto.
 6. Committa codice, test e rapporto sul tuo branch. Il trailer `AI-Agent:` lo aggiunge l'hook
    `commit-msg`; non scriverlo tu.
 
+Esecuzione non interattiva (`oc run`): ogni comando che non e' esplicitamente consentito viene **rifiutato
+automaticamente** (nessuno puo' confermarlo). Usa comandi semplici e consentiti, uno per volta (`grep`, `rg`,
+`git log -1 <hash>`, `git show`, `cat`, `sed -n`, `ls`, `wc`, `bash tools/ai/verifica.sh ...`), niente cicli `for`/`while`
+o pipeline complesse; se un comando viene rifiutato, ripiega su uno consentito invece di fermarti.
+
 Vietato agli esecutori: `git push`, `git stash`, `git reset --hard`, `git checkout`/`switch` di altri
 branch, `git config`, installare pacchetti, modificare i file riservati sopra (un hook git rifiuta il
 commit), dichiarare test eseguiti che non hai eseguito.

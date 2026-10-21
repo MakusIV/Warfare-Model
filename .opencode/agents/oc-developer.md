@@ -31,6 +31,7 @@ permission:
     "git add*": allow
     "git commit*": allow
     "grep*": allow
+    "rg*": allow
     "cat *": allow
     "head *": allow
     "tail *": allow

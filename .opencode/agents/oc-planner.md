@@ -26,6 +26,7 @@ permission:
     "git show*": allow
     "git branch --show-current": allow
     "grep*": allow
+    "rg*": allow
     "cat *": allow
     "head *": allow
     "tail *": allow

@@ -16,6 +16,7 @@ permission:
     "git show*": allow
     "git branch*": allow
     "grep*": allow
+    "rg*": allow
     "ls*": allow
     "wc*": allow
     "bash tools/ai/verifica.sh*": allow
