@@ -7,6 +7,7 @@ reale seedato da `SessionOrder.rng`, per verificare che i pezzi si incastrino.
 """
 
 import unittest
+from types import MappingProxyType
 from unittest.mock import MagicMock, patch
 
 from Code.Dynamic_War_Manager.Source.Command import Mission_Types as MT
@@ -406,6 +407,119 @@ class TestSessionOutcomeMissions(_Base):
             ST.SessionOutcome('S1', None, None, mission_outcomes={'m1': 'completed'})
         with self.assertRaises(TypeError):
             ST.SessionOutcome('S1', None, None, mission_outcomes=[self._mission_outcome()])
+
+
+# ── F8: esito d'Operazione e campi nuovi dell'esito ──────────────────────────
+
+def _mo(mission_id, status, reason=None):
+    return MT.MissionOutcome(mission_id, status, reason=reason)
+
+
+class TestOperationOutcomeFunction(_Base):
+    """`operation_outcome` per le 3 regole x i casi della tabella §2.H della Proposta F8."""
+
+    def test_all_rule(self):
+        op = MT.Operation('op1', 'p', ('m1', 'm2'), outcome_rule='all')
+        cases = (
+            ({'m1': _mo('m1', 'completed'), 'm2': _mo('m2', 'completed')}, MT.OperationStatus.SUCCEEDED),
+            ({'m1': _mo('m1', 'completed'), 'm2': _mo('m2', 'in_progress')}, MT.OperationStatus.IN_PROGRESS),
+            ({'m1': _mo('m1', 'completed'), 'm2': _mo('m2', 'failed')}, MT.OperationStatus.FAILED),
+        )
+
+        for outcomes, expected in cases:
+            with self.subTest(outcomes=tuple(sorted(outcomes))):
+                self.assertIs(ST.operation_outcome(op, outcomes).status, expected)
+
+    def test_any_rule(self):
+        op = MT.Operation('op1', 'p', ('m1', 'm2'), outcome_rule='any')
+        cases = (
+            ({'m1': _mo('m1', 'completed'), 'm2': _mo('m2', 'aborted', 'threat')}, MT.OperationStatus.SUCCEEDED),
+            ({'m1': _mo('m1', 'in_progress'), 'm2': _mo('m2', 'failed')}, MT.OperationStatus.IN_PROGRESS),
+            ({'m1': _mo('m1', 'aborted', 'threat'), 'm2': _mo('m2', 'failed')}, MT.OperationStatus.FAILED),
+        )
+
+        for outcomes, expected in cases:
+            with self.subTest(outcomes=tuple(sorted(outcomes))):
+                self.assertIs(ST.operation_outcome(op, outcomes).status, expected)
+
+    def test_main_mission_rule(self):
+        op = MT.Operation('op1', 'p', ('m1', 'm2'), outcome_rule='main_mission', main_mission_id='m2')
+        cases = (
+            ({'m1': _mo('m1', 'failed'), 'm2': _mo('m2', 'completed')}, MT.OperationStatus.SUCCEEDED),
+            ({'m1': _mo('m1', 'completed'), 'm2': _mo('m2', 'in_progress')}, MT.OperationStatus.IN_PROGRESS),
+            ({'m1': _mo('m1', 'completed'), 'm2': _mo('m2', 'failed')}, MT.OperationStatus.FAILED),
+        )
+
+        for outcomes, expected in cases:
+            with self.subTest(outcomes=tuple(sorted(outcomes))):
+                self.assertIs(ST.operation_outcome(op, outcomes).status, expected)
+
+    def test_reports_the_ordered_mission_statuses(self):
+        op = MT.Operation('op1', 'p', ('m2', 'm1'), outcome_rule='all')
+        result = ST.operation_outcome(op, {'m1': _mo('m1', 'completed'), 'm2': _mo('m2', 'completed')})
+        self.assertEqual(result.operation_id, 'op1')
+        self.assertEqual(tuple(result.mission_statuses), ('m1', 'm2'))
+
+    def test_missing_mission_raises(self):
+        op = MT.Operation('op1', 'p', ('m1', 'm2'))
+
+        with self.assertRaises(ValueError):
+            ST.operation_outcome(op, {'m1': _mo('m1', 'completed')})
+
+
+class TestSessionOutcomeF8Fields(_Base):
+    """I tre campi nuovi (F8): validazione, immutabilita', ordinamento, riporto in assemble."""
+
+    def test_defaults_are_empty(self):
+        outcome = ST.SessionOutcome('S1', None, None)
+        self.assertEqual(dict(outcome.operation_outcomes), {})
+        self.assertEqual(dict(outcome.final_positions), {})
+        self.assertEqual(dict(outcome.movement_ends), {})
+        self.assertIsInstance(outcome.final_positions, MappingProxyType)
+
+    def test_operation_outcomes_validated_and_ordered(self):
+        op0 = MT.OperationOutcome('op0', 'in_progress', {'m2': 'in_progress'})
+        op1 = MT.OperationOutcome('op1', 'succeeded', {'m1': 'completed'})
+        outcome = ST.SessionOutcome('S1', None, None, operation_outcomes={'op1': op1, 'op0': op0})
+        self.assertEqual(tuple(outcome.operation_outcomes), ('op0', 'op1'))
+
+        with self.assertRaises(ValueError):
+            ST.SessionOutcome('S1', None, None, operation_outcomes={'op2': op1})   # chiave != operation_id
+
+        with self.assertRaises(TypeError):
+            ST.SessionOutcome('S1', None, None, operation_outcomes={'op1': 'succeeded'})
+
+    def test_final_positions_validated_and_ordered(self):
+        outcome = ST.SessionOutcome('S1', None, None,
+                                    final_positions={'a2': (2.0, 0.0, 1.0), 'a1': (0, 0, 0)})
+        self.assertEqual(tuple(outcome.final_positions), ('a1', 'a2'))
+        self.assertEqual(outcome.final_positions['a1'], (0.0, 0.0, 0.0))
+
+        with self.assertRaises(ValueError):
+            ST.SessionOutcome('S1', None, None, final_positions={'a1': (0.0, 0.0)})          # 2 componenti
+
+        with self.assertRaises(ValueError):
+            ST.SessionOutcome('S1', None, None, final_positions={'a1': (float('inf'), 0.0, 0.0)})  # non finita
+
+        with self.assertRaises(TypeError):
+            ST.SessionOutcome('S1', None, None, final_positions={'a1': (0.0, 0.0, 'x')})     # non numerico
+
+    def test_movement_ends_validated_and_ordered(self):
+        outcome = ST.SessionOutcome('S1', None, None, movement_ends={'a2': 200.0, 'a1': 100})
+        self.assertEqual(tuple(outcome.movement_ends), ('a1', 'a2'))
+        self.assertEqual(outcome.movement_ends['a1'], 100.0)
+
+        with self.assertRaises(TypeError):
+            ST.SessionOutcome('S1', None, None, movement_ends={'a1': '100'})                 # non numerico
+
+    def test_assemble_reports_the_new_fields(self):
+        op = MT.OperationOutcome('op1', 'succeeded', {'m1': 'completed'})
+        outcome = ST.assemble_session_outcome('S1', [], operation_outcomes={'op1': op},
+                                              final_positions={'a1': (1.0, 2.0, 3.0)},
+                                              movement_ends={'a1': 100.0})
+        self.assertIs(outcome.operation_outcomes['op1'], op)
+        self.assertEqual(outcome.final_positions['a1'], (1.0, 2.0, 3.0))
+        self.assertEqual(outcome.movement_ends['a1'], 100.0)
 
 
 if __name__ == '__main__':

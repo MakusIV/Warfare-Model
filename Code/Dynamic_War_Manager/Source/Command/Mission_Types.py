@@ -164,6 +164,16 @@ class MissionStatus(Enum):
     ABORTED = 'aborted'      # con `AbortReason`
     FAILED = 'failed'        # obiettivo non raggiunto entro la fine
     DESTROYED = 'destroyed'  # tutti gli asset persi
+    IN_PROGRESS = 'in_progress'  # missione non finita alla fine della sessione: almeno un asset
+                                 # superstite ancora sulla rotta o sul posto (SESSION_END), F8, D4.e
+
+
+class OperationStatus(Enum):
+    """Esito di un'Operazione (F8, D2.e), calcolato da `Command/Session_Types.operation_outcome` con la
+    regola dichiarata (tabella §2.H della Proposta F8)."""
+    SUCCEEDED = 'succeeded'
+    FAILED = 'failed'
+    IN_PROGRESS = 'in_progress'
 
 
 class AbortReason(Enum):
@@ -1339,3 +1349,39 @@ class MissionOutcome:
             raise ValueError(f"actual_etas must be non-decreasing, got {etas}")
 
         object.__setattr__(self, 'actual_etas', etas)
+
+
+@dataclass(frozen=True)
+class OperationOutcome:
+    """Esito di un'Operazione (F8, D2.e), aggregato dalla regola dichiarata.
+
+    Attributes:
+        operation_id: id di dominio dell'Operazione.
+        status: esito aggregato (`OperationStatus`) calcolato da
+            `Command/Session_Types.operation_outcome` (tabella §2.H della Proposta F8).
+        mission_statuses: `{mission_id: MissionStatus}` delle missioni dell'Operazione, mapping
+            immutabile e ordinato per id; non vuoto.
+    """
+    operation_id: str
+    status: OperationStatus
+    mission_statuses: Mapping[str, MissionStatus] = field(default_factory=dict, hash=False)
+
+    def __post_init__(self):
+        _check_domain_id('operation_id', self.operation_id)
+        status = _coerce_enum('status', OperationStatus, self.status)
+        object.__setattr__(self, 'status', status)
+
+        if not isinstance(self.mission_statuses, Mapping):
+            raise TypeError(f"mission_statuses must be a mapping mission_id -> MissionStatus, "
+                            f"got {type(self.mission_statuses).__name__}")
+
+        normalized: Dict[str, MissionStatus] = {}
+
+        for mission_id, mission_status in self.mission_statuses.items():
+            _check_domain_id('mission_statuses key', mission_id)
+            normalized[mission_id] = _coerce_enum('mission_statuses value', MissionStatus, mission_status)
+
+        if not normalized:
+            raise ValueError("mission_statuses must be non-empty")
+
+        object.__setattr__(self, 'mission_statuses', MappingProxyType(dict(sorted(normalized.items()))))

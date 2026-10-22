@@ -914,6 +914,58 @@ class TestMissionOutcome(_LoggerMock, unittest.TestCase):
         with self.assertRaises(TypeError):
             MT.MissionOutcome('m', 'completed', actual_etas='100')
 
+    def test_in_progress(self):
+        """F8: IN_PROGRESS non ammette `reason` (come ogni stato diverso da ABORTED)."""
+        self.assertIs(MT.MissionOutcome('m', 'in_progress').status, MT.MissionStatus.IN_PROGRESS)
+
+        with self.assertRaises(ValueError):
+            MT.MissionOutcome('m', MT.MissionStatus.IN_PROGRESS, reason=MT.AbortReason.FUEL)
+
+
+class TestOperationOutcome(_LoggerMock, unittest.TestCase):
+    """F8: esito d'Operazione — validazioni, immutabilita', ordine."""
+
+    def test_valid_and_ordered(self):
+        outcome = MT.OperationOutcome('op1', 'succeeded', {'m2': 'completed', 'm1': 'in_progress'})
+        self.assertIs(outcome.status, MT.OperationStatus.SUCCEEDED)
+        self.assertEqual(tuple(outcome.mission_statuses), ('m1', 'm2'))
+        self.assertIs(outcome.mission_statuses['m1'], MT.MissionStatus.IN_PROGRESS)
+        self.assertIsInstance(outcome.mission_statuses, MappingProxyType)
+
+    def test_status_is_coerced_from_string(self):
+        outcome = MT.OperationOutcome('op1', MT.OperationStatus.FAILED, {'m1': 'failed'})
+        self.assertIs(outcome.status, MT.OperationStatus.FAILED)
+        self.assertIs(MT.OperationOutcome('op1', 'in_progress', {'m1': 'in_progress'}).status,
+                      MT.OperationStatus.IN_PROGRESS)
+
+    def test_immutable(self):
+        outcome = MT.OperationOutcome('op1', 'succeeded', {'m1': 'completed'})
+
+        with self.assertRaises(TypeError):
+            outcome.mission_statuses['m2'] = MT.MissionStatus.COMPLETED
+
+        with self.assertRaises(Exception):
+            outcome.status = MT.OperationStatus.FAILED
+
+    def test_validation(self):
+        with self.assertRaises(TypeError):
+            MT.OperationOutcome('', 'succeeded', {'m1': 'completed'})
+
+        with self.assertRaises(ValueError):
+            MT.OperationOutcome('op1', 'bogus', {'m1': 'completed'})
+
+        with self.assertRaises(ValueError):
+            MT.OperationOutcome('op1', 'succeeded', {})
+
+        with self.assertRaises(TypeError):
+            MT.OperationOutcome('op1', 'succeeded', ['m1'])
+
+        with self.assertRaises(TypeError):
+            MT.OperationOutcome('op1', 'succeeded', {1: 'completed'})
+
+        with self.assertRaises(ValueError):
+            MT.OperationOutcome('op1', 'succeeded', {'m1': 'bogus'})
+
 
 # ── Fuoco su posizione (F7b) ──────────────────────────────────────────────────
 

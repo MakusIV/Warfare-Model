@@ -140,7 +140,7 @@ _ATOMIC = (str, float, int, bool, type(None))
 # Contenitori della catena delle porte: i soli tipi composti ammessi dentro un campo.
 _PORT_TYPES = (ST.SessionOrder, ST.SessionOutcome, ER.ForceOutcome, DM.DamageEvent,
                ER.AmmunitionEvent, ER.InterceptionEvent, FM.FuelEvent,
-               MT.Operation, MT.MissionOutcome, MT.AssetMissionOutcome)
+               MT.Operation, MT.OperationOutcome, MT.MissionOutcome, MT.AssetMissionOutcome)
 
 # Tipi di dominio composti ammessi come foglie (non scomposti): la `Mission` porta la geometria
 # della rotta (`DataType.Route`, sympy) e il profilo d'attacco; la sua forma e' verificata da
