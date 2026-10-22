@@ -1,7 +1,7 @@
 ---
 description: Esecutore di Warfare-Model. Implementa un piano Proposta_*.md gia' approvato, scrive i test, esegue suite e confronto con tools/ai/verifica.sh, scrive il rapporto e committa sul proprio branch ai/oc-*.
 mode: all
-model: openrouter/deepseek/deepseek-v4-pro
+model: openrouter/deepseek/deepseek-v4-pro-0813
 variant: high
 steps: 120
 permission:

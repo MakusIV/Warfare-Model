@@ -1,7 +1,7 @@
 ---
 description: Diagnosi di Warfare-Model in sola lettura (fuori da Claude). Riproduce un fallimento (test, suite, confronto con la fotografia), ne isola la causa e propone una correzione minima SENZA applicarla; scrive solo Analysis/Document/Rapporti/Diagnosi_*.md.
 mode: all
-model: openrouter/deepseek/deepseek-v4-pro
+model: openrouter/deepseek/deepseek-v4-pro-0813
 variant: high
 steps: 80
 permission:

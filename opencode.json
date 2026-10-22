@@ -29,6 +29,65 @@
       "apt-get*": "deny"
     }
   },
+  "provider": {
+    "openrouter": {
+      "whitelist": [
+        "deepseek/deepseek-v4-pro",
+        "deepseek/deepseek-v4-pro-0813",
+        "deepseek/deepseek-v4.1-flash",
+        "z-ai/glm-5.3",
+        "z-ai/glm-5.3-flash",
+        "anthropic/claude-haiku-5.5",
+        "minimax/minimax-m3.1-flash:free"
+      ],
+      "models": {
+        "deepseek/deepseek-v4-pro-0813": {
+          "name": "DeepSeek V4 Pro 0813",
+          "tool_call": true,
+          "reasoning": true,
+          "cost": {
+            "input": 0.145,
+            "output": 0.436,
+            "cache_read": 0.0046
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 393216
+          },
+          "options": {
+            "provider": {
+              "order": ["baidu", "deepseek", "streamlake"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "deepseek/deepseek-v4-pro": {
+          "options": {
+            "provider": {
+              "order": ["baidu", "streamlake"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "deepseek/deepseek-v4.1-flash": {
+          "options": {
+            "provider": {
+              "order": ["coreweave", "streamlake"],
+              "allow_fallbacks": false
+            }
+          }
+        },
+        "z-ai/glm-5.3": {
+          "options": {
+            "provider": {
+              "order": ["morph", "sail-research"],
+              "allow_fallbacks": false
+            }
+          }
+        }
+      }
+    }
+  },
   "agent": {
     "oc-ui-developer": {
       "disable": true

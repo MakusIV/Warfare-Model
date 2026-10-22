@@ -1,7 +1,7 @@
 ---
 description: Pianificatore di Warfare-Model fuori da Claude (riserva di des-planner quando la quota Pro e' esaurita, o per piani normali). Analizza il codice e scrive solo un piano Analysis/Document/Proposta_*.md con la stessa struttura di des-planner. Non modifica codice e non committa.
 mode: all
-model: openrouter/deepseek/deepseek-v4-pro
+model: openrouter/deepseek/deepseek-v4-pro-0813
 variant: high
 steps: 80
 permission:
