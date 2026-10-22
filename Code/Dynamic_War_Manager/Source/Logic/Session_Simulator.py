@@ -164,9 +164,10 @@ stessa ragione per cui `SessionOutcome` non fonde gli esiti di ingaggi diversi.
   * (F6-B1) la fine di attivita' per un criterio dichiarato (WINCHESTER, DAMAGE, TARGET_DESTROYED,
     MAX_DURATION) se precede l'arrivo, v. "Fine di attivita' e stato di missione".
 Per missione (prima forma): DESTROYED se tutti gli asset sono distrutti; COMPLETED se almeno un asset ha
-raggiunto l'ultimo punto PRIMA di un'eventuale distruzione; altrimenti FAILED ("non completata
-entro la sessione": manca uno stato "in corso", v. D4.e, che lo distinguerebbe da un
-fallimento vero); dalla F6-B1 la regola unica sotto. ETA effettive per punto: il primo passaggio fra gli asset non ancora
+raggiunto l'ultimo punto PRIMA di un'eventuale distruzione; con `F8_IN_PROGRESS` attivo la missione non
+completata, non distrutta e non abortita con almeno un asset superstite che ha finito per SESSION_END e'
+IN_PROGRESS (non "fallita", v. D4.e); altrimenti FAILED ("non completata entro la sessione"). Dalla F6-B1
+la regola unica sotto. ETA effettive per punto: il primo passaggio fra gli asset non ancora
 distrutti, None se nessuno ci arriva dentro la sessione; e' l'istante d'ARRIVO al punto (prima di
 un'eventuale attesa nel punto), calcolato dai tratti con le attese (`Mission_Adapter.waypoint_times`,
 F5-C), non dalle ETA pianificate.
@@ -716,9 +717,21 @@ l'esecutore, sintetico o DCS, esegue; il pianificatore valida. `run_session` eme
 **warning** per ogni missione la cui fine pianificata supera la fine della sessione (E4 non
 piu' silenzioso, nessun cambio di comportamento).
 
+## Esito per la campagna (F8)
+Oltre alle posture, `run_session` chiude la porta di uscita con tre dati per la campagna:
+- `final_positions`: `{asset_id: (x, y, z) [m]}` di ogni asset alla fine NOMINALE della sessione
+  (`session_end`, non `latest`: le salve in volo non muovono nessuno). Gli asset senza tratti (aereo
+  perso alla partenza) non hanno posizione; posizione non applicata agli asset.
+- `movement_ends`: `{asset_id: istante [s]}` in cui l'asset di missione ha smesso di muoversi nella
+  sessione (arrivo all'ultimo punto, esaurimento del carburante); assente per gli asset senza missione.
+- `operation_outcomes`: `{operation_id: OperationOutcome}` per ogni Operazione dell'ordine, aggregato
+  dalla regola dichiarata (`Command/Session_Types.operation_outcome`, tabella §2.H della Proposta F8).
+
 ## Cosa NON fa
 - Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`.
 - Non valida l'ordine di sessione (lo fa `Logic/Session_Validator`, v. sopra).
+- Non applica le `final_positions` agli asset (lo fa `Session_Campaign.apply_final_positions`, F8c):
+  `run_session` non muta la posizione degli asset.
 - Non seleziona l'arma (lo fa la fire control iniettata; la politica d'armi di missione, F7a, la restringe; per il fuoco su
   posizione della F7b la sceglie `Fire_Control.area_fire_weapon`), non rifornisce (munizioni o carburante), non ri-instrada le forze
   TERRESTRI e NAVALI che si disingaggiano (restano segnalate nell'esito e, dal G4a, passive negli episodi
@@ -750,6 +763,7 @@ from Code.Dynamic_War_Manager.Source.Command.Session_Types import (
     SessionOrder,
     SessionOutcome,
     assemble_session_outcome,
+    operation_outcome,
 )
 from Code.Dynamic_War_Manager.Source.Logic import Area_Fire as AF
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
@@ -886,6 +900,12 @@ F7_TARGET_RULES = True
 #     ignorate con un warning, come prima della F7b. Nessuno scenario precedente alla F7b dichiara l'azione, quindi
 #     con l'interruttore acceso nessuna sessione precedente cambia.
 F7_AREA_FIRE = True
+
+# F8, stato "in corso" (decisione 23 dell'utente):
+#   * `F8_IN_PROGRESS` (ATTIVO): una missione non distrutta, non completata e non abortita con almeno un asset
+#     superstite ancora sulla rotta o sul posto alla fine della sessione (SESSION_END) e' IN_PROGRESS. Spento: FAILED,
+#     come prima. La fotografia non registra lo stato di missione.
+F8_IN_PROGRESS = True
 
 # Intervallo [s] entro cui due finestre (di una stessa forza o dominio) che non si sovrappongono sono ancora lo
 # stesso episodio. Decisione dell'utente del 2026-10-17: 300 s, cioe' `Fuel_Model.DISENGAGE_TIME`, i 5 minuti del
@@ -2118,6 +2138,8 @@ def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed
     elif aborted:
         last = max(aborts, key=lambda o: (o.end_time, -list(_ABORT_REASON_OF).index(o.end_reason)))
         status, reason = MissionStatus.ABORTED, _ABORT_REASON_OF[last.end_reason]
+    elif F8_IN_PROGRESS and any(o.end_reason is AssetEndReason.SESSION_END for o in survivors):
+        status = MissionStatus.IN_PROGRESS
     else:
         status = MissionStatus.FAILED
 
@@ -3116,8 +3138,26 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             if asset is not None and getattr(asset, 'is_destroyed', lambda: False)():
                 postures[asset_id] = MA.DESTROYED_POSTURE
 
+    # F8, esito per la campagna (v. docstring del modulo): posizioni finali [m] alla fine NOMINALE della sessione
+    # (`session_end`, non `latest`: le salve in volo non muovono nessuno), istante in cui ogni asset di missione ha
+    # smesso di muoversi ed esito aggregato di ogni Operazione dell'ordine.
+    final_positions = {}
+
+    for asset_id in sorted(assets_by_id):
+        legs = all_legs.get(asset_id)
+        point = CS.position_on_legs(legs, session_end) if legs else None
+
+        if point is not None:
+            final_positions[asset_id] = tuple(float(c) for c in point)
+
+    movement_ends = {asset_id: float(legs[-1].t_end) for asset_id, legs in sorted(moving_legs.items()) if legs}
+    operation_outcomes = {op.operation_id: operation_outcome(op, mission_outcomes) for op in order.operations}
+
     # Ogni esito e' applicato prima di risolvere il successivo: i `health_before/after` sono concatenati anche
     # quando lo stesso asset e' in piu' episodi (G4a).
     return assemble_session_outcome(order.session_id, results, fuel_events,
                                     t_start=t0, t_end=latest, mission_outcomes=mission_outcomes,
-                                    postures=postures, chained=True)
+                                    postures=postures, chained=True,
+                                    operation_outcomes=operation_outcomes,
+                                    final_positions=final_positions,
+                                    movement_ends=movement_ends)

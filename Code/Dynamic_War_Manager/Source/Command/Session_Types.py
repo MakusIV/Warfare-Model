@@ -41,12 +41,21 @@ nessun modulo di `Logic`/`Asset`/`Context` importa questo file.
 """
 from __future__ import annotations
 
+import math
 import random
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Dict, Iterable, Mapping, Optional, Tuple
 
-from Code.Dynamic_War_Manager.Source.Command.Mission_Types import Mission, MissionOutcome, Operation
+from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
+    Mission,
+    MissionOutcome,
+    MissionStatus,
+    Operation,
+    OperationOutcome,
+    OperationStatus,
+    OutcomeRule,
+)
 from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import TIME_EPS
 from Code.Dynamic_War_Manager.Source.Logic.Damage_Model import DamageEvent
 from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import (
@@ -127,6 +136,78 @@ def _check_postures(value) -> Mapping[str, str]:
         _check_domain_id(f'postures[{asset_id!r}]', posture)
 
     return MappingProxyType(dict(sorted(value.items())))
+
+
+def _check_operation_outcomes(value) -> Mapping[str, OperationOutcome]:
+    """`{operation_id: OperationOutcome}` reso immutabile e ordinato per id; chiave = `operation_id`."""
+    if not isinstance(value, Mapping):
+        raise TypeError(f"operation_outcomes must be a mapping operation_id -> OperationOutcome, "
+                        f"got {type(value).__name__}")
+
+    normalized: Dict[str, OperationOutcome] = {}
+
+    for operation_id, outcome in value.items():
+        _check_domain_id('operation_outcomes key', operation_id)
+
+        if not isinstance(outcome, OperationOutcome):
+            raise TypeError(f"operation_outcomes[{operation_id!r}] must be an OperationOutcome, "
+                            f"got {type(outcome).__name__}")
+
+        if outcome.operation_id != operation_id:
+            raise ValueError(f"operation_outcomes key {operation_id!r} differs from its operation_id "
+                             f"{outcome.operation_id!r}")
+
+        normalized[operation_id] = outcome
+
+    return MappingProxyType(dict(sorted(normalized.items())))
+
+
+def _check_final_positions(value) -> Mapping[str, Tuple[float, float, float]]:
+    """`{asset_id: (x, y, z) [m]}` reso immutabile e ordinato per id; tre float finiti."""
+    if not isinstance(value, Mapping):
+        raise TypeError(f"final_positions must be a mapping asset_id -> (x, y, z) [m], "
+                        f"got {type(value).__name__}")
+
+    normalized: Dict[str, Tuple[float, float, float]] = {}
+
+    for asset_id, point in value.items():
+        _check_domain_id('final_positions key', asset_id)
+
+        if isinstance(point, (str, bytes)) or not hasattr(point, '__iter__'):
+            raise TypeError(f"final_positions[{asset_id!r}] must be an iterable of 3 floats, got {point!r}")
+
+        coords = tuple(point)
+
+        if len(coords) != 3:
+            raise ValueError(f"final_positions[{asset_id!r}] must have exactly 3 components, got {len(coords)}")
+
+        floats: Tuple[float, float, float] = tuple(
+            _check_time(f'final_positions[{asset_id!r}] component', c) for c in coords)
+
+        if len(floats) != 3 or any(f is None or not math.isfinite(f) for f in floats):
+            raise ValueError(f"final_positions[{asset_id!r}] must be 3 finite floats, got {coords}")
+
+        normalized[asset_id] = floats
+
+    return MappingProxyType(dict(sorted(normalized.items())))
+
+
+def _check_movement_ends(value) -> Mapping[str, float]:
+    """`{asset_id: istante [s]}` in cui l'asset di missione ha smesso di muoversi; immutabile, ordinato per id."""
+    if not isinstance(value, Mapping):
+        raise TypeError(f"movement_ends must be a mapping asset_id -> seconds, got {type(value).__name__}")
+
+    normalized: Dict[str, float] = {}
+
+    for asset_id, t in value.items():
+        _check_domain_id('movement_ends key', asset_id)
+
+        if t is None:
+            raise TypeError(f"movement_ends[{asset_id!r}] must be a number of seconds, got None")
+
+        normalized[asset_id] = _check_time(f'movement_ends[{asset_id!r}]', t)
+
+    return MappingProxyType(dict(sorted(normalized.items())))
 
 
 def _check_interval(t_start: Optional[float], t_end: Optional[float]) -> None:
@@ -340,6 +421,14 @@ class SessionOutcome:
             `Logic/Mission_Adapter.session_postures`: aereo a terra, `Defense` di superficie,
             postura di fine missione). Valorizzato da `Session_Simulator` dalla F5-B; vuoto se
             l'esecutore non le riporta.
+        operation_outcomes: `{operation_id: OperationOutcome}` (F8), mapping immutabile ordinato
+            per id, una voce per Operazione dell'ordine. Vuoto se l'ordine non ha Operazioni.
+        final_positions: `{asset_id: (x, y, z) [m]}` posizione di ogni asset alla fine NOMINALE
+            della sessione (F8), mapping immutabile ordinato per id; tre float finiti. Gli asset
+            senza tratti (aereo perso alla partenza) non compaiono.
+        movement_ends: `{asset_id: istante [s]}` in cui l'asset di missione ha smesso di muoversi
+            nella sessione (F8), mapping immutabile ordinato per id; assente per gli asset senza
+            missione.
     """
     session_id: str
     t_start: Optional[float]
@@ -351,12 +440,18 @@ class SessionOutcome:
     interception_events: Tuple[InterceptionEvent, ...] = ()
     mission_outcomes: Mapping[str, MissionOutcome] = field(default_factory=dict, hash=False)
     postures: Mapping[str, str] = field(default_factory=dict, hash=False)
+    operation_outcomes: Mapping[str, OperationOutcome] = field(default_factory=dict, hash=False)
+    final_positions: Mapping[str, Tuple[float, float, float]] = field(default_factory=dict, hash=False)
+    movement_ends: Mapping[str, float] = field(default_factory=dict, hash=False)
 
     def __post_init__(self):
         _check_domain_id('session_id', self.session_id)
         _check_interval(_check_time('t_start', self.t_start), _check_time('t_end', self.t_end))
         object.__setattr__(self, 'mission_outcomes', _check_mission_outcomes(self.mission_outcomes))
         object.__setattr__(self, 'postures', _check_postures(self.postures))
+        object.__setattr__(self, 'operation_outcomes', _check_operation_outcomes(self.operation_outcomes))
+        object.__setattr__(self, 'final_positions', _check_final_positions(self.final_positions))
+        object.__setattr__(self, 'movement_ends', _check_movement_ends(self.movement_ends))
 
     @property
     def force_outcomes(self) -> Tuple[ForceOutcome, ...]:
@@ -428,6 +523,51 @@ class SessionOutcome:
         return consumed
 
 
+def operation_outcome(operation: Operation, mission_outcomes: Mapping[str, MissionOutcome]) -> OperationOutcome:
+    """Esito dell'Operazione dalla sua regola dichiarata (D2.e, F8): tabella §2.H della Proposta F8.
+    ValueError se manca l'esito di una sua missione."""
+    statuses: Dict[str, MissionStatus] = {}
+
+    for mission_id in operation.mission_ids:
+        outcome = mission_outcomes.get(mission_id)
+
+        if outcome is None:
+            raise ValueError(f"operation {operation.operation_id!r} lacks the outcome of mission "
+                             f"{mission_id!r}")
+
+        statuses[mission_id] = outcome.status
+
+    values = set(statuses.values())
+
+    if operation.outcome_rule is OutcomeRule.MAIN_MISSION:
+        main = statuses[operation.main_mission_id]
+
+        if main is MissionStatus.COMPLETED:
+            status = OperationStatus.SUCCEEDED
+        elif main is MissionStatus.IN_PROGRESS:
+            status = OperationStatus.IN_PROGRESS
+        else:
+            status = OperationStatus.FAILED
+
+    elif operation.outcome_rule is OutcomeRule.ALL:
+        if values == {MissionStatus.COMPLETED}:
+            status = OperationStatus.SUCCEEDED
+        elif MissionStatus.IN_PROGRESS in values and values <= {MissionStatus.COMPLETED, MissionStatus.IN_PROGRESS}:
+            status = OperationStatus.IN_PROGRESS
+        else:
+            status = OperationStatus.FAILED
+
+    else:  # OutcomeRule.ANY
+        if MissionStatus.COMPLETED in values:
+            status = OperationStatus.SUCCEEDED
+        elif MissionStatus.IN_PROGRESS in values:
+            status = OperationStatus.IN_PROGRESS
+        else:
+            status = OperationStatus.FAILED
+
+    return OperationOutcome(operation.operation_id, status, statuses)
+
+
 def _event_time_bounds(times: Iterable[float]) -> Tuple[Optional[float], Optional[float]]:
     values = list(times)
 
@@ -444,6 +584,9 @@ def assemble_session_outcome(session_id: str,
                              t_end: Optional[float] = None,
                              mission_outcomes: Optional[Mapping[str, MissionOutcome]] = None,
                              postures: Optional[Mapping[str, str]] = None,
+                             operation_outcomes: Optional[Mapping[str, OperationOutcome]] = None,
+                             final_positions: Optional[Mapping[str, Tuple[float, float, float]]] = None,
+                             movement_ends: Optional[Mapping[str, float]] = None,
                              chained: bool = False
                              ) -> SessionOutcome:
     """Aggrega gli esiti di una sessione in un unico `SessionOutcome`. Funzione pura.
@@ -464,6 +607,12 @@ def assemble_session_outcome(session_id: str,
             riportati tali e quali (None = nessuna missione).
         postures: `{asset_id: postura}` a fine sessione calcolate dall'esecutore (F5), riportate
             tali e quali (None = nessuna).
+        operation_outcomes: `{operation_id: OperationOutcome}` gia' calcolati dall'esecutore
+            (F8, `operation_outcome`), riportati tali e quali (None = nessuna Operazione).
+        final_positions: `{asset_id: (x, y, z) [m]}` (F8) calcolate dall'esecutore, riportate tali
+            e quali (None = vuoto).
+        movement_ends: `{asset_id: istante [s]}` (F8) calcolate dall'esecutore, riportate tali e
+            quali (None = vuoto).
         chained: True se l'esecutore garantisce di aver applicato ogni esito prima di risolvere il
             successivo (G4a, `Session_Simulator`: lo stesso asset in piu' episodi d'ingaggio della
             sessione); allora i `health_before/after` sono concatenati e il warning del limite noto
@@ -542,7 +691,10 @@ def assemble_session_outcome(session_id: str,
                           interception_events=interceptions,
                           fuel_events=fuel,
                           mission_outcomes=mission_outcomes if mission_outcomes is not None else {},
-                          postures=postures if postures is not None else {})
+                          postures=postures if postures is not None else {},
+                          operation_outcomes=operation_outcomes if operation_outcomes is not None else {},
+                          final_positions=final_positions if final_positions is not None else {},
+                          movement_ends=movement_ends if movement_ends is not None else {})
 
 
 def _warn_shared_targets(session_id: str, results) -> None:

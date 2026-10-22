@@ -44,6 +44,8 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     MissionStatus,
     MissionWaypoint,
     Operation,
+    OperationOutcome,
+    OperationStatus,
     StartMode,
     Target,
     TargetKind,
@@ -431,11 +433,16 @@ class TestNoContact(_Base):
         blue, red, _ = self._scenario(red_offset=10_000_000.0)
         outcome = SS.run_session(self._order(), blue, red, _fire)
         # Dalla F5-B l'esito porta comunque la postura di ogni asset: aerei senza missione a terra,
-        # veicoli in difesa.
+        # veicoli in difesa. Dalla F8b porta anche la posizione finale (iniziale: nessun movimento).
         postures = {'bn1': MA.PARKED_POSTURE, 'bn2': MA.PARKED_POSTURE, 'bs1': MA.PARKED_POSTURE,
                     're1': MA.GROUND_DEFENSE_POSTURE, 're2': MA.GROUND_DEFENSE_POSTURE,
                     'rw1': MA.GROUND_DEFENSE_POSTURE}
-        self.assertEqual(outcome, SessionOutcome('S-test', 0.0, 3600.0, postures=postures))
+        final_positions = {'bn1': (0.0, -20_000.0, 0.0), 'bn2': (500.0, -20_000.0, 0.0),
+                           'bs1': (100_000.0, -20_000.0, 0.0),
+                           're1': (0.0, 10_000_000.0, 0.0), 're2': (300.0, 10_000_000.0, 0.0),
+                           'rw1': (100_000.0, 10_000_000.0, 0.0)}
+        self.assertEqual(outcome, SessionOutcome('S-test', 0.0, 3600.0, postures=postures,
+                                                 final_positions=final_positions))
 
     def test_empty_sides(self):
         outcome = SS.run_session(self._order(), [], [], _fire)
@@ -753,13 +760,20 @@ class TestMissions(_Base):
             self.assertEqual((asset.state, asset.end_reason), (AssetState.OPERATIONAL, AssetEndReason.ROUTE_COMPLETED))
             self.assertAlmostEqual(asset.end_time, 200.0)
 
-    def test_route_cut_by_the_session_end_fails(self):
+    def test_route_cut_by_the_session_end_is_in_progress(self):
         outcome, _, _ = self._far(t_end=100.0)
         north = outcome.mission_outcomes['M-north']
-        self.assertEqual(north.status, MissionStatus.FAILED)
+        self.assertEqual(north.status, MissionStatus.IN_PROGRESS)
         self.assertEqual(north.actual_etas, (0.0, None))
         self.assertEqual({(o.end_reason, o.end_time) for o in north.asset_outcomes.values()},
                          {(AssetEndReason.SESSION_END, 100.0)})
+
+    def test_route_cut_by_the_session_end_off_is_failed(self):
+        with patch.object(SS, 'F8_IN_PROGRESS', False):
+            outcome, _, _ = self._far(t_end=100.0)
+        north = outcome.mission_outcomes['M-north']
+        self.assertEqual(north.status, MissionStatus.FAILED)
+        self.assertEqual(north.actual_etas, (0.0, None))
 
     def test_late_start_shifts_the_arrival(self):
         blue, red, missions = self._scenario(red_offset=10_000_000.0)
@@ -840,6 +854,72 @@ class TestMissions(_Base):
 
         self.assertTrue(spy.call_args_list)
         self.assertTrue(all(call.kwargs.get('mission_id') is None for call in spy.call_args_list))
+
+
+class TestF8bCampaignOutcome(_Base):
+    """F8b: posizioni finali, fine del movimento ed esito d'Operazione nella porta di uscita."""
+
+    def test_final_positions(self):
+        """Un asset di missione che ha completato la rotta ha la posizione dell'ultimo punto (LAND);
+        un asset senza missione resta alla posizione iniziale."""
+        outcome, blue, red = self._run(red_offset=10_000_000.0)
+        self.assertEqual(outcome.final_positions['bn1'], (0.0, 20_000.0, 0.0))
+        self.assertEqual(outcome.final_positions['re1'], (0.0, 10_000_000.0, 0.0))
+        self.assertEqual(outcome.final_positions['rw1'], (100_000.0, 10_000_000.0, 0.0))
+        # Tutto float di Python, nessun Point3D sympy.
+        self.assertIs(type(outcome.final_positions['bn1'][0]), float)
+
+    def test_movement_ends(self):
+        """Istante d'arrivo (rotta completata) per gli asset di missione; assente per chi non ha missione."""
+        outcome, blue, red = self._run(red_offset=10_000_000.0)
+        self.assertEqual(outcome.movement_ends['bn1'], 200.0)
+        self.assertEqual(outcome.movement_ends['bs1'], 200.0)
+        self.assertEqual(sorted(outcome.movement_ends), ['bn1', 'bn2', 'bs1'])
+        self.assertNotIn('re1', outcome.movement_ends)
+
+    def test_movement_ends_fuel_exhaustion(self):
+        """Un veicolo fermo per carburante smette di muoversi all'istante dell'esaurimento."""
+        blue = [_force('Blue', 'Blue', [_asset(Vehicle, 'v1', 0, 0, fuel=0.002, speed=10.0)])]
+        route = _ground_route([(0, 0), (0, 10_000)], 10.0, 'r-v1')
+        outcome = SS.run_session(self._order(missions=(_ground_mission('M-v1', blue[0], route, 'v1'),)),
+                                 blue, [], _fire)
+        self.assertEqual(outcome.movement_ends['v1'], 200.0)
+
+    def test_operation_outcomes(self):
+        """Operazione ALL: una missione completata e una tagliata dalla fine -> IN_PROGRESS;
+        con `F8_IN_PROGRESS` spento la tagliata e' FAILED -> FAILED."""
+        blue_n = _force('Blue-North', 'Blue', [_asset(Aircraft, 'bn1', 0, -20_000, speed=200.0)])
+        blue_s = _force('Blue-South', 'Blue', [_asset(Aircraft, 'bs1', 100_000, -20_000, speed=200.0)])
+        red = [_force('Red', 'Red', [_asset(Vehicle, 'r1', 0, 10_000_000)])]
+        missions = (_air_mission('M-complete', blue_n, _route([(0, -20_000), (0, 0)], 200.0, 'r-bn1'),
+                                 [('bn1', 0.0)], target_block='Red'),
+                    _air_mission('M-cut', blue_s, _route([(100_000, -20_000), (100_000, 20_000)], 200.0, 'r-bs1'),
+                                 [('bs1', 0.0)], target_block='Red'))
+        order = self._order('S-op', missions, t_end=150.0,
+                            operations=(Operation('op1', 'p', ('M-complete', 'M-cut'), outcome_rule='all'),))
+        outcome = SS.run_session(order, [blue_n, blue_s], red, _fire, reaction_profile_for=_profile)
+
+        op = outcome.operation_outcomes['op1']
+        self.assertIsInstance(op, OperationOutcome)
+        self.assertIs(op.status, OperationStatus.IN_PROGRESS)
+        self.assertEqual(op.mission_statuses['M-complete'], MissionStatus.COMPLETED)
+        self.assertEqual(op.mission_statuses['M-cut'], MissionStatus.IN_PROGRESS)
+
+        with patch.object(SS, 'F8_IN_PROGRESS', False):
+            off = SS.run_session(order, [blue_n, blue_s], red, _fire, reaction_profile_for=_profile)
+
+        self.assertIs(off.operation_outcomes['op1'].status, OperationStatus.FAILED)
+
+    def test_operation_outcomes_keyed_by_operation_id(self):
+        blue_n = _force('Blue-North', 'Blue', [_asset(Aircraft, 'bn1', 0, -20_000, speed=200.0)])
+        red = [_force('Red', 'Red', [_asset(Vehicle, 'r1', 0, 10_000_000)])]
+        missions = (_air_mission('M-complete', blue_n, _route([(0, -20_000), (0, 0)], 200.0, 'r-bn1'),
+                                 [('bn1', 0.0)], target_block='Red'),)
+        order = self._order('S-op2', missions, t_end=3600.0,
+                            operations=(Operation('op1', 'p', ('M-complete',), outcome_rule='all'),))
+        outcome = SS.run_session(order, [blue_n], red, _fire, reaction_profile_for=_profile)
+        self.assertEqual(sorted(outcome.operation_outcomes), ['op1'])
+        self.assertIs(outcome.operation_outcomes['op1'].status, OperationStatus.SUCCEEDED)
 
 
 class TestInputs(_Base):
