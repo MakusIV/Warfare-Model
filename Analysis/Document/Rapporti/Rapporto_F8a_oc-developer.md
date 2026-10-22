@@ -96,3 +96,21 @@ d3bc2cd6 Memoria: sessione 2026-10-21 multi-LLM
 0aa1c8f3 Memoria: esiti delle prove U4 nella regola delle deleghe
 bc27a801 oc-debugger: riproduzione col test singolo, suite completa solo se serve
 ```
+## 9. Costi di consumo (aggiunto dalla sessione principale, 2026-10-22)
+
+Modello effettivo di entrambe le sessioni (`oc export`, `modelID`): `deepseek/deepseek-v4-pro` (= V4 Pro 0423), `variant: high`.
+Costi REALI dalla pagina Logs/Sessions di OpenRouter (chiave `opencode-osboxes`); il costo di `oc export` e' la stima di OpenCode e
+sottostima di circa 1,95 volte.
+
+| Sessione | Fornitore principale | Richieste | Costo OpenCode | Costo reale | Esito |
+|---|---|---|---|---|---|
+| `ses_e9c69f02…` (08:29-08:39) | Azure | 103 | 1,60 $ | **3,0868 $** | interrotta: limite della chiave (3 $) |
+| `ses_e9c38f3b…` (09:22-09:31) | Relace (fp4) | 82 | 0,50 $ | **0,979 $** | completata, commit `e593bc9a` |
+| **Totale F8a** | | 185 | 2,10 $ | **4,07 $** | |
+
+Token (da `oc export`): sessione 1 = 0,61 M in ingresso, 11,59 M di cache letta, 0,05 M in uscita; sessione 2 = 0,16 M, 4,24 M, 0,02 M.
+Con i prezzi di listino di Baidu o StreamLake le due sessioni sarebbero costate circa 0,99 $ (0,74 + 0,25): **~3 $ in piu' per
+il fornitore estratto a caso da OpenRouter** (un fornitore per sessione, non scelto per prezzo). La causa del costo non e' il
+numero di passi: e' il contesto accumulato (fino a ~160k token riletti a ogni passo) piu' il fornitore caro. Il rimedio adottato e'
+descritto in memoria `project_opencode_costi_misurati` (fornitore fissato nel `opencode.json`, sessioni a blocchi, disciplina dei
+costi nell'agente).
