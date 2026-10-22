@@ -20,10 +20,14 @@ metadata:
   fallimenti (`adcf5043`); sessioni nuove per blocchi; suite e confronto lanciati dalla sessione principale in background
   (`/tmp/.../verifica_seq.sh`: `verifica.sh suite` poi `confronto` in un solo comando background, una notifica a fine) invece che
   dall'agente. Chiave osboxes portata a 5 $ dall'utente (rimasti ~0,9 $).
-- **DA FARE**: fissare il fornitore nel `opencode.json` di progetto (`provider.openrouter.models["deepseek/deepseek-v4-pro"].options.provider`
-  con `order` baidu, streamlake e `allow_fallbacks:false`) e provarlo con un `oc run` da 0,005 $ guardando i Logs; poi provare la 0813;
-  registro `Rapporti/Costi_Deleghe.md`; alzare il limite della chiave prima di F8b. Criteri fornitore: costo atteso su carico ~95% cache
-  (cache letta + ingresso), uptime 100%, fp8, niente fp4, un fornitore per sessione.
+- **Fornitori fissati e PROVATI (2026-10-22, commit `6c0b021e`)**: nel `opencode.json` di progetto `provider.openrouter.models.<id>.options.provider`
+  con `order` e `allow_fallbacks:false` per V4 Pro 0813 (baidu, deepseek, streamlake), V4 Pro 0423, V4.1 Flash (coreweave, streamlake),
+  GLM 5.3 (morph, sail-research); planner/developer/debugger passati alla **0813**. Test `oc run --agent oc-planner ...`: Baidu + 0813,
+  costo 0,001254 $ = prezzo di listino (8520 token); la richiesta 'doppia' e' il titolo della sessione (`small_model`, Flash su CoreWeave).
+  Con `order` OpenRouter salta il routing sticky. Costo atteso di una richiesta a 160k di contesto con 0813/Baidu ~0,0014 $ (stima, non
+  misurata): ~20 volte meno di Azure. Prezzi dei fornitori cambiano di giorno in giorno: ricontrollare. Impostazione workspace consigliata:
+  Routing > Default Provider Sort = Price (rete di sicurezza, non sostituisce `order`). Chiave osboxes a 10 $ (residui ~5 $).
+  Ancora da fare: registro `Rapporti/Costi_Deleghe.md`.
 - **Stato F8**: F8a FATTA e verificata (suite 4619 OK skipped 7, confronto 982 IDENTICHE, merge `c1182d8a`, Piano aggiornato `73cd5e22`);
   restano F8b, F8c, F8-R (rinviata: nessun agente OpenCode ha accesso al web), F6-B3 (una riga di docstring), push da chiedere all'utente.
 - **Why:** la sessione principale ha il Pro al 93% (7d) e i soldi OpenRouter sono un tetto reale; un ciclo a vuoto o un fornitore caro
