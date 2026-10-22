@@ -1599,3 +1599,82 @@ class TestWeaponPolicies(_EngagementRulesBase):
         rules = MA.target_rules([ground], self.blocks, {}, self.assets, self.side_of)
         self.assertEqual(rules['r1'].designated_weapons, frozenset({'2A42'}))
 
+
+class TestMissionPlannedEnd(unittest.TestCase):
+    """`mission_planned_end` (F8a): fine pianificata della missione."""
+
+    def setUp(self):
+        self._patches = [patch(target, MagicMock()) for target in _LOGGERS]
+        for p in self._patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patches:
+            p.stop()
+
+    def test_returns_max_last_arrival(self):
+        """Due asset, arrivi diversi: restituisce il piu' tardo."""
+        route = _route([(0.0, 0.0), (10000.0, 0.0)], speed=100.0)
+        wps = MT.route_waypoints(route)
+        mwps = tuple(MT.MissionWaypoint(wp, MT.WaypointRole.DEPARTURE if i == 0 else MT.WaypointRole.LAND)
+                     for i, wp in enumerate(wps))
+        members = tuple(MT.MissionAsset(a, 'lead') for a in ('a1', 'a2'))
+        mission = MT.Mission(mission_id='M', block_id='B', domain='air', mission_type='CAS',
+                             assets=members, target=MT.Target(kind=MT.TargetKind.GROUP, target_id='red',
+                                                               provenance=MT.TargetProvenance.OBSERVED,
+                                                               observed_at=0.0),
+                             route=route, waypoints=mwps, start_time=100.0)
+        # Due movimenti con lo stesso percorso ma partenze uguali.
+        movements = MA.mission_movements(mission, 0.0)
+        end = MA.mission_planned_end(mission, movements)
+        # 100 m/s per 10 km = 100 s, partenza a 100 s -> arrivo a 200.0 s.
+        self.assertAlmostEqual(end, 200.0)
+
+    def test_with_wait(self):
+        """WAIT su un waypoint allunga la fine."""
+        route = _route([(0.0, 0.0), (5000.0, 0.0), (10000.0, 0.0)], speed=100.0)
+        wps = MT.route_waypoints(route)
+        # WAIT al punto intermedio.
+        mwps = (MT.MissionWaypoint(wps[0], MT.WaypointRole.DEPARTURE, planned_eta=10.0, eta_locked=False),
+                MT.MissionWaypoint(wps[1], MT.WaypointRole.HOLD, planned_eta=60.0 + 30.0, eta_locked=True),
+                MT.MissionWaypoint(wps[2], MT.WaypointRole.LAND))
+        members = (MT.MissionAsset('a1', 'lead'),)
+        mission = MT.Mission(mission_id='M', block_id='B', domain='air', mission_type='CAS',
+        assets=members,
+        target=MT.Target(kind=MT.TargetKind.GROUP, target_id='red',
+        provenance=MT.TargetProvenance.OBSERVED, observed_at=0.0),
+        route=route, waypoints=mwps, start_time=0.0)
+        movements = MA.mission_movements(mission, 0.0)
+        end = MA.mission_planned_end(mission, movements)
+        # 0->50->100 senza attesa sarebbe 100 s. Qui c'e' un'attesa: la timeline
+        # include il tratto fermo.
+        self.assertGreater(end, 100.0)
+
+    def test_mission_without_route_with_max_duration(self):
+        """Missione sul posto con max_duration_s: fine = partenza + durata."""
+        members = (MT.MissionAsset('a1', 'lead'),)
+        mission = MT.Mission(mission_id='M-site', block_id='B', domain='ground',
+                             mission_type='Movement', assets=members,
+                             target=MT.Target(kind=MT.TargetKind.GROUP, target_id='red',
+                                              provenance=MT.TargetProvenance.OBSERVED, observed_at=0.0),
+                             route=None, waypoints=(),
+                             start_time=50.0, start_mode=MT.StartMode.GROUND,
+                             end_criteria=MT.EndCriteria(max_duration_s=200.0))
+        movements = MA.mission_movements(mission, 0.0)
+        end = MA.mission_planned_end(mission, movements)
+        self.assertEqual(end, 250.0)  # 50.0 + 200.0
+
+    def test_mission_without_route_without_max_duration_returns_none(self):
+        """Missione sul posto senza max_duration_s: dura fino alla fine della sessione -> None."""
+        members = (MT.MissionAsset('a1', 'lead'),)
+        mission = MT.Mission(mission_id='M-site', block_id='B', domain='ground',
+                             mission_type='Movement', assets=members,
+                             target=MT.Target(kind=MT.TargetKind.GROUP, target_id='red',
+                                              provenance=MT.TargetProvenance.OBSERVED, observed_at=0.0),
+                             route=None, waypoints=(),
+                             start_time=50.0, start_mode=MT.StartMode.GROUND,
+                             end_criteria=MT.EndCriteria())
+        movements = MA.mission_movements(mission, 0.0)
+        end = MA.mission_planned_end(mission, movements)
+        self.assertIsNone(end)
+

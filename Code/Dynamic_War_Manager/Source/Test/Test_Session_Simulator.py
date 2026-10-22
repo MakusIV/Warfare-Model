@@ -2587,3 +2587,61 @@ class TestReplanAfterEpisode(_Base):
         first = self._flight()[0]
         second = self._flight()[0]
         self.assertEqual(first, second)
+
+
+class TestSessionBlocks(unittest.TestCase):
+    """`session_blocks` (F8a): blocchi per id di dominio."""
+
+    def setUp(self):
+        patchers = [patch(target, MagicMock()) for target in _LOGGERS]
+        for p in patchers:
+            p.start()
+        self._patchers = patchers
+
+    def tearDown(self):
+        for p in self._patchers:
+            p.stop()
+
+    def test_returns_blocks_by_id(self):
+        """Restituisce i blocchi in un dict chiave=id dominio."""
+        a1 = _asset(Aircraft, 'a1', 0, 0, 500.0)
+        blue = _force('Blue', 'Blue', [a1])
+        r1 = _asset(Vehicle, 'r1', 10000, -10000, 500.0)
+        red = _force('Red', 'Red', [r1])
+
+        order = SessionOrder('S', t_start=0.0, t_end=3600.0)
+        blocks = SS.session_blocks(order, [blue], [red])
+        self.assertEqual(set(blocks), {'Blue', 'Red'})
+        self.assertIs(blocks['Blue'], blue)
+        self.assertIs(blocks['Red'], red)
+
+    def test_force_not_in_force_ids_raises(self):
+        a1 = _asset(Aircraft, 'a1', 0, 0, 500.0)
+        blue = _force('Blue', 'Blue', [a1])
+
+        order = SessionOrder('S', t_start=0.0, t_end=3600.0, force_ids=['Red'])
+        with self.assertRaises(ValueError):
+            SS.session_blocks(order, [blue], [])
+
+
+class TestMissionBeyondSessionWarning(_Base):
+    """Warning E4 in `run_session` (F8a)."""
+
+    def setUp(self):
+        # Mocka tutti i logger TRANNE Session_Simulator (serve il logger reale per assertLogs).
+        ss_logger = _SOURCE + 'Logic.Session_Simulator.logger'
+        self._patches = [patch(target, MagicMock()) for target in _LOGGERS if target != ss_logger]
+        for p in self._patches:
+            p.start()
+
+    def test_mission_beyond_session_end_produces_warning(self):
+        """Una missione pianificata oltre la fine emette un warning."""
+        blue, red, missions = self._scenario()
+        # Sessione corta: 100 s, la missione M-north finisce a 200 s.
+        order = self._order('S-warn', missions, t_end=100.0)
+        with self.assertLogs(_SOURCE + 'Logic.Session_Simulator', level='WARNING') as log:
+            SS.run_session(order, blue, red, _fire, reaction_profile_for=_profile)
+        warnings = [r for r in log.records if 'is planned to end' in r.getMessage()]
+        self.assertTrue(warnings, "Expected at least one warning for a mission beyond session end")
+        # La missione e' ancora FAILED (comportamento invariato).
+        self.assertIn('planned to end at t=200.0', warnings[0].getMessage())
