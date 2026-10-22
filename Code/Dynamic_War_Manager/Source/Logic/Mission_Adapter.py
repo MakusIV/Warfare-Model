@@ -69,9 +69,9 @@ Gli istanti della missione sono in secondi dall'inizio della sessione; la parten
      senza un punto d'ancoraggio ValueError. Il TOT e' della missione, non dell'Operazione (v.
      sotto, "Attese, ETA bloccate e TOT").
 Tutti gli asset di una missione partono insieme (la formazione e' una). Una partenza derivata
-anteriore all'inizio della sessione e' un errore (le missioni fuori finestra saranno rifiutate dal
-validatore di sessione della F8; qui non si tagliano in silenzio). `Activation.ON_EVENT` e' solo
-dichiarabile: ValueError.
+anteriore all'inizio della sessione e' un errore (le missioni fuori finestra sono rifiutate dal
+validatore di sessione, `Logic/Session_Validator`; qui non si tagliano in silenzio).
+`Activation.ON_EVENT` e' solo dichiarabile: ValueError.
 
 ## Regola A: la missione si muove insieme, alla velocita' del mezzo piu' lento (F4a)
 
@@ -1109,6 +1109,31 @@ def waypoint_times(movement: AssetMovement) -> Tuple[float, ...]:
     (F5: ETA effettive, `_timeline`), senza taglio alla sessione; tupla vuota se l'asset non ha
     rotta o la rotta non e' percorribile."""
     return _timeline(movement)[1]
+
+
+def mission_planned_end(mission: Mission, movements: Sequence[AssetMovement]) -> Optional[float]:
+    """Istante assoluto [s] della fine PIANIFICATA della missione (F8, D4.c): il piu' tardo fra gli
+    arrivi all'ultimo punto degli asset (`waypoint_times(movement)[-1]`, attese comprese).
+
+    Missione senza rotta: partenza (`movements[0].start`) + `EndCriteria.max_duration_s` se
+    dichiarata, altrimenti None (dura fino alla fine della sessione, D4.e). Funzione pura.
+    """
+    times = []
+    for movement in movements:
+        wt = waypoint_times(movement)
+        if wt:
+            times.append(wt[-1])
+
+    if times:
+        return max(times)
+
+    # Nessun asset con rotta: missione sul posto (o senza rotta).
+    if movements:
+        duration = mission.end_criteria.max_duration_s
+        if duration is not None and duration > 0.0:
+            return float(movements[0].start) + float(duration)
+
+    return None
 
 
 def _max_speed(asset) -> Optional[float]:

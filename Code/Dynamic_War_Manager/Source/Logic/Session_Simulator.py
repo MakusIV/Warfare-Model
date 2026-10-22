@@ -710,8 +710,15 @@ risoluzioni possono cadere dopo `t_start + horizon`. L'esito non viene troncato 
 cancellare danni gia' decisi): il `t_end` del `SessionOutcome` e' esteso fino all'ultima
 attivita', con un log. I contatti invece sono cercati solo dentro la sessione.
 
+## Validazione di sessione (F8)
+Il validatore di sessione e' FUORI da `run_session` (`Logic/Session_Validator.check_session`):
+l'esecutore, sintetico o DCS, esegue; il pianificatore valida. `run_session` emette solo un
+**warning** per ogni missione la cui fine pianificata supera la fine della sessione (E4 non
+piu' silenzioso, nessun cambio di comportamento).
+
 ## Cosa NON fa
 - Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`.
+- Non valida l'ordine di sessione (lo fa `Logic/Session_Validator`, v. sopra).
 - Non seleziona l'arma (lo fa la fire control iniettata; la politica d'armi di missione, F7a, la restringe; per il fuoco su
   posizione della F7b la sceglie `Fire_Control.area_fire_weapon`), non rifornisce (munizioni o carburante), non ri-instrada le forze
   TERRESTRI e NAVALI che si disingaggiano (restano segnalate nell'esito e, dal G4a, passive negli episodi
@@ -1076,6 +1083,12 @@ def _collect_forces(order: SessionOrder, forces_a: Iterable, forces_b: Iterable)
                            f"(force ids are {sorted(blocks)}): their restriction is ignored")
 
     return items[0], items[1], blocks, owner
+
+
+def session_blocks(order: SessionOrder, forces_a: Iterable, forces_b: Iterable) -> Dict[str, object]:
+    """I blocchi della sessione per id di dominio, con le stesse verifiche di `run_session`
+    (F8: li usa il validatore di sessione). `_collect_forces(order, forces_a, forces_b)[2]`."""
+    return _collect_forces(order, forces_a, forces_b)[2]
 
 
 def _legs_distance(legs) -> float:
@@ -2209,6 +2222,14 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         mission, t0, air_bases.get(getattr(blocks[mission.block_id], 'side', None), ()))
         for mission in order.missions}
     movement_of = {movement.asset_id: movement for movements in mission_movements.values() for movement in movements}
+    # F8: warning per le missioni pianificate oltre la fine della sessione (E4).
+    # Il validatore di sessione (Logic/Session_Validator) le rifiuta; qui solo il warning.
+    for mission in order.missions:
+        end = MA.mission_planned_end(mission, mission_movements[mission.mission_id])
+        if end is not None and end > session_end + CS.TIME_EPS:
+            logger.warning(f"run_session: mission {mission.mission_id!r} is planned to end at t={end:.1f}, "
+                           f"after the session end t={session_end:.1f}: its route is cut (E4); the session "
+                           f"validator (Logic/Session_Validator) rejects it")
     routes, starts, speeds = MA.session_movements(order.missions, t0)
     # Aerei a terra nel tempo (F4c + F5): sempre gli aerei senza missione, a intervalli quelli di
     # missione prima del decollo e dopo l'atterraggio su una base vera. V. docstring del modulo.
