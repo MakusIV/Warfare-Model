@@ -54,6 +54,7 @@ Indice compatto (2026-10-21). Descrizioni estese e sessioni precedenti al 2026-1
 - [Sabin, Simulating War](reference_philip_sabin_simulating_war.md) — Force/Space/Time/Command, Igo-Ugo
 
 ## Feedback (come lavorare qui)
+- [Costi reali oc-developer (2026-10-22)](project_opencode_costi_misurati.md) — F8a 1a sessione = 3,1 $, oc stats sottostima 2x; regole: steps 120, blocchi, verifica fuori dall'agente
 - [Modelli e sforzi](feedback_model_effort_delegation.md) — principale Sonnet high, des-planner Opus high; esecuzione: des-developer (Claude) o oc-developer (OpenCode), a scelta; proporre e attendere conferma
 - [Agenti paralleli + verifica pre-commit](feedback_parallel_agents_verification.md) — verificare sempre di persona
 - [Core indifferente al simulatore](feedback_core_simulator_agnostic.md) — VINCOLO: la campagna gira senza adapter DCS
