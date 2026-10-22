@@ -3,7 +3,7 @@ description: Esecutore di Warfare-Model. Implementa un piano Proposta_*.md gia' 
 mode: all
 model: openrouter/deepseek/deepseek-v4-pro-0813
 variant: high
-steps: 120
+steps: 180
 permission:
   edit:
     "*": allow
@@ -88,3 +88,11 @@ ogni passo costa; una sessione di 100 passi con file grandi letti per intero e' 
   con `file:riga`. Se hai blocchi verdi non ancora committati, committali (messaggio che inizia con `WIP:`) e scrivi un
   rapporto parziale che dica cosa manca; il resto lo riprende una sessione nuova, o `/diagnosi`.
 - Un errore diverso, o un test diverso, riparte da zero con il conteggio.
+
+Non perdere il lavoro se i passi finiscono (`steps`: a fine tetto non puoi piu' chiamare strumenti; in F8b l'esecutore ha scritto
+codice e test completi ma non il rapporto ne' il commit):
+- Scrivi il rapporto SUBITO dopo il primo blocco di file con test verdi (anche incompleto, con "in corso" nelle sezioni che mancano) e
+  aggiornalo a ogni blocco; non lasciarlo per ultimo.
+- Dopo ogni blocco di file con i relativi test mirati verdi, committa (`git add` dei soli file del blocco e del rapporto, messaggio che
+  inizia con `WIP:`); l'ultimo commit non ha il prefisso.
+- Se il compito indica un blocco (per esempio "solo il blocco 1 di F8c"), fermati alla fine di quel blocco: rapporto, commit, risposta.

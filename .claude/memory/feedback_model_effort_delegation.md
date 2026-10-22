@@ -48,6 +48,11 @@ Comandi OpenCode: `/piano`, `/esegui`, `/rivedi`, `/diagnosi`, `/bozza` (TUI) o 
 i comandi usano SEMPRE il modello predefinito dell'agente (`-m` ignorato con --command, verificato 2026-10-21);
 modello alternativo: `oc run --agent <agente> -m openrouter/<id> "<compito>"`. Proposta sempre in una riga "compito -> agente, modello, motivo".
 
+## Aggiornamento 2026-10-22 (costi reali, v. [[project-opencode-costi-misurati]])
+- planner/developer/debugger OpenCode usano **V4 Pro 0813** con fornitore fissato (`order` Baidu in `opencode.json`); `steps` developer 180;
+  suite/confronto li lancia la sessione principale in background (non l'esecutore); piani grandi a blocchi con sessione nuova; stima di costo
+  per passo ~0,0013 $ con Baidu (0,03 $ con un fornitore caro). Pro Claude al 93% (7d): esecuzione e revisione su OpenCode.
+
 ## Corsia OpenCode (dal 2026-10-19, protocollo in AGENTS.md/CLAUDE.md)
 - **Opzione in piu', non sostitutiva**: per eseguire un piano gia' approvato si sceglie OGNI VOLTA tra
   `des-developer` (Claude, come oggi) e `oc-developer` (OpenCode, `openrouter/deepseek/deepseek-v4-pro`,

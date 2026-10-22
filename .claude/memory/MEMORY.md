@@ -3,6 +3,7 @@
 Indice compatto (2026-10-21). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
+- [Sessione 2026-10-22 osboxes — CHIUSA, pushato: F8a e F8b fatte (suite 4640, fotografia 982), costi OpenRouter, fornitori fissati](project_session_2026_10_22_summary.md) — prossimo F8c in 3 blocchi sul ProArt (comandi in project_f8c_comandi_blocchi)
 - [Sessione 2026-10-21 ProArt (ai-multimodel) — CHIUSA, pushato: ruoli multi-agente ridefiniti, prove U4 4/4, osboxes pronta](project_session_2026_10_21_multillm_summary.md) — voci 11 e 23 del manuale chiuse dal Piano allineato; ora si assegnano gli esecutori F8
 - [Sessione 2026-10-21 ProArt — CHIUSA, pushato: manuale DES a dcedc541, Proposta F8 decisa (17-27)](project_session_2026_10_21_summary.md) — F8d logistica non fatta; esecutori F8 da assegnare dopo la ridefinizione dei ruoli multi-agente; Game_PC/Ollama verificato
 - [Sessione 2026-10-20 osboxes — CHIUSA: F7b approvata, fotografia 982, suite 4555](project_session_2026_10_20_summary.md) — fuoco su posizione (Area_Fire, S29); hooksPath corretto; OpenCode NON installato su osboxes (da fare da ProArt, progetto ai-multimodel); main invariato
@@ -55,6 +56,7 @@ Indice compatto (2026-10-21). Descrizioni estese e sessioni precedenti al 2026-1
 
 ## Feedback (come lavorare qui)
 - [Costi reali oc-developer (2026-10-22)](project_opencode_costi_misurati.md) — F8a 1a sessione = 3,1 $, oc stats sottostima 2x; regole: steps 120, blocchi, verifica fuori dall'agente
+- [F8c: comandi dei 3 blocchi per oc-developer](project_f8c_comandi_blocchi.md) — testi esatti, branch, verifiche attese
 - [Modelli e sforzi](feedback_model_effort_delegation.md) — principale Sonnet high, des-planner Opus high; esecuzione: des-developer (Claude) o oc-developer (OpenCode), a scelta; proporre e attendere conferma
 - [Agenti paralleli + verifica pre-commit](feedback_parallel_agents_verification.md) — verificare sempre di persona
 - [Core indifferente al simulatore](feedback_core_simulator_agnostic.md) — VINCOLO: la campagna gira senza adapter DCS

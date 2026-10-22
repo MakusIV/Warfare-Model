@@ -27,9 +27,9 @@ metadata:
   Con `order` OpenRouter salta il routing sticky. Costo atteso di una richiesta a 160k di contesto con 0813/Baidu ~0,0014 $ (stima, non
   misurata): ~20 volte meno di Azure. Prezzi dei fornitori cambiano di giorno in giorno: ricontrollare. Impostazione workspace consigliata:
   Routing > Default Provider Sort = Price (rete di sicurezza, non sostituisce `order`). Chiave osboxes a 10 $ (residui ~5 $).
-  Ancora da fare: registro `Rapporti/Costi_Deleghe.md`.
-- **Stato F8**: F8a FATTA e verificata (suite 4619 OK skipped 7, confronto 982 IDENTICHE, merge `c1182d8a`, Piano aggiornato `73cd5e22`);
-  restano F8b, F8c, F8-R (rinviata: nessun agente OpenCode ha accesso al web), F6-B3 (una riga di docstring), push da chiedere all'utente.
+  Registro dei costi: `Analysis/Document/Rapporti/Costi_Deleghe.md` (F8b reale 0,155 $ con Baidu, 120 richieste, 23 minuti).
+- **Stato F8**: F8a FATTA (`c1182d8a`), F8b FATTA (`33698fb4`, suite 4640, 982 IDENTICHE); restano F8c (3 blocchi, v. [[project-f8c-comandi-blocchi]]), F8-R
+  (rinviata: nessun agente OpenCode ha il web), F6-B3 (una riga di docstring). `steps` oc-developer = 180 dal 2026-10-22 (F8b ha esaurito 120).
 - **Why:** la sessione principale ha il Pro al 93% (7d) e i soldi OpenRouter sono un tetto reale; un ciclo a vuoto o un fornitore caro
   brucia budget senza produrre lavoro verificabile.
 - **How to apply:** stimare il costo con ~0,01-0,03 $ per passo (x2 se il fornitore non e' fissato) dichiarando che non e' misurato;
