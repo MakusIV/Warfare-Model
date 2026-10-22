@@ -3,7 +3,7 @@ description: Esecutore di Warfare-Model. Implementa un piano Proposta_*.md gia' 
 mode: all
 model: openrouter/deepseek/deepseek-v4-pro
 variant: high
-steps: 120
+steps: 185
 permission:
   edit:
     "*": allow

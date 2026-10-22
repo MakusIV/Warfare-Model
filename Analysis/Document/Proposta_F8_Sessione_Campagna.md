@@ -1,8 +1,8 @@
 # Proposta F8: sessione e campagna (validatore di sessione, prontezza, posizione persistente, esito d'Operazione)
 
 **Stato**: DECISO dall'utente il 2026-10-21 (decisioni 17-27, tutte come raccomandate, v. riquadro in §3); piano eseguibile.
-Nessun codice modificato. **L'assegnazione dell'esecuzione ai singoli agenti e' RINVIATA** alla ridefinizione dei ruoli nel
-sistema multi-agente in corso: la colonna «Esecutore consigliato» di §4.0 e' solo indicativa.
+Nessun codice modificato. **Esecutori assegnati dall'utente il 2026-10-22** (§4.0): F8a, F8b, F8c a `oc-developer`
+(DeepSeek V4 Pro), sulla VM osboxes; F8-R rinviata. **Decisioni 22 e 25 riconfermate** dall'utente il 2026-10-22.
 **Base**: HEAD `dcedc541` del branch `analysis/dce-dcs-persistence` (F0-F7b fatte; suite 4555 OK; fotografia 982 esecuzioni).
 **Fonti**: `Piano_Implementazione_Missione.md` (Fase 8 a :213-233, tabella §5 a :304, limite a :421-422);
 `Proposta_Struttura_Missione_Decisioni.md` (D1.d :417-420, D2.d-e :362-374, D4 :429-468, D6 :472-505);
@@ -338,7 +338,7 @@ Persistenza su disco: `CampaignState.restore(..., restore_position=False)`: con 
 > - 24: tabella dell'esito d'Operazione (H1) come in §2.H;
 > - 26: F6-B3 chiusa senza cambi (I1: una riga di docstring in S24-GLIDE);
 > - 27: `final_positions`, `movement_ends` e `operation_outcomes` NON registrati nella fotografia;
-> - 22 e 25: non commentate dall'utente, la raccomandazione e' assunta; da riconfermare all'avvio dell'esecuzione.
+> - 22 e 25: non commentate il 2026-10-21; **riconfermate come raccomandate il 2026-10-22**.
 
 17. **Dove si chiama il validatore** (§2.A): (R) A1, funzione fuori da `run_session`, chiamata dal conduttore di
     campagna e dal futuro pianificatore; `run_session` solo un warning per le missioni oltre la fine. Alternative A2, A3.
@@ -383,8 +383,12 @@ Persistenza su disco: `CampaignState.restore(..., restore_position=False)`: con 
 | **F8c** | prontezza, ciclo di campagna, posizione persistente, `CampaignState`, scenario S30 | nuovi moduli di campagna, nessun cambio di `run_session` | 982 IDENTICHE, **4 NUOVE** (S30) | **des-developer** (integrazione di piu' moduli e scenario nuovo) |
 | **F6-B3** | secondo la decisione 26 | — | I1: identica | sessione principale (una riga di docstring) |
 
-**Assegnazione degli esecutori rinviata** (v. Stato): la scelta fra `des-developer` e gli agenti OpenCode si fara' dopo la
-ridefinizione dei ruoli nel sistema multi-agente.
+**Esecutori assegnati (2026-10-22, utente)**: Pro Claude quasi esaurito, quindi tutta l'esecuzione sulla corsia OpenCode,
+sulla VM osboxes (`steps` di `oc-developer` portato a 185 per le attese di suite e confronto):
+F8a, F8b, F8c -> `oc-developer`, DeepSeek V4 Pro, un branch `ai/oc-f8a`, `ai/oc-f8b`, `ai/oc-f8c` per passo, ciascuno
+verificato e unito dalla sessione principale prima del successivo; revisione con `oc-reviewer` (GLM 5.3) dopo F8b e F8c.
+F8-R rinviata (nessun agente OpenCode ha accesso al web: serve una sessione Claude); F6-B3 alla sessione principale.
+La colonna «Esecutore consigliato» sopra e' superata da questa assegnazione.
 
 Ordine: F8a -> F8b -> F8c (F8c usa i tipi di F8a e i campi di F8b). F8-R in parallelo; il suo esito entra con un
 commit di soli dati dopo F8c (cambiano solo le 4 esecuzioni di S30, v. §4.7). Ogni passo: suite e confronto con
