@@ -56,7 +56,7 @@
           },
           "options": {
             "provider": {
-              "order": ["streamlake", "deepseek", "sail-research", "novita"],
+              "order": ["streamlake", "deepseek", "novita", "sail-research"],
               "allow_fallbacks": false,
               "max_price": {
                 "prompt": 0.99,

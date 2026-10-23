@@ -10,6 +10,16 @@ prezzo reale del modello 0813 la stima coincide col costo reale). Fornitori e cr
 | 2026-10-22 | F8a, sessione 2 (`ses_e9c38f3b…`) | V4 Pro 0423 | Relace (fp4) | 82 | 0,50 $ | **0,979 $** | completata, commit `e593bc9a` |
 | 2026-10-22 | prova del routing (`oc-planner` "OK") | V4 Pro 0813 + Flash | Baidu + CoreWeave | 2 | — | 0,0013 $ | `order` verificato |
 | 2026-10-22 | F8b (`ses_e9bd5a5f…`) | V4 Pro 0813 | Baidu | 120 + 1 titolo | 0,155 $ | **0,1552 $** | 120/120 passi, codice e test completi, rapporto e commit mancanti (scritti dalla sessione principale) |
+| 2026-10-23 | F8c1 (`ses_e98066773ffe…`) | V4 Pro 0813 | Baidu (83) + StreamLake (2, 429 di Baidu probabile) | 85 | 0,169 $ | **1,40 $** | prezzo Baidu x9,1 rispetto al 22/10 (1,32/3,96/0,042 $/M); 2 passaggi a StreamLake a cache fredda = 0,137 $; 276 test mirati OK al primo colpo, rapporto e commit completi |
+| 2026-10-23 | prova del routing per costo (`oc-planner` "ok") | V4 Pro 0813 + Flash | StreamLake (Flash: CoreWeave 429 -> StreamLake) | 2 | 0,0057 $ | 0,00567 $ | `order` da `tools/ai/prezzi_fornitori.py`: Pro servito dal primo della lista, senza fallback; costo = previsione |
 
 Chiave `opencode-osboxes`: limite 10 $ (alzato il 2026-10-22); speso a questa data circa 4,3 $ (stima: 4,07 + 0,04 prove precedenti + 0,16).
 Confronto F8a / F8b: con Azure/Relace 4,07 $ per un passo piu' piccolo, con Baidu 0,16 $ per F8b: ~25 volte meno a parita' di richieste.
+
+## Qualita' per fornitore e quantizzazione
+Per ogni delega registrare il fornitore e la quantizzazione effettivi (colonna `provider_name` del CSV Activity di OpenRouter; la
+quantizzazione e' nella tabella di `python3 tools/ai/prezzi_fornitori.py`) e l'esito della verifica: test mirati al primo colpo, test
+ripetutamente rossi, tool call con argomenti sbagliati, regole violate (es. `git add -A`). Un fornitore fp4 sta in coda a `order` (solo
+ripiego, v. `APPROVATI_FP4` nello script): se una delega servita da un fp4 mostra piu' errori, si toglie l'approvazione. Finora nessuna
+delega e' stata servita da un fp4 con V4 Pro 0813 (F8a su Relace fp4 era la 0423: completata, ma con 82 richieste e un ciclo a vuoto
+precedente su Azure; nessun confronto di qualita' possibile).

@@ -19,6 +19,7 @@
 - **Verificare un rapporto OpenCode** prima di integrare (mai fidarsi del solo rapporto):
   `git log --format='%h %s%n%(trailers:key=AI-Agent)' <base>..ai/oc-<tema>`, `git diff --stat`,
   `git status`, `git stash list` vuota; modello effettivo della sessione OpenCode (`oc session list`,
-  `oc export <id>` -> `modelID`), da riportare nel messaggio di merge; leggere il codice nuovo principale; rieseguire suite e confronto
+  `oc export <id>` -> `modelID`), da riportare nel messaggio di merge; fornitore e quantizzazione effettivi dal CSV Activity di
+  OpenRouter (`provider_name`), con costo e qualita' registrati in `Rapporti/Costi_Deleghe.md`; leggere il codice nuovo principale; rieseguire suite e confronto
   con `tools/ai/verifica.sh` e confrontarli con l'esito atteso dal piano; nessun file riservato toccato.
   Solo dopo: merge nel branch di lavoro, aggiornamento della memoria, push su richiesta dell'utente.
