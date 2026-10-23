@@ -1010,6 +1010,30 @@ AIR_MILITARY_CRAFT_ASSET = {
     Air_Asset_Type.HELICOPTER.value:       {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},  
 }
 
+# F8 (D6.b-d): tempi [s]. STIME DI PROGETTO (ordini di grandezza), NON dati tarati: da sostituire
+# con la ricerca F8-R. Un tempo di turnaround per classe aerea, un tempo per dominio a terra e in
+# mare, e il tempo di riparazione completa (danno 100 -> 0) per dominio.
+AIR_TURNAROUND_S = {
+    Air_Asset_Type.FIGHTER.value:        7_200,    # 2 h
+    Air_Asset_Type.FIGHTER_BOMBER.value: 9_000,    # 2,5 h
+    Air_Asset_Type.ATTACKER.value:       9_000,    # 2,5 h
+    Air_Asset_Type.BOMBER.value:         14_400,   # 4 h
+    Air_Asset_Type.HEAVY_BOMBER.value:   28_800,   # 8 h
+    Air_Asset_Type.AWACS.value:          14_400,   # 4 h
+    Air_Asset_Type.RECON.value:          7_200,    # 2 h
+    Air_Asset_Type.TRANSPORT.value:      10_800,   # 3 h
+    Air_Asset_Type.HELICOPTER.value:     5_400,    # 1,5 h
+}
+AIR_TURNAROUND_DEFAULT_S = 9_000                   # 2,5 h: classe aerea ignota
+GROUND_TURNAROUND_S = 21_600                        # 6 h: reparto terrestre
+SEA_TURNAROUND_S = 43_200                           # 12 h: nave
+# Tempo di riparazione completa di un danno grave riparabile [s], per dominio (lineare nel danno).
+REPAIR_TIME_FULL_S = {
+    'air': 86_400,      # 24 h
+    'ground': 86_400,   # 24 h
+    'sea': 259_200,     # 72 h
+}
+
  # Asset:                   STRUCTURE_ASSET_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, BLOCK_ASSET, BLOCK_ASSET_CATEGORY
  # Tactical_Evaluation:     GROUND_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY
  # Strategical_Evaluation:  Military_CATEGORY
