@@ -2,8 +2,12 @@
 name: project-opencode-costi-misurati
 description: "Costi REALI di oc-developer (DeepSeek V4 Pro via OpenRouter) misurati il 2026-10-22: F8a = 4,07 $ in 2 sessioni, ~3 $ in piu' per il fornitore (Azure, Relace) estratto a caso da OpenRouter; oc export sottostima ~1,95x; regole per contenere i costi; F8a fatta (c1182d8a)"
 metadata:
+  node_type: memory
   type: project
+  originSessionId: 1d3b4d7d-48a4-4011-92a5-5c4578c21791
+  modified: 2026-10-23T10:21:14.417Z
 ---
+
 - **Misura (OpenRouter, Logs > Sessions; screenshot in `~/Downloads/screenshoot.*DeepSeek.Pro.V4.pdf`)**: sessione 1 di `oc-developer`
   su F8a = 3,0868 $ (103 richieste, fornitore **Azure**, interrotta dal limite della chiave da 3 $); sessione 2 = 0,979 $ (82 richieste,
   fornitore **Relace**, fp4, completata, commit `e593bc9a`). Totale 4,07 $. Con i prezzi di listino di Baidu/StreamLake sarebbero
@@ -28,6 +32,14 @@ metadata:
   misurata): ~20 volte meno di Azure. Prezzi dei fornitori cambiano di giorno in giorno: ricontrollare. Impostazione workspace consigliata:
   Routing > Default Provider Sort = Price (rete di sicurezza, non sostituisce `order`). Chiave osboxes a 10 $ (residui ~5 $).
   Registro dei costi: `Analysis/Document/Rapporti/Costi_Deleghe.md` (F8b reale 0,155 $ con Baidu, 120 richieste, 23 minuti).
+- **Prezzi 'ballano' (2026-10-23, CSV OpenRouter Activity)**: F8c1 su Baidu = 1,40 $ (85 chiamate) contro 0,155 $ di F8b (120 chiamate): stesso
+  fornitore, prezzo x9,1 (Baidu 0813: 0,145/0,436/0,0046 il 22/10 -> 1,32/3,96/0,042 il 23/10, sconto finito). `order` mette Baidu per primo e
+  disattiva `sort` e il Default Provider Sort dell'account (non e' indisponibilita'). StreamLake = meta' di Baidu (0,66/1,98/0,022); 2 chiamate
+  isolate lo hanno servito con cache fredda (0,06-0,08 $ l'una). `sort: price` e' pericoloso: ordina sul prompt, ma il 95% dei token e' cache:
+  Relace/Wafer costano +378% sul mix reale. Nessuna tolleranza % nativa in OpenRouter (solo `max_price` assoluto, `only`, `ignore`, `order`).
+  **Soluzione**: `tools/ai/prezzi_fornitori.py` (API pubblica degli endpoint, costo effettivo sul mix misurato, tolleranza 50%, candidati
+  streamlake/deepseek/sail-research(fp4)/novita/baidu) scrive `order` + `allow_fallbacks:false` + `max_price` + `cost` in `opencode.json`
+  (`--apply`); RILANCIARLO prima di ogni delega. Commit `f550df32`. `deepseek` ha fasce orarie a prezzo ridotto e poi torna a 1,32.
 - **Stato F8**: F8a FATTA (`c1182d8a`), F8b FATTA (`33698fb4`, suite 4640, 982 IDENTICHE); restano F8c (3 blocchi, v. [[project-f8c-comandi-blocchi]]), F8-R
   (rinviata: nessun agente OpenCode ha il web), F6-B3 (una riga di docstring). `steps` oc-developer = 180 dal 2026-10-22 (F8b ha esaurito 120).
 - **Why:** la sessione principale ha il Pro al 93% (7d) e i soldi OpenRouter sono un tetto reale; un ciclo a vuoto o un fornitore caro
