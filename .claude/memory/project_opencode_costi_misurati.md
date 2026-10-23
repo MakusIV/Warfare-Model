@@ -37,9 +37,11 @@ metadata:
   disattiva `sort` e il Default Provider Sort dell'account (non e' indisponibilita'). StreamLake = meta' di Baidu (0,66/1,98/0,022); 2 chiamate
   isolate lo hanno servito con cache fredda (0,06-0,08 $ l'una). `sort: price` e' pericoloso: ordina sul prompt, ma il 95% dei token e' cache:
   Relace/Wafer costano +378% sul mix reale. Nessuna tolleranza % nativa in OpenRouter (solo `max_price` assoluto, `only`, `ignore`, `order`).
-  **Soluzione**: `tools/ai/prezzi_fornitori.py` (API pubblica degli endpoint, costo effettivo sul mix misurato, tolleranza 50%, candidati
-  streamlake/deepseek/sail-research(fp4)/novita/baidu) scrive `order` + `allow_fallbacks:false` + `max_price` + `cost` in `opencode.json`
-  (`--apply`); RILANCIARLO prima di ogni delega. Commit `f550df32`. `deepseek` ha fasce orarie a prezzo ridotto e poi torna a 1,32.
+  **Soluzione (2026-10-23, nel repo ai-multimodel, commit 80a1358)**: `scripts/prezzi_fornitori.py` calcola il costo effettivo sul mix misurato (tolleranza 50%,
+  candidati = TUTTI i fornitori utilizzabili, fp4 solo in coda, uscita max >= 32768) e scrive `order`+`allow_fallbacks:false`+`max_price`+`cost` in
+  `~/.local/share/opencode/routing.local.json` (per macchina, fuori da git); `bin/oc` lo rigenera ogni 30 min e lo passa con `OPENCODE_CONFIG`.
+  Il `opencode.json` di Warfare-Model NON ha piu' il blocco `provider` (un options.provider di progetto prevarrebbe). Prima prova reale: F8c2 = 0,4785 $ tutta
+  su StreamLake (stesso consumo su Baidu ~0,94 $). `deepseek` ha fasce orarie a prezzo ridotto e poi torna a 1,32.
 - **Stato F8**: F8a FATTA (`c1182d8a`), F8b FATTA (`33698fb4`, suite 4640, 982 IDENTICHE); restano F8c (3 blocchi, v. [[project-f8c-comandi-blocchi]]), F8-R
   (rinviata: nessun agente OpenCode ha il web), F6-B3 (una riga di docstring). `steps` oc-developer = 180 dal 2026-10-22 (F8b ha esaurito 120).
 - **Why:** la sessione principale ha il Pro al 93% (7d) e i soldi OpenRouter sono un tetto reale; un ciclo a vuoto o un fornitore caro
