@@ -17,7 +17,7 @@ definisce la sessione principale (l'utente li incolla): sotto i testi esatti. Ri
 **STATO (2026-10-23, ProArt)**: blocco 1 FATTO e verificato (merge `87aa7dea`, branch `ai/oc-f8c1`, V4 Pro 0813 confermato da `oc export`, costo
 dichiarato ~0,17 $; `Readiness.py` 343 righe aderente al piano, 276 test mirati OK rieseguiti dalla sessione principale; nessuna suite, motore
 invariato). Nota: i comandi `oc run` vanno lanciati DAL REPO (da `~` dà "Unexpected server error": agenti/comandi di progetto non trovati).
-Restano blocchi 2 e 3. La config globale `ai-multimodel` e' indietro (whitelist senza 0813, niente `order` Baidu): da allineare se l'utente vuole.
+BLOCCO 2 FATTO e verificato (merge sul branch di lavoro, 2026-10-23: 62 chiamate tutte StreamLake, 0,4785 $ reali; suite 4691, skipped 7, 1 fallimento INTERMITTENTE preesistente `Test_Tactical_Evaluation.testCalcFightResult`: `calcFightResult` usa `random` globale, ~0,68% per esecuzione, modulo non toccato, 32 OK rieseguito; da sistemare a parte con una decisione dell'utente: seme fisso o delta piu' largo). Resta il blocco 3 (S30; atteso 982 IDENTICHE + 4 NUOVE, fotografia NON installata senza approvazione). La config globale `ai-multimodel` e' indietro (whitelist senza 0813, niente `order` Baidu): da allineare se l'utente vuole.
 
 **Blocco 1 — tabelle in `Context` e `Logic/Readiness.py`** (righe 701-795; vincoli comuni 916-935; test `Test_Readiness.py` e `Test_Context.py` dalle righe 880-898):
 ```bash
