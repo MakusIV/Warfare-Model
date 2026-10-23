@@ -1010,28 +1010,31 @@ AIR_MILITARY_CRAFT_ASSET = {
     Air_Asset_Type.HELICOPTER.value:       {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},  
 }
 
-# F8 (D6.b-d): tempi [s]. STIME DI PROGETTO (ordini di grandezza), NON dati tarati: da sostituire
-# con la ricerca F8-R. Un tempo di turnaround per classe aerea, un tempo per dominio a terra e in
-# mare, e il tempo di riparazione completa (danno 100 -> 0) per dominio.
+# F8 (D6.b-d): tempi [s]. Ricerca F8-R del 2026-10-23 (fonti, livello di verifica e confidenza in
+# Analysis/Document/Ricerca_Turnaround_Riparazione.md): NON sono dati tarati ma ordini di grandezza di operazioni
+# reali. Dove la ricerca non ha trovato una fonte il valore resta una STIMA DI PROGETTO e lo dice il commento.
+# Un tempo di turnaround per classe aerea, un tempo per dominio a terra e in mare, e il tempo di riparazione
+# completa (danno 100 -> 0, lineare) per dominio.
 AIR_TURNAROUND_S = {
-    Air_Asset_Type.FIGHTER.value:        7_200,    # 2 h
-    Air_Asset_Type.FIGHTER_BOMBER.value: 9_000,    # 2,5 h
-    Air_Asset_Type.ATTACKER.value:       9_000,    # 2,5 h
-    Air_Asset_Type.BOMBER.value:         14_400,   # 4 h
-    Air_Asset_Type.HEAVY_BOMBER.value:   28_800,   # 8 h
-    Air_Asset_Type.AWACS.value:          14_400,   # 4 h
-    Air_Asset_Type.RECON.value:          7_200,    # 2 h
-    Air_Asset_Type.TRANSPORT.value:      10_800,   # 3 h
-    Air_Asset_Type.HELICOPTER.value:     5_400,    # 1,5 h
+    Air_Asset_Type.FIGHTER.value:        10_800,   # 3 h: F-35 ~3 h (verificata), formula RAND non verificata; confidenza media-bassa
+    Air_Asset_Type.FIGHTER_BOMBER.value: 10_800,   # 3 h: per analogia con Fighter (nessuna fonte specifica)
+    Air_Asset_Type.ATTACKER.value:       10_800,   # 3 h: per analogia con Fighter (nessuna fonte specifica)
+    Air_Asset_Type.BOMBER.value:         16_200,   # 4,5 h: 4-5 h (colonnello PACAF 2003, riportata e NON riverificata); confidenza media-bassa
+    Air_Asset_Type.HEAVY_BOMBER.value:   28_800,   # 8 h: STIMA DI PROGETTO (nessuna fonte affidabile su B-52/B-1)
+    Air_Asset_Type.AWACS.value:          43_200,   # 12 h: 1-2 sortite al giorno e ~8 h di autonomia (fonti riportate); confidenza bassa
+    Air_Asset_Type.RECON.value:          7_200,    # 2 h: STIMA DI PROGETTO (nessun turnaround trovato)
+    Air_Asset_Type.TRANSPORT.value:      10_800,   # 3 h: C-17 da 2 h (turn ottimizzato) a 4-8 h (fonti riportate); STIMA confermata
+    Air_Asset_Type.HELICOPTER.value:     5_400,    # 1,5 h: STIMA DI PROGETTO (FARP 45-60 min documentato, senza le ispezioni)
 }
-AIR_TURNAROUND_DEFAULT_S = 9_000                   # 2,5 h: classe aerea ignota
-GROUND_TURNAROUND_S = 21_600                        # 6 h: reparto terrestre
-SEA_TURNAROUND_S = 43_200                           # 12 h: nave
+AIR_TURNAROUND_DEFAULT_S = 10_800                  # 3 h: classe aerea ignota, come le classi tattiche
+GROUND_TURNAROUND_S = 21_600                        # 6 h: STIMA DI PROGETTO (nessuna fonte con tempi in ore per un reparto meccanizzato)
+SEA_TURNAROUND_S = 172_800                          # 48 h: STIMA INFORMATA, solo indicativa (D4): nessuna durata pubblica; la ricarica dei VLS in porto e' un'operazione
+                                                    # di giorni e, contando il rientro, di settimane (fonti qualitative); le navi senza missili in VLS ricaricano prima
 # Tempo di riparazione completa di un danno grave riparabile [s], per dominio (lineare nel danno).
 REPAIR_TIME_FULL_S = {
-    'air': 86_400,      # 24 h
-    'ground': 86_400,   # 24 h
-    'sea': 259_200,     # 72 h
+    'air': 86_400,      # 24 h: riparazione rapida temporanea (ABDR): 72% in 24 h (IAF 1973), 50% in 24 h e 80% in 48 h come livello "eccellente" (NATO STO)
+    'ground': 86_400,   # 24 h: un esercito rimise in battaglia l'80% dei carri danneggiati in 24 h (DTIC, esercito non nominato); confidenza bassa
+    'sea': 259_200,     # 72 h: riparazione TEMPORANEA in porto (D3); il danno grave di una nave (mesi in cantiere) e' del lavoro sulla logistica (F8d)
 }
 
  # Asset:                   STRUCTURE_ASSET_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, BLOCK_ASSET, BLOCK_ASSET_CATEGORY

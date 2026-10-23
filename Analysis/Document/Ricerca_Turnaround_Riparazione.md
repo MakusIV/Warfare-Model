@@ -2,7 +2,7 @@
 
 - **Data**: 2026-10-23 · **Chi**: sessione principale di Claude (Sonnet 5.5) con ricerca web · **Piano**: `Proposta_F8_Sessione_Campagna.md` §4.3
 - **Scopo**: sostituire, dove esiste una fonte, le STIME DI PROGETTO di `Context/Context.py` (`AIR_TURNAROUND_S`, `AIR_TURNAROUND_DEFAULT_S`,
-  `GROUND_TURNAROUND_S`, `SEA_TURNAROUND_S`, `REPAIR_TIME_FULL_S`). **Questo documento NON modifica il codice**: i valori sono una proposta, li approva l'utente.
+  `GROUND_TURNAROUND_S`, `SEA_TURNAROUND_S`, `REPAIR_TIME_FULL_S`). I valori sono stati **approvati dall'utente il 2026-10-23** (v. §8) e applicati in un commit di soli dati.
 - **Esito in una riga**: i dati pubblici trovati sono pochi e quasi tutti di seconda mano. Reggono (con confidenza media o bassa) il turnaround dei velivoli ad ala fissa,
   dei trasporti e degli elicotteri e la riparazione rapida di aerei; **non c'e' nessuna fonte** per il turnaround di reparti terrestri e navi, e per la riparazione di mezzi di terra
   e navi si trovano solo dati qualitativi o di ordine di grandezza molto diverso. Dove non c'e' fonte il valore resta una STIMA e va detto.
@@ -95,3 +95,32 @@ Invariati, con la sola nota nel commento: Heavy_Bomber 28 800, Recon 7 200, Tran
 - **Fotografia**: la prontezza e' usata solo da S30-CAMPAIGN. Il registro non fa parte dell'esito di sessione catturato dalla fotografia, quindi e' probabile che le 4 esecuzioni di S30 restino
   identiche anche con i nuovi valori; **da verificare con il confronto**, non assunto. La precondizione di S30 (`ready_at('mbt0') > t2`) non dipende dai valori aerei.
 - Se D1 e' approvata: un solo commit di dati (6 costanti e i commenti), poi suite e confronto; il confronto dira' se qualcosa cambia; la fotografia si reinstalla solo se cambia, con la tua approvazione.
+
+## 8. Esito delle decisioni e della ricerca mirata (2026-10-23)
+
+| Decisione | Esito |
+|---|---|
+| D1 | approvati i 6 cambi della §6 |
+| D2 | Fighter_Bomber e Attacker allineati al Fighter: 10 800 s |
+| D3 | `REPAIR_TIME_FULL_S['sea']` resta 259 200 s e vale come **riparazione temporanea in porto**; il danno grave di una nave (mesi in cantiere) e' lavoro della logistica (F8d) |
+| D4 | ricerca mirata sul riarmo navale (sotto); basta un dato indicativo: `SEA_TURNAROUND_S` 43 200 -> **172 800 s (48 h)**, STIMA INFORMATA |
+| D5 | verifica delle fonti **S**/**F** (sotto): non riuscita; il documento riporta cio' che non si e' potuto confermare |
+
+**D4 — riarmo navale (indicativo).** Non esiste una durata pubblica in giorni per la ricarica dei VLS in banchina. Quel che si trova: oggi i VLS Mk 41 si ricaricano solo in porto e, contando il
+rientro, la nave e' fuori dal combattimento "per settimane" (USNI Proceedings 2024, Heritage su Defense News 2024, National Interest, tutti **S**); una Arleigh Burke Flight IIA ha 96 celle e il
+carico in porto e' definito "un processo lungo"; ricaricare e' piu' lento che scaricare perche' ogni cella ha un sistema di gestione dei gas da predisporre (Maritime Reporter, **S**); le dimostrazioni
+di ricarica in banchina (USS Porter con USNS William McLean a Norfolk, 03/08/2023; USS Stout a Brest, 11/2024) hanno usato munizioni simulate e non riportano durate; due dimostrazioni su tre del TRAM
+sono riuscite. Da qui un valore **indicativo di 48 h**: ordine di grandezza "giorni per la ricarica in banchina", senza il rientro; **NON e' un dato tarato**, e per le navi che non usano VLS
+(cannoni, siluri) il tempo reale e' minore. Fonti: [DSIAC su USS Porter](https://dsiac.dtic.mil/articles/uss-porter-usns-william-mclean-perform-vertical-launch-system-re-arm-demonstration/),
+[USNI News, test a San Diego 2022](https://news.usni.org/2022/10/18/navy-tests-reloading-missiles-on-destroyer-in-san-diego-bay-open-ocean-tests-tougher-task).
+
+**D5 — tentativo di verifica.**
+- Turn-time dei bombardieri "4-5 ore" (PACAF, 2003): una nuova ricerca non ha ritrovato la frase; la pagina originale resta illeggibile (HTTP 402). **Non confermata.** Il valore di `Bomber` (16 200 s)
+  poggia su questa sola affermazione e va letto come ordine di grandezza.
+- Formula RAND per F-15/F-16 (3,4 h + 0,68 x ore di volo): rintracciata solo nel forum; un sito di verifica nota che i dati pubblici sul turnaround dell'F-16 sono pochi e che i turn da combattimento
+  di ~10 minuti sono in gran parte aneddotici. **Non confermata.** Il valore di `Fighter` (10 800 s) poggia quindi soprattutto sull'F-35 (3 h, verificata) e resta di confidenza media-bassa.
+  Possibile origine da verificare: il modello RAND TSAR (manuale DTIC ADA257838) e il modello di sortie dell'Aeronautica USA.
+- Pagine non riletta: McChord e Charleston (C-17), FARP AH-64, STO ABDR, NHHC su USS Samuel B. Roberts.
+
+**Cosa e' stato applicato**: commit di soli dati su `Context/Context.py` con i 6 cambi della §6, `SEA_TURNAROUND_S` a 172 800 s e i commenti (fonte e livello di confidenza accanto a ogni valore;
+"STIMA DI PROGETTO" dove la ricerca non ha trovato niente).
