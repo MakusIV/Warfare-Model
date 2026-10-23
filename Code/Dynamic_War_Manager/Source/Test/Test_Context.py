@@ -61,6 +61,11 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     GROUND_MILITARY_VEHICLE_ASSET,
     AIR_MILITARY_CRAFT_ASSET,
     SEA_MILITARY_CRAFT_ASSET,
+    AIR_TURNAROUND_S,
+    AIR_TURNAROUND_DEFAULT_S,
+    GROUND_TURNAROUND_S,
+    SEA_TURNAROUND_S,
+    REPAIR_TIME_FULL_S,
     AIR_DEFENSE_ASSET,
     AREA_FOR_VOLUME,
     TASK_FOR_WEAPON_PARAM,
@@ -1432,6 +1437,29 @@ class TestMissionTypes(unittest.TestCase):
         """L'aria non ha posture tattiche: errore esplicito anche per un task valido."""
         with self.assertRaises(ValueError):
             postures_for('air', 'CAP')
+
+
+class TestReadinessTables(unittest.TestCase):
+    """Tabelle di prontezza della F8 (D6.b-d): STIME di progetto in `Context` (§4.4)."""
+
+    def test_every_air_asset_type_has_a_turnaround(self):
+        """Ogni `Air_Asset_Type` ha una voce in `AIR_TURNAROUND_S`."""
+        expected = {member.value for member in Air_Asset_Type}
+        self.assertEqual(set(AIR_TURNAROUND_S.keys()), expected)
+
+    def test_all_turnaround_values_positive(self):
+        """Tutti i valori di turnaround (aria, default, terra, mare) sono > 0."""
+        for value in AIR_TURNAROUND_S.values():
+            self.assertGreater(value, 0)
+        self.assertGreater(AIR_TURNAROUND_DEFAULT_S, 0)
+        self.assertGreater(GROUND_TURNAROUND_S, 0)
+        self.assertGreater(SEA_TURNAROUND_S, 0)
+
+    def test_repair_time_full_s_has_all_domains(self):
+        """`REPAIR_TIME_FULL_S` ha le tre chiavi 'air', 'ground', 'sea' e valori > 0."""
+        self.assertEqual(set(REPAIR_TIME_FULL_S.keys()), {'air', 'ground', 'sea'})
+        for value in REPAIR_TIME_FULL_S.values():
+            self.assertGreater(value, 0)
 
 
 class TestMissionWeaponPolicy(unittest.TestCase):
