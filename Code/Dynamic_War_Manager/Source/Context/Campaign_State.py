@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 import pathlib
 from datetime import date as _date, time as _time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
+
+from sympy import Point3D
 
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
@@ -236,6 +238,26 @@ class CampaignState:
         self._validate_str(region_name, "region_name")
         return self.get_mission(mission_id)["regions"].get(region_name, {})
 
+    def add_ledger(self, mission_id: str, ledger: Mapping) -> None:
+        """Save the campaign ledger (`CampaignLedger.to_dict()`) for a campaign mission.
+
+        Nota terminologica: qui `mission_id` e' la missione di CAMPAGNA (una sessione), non
+        la `Mission` di una sessione. Nessun import di `Command`: il chiamante converte con
+        `CampaignLedger.from_dict`.
+
+        Raises:
+            KeyError: la missione di campagna non e' registrata.
+        """
+        self._validate_mission_id(mission_id)
+        if mission_id not in self._state:
+            raise KeyError(f"Mission '{mission_id}' not found in state.")
+        self._state[mission_id]["ledger"] = dict(ledger)
+
+    def get_ledger(self, mission_id: str) -> Optional[Dict]:
+        """The saved campaign ledger dict for a campaign mission, or None."""
+        self._validate_mission_id(mission_id)
+        return self._state.get(mission_id, {}).get("ledger")
+
     def get_block_snapshot(
         self, mission_id: str, region_name: str, block_id: str
     ) -> Optional[Dict]:
@@ -308,7 +330,7 @@ class CampaignState:
     # Restore API                                                          #
     # ------------------------------------------------------------------ #
 
-    def restore(self, mission_id: str, regions: List) -> None:
+    def restore(self, mission_id: str, regions: List, restore_position: bool = False) -> None:
         """Apply the saved state for mission_id to a list of live Region objects.
 
         For each region / block / asset / route found in both the snapshot and
@@ -320,6 +342,9 @@ class CampaignState:
         * Block.resource_manager: warehouse payload, actual_production payload
         * Asset.state: health, success_ratio
         * Asset payloads: resources_assigned, resources_to_self_consume, payload, production
+        * Asset.position (solo con `restore_position=True`, F8): riportata a `Point3D(x, y, z)`
+          dal campo `position` dell'istantanea; con il default False (comportamento di oggi) la
+          posizione degli asset live NON e' toccata
         * Route.Edge: danger_level, speed
 
         Objects present in the live graph but absent from the snapshot are left
@@ -342,7 +367,7 @@ class CampaignState:
                     region_name, mission_id,
                 )
                 continue
-            self._restore_region(region, region_snap)
+            self._restore_region(region, region_snap, restore_position)
 
     # ------------------------------------------------------------------ #
     # Persistence                                                          #
@@ -515,7 +540,7 @@ class CampaignState:
     # Restore helpers                                                      #
     # ------------------------------------------------------------------ #
 
-    def _restore_region(self, region, region_snap: Dict) -> None:
+    def _restore_region(self, region, region_snap: Dict, restore_position: bool) -> None:
         attack_weight_snap = region_snap.get("attack_weight")
         if attack_weight_snap is not None:
             for side, value in attack_weight_snap.items():
@@ -567,10 +592,10 @@ class CampaignState:
                     logger.warning(
                         "Could not restore priority for block '%s': %s", block_id, exc
                     )
-            self._restore_block(block_item.block, block_snap)
+            self._restore_block(block_item.block, block_snap, restore_position)
 
     @staticmethod
-    def _restore_block(block, block_snap: Dict) -> None:
+    def _restore_block(block, block_snap: Dict, restore_position: bool) -> None:
         state_snap = block_snap.get("state")
         if state_snap and getattr(block, '_state', None) is not None:
             CampaignState._restore_state(block._state, state_snap, f"block {block.id}")
@@ -588,7 +613,7 @@ class CampaignState:
                     "Asset '%s' not found in live block '%s'. Skipped.", asset_id, block.id
                 )
                 continue
-            CampaignState._restore_asset(asset, asset_snap)
+            CampaignState._restore_asset(asset, asset_snap, restore_position)
 
     @staticmethod
     def _restore_state(state, state_snap: Dict, context: str) -> None:
@@ -618,7 +643,7 @@ class CampaignState:
             )
 
     @staticmethod
-    def _restore_asset(asset, asset_snap: Dict) -> None:
+    def _restore_asset(asset, asset_snap: Dict, restore_position: bool) -> None:
         state_snap = asset_snap.get("state")
         if state_snap and getattr(asset, '_state', None) is not None:
             CampaignState._restore_state(asset._state, state_snap, f"asset {asset.id}")
@@ -630,6 +655,16 @@ class CampaignState:
                 CampaignState._restore_payload(
                     payload_obj, field_snap, f"{field} of asset {asset.id}"
                 )
+
+        if restore_position:
+            pos_snap = asset_snap.get("position")
+            if pos_snap is not None:
+                try:
+                    asset.position = Point3D(
+                        float(pos_snap["x"]), float(pos_snap["y"]), float(pos_snap["z"])
+                    )
+                except Exception as exc:
+                    logger.warning("Could not restore position for asset %s: %s", asset.id, exc)
 
     @staticmethod
     def _restore_payload(payload, snap: Dict, context: str) -> None:

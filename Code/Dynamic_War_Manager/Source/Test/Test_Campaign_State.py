@@ -6,6 +6,8 @@ import types
 import unittest
 from pathlib import Path
 
+from sympy import Point3D
+
 from Code.Dynamic_War_Manager.Source.Context.Campaign_State import CampaignState
 
 
@@ -123,6 +125,14 @@ class _AssetStub:
     @property
     def name(self):
         return self._name
+
+    @property
+    def position(self):
+        return self._position
+
+    @position.setter
+    def position(self, value):
+        self._position = value
 
     @property
     def model(self):
@@ -849,6 +859,79 @@ class TestCampaignStatePersistence(unittest.TestCase):
     def test_load_invalid_path_raises(self):
         with self.assertRaises(TypeError):
             CampaignState.load(42)
+
+
+# ---------------------------------------------------------------------------
+# Ledger API (F8c, blocco 2)
+# ---------------------------------------------------------------------------
+
+class TestCampaignStateLedger(unittest.TestCase):
+
+    def setUp(self):
+        self.cs = CampaignState()
+        self.M = "M001"
+        self.D = "2026-05-13"
+        self.T = "08:00"
+        self.block = _BlockStub("B1", "Base")
+
+    def _add_mission(self):
+        self.cs.add_block_snapshot(self.M, self.D, self.T, "North", self.block)
+
+    def test_add_and_get_ledger(self):
+        self._add_mission()
+        ledger = {'rules': {'default_duration_s': 7200.0}, 'sessions': [], 'readiness': {}}
+        self.cs.add_ledger(self.M, ledger)
+        self.assertEqual(self.cs.get_ledger(self.M), ledger)
+
+    def test_get_ledger_before_add_is_none(self):
+        self._add_mission()
+        self.assertIsNone(self.cs.get_ledger(self.M))
+
+    def test_get_ledger_missing_mission_returns_none(self):
+        self.assertIsNone(self.cs.get_ledger("NONEXISTENT"))
+
+    def test_add_ledger_missing_mission_raises(self):
+        with self.assertRaises(KeyError):
+            self.cs.add_ledger("NONEXISTENT", {})
+
+
+# ---------------------------------------------------------------------------
+# Restore position (F8c, blocco 2)
+# ---------------------------------------------------------------------------
+
+class TestCampaignStateRestorePosition(unittest.TestCase):
+
+    def setUp(self):
+        self.region, self.block, self.asset = _make_region_with_block()
+        self.M = "M_POS"
+        self.D = "2026-05-13"
+        self.T = "08:00"
+
+    def _snapshot_with_position(self, x, y, z):
+        self.asset.position = Point3D(x, y, z)
+        cs = CampaignState()
+        cs.add_region_snapshot(self.M, self.D, self.T, self.region)
+        return cs
+
+    def test_restore_default_leaves_position(self):
+        cs = self._snapshot_with_position(10.0, 20.0, 100.0)
+        self.asset.position = Point3D(0.0, 0.0, 0.0)
+        cs.restore(self.M, [self.region])
+        self.assertEqual(self.asset.position, Point3D(0.0, 0.0, 0.0))
+
+    def test_restore_position_true_sets_position(self):
+        cs = self._snapshot_with_position(10.0, 20.0, 100.0)
+        self.asset.position = Point3D(0.0, 0.0, 0.0)
+        cs.restore(self.M, [self.region], restore_position=True)
+        self.assertEqual(self.asset.position, Point3D(10.0, 20.0, 100.0))
+
+    def test_restore_position_true_with_no_position_in_snapshot(self):
+        # posizione assente nell'istantanea: nessun errore, posizione non toccata.
+        cs = CampaignState()
+        cs.add_region_snapshot(self.M, self.D, self.T, self.region)
+        self.asset.position = Point3D(0.0, 0.0, 0.0)
+        cs.restore(self.M, [self.region], restore_position=True)
+        self.assertEqual(self.asset.position, Point3D(0.0, 0.0, 0.0))
 
 
 # ---------------------------------------------------------------------------
