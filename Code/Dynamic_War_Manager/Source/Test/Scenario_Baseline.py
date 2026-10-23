@@ -370,6 +370,9 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     # ── S29 (F7b: fuoco su posizione) — in coda, nomi stabili ──
     ('S29-AREA', 'Test_Session_Scenarios_S29', 'TestS29AreaFire', None,
      _by_occurrence('stale', 'on_target', 'switch_off')),
+    # ── S30 (F8c: ciclo di campagna — prontezza, posizione persistente, riparazione) — in coda ──
+    ('S30-CAMPAIGN', 'Test_Session_Scenarios_S30', 'TestS30CampaignSequence', None,
+     _single_or_index),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per
