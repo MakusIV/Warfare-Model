@@ -46,9 +46,9 @@
           "tool_call": true,
           "reasoning": true,
           "cost": {
-            "input": 0.145,
-            "output": 0.436,
-            "cache_read": 0.0046
+            "input": 0.66,
+            "output": 1.98,
+            "cache_read": 0.022
           },
           "limit": {
             "context": 1048576,
@@ -56,8 +56,12 @@
           },
           "options": {
             "provider": {
-              "order": ["baidu", "deepseek", "streamlake"],
-              "allow_fallbacks": false
+              "order": ["streamlake", "deepseek", "sail-research", "novita"],
+              "allow_fallbacks": false,
+              "max_price": {
+                "prompt": 0.99,
+                "completion": 2.97
+              }
             }
           }
         },
