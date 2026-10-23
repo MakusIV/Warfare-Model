@@ -26,13 +26,15 @@ consuma). `SessionOutcome` porta l'esito di ogni missione (`MissionOutcome`, pri
 l'appartenenza degli asset al blocco si verifica con gli oggetti del modello, in `run_session`.
 
 ## Cosa NON c'e' (di proposito)
-  * Nessun concetto che il codice non ha ancora: obiettivi di campagna, finestre di sessione
-    di campagna (F8), re-scheduling. Quel livello nascera' con `Theater_Session_Manager`;
-    aggiungerlo ora vorrebbe dire inventarne la forma.
-  * Nessuna scrittura in `Campaign_State` e nessuna applicazione agli asset:
-    `assemble_session_outcome` e' una funzione pura. Applicare l'esito "in un'unica passata"
-    e' responsabilita' di `Theater_Session_Manager` (wiki decisions/c2-hierarchy-design),
-    non ancora costruito.
+  * Obiettivi di campagna e re-scheduling: nasceranno con `Theater_Session_Manager`. Le
+    finestre di sessione di campagna INVECE esistono (F8): `Command/Campaign_Types.SessionRules`
+    (durata di default e massima) e `Logic/Session_Validator.check_session`, che le valuta fuori
+    da `run_session` (per esempio la sessione successiva parte non prima della fine EFFETTIVA
+    della precedente).
+  * Nessuna scrittura in `Campaign_State` e nessuna applicazione agli asset QUI:
+    `assemble_session_outcome` e' una funzione pura. Applicare l'esito (posizioni finali,
+    prontezza) "in un'unica passata" e' del conduttore di campagna (`Logic/Session_Campaign`,
+    `apply_final_positions`; wiki decisions/c2-hierarchy-design), non di questo modulo.
   * Nessun componente LLM, in nessuna forma.
 
 Stile di `Command/Command_Types.py`: dataclass, nessuna logica di calcolo oltre alla
