@@ -42,6 +42,7 @@ metadata:
   `~/.local/share/opencode/routing.local.json` (per macchina, fuori da git); `bin/oc` lo rigenera ogni 30 min e lo passa con `OPENCODE_CONFIG`.
   Il `opencode.json` di Warfare-Model NON ha piu' il blocco `provider` (un options.provider di progetto prevarrebbe). Prima prova reale: F8c2 = 0,4785 $ tutta
   su StreamLake (stesso consumo su Baidu ~0,94 $). `deepseek` ha fasce orarie a prezzo ridotto e poi torna a 1,32.
+- **Baidu ha un prezzo che varia nella giornata (osservato 2026-10-23, dai CSV, non dichiarato da OpenRouter)**: fatturato 1,32/3,96/0,042 $/M alle 08-09 UTC; ~0,2/0,6/0,006 alle 13:20-13:40 UTC; 0,148/0,44/0,0047 listino alle 14:38 UTC; 0,145 il 22/10 alle 15 UTC. Probabile fascia oraria (sera/notte in Cina). Lo script sceglie il piu' economico AL LANCIO (F8c3: Baidu da solo, 0,2789 $ contro ~0,9 $ su StreamLake); `max_price` e' fissato al lancio.
 - **Stato F8**: F8a FATTA (`c1182d8a`), F8b FATTA (`33698fb4`, suite 4640, 982 IDENTICHE); restano F8c (3 blocchi, v. [[project-f8c-comandi-blocchi]]), F8-R
   (rinviata: nessun agente OpenCode ha il web), F6-B3 (una riga di docstring). `steps` oc-developer = 180 dal 2026-10-22 (F8b ha esaurito 120).
 - **Why:** la sessione principale ha il Pro al 93% (7d) e i soldi OpenRouter sono un tetto reale; un ciclo a vuoto o un fornitore caro
