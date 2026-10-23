@@ -2,13 +2,22 @@
 name: project-f8c-comandi-blocchi
 description: "F8c divisa in 3 blocchi per oc-developer (V4 Pro 0813, Baidu, steps 180): testi esatti dei comandi `oc run --command esegui`, branch, verifiche attese dopo ciascun blocco; da usare nella prossima sessione"
 metadata:
+  node_type: memory
   type: project
+  originSessionId: 1d3b4d7d-48a4-4011-92a5-5c4578c21791
+  modified: 2026-10-23T09:25:12.749Z
 ---
+
 Premessa (2026-10-22): F8a e F8b fatte e verificate (v. [[project-opencode-costi-misurati]], [[project-session-2026-10-22-summary]]).
 F8c e' il passo piu' grande: si divide in 3 blocchi, ciascuno con branch `ai/oc-f8c<N>` creato dalla sessione principale da `analysis/dce-dcs-persistence`
 (`git switch -c ai/oc-f8c1`), sessione OpenCode NUOVA (contesto piccolo), verifica e merge prima del blocco successivo. I testi dei comandi li
 definisce la sessione principale (l'utente li incolla): sotto i testi esatti. Righe di `Proposta_F8_Sessione_Campagna.md` valide al 2026-10-22
 (controllare con `grep -n '^####' ...` se il file cambia). Modello e fornitore: da `.opencode/agents/oc-developer.md` (V4 Pro 0813, `order` baidu).
+
+**STATO (2026-10-23, ProArt)**: blocco 1 FATTO e verificato (merge `87aa7dea`, branch `ai/oc-f8c1`, V4 Pro 0813 confermato da `oc export`, costo
+dichiarato ~0,17 $; `Readiness.py` 343 righe aderente al piano, 276 test mirati OK rieseguiti dalla sessione principale; nessuna suite, motore
+invariato). Nota: i comandi `oc run` vanno lanciati DAL REPO (da `~` dà "Unexpected server error": agenti/comandi di progetto non trovati).
+Restano blocchi 2 e 3. La config globale `ai-multimodel` e' indietro (whitelist senza 0813, niente `order` Baidu): da allineare se l'utente vuole.
 
 **Blocco 1 — tabelle in `Context` e `Logic/Readiness.py`** (righe 701-795; vincoli comuni 916-935; test `Test_Readiness.py` e `Test_Context.py` dalle righe 880-898):
 ```bash
