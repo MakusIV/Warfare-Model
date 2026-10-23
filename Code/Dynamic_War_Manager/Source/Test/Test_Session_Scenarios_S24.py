@@ -354,7 +354,11 @@ def _landing(variant: str):
 
 
 class TestS24DryAircraft(F.LoggerSilencer, unittest.TestCase):
-    """S24-GLIDE: un aereo a secco in volo plana sulla base raggiungibile o e' perso (F6-A)."""
+    """S24-GLIDE: un aereo a secco in volo plana sulla base raggiungibile o e' perso (F6-A).
+
+    Dichiara `EndCriteria(bingo=False)`: volo che non rientra al bingo (lo scenario prova la planata della F6-A);
+    il bingo alla partenza e' in S26; il validatore di sessione della F8 non controlla il carburante di una missione
+    con `bingo` False (F6-B3, I1)."""
 
     SEEDS = _seeds('S24-GLIDE')
     VARIANTS = ('glide', 'no_base', 'enemy_base', 'off')

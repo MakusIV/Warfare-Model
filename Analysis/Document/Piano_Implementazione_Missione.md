@@ -1,6 +1,6 @@
 # Piano di implementazione dell'entità Missione
 
-**Stato**: APPROVATO (2026-10-05, Q1-Q4 sì) e IN CORSO: fatte F0, F1, F2, F3, F4a, F4b, F4b+, F4b++, la riprogettazione dei test S3/S5, F4c, F5-A, F5-B, F5-C, F6-A, F6-B1, F6-B2, F6-B2bis, G1-G5, (2026-10-18) F7a e (2026-10-20) F7b; da fare F8-F9 (v. §5 "Stato di avanzamento").
+**Stato**: APPROVATO (2026-10-05, Q1-Q4 sì) e IN CORSO: fatte F0, F1, F2, F3, F4a, F4b, F4b+, F4b++, la riprogettazione dei test S3/S5, F4c, F5-A, F5-B, F5-C, F6-A, F6-B1, F6-B2, F6-B2bis, G1-G5, (2026-10-18) F7a e (2026-10-20) F7b, (2026-10-22/23) F8a, F8b e F8c; da fare F8-R e F9 (v. §5 "Stato di avanzamento").
 **Base**: le decisioni D1-D6 e N1-N3 di `Proposta_Struttura_Missione_Decisioni.md` (tutte prese;
 N2.a = C, N3.f = B).
 **Convenzioni**:
@@ -303,7 +303,9 @@ su cui poggia la successiva.
 | F7b (fuoco su posizione) | FATTA, verificata e approvata 2026-10-20 (fotografia 982) | `dcedc541` | deviazione 24: una missione di terra o di mare con bersaglio POINT o AREA e un'azione `Fire_At_Point` spara sulla posizione STIMATA del bersaglio come evento di sessione `AREA_FIRE_EVENT` (`Logic/Area_Fire`, interruttore `F7_AREA_FIRE`), separato dal risolutore: nessun rilevamento, nessuna forza d'ingaggio, solo geometria e RNG di sessione; costanti STIMATE (dispersione 50 m, raggio letale 0,25 m/mm, ripiego 25 m); nuovo S29 (12 esecuzioni); suite 4555 OK (7 skipped); `--compare` contro la fotografia 970: 970 IDENTICHE, 0 cambiate, 12 nuove; fotografia NON rigenerata; v. `Proposta_F7_Bersagli_Filtro_Armi.md` §6 e `F4_Differenze_Scenari.md`, "F7b" |
 | F8a (tipi di campagna e validatore di sessione) | FATTA, verificata 2026-10-22 (fotografia 982 identiche, suite 4619) | `c1182d8a` | `Command/Campaign_Types.py`, `Logic/Session_Validator.py`, `Mission_Adapter.mission_planned_end`, `Session_Simulator.session_blocks` e warning E4; eseguita da `oc-developer` (DeepSeek V4 Pro 0423); rapporto con i costi in `Rapporti/Rapporto_F8a_oc-developer.md` (Proposta F8 §4.1). |
 | F8b (esito di campagna) | FATTA, verificata 2026-10-22 (fotografia 982 identiche, suite 4640) | `33698fb4` | `MissionStatus.IN_PROGRESS` con `F8_IN_PROGRESS`=True, `OperationStatus`/`OperationOutcome`, `operation_outcome`, `SessionOutcome.operation_outcomes`/`final_positions`/`movement_ends`; eseguita da `oc-developer` (DeepSeek V4 Pro 0813, fermato dal limite di 120 passi: rapporto e commit completati dalla sessione principale). |
-| F8c, F8-R, F9 | DA FARE | | F8 = sessione e campagna (validatore di sessione, che potra' chiamare il bingo a priori; prontezza; posizione persistente); F9 = documentazione (manuale DES, togliere il 'TOT comune' nei capitoli 03 e 10, documentare F5/F6); `abort_on_threat` fuori dal Piano di F6 |
+| F8c (prontezza, ciclo di campagna, posizione persistente) | FATTA, verificata 2026-10-23 (suite 4699, confronto 982 identiche + 4 nuove: S30-CAMPAIGN-1..4; fotografia 986 dopo l'approvazione dell'utente) | `87aa7dea`, `6d3497bc`, `398ae3ef` | deviazione 25: `Logic/Readiness.py` (turnaround e riparazione con tabelle STIMATE in `Context`), `Logic/Session_Campaign.py` (`run_campaign_session`, `apply_final_positions`), `Campaign_State` (`restore_position`, `add_ledger`/`get_ledger`), scenario S30-CAMPAIGN; eseguita in 3 blocchi da `oc-developer` (DeepSeek V4 Pro 0813); costi reali in `Rapporti/Costi_Deleghe.md` |
+| F6-B3 (S24-GLIDE e bingo di default) | CHIUSA 2026-10-23 (I1: solo docstring, fotografia identica) | | S24-GLIDE resta con `EndCriteria(bingo=False)` (volo che non rientra al bingo: prova la planata); dichiarato nel docstring di `TestS24DryAircraft`; I2 e I3 non realizzate |
+| F8-R, F9 | DA FARE | | F8-R = ricerca dei tempi di turnaround e riparazione per sostituire le STIME (serve una sessione Claude col web); F9 = documentazione (manuale DES, togliere il 'TOT comune' nei capitoli 03 e 10, documentare F5/F6/F8); `abort_on_threat` fuori dal Piano di F6 |
 
 **Deviazioni decise durante il lavoro**:
 1. `mission_id` **non** entra nell'RNG in F3 ma in F4b. Le estrazioni sono per ingaggio fra forze, e finché la forza è il blocco un ingaggio può coinvolgere più missioni. Così F3 è rimasta pura struttura, verificata con fotografia identica.
@@ -496,9 +498,22 @@ su cui poggia la successiva.
       rappresentabile (decisione 12 della F7a).
     - Dettagli, scelte e confronto in `F4_Differenze_Scenari.md`, "F7b".
 
+25. **F8: sessione e campagna (decisioni dell'utente, proposta `Proposta_F8_Sessione_Campagna.md`)**.
+    - **Regola**: il validatore di sessione sta FUORI da `run_session` (`Logic/Session_Validator.check_session`, chiamato dal conduttore
+      `Logic/Session_Campaign.run_campaign_session`, che esegue prima i processi di campagna e dopo registra la sessione); il registro di campagna e'
+      immutabile (`Command/Campaign_Types.CampaignLedger`: sessioni passate e prontezza per asset); l'esito della sessione porta `final_positions`,
+      `movement_ends` e `operation_outcomes`, e le posizioni sono applicate FUORI dalla sessione (`apply_final_positions`: un asset `off_scene` non
+      si sposta); `MissionStatus.IN_PROGRESS` (interruttore `F8_IN_PROGRESS`, attivo) e `OperationOutcome` per l'esito d'Operazione; la prontezza
+      e' turnaround + riparazione, con un tempo per classe aerea e per dominio (`Context`: tabelle STIMATE, da sostituire con la ricerca F8-R).
+    - **Passi**: F8a `c1182d8a` (tipi e validatore), F8b `33698fb4` (esito), F8c `87aa7dea` + `6d3497bc` + `398ae3ef` (prontezza, conduttore e posizione
+      persistente, S30-CAMPAIGN). `run_session` e' invariata: la fotografia resta identica nei passi, con 4 esecuzioni nuove da F8c.
+    - **Limiti**: costanti di tempo STIMATE; nessuna logistica (riarmo e rifornimento a fine turnaround senza consumo delle scorte del blocco, riparazione
+      senza risorse); `CampaignState` e `Session_Campaign` senza chiamanti di produzione (solo scenario e test); `off_scene` senza base di destinazione.
+    - Dettagli, scelte e confronto in `F4_Differenze_Scenari.md`, "F8". Eseguita da `oc-developer`; costi in `Rapporti/Costi_Deleghe.md`.
+
 **Punti aperti rilevati dall'aggiornamento del manuale** (capitolo 10 §9.6 del manuale DES):
 - docstring obsoleti in `Session_Simulator` (dicono ancora che la selezione dell'arma resta fuori dall'orchestratore);
 - `run_session` non inoltra `rwr_catalogue` al risolutore;
 - nessun codice di produzione fornisce `morale_for` / `enemy_estimate_for` (solo i test);
-- una missione sul posto risulta `FAILED` perché manca uno stato "in corso" (D4.e);
+- una missione sul posto risulta `FAILED` perché manca uno stato "in corso" (D4.e) — RISOLTO dalla F8b (`IN_PROGRESS`);
 - ruoli e criteri di fine: i ruoli restano validati ma non letti da `Logic`; bersaglio e regole (ROE, armi designate) sono letti dalla F7a e le azioni `Fire_At_Point` dalla F7b (F5-F6 per i criteri di fine); `Operation` è letta dalla F4b+ (`coordination_domains`: `Operation.mission_ids` e `Mission.operation_id`).

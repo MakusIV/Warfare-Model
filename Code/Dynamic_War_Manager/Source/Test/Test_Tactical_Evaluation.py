@@ -1,3 +1,4 @@
+import random
 import unittest
 from unittest.mock import MagicMock, patch
 import numpy as np
@@ -331,6 +332,11 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
 
     def testCalcFightResult(self):
+        # `calcFightResult` usa il `random` globale e alcune tolleranze (es. delta=3) sono superate in ~0,7% delle
+        # estrazioni: seme fisso, con ripristino dello stato globale, per un esito riproducibile.
+        state = random.getstate()
+        self.addCleanup(random.setstate, state)
+        random.seed(30)
         # Test con valori di input validi
         n_fr = 10
         n_en = 5

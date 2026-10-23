@@ -2585,3 +2585,27 @@ bersaglio come evento di sessione `AREA_FIRE_EVENT`, separato dal risolutore; nu
   `Test_Mission_Types.TestFireAtPoint` (9); `Test_Session_Scenarios_S29` (7).
 - Suite completa: 4555 test OK (7 skipped), 65 nuovi rispetto ai 4490 della F7a.
 
+## F8 — sessione e campagna (2026-10-22/23)
+
+Proposta `Proposta_F8_Sessione_Campagna.md`; eseguita da `oc-developer` (DeepSeek V4 Pro) in 6 sedute (F8a in 2, F8b in 1, F8c in 3 blocchi) e verificata dalla
+sessione principale. `run_session` non cambia: i passi non spostano nessuna esecuzione esistente.
+
+| Passo | Commit | Suite | Confronto con la fotografia |
+|---|---|---|---|
+| F8a (tipi di campagna, validatore di sessione) | `c1182d8a` | 4619 OK | 982 identiche |
+| F8b (esito: `IN_PROGRESS`, `OperationOutcome`, posizioni finali) | `33698fb4` | 4640 OK (7 skipped) | 982 identiche |
+| F8c blocco 1 (tabelle e `Logic/Readiness`) | `87aa7dea` | solo test mirati (276) | non necessario (nessun cambio di motore) |
+| F8c blocco 2 (`Session_Campaign`, `Campaign_State`) | `6d3497bc` | 4691 (1 fallimento intermittente preesistente, v. sotto) | non necessario |
+| F8c blocco 3 (S30-CAMPAIGN, docstring) | `398ae3ef` | 4699 OK (7 skipped) | 986 esecuzioni: 982 identiche, 0 cambiate, 4 nuove |
+
+**S30-CAMPAIGN** (4 esecuzioni nuove, nessun contatto, nessuna estrazione RNG): sequenza di 4 sessioni disgiunte con `run_campaign_session`.
+Sessione 1: due F-16C ad anello e `mbt0` in `Movement` verso (10 km, -20 km); `mbt1` gia' danneggiato (salute 60). Sessione 2 senza missioni: `mbt0` fermo
+dove l'aveva lasciato la 1 (posizione ripresa). Sessione 3: `mbt0` rifornito e di nuovo in missione da (10 km, -20 km). Sessione 4: `mbt1` riparato e fuori dal
+registro. 10 test (l'esecutore ne ha scritti 8; la sessione principale ha aggiunto `test_aircraft_land_on_base` e `test_session1_readiness_records`, che verificano
+i `ready_at` di F-16C, `mbt0` e `mbt1` sulle costanti e sul registro).
+
+**Costanti stimate**: tutte le tabelle di turnaround e riparazione in `Context/Context.py` sono STIME DI PROGETTO (ordini di grandezza), non dati tarati.
+
+**Test intermittente preesistente** (non legato alla F8): `Test_Tactical_Evaluation.testCalcFightResult` usa `calcFightResult` con il `random` globale e una
+tolleranza `delta=3` superata nello 0,68% delle estrazioni (136 su 20 000); corretto il 2026-10-23 con un seme fisso e ripristino dello stato globale.
+

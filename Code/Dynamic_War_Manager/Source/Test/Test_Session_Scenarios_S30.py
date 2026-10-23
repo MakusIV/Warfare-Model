@@ -71,11 +71,12 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
 )
 from Code.Dynamic_War_Manager.Source.Command.Session_Types import SessionOrder
 from Code.Dynamic_War_Manager.Source.Context.Campaign_State import CampaignState
-from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_TURNAROUND_S
+from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_TURNAROUND_S, REPAIR_TIME_FULL_S
 from Code.Dynamic_War_Manager.Source.Context.Region import Region
 from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
+from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA
 from Code.Dynamic_War_Manager.Source.Logic import Readiness
 from Code.Dynamic_War_Manager.Source.Logic import Session_Campaign
 from Code.Dynamic_War_Manager.Source.Logic import Session_Validator
@@ -290,7 +291,7 @@ class TestS30CampaignSequence(F.LoggerSilencer, unittest.TestCase):
         `ASSET_NOT_READY` (precondizione: `ready_at('mbt0') > t2` con le stime di §4.4)."""
         t2 = self.ledgers[S1].last_end
         self.assertGreater(self.ledgers[S1].ready_at(MBT0), t2,
-                           "preconditione del piano: con le stime di §4.4 mbt0 non e' pronto a t2; "
+                           "precondizione del piano: con le stime di §4.4 mbt0 non e' pronto a t2; "
                            "se la ricerca F8-R la rendesse falsa va allungata la rotta della sessione 1")
 
         base, wing, mech, red = _build_forces()
@@ -304,6 +305,41 @@ class TestS30CampaignSequence(F.LoggerSilencer, unittest.TestCase):
         not_ready = [v for v in raised.exception.violations
                      if v.code is ViolationCode.ASSET_NOT_READY and v.asset_id == MBT0]
         self.assertTrue(not_ready, str(raised.exception))
+
+    def test_aircraft_land_on_base(self):
+        """Gli F-16C rientrano e restano a terra sulla base (`parking_cold`): la loro posizione
+        finale e' quella di parcheggio di partenza (capo sul riferimento, gregario a 150 m)."""
+        for index in (0, 1):
+            asset_id = f'{WING}/f{index}'
+            self.assertEqual(self.outcomes[S1].postures[asset_id], MA.PARKED_POSTURE, asset_id)
+            self._assert_point(self, self.checkpoints[S1][asset_id]['position'],
+                               (BASE_ORIGIN[0], -WING_SPACING_M * index, 0.0))
+
+    def test_session1_readiness_records(self):
+        """Il registro dopo la sessione 1 segue la regola di §4.4: ogni asset di missione parte dal
+        rientro (`movement_ends`) e somma il turnaround (di classe per gli aerei, di terra per
+        `mbt0`); `mbt1`, senza missione e gia' danneggiato, parte dalla fine nominale e somma solo
+        la riparazione (lineare nel danno)."""
+        assets = _assets_map(self.forces_a + self.forces_b)
+        ledger, outcome = self.ledgers[S1], self.outcomes[S1]
+
+        for index in (0, 1):
+            asset_id = f'{WING}/f{index}'
+            record = ledger.readiness[asset_id]
+            turnaround, source = Readiness.turnaround_s(assets[asset_id])
+            self.assertTrue(source.startswith('class:'), source)
+            self.assertAlmostEqual(record.since, outcome.movement_ends[asset_id], delta=1e-6)
+            self.assertAlmostEqual(record.turnaround_s, turnaround, delta=1e-6)
+            self.assertAlmostEqual(record.ready_at, outcome.movement_ends[asset_id] + turnaround, delta=1e-6)
+
+        record = ledger.readiness[MBT0]
+        self.assertAlmostEqual(record.ready_at, outcome.movement_ends[MBT0] + GROUND_TURNAROUND_S, delta=1e-6)
+
+        record = ledger.readiness[MBT1]
+        repair = REPAIR_TIME_FULL_S['ground'] * (100 - 60) / 100.0
+        self.assertAlmostEqual(record.since, outcome.t_end, delta=1e-6)
+        self.assertAlmostEqual(record.repair_s, repair, delta=1e-6)
+        self.assertAlmostEqual(record.ready_at, outcome.t_end + repair, delta=1e-6)
 
     def test_ready_assets(self):
         """`ready_assets` restituisce esattamente gli asset non distrutti e pronti a `t`: nessuno a
@@ -324,7 +360,7 @@ class TestS30CampaignSequence(F.LoggerSilencer, unittest.TestCase):
         riparato (salute 100) e tolto dal registro all'inizio della sessione 4."""
         self.assertIn(MBT1, self.ledgers[S1].readiness)
         self.assertGreater(self.ledgers[S3].ready_at(MBT1), self.ledgers[S2].last_end,
-                           "preconditione: mbt1 e' ancora in riparazione a t3")
+                           "precondizione: mbt1 e' ancora in riparazione a t3")
 
         for stage in (S1, S2, S3):
             self.assertEqual(self.checkpoints[stage][MBT1]['health'], 60, stage)
