@@ -233,10 +233,11 @@ base idonea piu' vicina (con una rotta che atterra su una base il rientro e' qua
 qualunque base aerea del lato (`air_base_points`, lo stesso criterio della planata della F6-A); nessuna
 base = rifiuto. Non si applica alle missioni di terra e mare ne' a quelle con `EndCriteria.bingo` False
 (dichiarano di non rientrare al bingo).
-Il controllo NON e' chiamato da `Session_Simulator.run_session`: e' del pianificatore (il futuro C2),
-che decide con lo stato della campagna; l'esecutore (sintetico o DCS, "RTB on bingo") non rifiuta un
-ordine ma fa tornare l'aereo al bingo in volo (`Session_Simulator`, "Bingo"). I due usano lo stesso
-criterio (`Fuel_Model.bingo_point`): con lo stesso carburante e le stesse basi la missione rifiutata qui
+Il controllo NON e' chiamato da `Session_Simulator.run_session`: e' del pianificatore (il futuro C2)
+e del validatore di sessione (`Logic/Session_Validator`, F8), che decidono con lo stato della
+campagna; l'esecutore (sintetico o DCS, "RTB on bingo") non rifiuta un ordine ma fa tornare
+l'aereo al bingo in volo (`Session_Simulator`, "Bingo"). I due usano lo stesso criterio
+(`Fuel_Model.bingo_point`): con lo stesso carburante e le stesse basi la missione rifiutata qui
 e' esattamente quella che in sessione arriva al bingo.
 
 **F6-B2bis (decisioni dell'utente del 2026-10-15).** Con `reverse_route` True (default, come
@@ -260,7 +261,8 @@ separata e non parametro di `check_mission_bingo` perche' e' un'altra regola: il
 del rientro in volo dell'esecutore (lo stesso di `Fuel_Model.bingo_point`), il minimo verifica il carico; i
 passi G2-G4 rifaranno il bingo sopra la stessa riserva. Stessa applicabilita' (solo aerea, `EndCriteria.bingo`
 False = nessun controllo); un asset senza carburante o riserva modellati non e' controllato. Come l'altro,
-NON e' chiamato da `run_session` (nessun interruttore: il comportamento in sessione non cambia).
+NON e' chiamato da `run_session` (nessun interruttore: il comportamento in sessione non cambia); lo
+chiama il validatore di sessione (`Logic/Session_Validator`, F8) insieme al bingo a priori.
 
 **G2, soglia di bingo e albero di decisione (decisioni dell'utente del 2026-10-15).** Con `disengage_reserve`
 True (default, come `Session_Simulator.F6_BINGO_DISENGAGE_RESERVE` acceso) `check_mission_bingo` applica la

@@ -280,8 +280,10 @@ class TestAgnosticEndToEnd(F.LoggerSilencer, unittest.TestCase):
         # attraverso gli asset mutati), la seconda e la terza senza missioni (forze ferme).
         # NB: run_session non aggiorna `asset.position` a fine rotta (nessun movimento
         # fisico, v. il suo docstring): nelle sessioni 2-3 le forze ripartono dalle
-        # posizioni iniziali. Qui non conta — si verifica la concatenazione dello stato di
-        # salute/munizioni/carburante — ma e' un limite per una campagna vera (v. report).
+        # posizioni iniziali. Il limite resta per chi chiama run_session direttamente: la
+        # persistenza della posizione e' del conduttore di campagna
+        # (Logic/Session_Campaign, scenario S30). Qui non conta — si verifica la
+        # concatenazione dello stato di salute/munizioni/carburante.
         cls.campaign_scenario = F.combined_arms_scenario()
         cls.campaign = []
         t_start = 0.0

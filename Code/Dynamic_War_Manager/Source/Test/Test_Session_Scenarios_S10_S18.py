@@ -346,8 +346,9 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
 
     **Limite noto, non verificato qui** (v. Test_Session_Validation e il docstring di
     `run_session`): `asset.position` NON e' aggiornata a fine rotta, quindi la sessione 2
-    riparte dalle posizioni iniziali. La posizione e' fra i campi che P3 cita per S11:
-    resta lavoro futuro dell'orchestratore/C2.
+    riparte dalle posizioni iniziali. Il limite resta per chi chiama `run_session`
+    direttamente: la persistenza della posizione e' del conduttore di campagna
+    (`Logic/Session_Campaign.apply_final_positions`, scenario S30).
     """
 
     SEEDS = ('S11-a', 'S11-b', 'S11-c')
