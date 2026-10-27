@@ -6,13 +6,13 @@ come test di contratto), `Test/Test_Session_Scenarios.py` (S1-S9), `Test/
 Test_Session_Scenarios_S10_S18.py` (S10-S18), `Test/Test_Session_Scenarios_S19.py` e
 `Test/Test_Session_Scenarios_S19_Air_Defence.py` (S19, S19AD), `Test/Test_Session_Scenarios_S20.py` (S20) e
 `Test/Test_Session_Scenarios_S21.py` (S21, S21R), `Test/Test_Session_Scenarios_S22.py` ... `_S27.py` (S22-S27, §8.10),
-`Test/Test_Session_Scenarios_S28.py` e `_S29.py` (S28, S29, §8.11),
+`Test/Test_Session_Scenarios_S28.py` e `_S29.py` (S28, S29, §8.11), `Test/Test_Session_Scenarios_S30.py` (S30, §8.12),
 più lo strumento di non regressione `Test/Scenario_Baseline.py` (§8.7). Suite finale della Fase 7: **3371 test, OK
-(skipped=5)** (wiki `decisions/virtual-session-engine-des`, sezione Fase 7). **Suite a `dcedc541`: 4555 test, OK
-(skipped=7)** (messaggio del commit `dcedc541` e `F4_Differenze_Scenari.md`, sezione F7b, verificata dalla sessione principale e
-approvata dall'utente il 2026-10-20; **non rieseguita** per questo aggiornamento); fotografia di non regressione: **982
-esecuzioni** (§8.7, §8.11; contate sul file `Test/baseline/scenario_baseline.json`: chiavi `errors`/`meta`/`runs`, `errors` vuoto).
-*(Suite a `a784a9e7`: 4385 test, OK (skipped=7); fotografia a 918 esecuzioni.)*
+(skipped=5)** (wiki `decisions/virtual-session-engine-des`, sezione Fase 7). **Suite a `fa5fbf1e` (codice identico a quello di `dc53af99`): 4701 test, OK
+(skipped=7)**, e **confronto con la fotografia: 986 esecuzioni IDENTICHE**: sono i numeri della verifica fatta dalla sessione principale al commit `dc53af99`
+(messaggio del commit e Piano §5, riga F8-R), **riportati qui come dichiarati e NON rieseguiti** per questo aggiornamento; la fotografia di non regressione è
+di **986 esecuzioni** (§8.7, §8.12; contate sul file `Test/baseline/scenario_baseline.json`: chiavi `errors`/`meta`/`runs`, `errors` vuoto).
+*(Suite a `dcedc541`: 4555 test, OK (skipped=7) e fotografia a 982 esecuzioni, `F4_Differenze_Scenari.md` sezione F7b; a `a784a9e7`: 4385 test, 918 esecuzioni.)*
 
 **Aggiornamento rispetto alla stesura iniziale**: le estensioni successive alla Fase 7 (selezione
 arma dai registri, nebbia di guerra, scorta per modello d'arma, cannone di bordo, finestre di
@@ -21,7 +21,11 @@ v. capitolo 4 §4.16-4.20 e capitolo 7 §7.6-7.9) hanno portato la suite a **364
 (skipped=5)** al commit `6754bf1c` (2026-09-27), tutte nello stesso harness di questo capitolo. **Aggiornamento a `533cd1f5`** (2026-10-05): la suite è a
 **3922 test, OK (skipped=7)** (messaggio del commit `533cd1f5`), con le estensioni del 2026-09-28/30 (soglia
 di rottura stocastica, E(N), RWR, A6, dottrina di tiro, R-INT) e le fasi F0-F3 della Missione; i moduli di
-test nuovi e le classi aggiunte sono elencati in §8.8. **Aggiornamento a `dcedc541`** (2026-10-20): la suite è a **4555 test, OK (skipped=7)** (4385 → 4489 con la F7a, → 4490 con la
+test nuovi e le classi aggiunte sono elencati in §8.8. **Aggiornamento a `fa5fbf1e`** (2026-10-23): la suite è a **4701 test, OK (skipped=7)** (4555 → 4619 con la F8a, → 4640 con la F8b, → 4699 con la F8c, → 4701 con i due test che la sessione principale ha aggiunto a S30 alla chiusura della F8c, `3fb25089`; la F8-R, di soli dati, non aggiunge
+test; i totali sono quelli dei messaggi di commit, di `F4_Differenze_Scenari.md` sezione F8 e del Piano §5, **non rieseguiti**), con la fase F8 della Missione (validatore di
+sessione, esito per la campagna, prontezza, conduttore di campagna, posizione persistente); **un solo scenario nuovo, S30** (§8.12), quattro moduli di test
+nuovi (`Test_Campaign_Types`, `Test_Session_Validator`, `Test_Readiness`, `Test_Session_Campaign`) e il test intermittente `testCalcFightResult` reso
+riproducibile con un seme fisso. **Aggiornamento a `dcedc541`** (2026-10-20): la suite è a **4555 test, OK (skipped=7)** (4385 → 4489 con la F7a, → 4490 con la
 correzione dei dati A-10C, → 4555 con la F7b), con la fase F7 della Missione (regole d'ingaggio di missione e fuoco su
 posizione); due scenari nuovi (S28, S29, §8.11), S19AD migrato dai filtri di test alle regole di missione e un modulo di test nuovo,
 `Test/Test_Area_Fire.py` (49 test). **Aggiornamento a `a784a9e7`** (2026-10-18): la suite è a **4385 test, OK (skipped=7)** (`F4_Differenze_Scenari.md`,
@@ -138,7 +142,7 @@ deterministica (le stesse componenti di forze in contatto, che dipendono solo da
 non dal seed) — altrimenti l'uguaglianza del primo test potrebbe dipendere da un motore che
 ignora il seed anziché da un motore davvero deterministico.
 
-## 8.3 Agnosticismo come test di contratto (`Test/Test_Session_Validation.py:1-47`, `:134-373`)
+## 8.3 Agnosticismo come test di contratto (`Test/Test_Session_Validation.py:1-47`, `:134-375`)
 
 Il vincolo "core indifferente al simulatore" (capitolo 1, §1.4) si formula come "cancellando
 l'adapter DCS la campagna deve continuare a girare". A questo commit **non esiste alcun adapter
@@ -147,7 +151,8 @@ in due parti:
 
 **(a) Strutturale** (`TestAgnosticContractStructure`, `:188-237`): verificato con
 `typing.get_type_hints` + AST-check, non a runtime. **Esteso nella fase F3** (§2.9 del capitolo 2):
-`Operation`, `MissionOutcome` e `AssetMissionOutcome` sono fra i tipi della catena delle porte; gli enum di
+`Operation`, `MissionOutcome` e `AssetMissionOutcome` sono fra i tipi della catena delle porte (**dalla F8b anche `OperationOutcome`**, una riga in più
+nell'elenco `_PORT_TYPES`, `:141-143`, che è l'**unico** cambio di codice a questo modulo di test dalla F7, oltre a un commento); gli enum di
 dominio e i mapping sono tipi ammessi; la `Mission` è accettata come foglia composta (porta `DataType.Route`
 e `AttackProfile`) e coperta da `Test_Mission_Types`, ma i **nomi dei campi** di tutti i tipi di
 `Command/Mission_Types` sono comunque controllati contro il lessico del simulatore:
@@ -165,7 +170,7 @@ e `AttackProfile`) e coperta da `Test_Mission_Types`, ma i **nomi dei campi** di
   `zipfile`, `minizip`, né nulla con `'dcs'` nel nome, e non chiamano `timer.getTime`
   (l'orologio nativo di DCS/Lua).
 
-**(b) Funzionale end-to-end** (`TestAgnosticEndToEnd`, `:262-373`): l'intera catena gira con dati
+**(b) Funzionale end-to-end** (`TestAgnosticEndToEnd`, `:262-375`): l'intera catena gira con dati
 costruiti **solo** in Python (nessun `.miz`, nessun `dcs_unit_data`) e produce un
 `SessionOutcome` completo (ingaggi, danni, munizioni, carburante tutti presenti); ogni id
 presente nell'esito è un id di dominio noto (di blocco, di missione — i `mission_id` sono id di dominio
@@ -173,10 +178,12 @@ dalla F4b — o di asset costruiti dal core), mai un id di missione del simulato
 `target_id`, `source_id`, `asset_id`, `force_id` e, dalla F4b, `block_id`; ogni `time` cade dentro `[t_start, t_end]` della sessione. Una
 mini-campagna di **tre sessioni consecutive** sulle stesse forze verifica che lo stato passa solo
 attraverso gli asset mutati (nessuno stato nascosto fuori dagli asset). Limite annotato nel test
-stesso (`:281-285`): `run_session` non aggiorna `asset.position` a fine rotta (nessun movimento
+stesso (`:281-287`): `run_session` non aggiorna `asset.position` a fine rotta (nessun movimento
 fisico, v. capitolo 6 §6.5) — nelle sessioni successive le forze ripartono dalle posizioni
-iniziali; non conta per verificare la concatenazione di salute/munizioni/carburante, ma è un
-limite per una campagna vera (v. capitolo 9).
+iniziali; non conta per verificare la concatenazione di salute/munizioni/carburante. **Dalla F8c il commento dice**
+che il limite resta *per chi chiama `run_session` direttamente* e che la persistenza della posizione è del conduttore di campagna
+(`Logic/Session_Campaign`, scenario S30, §8.12): la mini-campagna `VAL-agn` e S11 non sono cambiate (restano 982 esecuzioni identiche, §8.7), perché
+`run_session` non muta la posizione.
 
 **Effetto della F4c sulla mini-campagna** (`F4_Differenze_Scenari.md`, sezione F4c): la seconda e la terza
 sessione sono *senza missioni*, quindi i 2 A-10C di Blue-CAS, che prima restavano fermi **in volo** nella
@@ -190,7 +197,7 @@ dello stato, non gli esiti, e passano.
 Quando l'adapter DCS esisterà, questo stesso test diventerà eseguibile alla lettera; fino ad
 allora è il suo equivalente verificabile (`Test/Test_Session_Validation.py:44-47`).
 
-## 8.4 La batteria di scenari S1-S29
+## 8.4 La batteria di scenari S1-S30
 
 Origine: S1-S5 adattano le composizioni di forza dei documenti Lanchester ingeriti (**senza i
 loro numeri**: solo composizione e domanda, v. wiki
@@ -234,6 +241,7 @@ prossimità `Urban`, scala gerarchica, rete `Transport` multi-nodo).
 | **S27** | `TestS27DoubleEngagement` | Doppio ingaggio dello stesso aereo: due consumi d'ingaggio, ri-pianificazione dopo ciascun episodio, bingo dopo il secondo con rientro sulla base alternativa (G5). 40 esecuzioni (§8.10). |
 | **S28** | `TestS28RulesOfEngagement`, `TestS28WeaponPolicyByMissionType`, `TestS28ZoneDesignation` | Regole d'ingaggio di missione (F7a, capitolo 4 §4.32-4.33): ROE e armi designate (S28-ROE), politica d'armi per tipo di missione (S28-CLASS), designazione geometrica (S28-ZONE). 52 esecuzioni (§8.11). |
 | **S29** | `TestS29AreaFire` | Fuoco su posizione (F7b, capitolo 6 §6.23): un'artiglieria spara sulla posizione stimata dove i blu erano. 12 esecuzioni (§8.11). |
+| **S30** | `TestS30CampaignSequence` | Ciclo di campagna (F8c, capitolo 6 §6.24-6.27): quattro sessioni disgiunte condotte da `run_campaign_session`, senza contatti: posizione ripresa, asset non pronto escluso dal validatore, riparazione in corso e poi conclusa, riarmo e rifornimento a fine turnaround. 4 esecuzioni (§8.12). |
 
 Tutti gli scenari condividono la stessa regola: si prende la composizione delle forze e la
 domanda che pongono, mai coefficienti o esiti numerici precalcolati — per S6-S19 la domanda è
@@ -281,20 +289,21 @@ sottoclasse di `Asset` (confrontava il nome classe esatto invece di usare `isins
   le verifiche sulle scorte d'intercettazione avessero casi; S1 con CAS, i Maverick non sono più intercettati
   (`Proposta_Dati_Anti_Missile.md` §6).
 
-## 8.7 Lo strumento di non regressione: `Test/Scenario_Baseline.py` (fase F0, commit `d3af6980`; esteso da F4a a G5)
+## 8.7 Lo strumento di non regressione: `Test/Scenario_Baseline.py` (fase F0, commit `d3af6980`; esteso da F4a a F8c)
 
 Dalla fase F3 la porta di sessione cambia e servono **numeri** per dimostrare che, a parità di input, il motore
 produce la stessa storia (`Piano_Implementazione_Missione.md`, §0 punto 2 e Fase 0). `Scenario_Baseline.py`
-(929 righe a `dcedc541`, 901 a `a784a9e7`, 693 a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
+(932 righe a `fa5fbf1e`, 929 a `dcedc541`, 901 a `a784a9e7`, 693 a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
 `Test_`) esegue gli scenari di sessione esistenti, riassume ogni `SessionOutcome` in una forma deterministica e la
 salva su JSON, oppure la confronta con una fotografia salvata.
 
-**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:252-373`) elenca le "unità" dei
+**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:252-376`) elenca le "unità" dei
 test: per le classi di scenario (S1-S21, S19AD, S21R, validazione) esegue il loro `setUpClass`, che costruisce le
 forze con `Scenario_Fixtures` e lancia tutte le repliche e varianti usate dai test; per
 `Test_Session_Simulator` (nessun `setUpClass`) un elenco scelto di **metodi** di test (`ORC-*`). Le unità S21 e
-S21R sono messe **in coda** alla tabella (nomi stabili: non spostano le chiavi delle altre). Durante
-l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:578-589`) che chiama
+S21R sono messe **in coda** alla tabella (nomi stabili: non spostano le chiavi delle altre); così **S30-CAMPAIGN**, aggiunta dalla F8c come ultima voce
+(`:373-375`, `_single_or_index`: una chiave per sessione, nessuna variante). Durante
+l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:581-592`) che chiama
 l'originale e poi riassume l'esito **e** lo stato reale degli asset (letto subito dopo la chiamata: in S11 e
 nella mini-campagna la sessione successiva muta di nuovo le stesse istanze). Le asserzioni dei test non sono
 eseguite per le classi di scenario; per i metodi un'asserzione fallita è segnalata su stderr ma non impedisce la
@@ -305,7 +314,7 @@ stesso `session_id` nell'unità, tradotto in un nome leggibile dalla tabella (es
 S1; `default`/`press_on`/`resistant` per S5; `split`/`single` per S20; `parked`/`control` per S21). Se un
 `setUpClass` cambia l'ordine delle varianti, le chiavi cambiano: va aggiornata la tabella.
 
-**Cosa registra** (`summarize_run`, `:474-573`): intervallo della sessione, forze dei due lati e parametri di
+**Cosa registra** (`summarize_run`, `:477-576`): intervallo della sessione, forze dei due lati e parametri di
 chiamata riconoscibili, esiti di forza per ingaggio (con tempi, perdite, erosione, shock, soglia e, dalla F4b,
 il `block_id` quando c'è), stato finale per asset (salute, operativo, distrutto, munizioni, scorta per arma,
 intercettori, carburante), munizioni consumate per asset e per arma, intercettazioni per asset e per arma,
@@ -313,13 +322,13 @@ eventi di carburante, conteggi (salve, intercettazioni, danni, distruzioni) e le
 **Dalla F4b la voce `force_outcomes` è chiavata per blocco** (gli esiti delle sue forze d'ingaggio, nell'ordine
 degli ingaggi, `block_id or force_id`): con una missione per blocco ha la stessa forma di prima, e il confronto con
 le fotografie precedenti resta possibile. I float sono arrotondati a 6 decimali
-(`ROUND_DIGITS`, `:206`; `-0.0` normalizzato, `norm`, `:394-418`), le chiavi ordinate: **due catture dello stesso
+(`ROUND_DIGITS`, `:206`; `-0.0` normalizzato, `norm`, `:397-421`), le chiavi ordinate: **due catture dello stesso
 codice sono identiche byte per byte**. `FORMAT_VERSION = 1` (`:205`).
 
 **Parametri di chiamata dopo la F3**: `run_session` non ha più `routes`; perché la fotografia della Fase 0 resti
 confrontabile, la voce `call.parameters.routes` è **ricostruita dalle missioni** (`Mission_Adapter.mission_routes`,
-`_call_parameters`, `:447-471`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
-`:713-721`).
+`_call_parameters`, `:450-474`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
+`:716-724`).
 
 **Uso** (dalla radice del repository, con l'interprete della macchina):
 
@@ -332,14 +341,14 @@ python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline \
 ```
 
 `--only <regex>` limita il confronto a unità o chiavi; `--compare a.json --against b.json` confronta due file
-già catturati senza eseguire nulla. `compare` (`:753-801`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
+già catturati senza eseguire nulla. `compare` (`:756-804`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
 20 righe di differenza per esecuzione). **`--summary` (dalla F4a)** sostituisce l'elenco grezzo con un riepilogo
-leggibile per esecuzione (`summarize_differences`, `:845-873`, che usa `run_digest`, `:804-842`): per ogni
+leggibile per esecuzione (`summarize_differences`, `:848-876`, che usa `run_digest`, `:807-845`): per ogni
 esecuzione che differisce, le sole grandezze cambiate come `vecchio -> nuovo` — esito per forza (e, per i blocchi
 con più forze d'ingaggio, l'esito di ciascuna: `<mission_id>.mission_outcome`), asset distrutti, colpi,
 intercettazioni, carburante e fine del movimento, istante del primo colpo e del primo danno — poi l'elenco delle
 esecuzioni invariate. Non cambia il formato della fotografia; si può usare solo con `--compare`. Codice d'uscita
-(`main`, `:876-925`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
+(`main`, `:879-928`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
 
 **Dalla F7b** l'evento di fuoco su posizione compare in `engagements` come un ingaggio **con zero forze** (`counts.engagements` lo conta; nessuna voce nuova nel riassunto), come in `SessionOutcome.engagement_outcomes`.
 
@@ -348,13 +357,13 @@ postura nell'esito, F5-B), `--ignore actual_etas` (le ETA effettive, F5-C), `--i
 e i conteggi `counts.fuel_events`/`counts.fuel_exhausted`, cioè la sola *forma* degli eventi di carburante; il carburante
 finale per asset resta nel confronto, quindi un cambio di sostanza resta visibile). Serve ad attribuire le differenze a una
 sola causa. **Voci nuove del riassunto**: `postures` (F5-B, se l'esito le porta) e `actual_etas` (F5-C, `{mission_id: [ETA |
-None]}`, solo se l'esito porta esiti di missione); le fasi F6-B1, F6-B2, G1-G5 **non** aggiungono voci (lo stato di
+None]}`, solo se l'esito porta esiti di missione); le fasi F6-B1, F6-B2, G1-G5 e, dalla F8, `IN_PROGRESS`, `final_positions`, `movement_ends` e `operation_outcomes` **non** aggiungono voci (lo stato di
 missione, i motivi di fine per asset e `crew_recovered` sono nell'esito di missione, che la fotografia non registra: si
 verificano nei test, S25-S27, e con catture estese fuori dal repository). Il G3 aggiunge solo eventi `FuelEvent` con
 `regime` `'engagement'` nella voce `fuel`; il G4a una voce in `engagements` per episodio.
 
-**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (**982 esecuzioni** a `dcedc541`, contate sul
-file; chiavi `errors`/`meta`/`runs`, `errors` vuoto; 918 a `a784a9e7`, 370 a `84a47670`). Ne è stata fatta la cattura iniziale su una copia
+**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (**986 esecuzioni** a `fa5fbf1e`, contate sul
+file; chiavi `errors`/`meta`/`runs`, `errors` vuoto; 982 a `dcedc541`, 918 a `a784a9e7`, 370 a `84a47670`). Ne è stata fatta la cattura iniziale su una copia
 isolata di `18a772d6` (292 esecuzioni, identica in due catture separate); è stata **rigenerata più volte**, sempre dopo un
 confronto spiegato e con due catture consecutive identiche (determinismo). La storia, dal documento delle differenze
 `Analysis/Document/F4_Differenze_Scenari.md` (le righe da F5-A in poi sono nuove di questo aggiornamento; le esecuzioni
@@ -383,6 +392,10 @@ sono quelle della fotografia **installata** nel commit indicato, come risulta da
 | F7a, regole d'ingaggio di missione | `9f87a3ad` | 970 (+52: S28) | di 918: **918 identiche** (S19AD compreso: 24 su 24), 0 cambiate, 52 nuove (S28-ROE 20, S28-CLASS 24, S28-ZONE 8); approvato il 2026-10-18 |
 | Correzione dati A-10C | `3cbb4226` | 970 | di 970: **966 identiche, 4 cambiate** (`S28-CLASS/S28-CLASS-{0,1,2,3}/self_defence`: l'A-10C in CAS ora ha l'autodifesa aria-aria), 0 nuove; nessun cambio di codice; approvato il 2026-10-18 |
 | F7b, fuoco su posizione | `dcedc541` | 982 (+12: S29) | di 970: **970 identiche**, 0 cambiate, 12 nuove (S29-AREA: 3 varianti × 4 seed); approvato il 2026-10-20 (confronto su osboxes, 1091 s) |
+| F8a, validatore di sessione e tipi di campagna | `c1182d8a` | 982 | **982 identiche**, 0 cambiate, 0 nuove: il validatore è fuori da `run_session` e il warning E4 non cambia nulla (verificata dalla sessione principale il 2026-10-22, Piano §5 e `F4_Differenze_Scenari.md`) |
+| F8b, esito per la campagna | `33698fb4` | 982 | **982 identiche** (`compared 982 runs: IDENTICAL`, 1113 s su osboxes, `Rapporti/Rapporto_F8b_oc-developer.md` §9): `IN_PROGRESS`, posizioni, fine del movimento ed esiti d'Operazione **non sono nella fotografia** |
+| F8c, prontezza, conduttore, S30 | `87aa7dea`, `6d3497bc`, `398ae3ef`; fotografia installata in `3fb25089` | 986 (+4: S30) | di 982: **982 identiche**, 0 cambiate, 4 nuove (`S30-CAMPAIGN/S30-CAMPAIGN-1..4`); installata dalla sessione principale dopo l'approvazione dell'utente. I blocchi 1 e 2 non hanno richiesto il confronto (nessun cambio di motore) |
+| F8-R, dati dei tempi | `dc53af99` | 986 | **986 identiche** (dichiarato dal messaggio del commit e dal Piano §5; **non rieseguito** per questo aggiornamento): i sette valori cambiati non entrano negli istanti di S30, che dipendono da `GROUND_TURNAROUND_S` e dalla riparazione, rimasti invariati |
 
 **Il processo di non regressione, come applicato dalla F4** (ogni passo dichiara la propria differenza prima di
 essere committato): (1) la fotografia *prima* del passo viene ricontrollata **identica** al codice di partenza;
@@ -732,3 +745,78 @@ loadout di test, caso positivo sui loadout reali, `S28 'self_defence'` caso posi
 `TestTargetRules (30)`, ma la classe definisce **29** metodi e la somma 104 torna solo con 29. Come per le fasi precedenti i totali di
 suite sono quelli dei messaggi di commit e di `F4_Differenze_Scenari.md`; **non sono stati rieseguiti** (la fotografia è stata contata
 sul file: 982).
+
+## 8.12 Scenari e verifiche della fase F8 (F8a-F8c 2026-10-22/23; dati F8-R 2026-10-23)
+
+Le misure vengono da `Analysis/Document/F4_Differenze_Scenari.md` (sezione «F8»), dai rapporti `Rapporti/Rapporto_F8a_oc-developer.md` … `Rapporto_F8c3_oc-developer.md`,
+dal Piano §5 (deviazione 25) e dal docstring di `Test_Session_Scenarios_S30.py`; i numeri di suite e confronto sono quelli già dichiarati da quei documenti e **non sono
+stati rieseguiti**. Come sempre i test asseriscono proprietà **qualitative o strutturali**: le uniche novità numeriche sono le tabelle dei tempi (STIME, capitolo 7 §7.13), e
+i test ne calcolano gli attesi dalle costanti e dal registro, mai da numeri scritti a mano. **La F8 non cambia nessuna esecuzione preesistente**: tutto il ciclo di
+campagna è fuori da `run_session` (capitolo 6 §6.24-6.27).
+
+### S30-CAMPAIGN (`TestS30CampaignSequence`, 4 esecuzioni, 10 test)
+
+Quattro sessioni disgiunte condotte da `Session_Campaign.run_campaign_session`, tutte nel `setUpClass` (così `Scenario_Baseline.capture` le registra come quattro
+esecuzioni: `S30-CAMPAIGN/S30-CAMPAIGN-1` … `-4`, una chiave per sessione, nessuna variante). **Nessun contatto, nessuna estrazione RNG**: la storia dipende solo da geometria,
+tempi e costanti. Forze (`_build_forces`, `Test_Session_Scenarios_S30.py:144-163`): **Blue-Base** (base aerea con un deposito `'Farp'` in (0, 0)), **Blue-Wing** (2 F-16C Block 52d
+con loadout `Strike` parcheggiati sulla base; missione ad anello `DEPARTURE` → `NAV` (100 km, 0, 5000 m) → `LAND`, partenza dal parcheggio), **Blue-Mech** (2 M1A2-Abrams in (0, −20 km):
+`mbt0` in missione `Movement` fino a (10 km, −20 km); `mbt1` senza missione e **già danneggiato prima del registro**, `health = 60`) e **Red-Depot** (una struttura Red a (300 km, 0),
+nessun sensore utile). Le posizioni sono costanti dichiarate di test, non dati tarati; le velocità sono quelle nominali del registro.
+
+| Sessione | Finestra [s] | Che cosa mostra |
+|---|---|---|
+| `S30-CAMPAIGN-1` | [0, 7200] (`SessionRules().window(0)`) | le due missioni; `mbt0` a (10 km, −20 km) in `final_positions` e in `asset.position`; gli F-16C a terra sulla base (`parking_cold`); il registro: F-16C pronti a `movement_ends + turnaround` (classe `Fighter`), `mbt0` a `arrivo + GROUND_TURNAROUND_S`, `mbt1` a `7200 + REPAIR_TIME_FULL_S['ground'] × 0,4` (riparazione in corso, salute 60) |
+| `S30-CAMPAIGN-2` | [7200, 14400] (`t2 = ledger.last_end`) | **asset non pronto escluso**: un ordine con una missione per `mbt0` è rifiutato con `ASSET_NOT_READY` (precondizione verificata con un messaggio esplicito: `ready_at('mbt0') > t2`); poi la sessione senza missioni: `final_positions['mbt0']` = (10 km, −20 km) — **posizione ripresa**, `mbt0` è dove l'ha lasciato la 1 — e `mbt1` ancora a salute 60 |
+| `S30-CAMPAIGN-3` | `t3 = max(ledger.last_end, ledger.ready_at('mbt0'))` | `mbt0` **rifornito** (carburante = pieno del registro meno il solo consumo di questa sessione) e di nuovo impiegabile; una nuova missione da (10 km, −20 km) a (20 km, −20 km), costruita **dopo** la sessione 2 con `F.missions_for` (che legge `asset.position`, quindi parte dalla posizione persistita), accettata; `mbt1` ancora in riparazione |
+| `S30-CAMPAIGN-4` | `t4 = max(ledger.last_end, ledger.ready_at('mbt1'))` | `mbt1` **riparato** (salute 100) e tolto dal registro, impiegabile |
+
+Gli istanti sono calcolati in `setUpClass` dalle costanti e dal registro. Con i valori attuali (letti dalla fotografia e dalle costanti, **non** da una nuova esecuzione): `mbt0` arriva a 654,5 s
+(10 km a velocità nominale), quindi `ready_at('mbt0')` = 654,5 + 21 600 = **22 254,5 s** e la sessione 3 è [22 254,5; 29 454,5]; gli F-16C finiscono la rotta a 750,9 s e sono pronti a 750,9 + 10 800 =
+11 550,9 s (pronti dalla sessione 3, non dalla 2); la riparazione di `mbt1` finisce a 7 200 + 0,4 × 86 400 = **41 760 s** (sessione 4: [41 760; 48 960]), e **non riparte** nelle sessioni 2 e 3 (regola 2 della
+prontezza, capitolo 6 §6.26).
+
+*Diagramma D55 — la sequenza di S30-CAMPAIGN sull'asse del tempo di campagna e i punti in cui gli asset tornano pronti (F8c).*
+
+```mermaid
+flowchart LR
+    S1["S30-CAMPAIGN-1<br/>[0, 7200]<br/>due missioni:<br/>F-16C ad anello, mbt0 a 10 km"]
+    S2["S30-CAMPAIGN-2<br/>[7200, 14400]<br/>mbt0 rifiutato (non pronto),<br/>poi nessuna missione:<br/>posizione ripresa"]
+    S3["S30-CAMPAIGN-3<br/>[22254,5, 29454,5]<br/>mbt0 rifornito,<br/>nuova missione da 10 a 20 km"]
+    S4["S30-CAMPAIGN-4<br/>[41760, 48960]<br/>mbt1 riparato,<br/>fuori dal registro"]
+    S1 --> S2 --> S3 --> S4
+    RF["F-16C pronti<br/>a 11550,9"] -.-> S3
+    RM["mbt0 pronto<br/>a 22254,5"] -.->|"inizio della sessione 3"| S3
+    RR["mbt1 riparato<br/>a 41760"] -.->|"inizio della sessione 4"| S4
+```
+
+Test (10: gli 8 scritti dall'esecutore del blocco 3 più 2 aggiunti dalla sessione principale alla chiusura della F8c, `3fb25089`): `test_positions_persist` (le posizioni delle sessioni 1-3), `test_not_ready_asset_is_rejected`
+(`ASSET_NOT_READY` per `mbt0`), `test_aircraft_land_on_base` e `test_session1_readiness_records` (i due aggiunti: la postura `parking_cold` e la posizione di parcheggio degli F-16C, e i `ready_at` di F-16C, `mbt0` e `mbt1` calcolati sulle
+costanti e sul registro), `test_ready_assets` (esattamente gli asset non distrutti e pronti a `t`), `test_repair_in_progress_then_done` (`mbt1` salute 60 nelle sessioni 1-3 e 100 nella 4), `test_turnaround_rearms_and_refuels`
+(carburante e scorta tornati al pieno del registro), `test_sessions_are_disjoint` (`SESSION_OVERLAP`), `test_ledger_round_trip` (`add_ledger`/`get_ledger`/`from_dict` identico) e `test_restore_position`
+(`restore(..., restore_position=True)` su forze ricostruite). **Premesse esplicite**: alcune asserzioni dipendono da una precondizione sui tempi (per esempio `ready_at('mbt0') > t2`) e la dichiarano con un messaggio; se una ricerca futura le rendesse false
+va allungata la rotta della sessione 1, non tolta l'asserzione.
+
+**Limiti dello scenario** (dichiarati): nessun contatto, quindi nessun danno in sessione (il danno di `mbt1` è anteriore al registro); un solo aereo-tipo (F-16C) e due mezzi terrestri; il test del rifiuto usa forze costruite a parte (`_build_forces()` di nuovo) per non
+toccare quelle della sequenza.
+
+### Test aggiunti dalla F8 (contati sul codice: metodi `test_` aggiunti da `dcedc541` a `fa5fbf1e`)
+
+| Modulo di test | Cosa copre | Test |
+|---|---|---|
+| `Test_Campaign_Types.py` (nuovo) | `SessionRules` (default, `window`, durate errate, default > max), `SessionViolation`, `SessionValidationError` (è un `ValueError`, una riga per violazione), `SessionRecord`, `ReadyRecord` (tempi nulli, `ready_at` troppo presto, `rearm`/`repair`), `CampaignLedger` (immutabile, `last_end`, `is_ready`, `with_session`, `with_readiness`, `to_dict`/`from_dict` serializzabili con `json.dumps`) | 41 |
+| `Test_Session_Validator.py` (nuovo) | `validate_session`/`check_session`: un ordine valido, un caso per codice (sessione aperta, troppo lunga, sovrapposta, blocco assente, asset distrutto, non pronto, missione oltre la fine, `FUEL_MINIMUM` e `BINGO_AT_START` insieme e con `F6_BINGO` spento), violazioni multiple raccolte in ordine, `bingo=False` non controllato, missione sul posto ammessa, nessuna mutazione degli asset | 16 |
+| `Test_Readiness.py` (nuovo) | `asset_domain`, `turnaround_class` (stringa, enum, dal registro, ignota, non aerei), `turnaround_s` (ogni classe, default con warning, terra, mare), `repair_s` (intatto, lineare, terra, distrutto), `readiness_after_session` (distrutto, `movement_ends`, ripiego su `end_time`, consumo senza missione, danno senza novità, riparazione non riavviata, ultimo danno, processo precedente più lungo, `record_session`), `apply_campaign_processes` (riparazione, riarmo dell'aereo, rifornimento del veicolo, record non concluso, asset assente, distrutto, idempotenza), `ready_assets` | 32 |
+| `Test_Session_Campaign.py` (nuovo) | `apply_final_positions` (terra, aereo parcheggiato, `off_scene` non spostato, in volo con warning, distrutto senza warning, asset senza posizione, arrotondamento a `OFFSET_DECIMALS`); `run_campaign_session` (ordine non valido: solleva e `run_session` non è chiamata; ordine valido: chiamata e registrazione) | 9 |
+| `Test_Session_Scenarios_S30.py` (nuovo) | S30-CAMPAIGN | 10 |
+| `Test_Mission_Types.py` | `test_in_progress`; `TestOperationOutcome` (ordine, coercizione da stringa, immutabilità, validazione) | 5 |
+| `Test_Session_Types.py` | `TestOperationOutcomeFunction` (le tre regole, ordine degli stati, missione mancante), `TestSessionOutcomeF8Fields` (default vuoti, validazione e ordinamento dei tre mapping, `assemble_session_outcome`) | 10 |
+| `Test_Session_Simulator.py` | `TestSessionBlocks` (2), `TestMissionBeyondSessionWarning` (1), `TestF8bCampaignOutcome` (5: posizioni finali, fine del movimento, esaurimento, esito d'Operazione con interruttore spento, chiave per `operation_id`); `test_route_cut_by_the_session_end_fails` → `..._is_in_progress` più la controprova `..._off_is_failed` | 9 (netti: 10 aggiunti, 1 rinominato) |
+| `Test_Mission_Adapter.py` | `TestMissionPlannedEnd` (massimo degli arrivi, con attese, sul posto con e senza `max_duration_s`) | 4 |
+| `Test_Context.py` | `TestReadinessTables` (ogni `Air_Asset_Type` ha un turnaround, valori > 0, `REPAIR_TIME_FULL_S` ha `air`/`ground`/`sea`): verificano la struttura, **non i numeri** | 3 |
+| `Test_Campaign_State.py` | `TestCampaignStateLedger` (`add_ledger`/`get_ledger`, `KeyError`), `TestCampaignStateRestorePosition` (default non tocca la posizione, `True` la imposta, snapshot senza posizione) | 7 |
+
+I conteggi sommano a **146**, esattamente la differenza fra i 4555 test di `dcedc541` e i 4701 di `fa5fbf1e` (suite dichiarate, non rieseguite). Cambia anche
+`Test_Tactical_Evaluation.testCalcFightResult` (seme fisso e ripristino dello stato globale): usava il `random` globale con una tolleranza `delta=3` superata nello 0,68% delle
+estrazioni (136 su 20 000), da cui un fallimento intermittente **preesistente e non legato alla F8** (`F4_Differenze_Scenari.md`, sezione F8). **Controllo di copertura**: `Test_Session_Validator` non ha un test dedicato per `MISSION_SPEED` né
+per il caso positivo di `MISSION_START_INVALID` (verificato cercando i codici nel modulo; sono citati solo `assertNotIn` per la missione sul posto); `check_mission_speed` ha comunque i propri test in `Test_Mission_Adapter`. **Nessun test** copre la
+sorte dei record di prontezza di un asset non passato a `readiness_after_session` (capitolo 9 §9.6 voce 26).

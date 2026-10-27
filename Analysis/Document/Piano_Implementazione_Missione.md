@@ -1,6 +1,6 @@
 # Piano di implementazione dell'entità Missione
 
-**Stato**: APPROVATO (2026-10-05, Q1-Q4 sì) e IN CORSO: fatte F0, F1, F2, F3, F4a, F4b, F4b+, F4b++, la riprogettazione dei test S3/S5, F4c, F5-A, F5-B, F5-C, F6-A, F6-B1, F6-B2, F6-B2bis, G1-G5, (2026-10-18) F7a e (2026-10-20) F7b, (2026-10-22/23) F8a, F8b e F8c; da fare F9; F8-R in attesa di approvazione (v. §5 "Stato di avanzamento").
+**Stato**: APPROVATO (2026-10-05, Q1-Q4 sì) e IN CORSO: fatte F0, F1, F2, F3, F4a, F4b, F4b+, F4b++, la riprogettazione dei test S3/S5, F4c, F5-A, F5-B, F5-C, F6-A, F6-B1, F6-B2, F6-B2bis, G1-G5, (2026-10-18) F7a e (2026-10-20) F7b, (2026-10-22/23) F8a, F8b e F8c; (2026-10-27) F8-R applicata e F9 (manuale DES aggiornato a `fa5fbf1e`); da fare solo F8d, rinviata (v. §5 "Stato di avanzamento").
 **Base**: le decisioni D1-D6 e N1-N3 di `Proposta_Struttura_Missione_Decisioni.md` (tutte prese;
 N2.a = C, N3.f = B).
 **Convenzioni**:
@@ -306,7 +306,7 @@ su cui poggia la successiva.
 | F8c (prontezza, ciclo di campagna, posizione persistente) | FATTA, verificata 2026-10-23 (suite 4699, confronto 982 identiche + 4 nuove: S30-CAMPAIGN-1..4; fotografia 986 dopo l'approvazione dell'utente) | `87aa7dea`, `6d3497bc`, `398ae3ef` | deviazione 25: `Logic/Readiness.py` (turnaround e riparazione con tabelle STIMATE in `Context`), `Logic/Session_Campaign.py` (`run_campaign_session`, `apply_final_positions`), `Campaign_State` (`restore_position`, `add_ledger`/`get_ledger`), scenario S30-CAMPAIGN; eseguita in 3 blocchi da `oc-developer` (DeepSeek V4 Pro 0813); costi reali in `Rapporti/Costi_Deleghe.md` |
 | F6-B3 (S24-GLIDE e bingo di default) | CHIUSA 2026-10-23 (I1: solo docstring, fotografia identica) | | S24-GLIDE resta con `EndCriteria(bingo=False)` (volo che non rientra al bingo: prova la planata); dichiarato nel docstring di `TestS24DryAircraft`; I2 e I3 non realizzate |
 | F8-R (ricerca dei tempi) | FATTA e APPLICATA 2026-10-23 (D1-D5 approvate dall'utente; `Ricerca_Turnaround_Riparazione.md` §8) | | solo dati in `Context.py`: suite 4701 OK, confronto 986 IDENTICHE; fonte verificata in pagina solo per l'F-35, mare = stima indicativa 48 h, riparazione mare 72 h in porto, danno grave nave in F8d |
-| F9 | DA FARE | | F8-R = ricerca dei tempi di turnaround e riparazione per sostituire le STIME (serve una sessione Claude col web); F9 = documentazione (manuale DES, togliere il 'TOT comune' nei capitoli 03 e 10, documentare F5/F6/F8); `abort_on_threat` fuori dal Piano di F6 |
+| F9 | FATTA 2026-10-27 (manuale DES aggiornato a `fa5fbf1e` da `des-manual-writer`; 10 file sotto `Manuale_Motore_DES/`) | | documentate F8a-F8c e F8-R; nel manuale non resta alcun TOT comune d'Operazione (solo negazione/storia); voci 24-27 nuove in §9.6 del capitolo 10 (v. sotto); `abort_on_threat` fuori dal Piano di F6. Voce 26: `readiness_after_session` perde i record degli asset assenti dalle forze della sessione (`with_readiness` sostituisce la mappa), contro il docstring di `Readiness.py:170-172` e la Proposta §4.4: DIFETTO APERTO, nessun test lo copre |
 
 **Deviazioni decise durante il lavoro**:
 1. `mission_id` **non** entra nell'RNG in F3 ma in F4b. Le estrazioni sono per ingaggio fra forze, e finché la forza è il blocco un ingaggio può coinvolgere più missioni. Così F3 è rimasta pura struttura, verificata con fotografia identica.

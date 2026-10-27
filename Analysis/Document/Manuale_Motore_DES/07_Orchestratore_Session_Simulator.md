@@ -1,8 +1,11 @@
 # Capitolo 6 — L'orchestratore: `Session_Simulator.run_session`
 
-Modulo: `Logic/Session_Simulator.py` (**3102 righe a `dcedc541`**, 2851 a `a784a9e7`, 937 a `84a47670`, 774 a `533cd1f5`; il
-grosso della crescita è il docstring del modulo, che è il documento di progetto di F5, F6, G1-G5 e F7, e la nuova logica di
-sessione). Tutti i riferimenti `:riga` di questo capitolo valgono per `dcedc541`.
+Modulo: `Logic/Session_Simulator.py` (**3163 righe a `fa5fbf1e`**, 3102 a `dcedc541`, 2851 a `a784a9e7`, 937 a `84a47670`, 774 a `533cd1f5`; il
+grosso della crescita è il docstring del modulo, che è il documento di progetto di F5, F6, G1-G5, F7 e F8, e la nuova logica di
+sessione). Tutti i riferimenti `:riga` di questo capitolo valgono per `fa5fbf1e`. **Dalla F8** il capitolo descrive anche i moduli
+che stanno *intorno* all'orchestratore e lo conducono da fuori: il validatore di sessione, la prontezza degli asset e il conduttore
+di campagna (§6.25-6.27, con i dati che `run_session` aggiunge all'esito, §6.24). `Session_Simulator.py` è cambiato poco (65 righe aggiunte e 4 tolte, di cui 23 nel
+docstring del modulo; `git diff -U0 dcedc541..HEAD`): la F8 è fatta di funzioni *nuove fuori da `run_session`*.
 Mette in fila, per la prima volta, i pezzi prodotti dalle fasi precedenti (`Logic/Session_Simulator.py:1-19`); dalla
 fase F3 della Missione (2026-10-05) la fila comincia dalle **missioni** dell'ordine, dalla F4 (2026-10-05/11) la
 missione è anche la **forza d'ingaggio** e dai passi G4a-G4b (2026-10-17) l'ingaggio è un **episodio nel tempo**, dopo
@@ -23,8 +26,13 @@ SessionOrder ──> Contact_Scheduler.schedule_contacts          (strato 1: QUA
              ──> apply_engagement_result                       (strato 3: danno, munizioni), subito
              ──> ri-pianificazione degli aerei + nuovi contatti (G4b), poi l'episodio successivo
              ──> Fuel_Model.build/apply_fuel_event             (strato 3: carburante, PASSO FINALE dal G4a)
-             ──> esito di missione per ogni Mission            (regola unica dalla F6-B1, §6.11/6.18)
+             ──> esito di missione per ogni Mission            (regola unica dalla F6-B1 + IN_PROGRESS F8b, §6.11/6.18)
+             ──> final_positions, movement_ends, operation_outcomes  (F8b, per la campagna, §6.24)
              ──> Session_Types.assemble_session_outcome        (porta di uscita)
+
+fuori da run_session (F8, il ciclo di campagna che la contiene, §6.25-6.27):
+   Readiness.apply_campaign_processes ──> Session_Validator.check_session ──> SS.run_session
+        ──> Session_Campaign.apply_final_positions ──> Readiness.record_session
 ```
 
 Questo modulo è **solo** quella fila: non reimplementa geometria, Pd, latenze, salve, danno o consumi. Ogni numero che
@@ -44,11 +52,31 @@ run_session(order, forces_a, forces_b, fire_control, *, horizon=None, margin=0.0
             -> SessionOutcome
 ```
 
-(`Logic/Session_Simulator.py:2128-3102`, firma a `:2128-2139`; **la firma non è cambiata dalla F3** e non cambia
-con F5, F6, G1-G5 e F7: tutte le novità sono interruttori del modulo, §6.21, e nuovi dati nell'esito). **Muta gli asset**:
+(`Logic/Session_Simulator.py:2163-3163`, firma a `:2163-2174`; **la firma non è cambiata dalla F3** e non cambia
+con F5, F6, G1-G5, F7 e F8: tutte le novità sono interruttori del modulo, §6.21, e nuovi dati nell'esito). **Muta gli asset**:
 danno e munizioni sono applicati man mano che gli episodi d'ingaggio sono risolti, il carburante in un passo finale. Il
 `SessionOutcome` restituito è il resoconto di ciò che è stato applicato. Si combatte solo fra `forces_a` e `forces_b`,
 mai dentro lo stesso lato.
+
+**Cambiamenti da `dcedc541` a `fa5fbf1e` (fase F8: F8a `c1182d8a`, F8b `33698fb4`, F8c `87aa7dea`/`6d3497bc`/`398ae3ef`, più i dati F8-R
+`dc53af99`):** nessuna modifica alla firma né al comportamento delle sessioni già esistenti (**982 esecuzioni identiche** a ogni passo F8a-F8c; le
+4 esecuzioni nuove, S30, vengono dal conduttore di campagna, non da un cambio di `run_session`). In ordine:
+
+- **Warning per le missioni oltre la fine** (F8a): per ogni missione dell'ordine, se la fine pianificata
+  (`Mission_Adapter.mission_planned_end`, §6.25) supera la fine della sessione, `run_session` emette un `logger.warning` e **nient'altro**
+  (`:2247-2254`): il taglio silenzioso della rotta (E4) non è più silenzioso, ma nessuna rotta e nessun esito cambiano. Il rifiuto è del
+  validatore di sessione (§6.25), non dell'esecutore.
+- **`session_blocks`** (F8a, `:1108-1110`): wrapper pubblico di `_collect_forces(...)[2]` (i blocchi per id di dominio con le stesse verifiche
+  di `run_session`), usato dal validatore.
+- **Stato di missione `IN_PROGRESS`** (F8b, interruttore `F8_IN_PROGRESS`, `:904-908`; ramo in `_mission_outcome`, `:2141-2142`): una
+  missione non distrutta, non completata e non abortita, con almeno un asset superstite ancora sulla rotta o sul posto alla fine della
+  sessione, non è più `FAILED` (§6.11).
+- **Esito per la campagna** (F8b): la porta di uscita aggiunge `final_positions`, `movement_ends` e `operation_outcomes` (`:3141-3154`,
+  passati ad `assemble_session_outcome` a `:3158-3163`, §6.24).
+- **Interruttori**: da quattordici a **quindici** costanti (`F8_IN_PROGRESS`, §6.21).
+- **Il ciclo di campagna è fuori**: validatore (`Logic/Session_Validator`, §6.25), prontezza (`Logic/Readiness`, §6.26) e conduttore
+  (`Logic/Session_Campaign`, §6.27) sono moduli nuovi che **chiamano** `run_session` (come attributo del modulo, `SS.run_session`) e non
+  sono da lei chiamati. `run_session` **non** valida l'ordine, **non** applica le posizioni, **non** rifornisce.
 
 **Cambiamenti da `a784a9e7` a `dcedc541` (fase F7: F7a `9f87a3ad`, F7b `dcedc541`):** nessuna modifica alla firma. In ordine:
 
@@ -83,30 +111,30 @@ mai dentro lo stesso lato.
 
 **Cambiamenti da `533cd1f5` a `84a47670` (fase F4):**
 
-- **Validazione delle missioni** (`_check_missions`, `:1898-1924`): oltre a "la missione si riferisce a un blocco
-  passato fra le forze" (`ValueError`, `:1905-1907`) e "ogni suo asset appartiene a quel blocco"
-  (`Mission_Types.check_mission_assets`, `:1909`), dalla F4a vale la **regola A** — una missione si muove insieme,
+- **Validazione delle missioni** (`_check_missions`, `:1931-1957`): oltre a "la missione si riferisce a un blocco
+  passato fra le forze" (`ValueError`, `:1938-1940`) e "ogni suo asset appartiene a quel blocco"
+  (`Mission_Types.check_mission_assets`, `:1942`), dalla F4a vale la **regola A** — una missione si muove insieme,
   alla velocità del mezzo più lento: `Mission_Adapter.check_mission_speed(mission, assets, order.t_start)`
-  (`:1911`, §6.10) solleva `ValueError` se un tratto pianificato supera la velocità massima del mezzo più
-  lento; dalla F4b un `mission_id` non può coincidere con l'id di un blocco passato (`:1922-1924`: sarebbero due
+  (`:1944`, §6.10) solleva `ValueError` se un tratto pianificato supera la velocità massima del mezzo più
+  lento; dalla F4b un `mission_id` non può coincidere con l'id di un blocco passato (`:1955-1957`: sarebbero due
   forze con lo stesso id); e **dalla F7a** il `loadout` dichiarato da un `MissionAsset` deve coincidere con
-  `assigned_loadout` dell'aereo (`:1913-1920`, `ValueError`, decisione 13 della F7: il motore usa `Aircraft.assigned_loadout`,
+  `assigned_loadout` dell'aereo (`:1946-1953`, `ValueError`, decisione 13 della F7: il motore usa `Aircraft.assigned_loadout`,
   la politica d'armi deve leggere lo stesso loadout della missione; **non** dipende dagli interruttori).
-- **Le forze d'ingaggio sono missioni**, non blocchi (F4b): `_engagement_forces` (`:1927-1970`, §6.12). Lo
-  scheduler riceve ancora i **blocchi** (`items_a`/`items_b`, `:2342`): le finestre sono per coppia di asset e la
+- **Le forze d'ingaggio sono missioni**, non blocchi (F4b): `_engagement_forces` (`:1960-2003`, §6.12). Lo
+  scheduler riceve ancora i **blocchi** (`items_a`/`items_b`, `:2385`): le finestre sono per coppia di asset e la
   potatura per blocco non dipende da come gli asset sono raggruppati in forze.
-- **Dominio di coordinamento** (F4b+): `coordination_domains` (`:2202`) è passato a `_connected_components` (`:2873`)
-  e a `_episodes` (`:2831`) e a ogni `resolve_engagement` come `coordination_of` (`:2737`), §6.13.
-- **Aerei a terra** (F4c, F5): il programma `grounded` (`:2215`) è passato a `schedule_contacts` (`grounded=`, `:2344`)
-  e a ogni `resolve_engagement` (`grounded=`, `:2738`), §6.14-6.15.
-- **`SessionOrder.committed`** resta chiavato per blocco; `_engagement_committed` (`:1973-1993`) lo traduce per forza
+- **Dominio di coordinamento** (F4b+): `coordination_domains` (`:2237`) è passato a `_connected_components` (`:2916`)
+  e a `_episodes` (`:2874`) e a ogni `resolve_engagement` come `coordination_of` (`:2780`), §6.13.
+- **Aerei a terra** (F4c, F5): il programma `grounded` (`:2258`) è passato a `schedule_contacts` (`grounded=`, `:2387`)
+  e a ogni `resolve_engagement` (`grounded=`, `:2781`), §6.14-6.15.
+- **`SessionOrder.committed`** resta chiavato per blocco; `_engagement_committed` (`:2006-2026`) lo traduce per forza
   d'ingaggio (§6.12).
 
 **Cambiamenti da `6754bf1c` a `533cd1f5` (fase F3):**
 
 - **Rimossi `routes`, `starts`, `speeds`** (decisione Q2 dell'utente: una sola strada): rotta, partenza e velocità di
   ogni asset vengono **solo** dalle missioni dell'ordine (`order.missions`); `Mission_Adapter.session_movements(
-  order.missions, t0)` ne ricava le tre mappe che il resto della fila consuma (`:2212`). Gli asset senza missione
+  order.missions, t0)` ne ricava le tre mappe che il resto della fila consuma (`:2255`). Gli asset senza missione
   restano fermi, come gli asset senza rotta di prima (dalla F4c con una postura, §6.14).
 - **Aggiunti `morale_for`, `enemy_estimate_for`, `fire_doctrine`** (2026-09-29): inoltrati a
   `resolve_engagement`; a questi si aggiunge il flusso `breakpoint_rng` della tempra, costruito
@@ -117,28 +145,28 @@ mai dentro lo stesso lato.
 ## 6.2 La coda eventi di sessione
 
 **Tre tipi di evento** (il terzo dalla F7b): `ENGAGEMENT_EVENT = 0`, `AREA_FIRE_EVENT = 1`, `MOVEMENT_EVENT = 2`
-(`:764-766`; il valore di `MOVEMENT_EVENT` è passato da 1 a 2 per far stare l'evento nuovo in mezzo, e nessun codice o test
+(`:785-787`; il valore di `MOVEMENT_EVENT` è passato da 1 a 2 per far stare l'evento nuovo in mezzo, e nessun codice o test
 lo usa per valore), con chiave `(t, tipo, id, sequenza)` (docstring `:21-47`). A parità d'istante
 **`ENGAGEMENT < AREA_FIRE < MOVEMENT`**, poi l'id (stringa canonica, mai l'ordine di un dizionario Python).
 
 | Evento | Quanti | Istante | Che cosa fa |
 |---|---|---|---|
-| **ENGAGEMENT** (0) | uno per **episodio d'ingaggio** (G4a, §6.20); con `G4_EPISODES` spento, uno per componente connessa di forze (§6.3) | inizio della prima finestra dell'episodio | **una** chiamata a `resolve_engagement` sulle sole sue finestre e forze, ed esito applicato subito (`engage`, `:2659-2778`) |
-| **AREA_FIRE** (1, F7b) | uno per azione `Fire_At_Point` di un asset di missione di terra o di mare | istante d'**impatto** (`t_fire + time_of_flight`) | `Area_Fire.resolve_area_fire` ed esito applicato subito (`fire_area`, `:2424-2443`); **non** è un ingaggio (§6.23) |
+| **ENGAGEMENT** (0) | uno per **episodio d'ingaggio** (G4a, §6.20); con `G4_EPISODES` spento, uno per componente connessa di forze (§6.3) | inizio della prima finestra dell'episodio | **una** chiamata a `resolve_engagement` sulle sole sue finestre e forze, ed esito applicato subito (`engage`, `:2702-2821`) |
+| **AREA_FIRE** (1, F7b) | uno per azione `Fire_At_Point` di un asset di missione di terra o di mare | istante d'**impatto** (`t_fire + time_of_flight`) | `Area_Fire.resolve_area_fire` ed esito applicato subito (`fire_area`, `:2467-2486`); **non** è un ingaggio (§6.23) |
 | **MOVEMENT** (2) | uno per asset con rotta schedulabile nella sessione | fine del suo movimento dentro la sessione (dalla F6-A troncato all'esaurimento del carburante) | produce e applica i `FuelEvent` del tragitto, **uno per tratto** (§6.17) |
 
-**Dal G4a la coda è percorsa in due passi**, non in uno (`:2820-2893`, `:2895-3029`):
+**Dal G4a la coda è percorsa in due passi**, non in uno (`:2863-2936`, `:2938-3072`):
 
 1. **tutti gli ENGAGEMENT**, in ordine di tempo (poi `event_id`), ciascuno seguito dalla ri-pianificazione degli aerei
    interessati (G4b, §6.20). **Dalla F7b** gli eventi AREA_FIRE sono intercalati: prima di ogni episodio la sessione
    risolve quelli con impatto *strettamente anteriore* all'inizio dell'episodio (`fire_due(min(w.t_start for w in group))`,
-   `:2838`), e alla fine quelli rimasti (`fire_due()`, `:2867`); con `G4_EPISODES` spento stanno nello stesso `heapq`
-   degli ingaggi (`:2869-2893`). Il diagramma D50 (§6.23) mostra l'intercalazione;
+   `:2881`), e alla fine quelli rimasti (`fire_due()`, `:2910`); con `G4_EPISODES` spento stanno nello stesso `heapq`
+   degli ingaggi (`:2912-2936`). Il diagramma D50 (§6.23) mostra l'intercalazione;
 2. **poi la contabilità del carburante**: un `heapq` con gli ingaggi già risolti, alla loro chiave
    `(istante, ENGAGEMENT, event_id)`, e un MOVEMENT per asset alla fine dei suoi tratti **definitivi**
-   (`:2911-2920`) — cioè la stessa coda di prima ripercorsa nello stesso ordine, che produce gli stessi `FuelEvent`. Un
+   (`:2954-2963`) — cioè la stessa coda di prima ripercorsa nello stesso ordine, che produce gli stessi `FuelEvent`. Un
    evento di fuoco su posizione, già in `resolved` come `(result.t_end, event_id, result)`, entra qui **con il tipo
-   ENGAGEMENT** (`:2915-2916`): non ha salve né intercettazioni, quindi non produce consumi d'ingaggio (G3), ma il tiratore
+   ENGAGEMENT** (`:2958-2959`): non ha salve né intercettazioni, quindi non produce consumi d'ingaggio (G3), ma il tiratore
    compare in `_engaged_assets` per il suo `AmmunitionEvent` (per terra e mare i due regimi di consumo coincidono, §6.5).
 
 È lecito spostare il carburante in coda perché **il risolutore non legge il carburante** (nessun accesso a `fuel` in
@@ -162,22 +190,22 @@ difetto: se X era in contatto con A e con B in finestre **sovrapposte**, l'ingag
 estratto per primo veniva svolto fino in fondo e applicato, e (X,B) leggeva uno stato di X già
 consumato anche per le salve che, in tempo di sessione, precedevano la fine di (X,A). L'ordine
 della coda decideva chi "arrivava prima" alla salute e alle scorte di X — un artefatto
-d'implementazione, non la fisica del combattimento (docstring `:234-246`).
+d'implementazione, non la fisica del combattimento (docstring `:235-247`).
 
 **Dal 2026-09-23 al G4a**: un ingaggio per **componente connessa** di forze d'ingaggio. Si costruisce il grafo non
 orientato con un nodo per forza e un arco per ogni coppia (lato A, lato B) con almeno una finestra (`_group_windows`,
-`:1091-1113`: raggruppa le finestre per coppia di *forze* d'ingaggio, dalla mappa `{asset_id: (lato, id di
-forza)}`), e se ne cercano le componenti connesse (`_connected_components`, `:1116-1181`, visita in ampiezza
+`:1124-1146`: raggruppa le finestre per coppia di *forze* d'ingaggio, dalla mappa `{asset_id: (lato, id di
+forza)}`), e se ne cercano le componenti connesse (`_connected_components`, `:1149-1214`, visita in ampiezza
 deterministica per id — mai l'ordine di un dizionario). **Dalla F4b+ il grafo ha anche archi fra forze dello
-stesso dominio di coordinamento** (`domain_of`, `:1139-1148`): le forze di uno stesso dominio sono messe nella
+stesso dominio di coordinamento** (`domain_of`, `:1172-1181`): le forze di uno stesso dominio sono messe nella
 stessa run **anche se non hanno nemici in comune**, perché la condivisione di fuoco, percezione e difesa di salva
 (capitolo 4 §4.28-4.29) vale solo dentro una run. Senza questi archi due missioni di un blocco su fronti
 disgiunti sarebbero risolte in run separate, mentre il blocco prima della F4b era una forza sola. I nodi restano
-le sole forze che compaiono in almeno una coppia con finestre (`:1133-1137`): una forza di un dominio senza
+le sole forze che compaiono in almeno una coppia con finestre (`:1166-1170`): una forza di un dominio senza
 nessuna finestra non entra in nessuna run. La componente unita ha l'`event_id` delle forze riunite (§6.4).
 
 Ogni ingaggio è risolto con **una** chiamata a `resolve_engagement`: `force_a`/`force_b` = le prime due forze
-per id, `extra_forces` = le altre, per id (`:2722-2724`). Dentro la run lo stato ombra di X evolve in un'unica
+per id, `extra_forces` = le altre, per id (`:2765-2767`). Dentro la run lo stato ombra di X evolve in un'unica
 timeline consumata da tutti i fronti; un disingaggio è per-forza (capitolo 4, §4.8), non ferma un eventuale altro
 fronte della componente — nemmeno un'altra missione dello stesso blocco.
 
@@ -187,7 +215,7 @@ il limite di `assemble_session_outcome` (capitolo 2, §2.4) non si presenta mai.
 **Era deliberatamente conservativa rispetto al tempo**: la componente non distingueva se le sue finestre si
 sovrappongono davvero o sono in sequenza (X contro A al mattino, contro B la sera): anche in quel caso {X, A, B} era
 risolta con una sola run, e questo significava **un solo consumo d'ingaggio, un disingaggio del mattino che vale anche la
-sera e nessuna decisione possibile "dopo l'ingaggio"** (docstring `:262-268`). **Il G4a la spezza** nei suoi episodi
+sera e nessuna decisione possibile "dopo l'ingaggio"** (docstring `:263-269`). **Il G4a la spezza** nei suoi episodi
 (§6.20); la componente connessa è oggi il comportamento a `G4_EPISODES` spento, mantenuto per la controprova degli
 scenari (S5 `episodes_off`, S27 `episodes_off`).
 
@@ -199,17 +227,17 @@ componenti ne tengono conto (sopra).
 
 ## 6.4 RNG: uno stream per ingaggio, uno stream per la tempra
 
-`order.rng(mission_id=None, event_id=engagement_event_id(*forze), counter=ordinale)` (`:2723`):
+`order.rng(mission_id=None, event_id=engagement_event_id(*forze), counter=ordinale)` (`:2766`):
 
 - `mission_id=None`: è il livello "di sessione" di `Session_Rng`. **Dalla F4b il `mission_id` entra nell'RNG
   attraverso l'`event_id`**, non attraverso lo slot `mission_id`: un ingaggio è fra DUE O PIÙ forze, tipicamente
   missioni di entrambi i lati, e nessuna ne possiede lo stream. Lo slot resta `None` (livello "di sessione") per gli ingaggi; è riservato alle
-  estrazioni che appartengono a una sola missione (docstring `:404-422`): **nessuna fino alla F7a, e dalla F7b il fuoco su
-  posizione** (`order.rng(mission_id=<missione>, event_id='area_fire|...', counter=0)`, `:2432`, §6.23), il cui tiro appartiene
+  estrazioni che appartengono a una sola missione (docstring `:405-423`): **nessuna fino alla F7a, e dalla F7b il fuoco su
+  posizione** (`order.rng(mission_id=<missione>, event_id='area_fire|...', counter=0)`, `:2475`, §6.23), il cui tiro appartiene
   a UNA missione. È un altro stream, quindi gli ingaggi e la tempra non cambiano. **Nota**: il piano della
   Missione prevedeva il `mission_id` reale già in F3; il codice l'ha rimandato a F4b (deviazione 1 del piano, con
   l'`event_id` al posto dello slot, deviazione 4: capitolo 9 §9.6).
-- `event_id`: `engagement_event_id(*force_ids)` (`:966-987`) è la codifica JSON di
+- `event_id`: `engagement_event_id(*force_ids)` (`:993-1014`) è la codifica JSON di
   `['engagement', id_1, id_2, ...]` con gli id dell'ingaggio **ordinati** — funzione pura
   dell'**insieme** delle forze, mai dell'ordine di iterazione o di passaggio a `run_session`. Dalla F4b gli id sono
   quelli delle **forze d'ingaggio**: i `mission_id` (o l'id del blocco per un blocco senza missioni e per la vista
@@ -217,16 +245,16 @@ componenti ne tengono conto (sopra).
   (`test_renaming_a_mission_changes_its_stream_only`), e l'unione di una componente per dominio cambia l'`event_id`
   (è un ingaggio diverso, con forze diverse).
 - **`counter` (G4a)**: l'**ordinale degli episodi con lo stesso insieme di forze** nella sessione (`ordinals`,
-  `:2378`, `:2663-2664`): 0 per il primo, 1 per il secondo che coinvolge esattamente le stesse forze, e così via.
+  `:2421`, `:2706-2707`): 0 per il primo, 1 per il secondo che coinvolge esattamente le stesse forze, e così via.
   Vale sia per lo stream dell'ingaggio sia per quello della tempra. Una componente che è un solo episodio ha quindi
   esattamente lo stream, le finestre, l'ordine e l'esito di prima; con `G4_EPISODES` spento è sempre 0 (ogni componente
   è risolta una sola volta per sessione). Il vecchio "contatore libero per un futuro re-ingaggio" è dunque stato
   consumato dal G4a.
 
-**Secondo stream: la tempra delle forze** (2026-09-29). `temper_event_id(*force_ids)` (`:990-1000`) ha
-la stessa forma e gli stessi vincoli ma il tag `'temper'` (`TEMPER_EVENT_TAG`, `:772`) invece di
+**Secondo stream: la tempra delle forze** (2026-09-29). `temper_event_id(*force_ids)` (`:1017-1027`) ha
+la stessa forma e gli stessi vincoli ma il tag `'temper'` (`TEMPER_EVENT_TAG`, `:793`) invece di
 `'engagement'`; `run_session` lo passa a `resolve_engagement` come `breakpoint_rng`
-(`order.rng(mission_id=None, event_id=temper_event_id(*force_ids), counter=counter)`, `:2731-2733`). Così estrarre
+(`order.rng(mission_id=None, event_id=temper_event_id(*force_ids), counter=counter)`, `:2774-2776`). Così estrarre
 la tempra non sposta le estrazioni di rilevamento e danno dell'ingaggio (capitolo 4 §4.11, §4.21), e **la tempra è
 nuova per ogni episodio** (stesso `counter`).
 
@@ -234,7 +262,7 @@ nuova per ogni episodio** (stesso `counter`).
 esecuzioni. `Block.__init__` genera l'id con `Utility.setId`, che aggiunge un suffisso casuale —
 due `Military` costruite da zero con lo stesso nome avrebbero id diversi, quindi seed diversi e
 un diverso ordine della coda. Corretto 2026-09-23: `Block.__init__`/`Military.__init__`
-accettano ora un parametro `id` esplicito (docstring `:423-432`); chi costruisce forze da zero per un
+accettano ora un parametro `id` esplicito (docstring `:424-433`); chi costruisce forze da zero per un
 replay/test deve passarlo. In campagna l'id è comunque quello dell'istanza già in memoria
 (persistito), quindi il caso comune non è mai stato a rischio.
 
@@ -251,17 +279,17 @@ Il carburante è oggi una **funzione a sé** dell'orchestratore, descritta in de
 3. **dopo l'ultimo episodio** (passo finale, §6.2): la contabilità produce i `FuelEvent` — uno per tratto che
    consuma, più uno istantaneo per ogni consumo d'ingaggio — e li applica agli asset.
 
-**Regime** (F6-A, `COMBAT_REGIME = 'max'`, `CRUISE_REGIME = 'nominal'`, `:775-776`). Per **terra e mare** vale ancora la
+**Regime** (F6-A, `COMBAT_REGIME = 'max'`, `CRUISE_REGIME = 'nominal'`, `:796-797`). Per **terra e mare** vale ancora la
 regola della F6-A: `'max'` se l'asset ha **combattuto** nella sessione (ha lanciato una salva, è stato bersaglio di una
-salva o ha intercettato: `_engaged_assets`, `:1294-1308`), altrimenti `'nominal'`; per veicoli e navi il registro ha
+salva o ha intercettato: `_engaged_assets`, `:1327-1341`), altrimenti `'nominal'`; per veicoli e navi il registro ha
 un'unica autonomia e i due regimi coincidono. Per gli **aerei di missione**, dal G3, il movimento è **sempre alla
 crociera** e il combattimento è nei consumi d'ingaggio (`regime = COMBAT_REGIME if key in engaged and not g3 else
-CRUISE_REGIME`, `:2970`). Se il regime `'max'` non è ricavabile si ricade su `'nominal'` (`_build_fuel`,
-`_build_leg_fuel`, `:1334-1357`).
+CRUISE_REGIME`, `:3013`). Se il regime `'max'` non è ricavabile si ricade su `'nominal'` (`_build_fuel`,
+`_build_leg_fuel`, `:1367-1390`).
 
 **Limiti dichiarati** (in parte superati): un asset distrutto a metà rotta consuma comunque il tragitto (troncato)
 intero (il carburante di un relitto non ha conseguenze di campagna); un asset senza rotta (fermo) non produce
-`FuelEvent`; il carburante di partenza e il rifornimento non sono toccati (rifornimento: F8). Il limite storico "nessun
+`FuelEvent`; il carburante di partenza e il rifornimento non sono toccati da `run_session` (il rifornimento fra una sessione e l'altra, a fine turnaround, lo fa dalla F8c `Logic/Readiness`, §6.26). Il limite storico "nessun
 movimento fisico: un asset a secco continua" è superato dalla F6-A (§6.17); il limite "un aereo che combatte consuma di
 più nella contabilità senza che il movimento sia ricalcolato" è superato dal G4b per gli aerei con consumo d'ingaggio
 (§6.20).
@@ -270,19 +298,25 @@ più nella contabilità senza che il movimento sia ricalcolato" è superato dal 
 
 `SessionOrder.t_end is None` (sessione aperta): la durata **non si deduce**, il chiamante deve
 passare `horizon` esplicito; con `t_end` valorizzato, `horizon` è ricavato (se passato comunque
-deve coincidere) — `_session_horizon`, `:1005-1024`. Nessuna durata di default inventata
-(docstring `:700-704`).
+deve coincidere) — `_session_horizon`, `:1032-1051`. Nessuna durata di default inventata
+(docstring `:701-705`). **Dalla F8** la durata di default (2 h) e il massimo (4 h) esistono, ma **non qui**: sono di
+`Command/Campaign_Types.SessionRules` (capitolo 2 §2.10) e il validatore di sessione rifiuta una sessione aperta
+(`SESSION_OPEN`) e una sessione più lunga del massimo (`SESSION_TOO_LONG`, §6.25); `run_session` chiamata direttamente continua ad
+accettare entrambe.
 
 Una salva lanciata poco prima della fine arriva comunque (payload congelato): impatti e
 risoluzioni possono cadere dopo `t_start + horizon`. L'esito non viene troncato (sarebbe
 cancellare danni già decisi): il `t_end` del `SessionOutcome` è esteso fino all'ultima
-attività, con un log (`:3031-3048`). I contatti invece sono cercati **solo** dentro la sessione
-(docstring `:706-711`); allo stesso modo la ri-pianificazione dopo un episodio non agisce oltre la fine della sessione
-(`:2533-2535`).
+attività, con un log (`:3074-3091`). I contatti invece sono cercati **solo** dentro la sessione
+(docstring `:707-712`); allo stesso modo la ri-pianificazione dopo un episodio non agisce oltre la fine della sessione
+(`:2576-2578`).
 
-## 6.7 Cosa non fa (docstring `:713-719`, aggiornato alla F7)
+## 6.7 Cosa non fa (docstring `:730-739`, aggiornato alla F7 e alla F8)
 
-Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`. Non rifornisce (munizioni o carburante). Non
+Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`. Non rifornisce (munizioni o carburante: lo fa, fra le
+sessioni, `Logic/Readiness`, §6.26). **Non valida l'ordine di sessione** (lo fa `Logic/Session_Validator`, §6.25: durata, sovrapposizione,
+prontezza, fine delle missioni, carburante) e **non applica le `final_positions` agli asset** (lo fa `Session_Campaign.apply_final_positions`,
+§6.27): `run_session` non muta la posizione di nessun asset (le righe sono nel docstring, `:730-739`). Non
 ri-instrada le forze **terrestri e navali** che si disingaggiano (restano segnalate nell'esito e, dal G4a, passive negli
 episodi successivi); **gli aerei** di una missione disingaggiata, invece, rientrano alla base dal G4b (§6.20). La
 selezione dell'arma dai registri non è dell'orchestratore: la `fire_control` è **una sola callable iniettata**,
@@ -290,14 +324,16 @@ passata a ogni ingaggio (può essere `Fire_Control.make_registry_fire_control`, 
 di missioni aeree, avvolta dalla politica d'armi `restrict_by_policy`**, §6.22; per il fuoco su posizione della F7b l'arma
 la sceglie `Fire_Control.area_fire_weapon`, §6.23; le frasi del docstring del modulo sulla selezione dell'arma sono state
 corrette e rimandano alla fabbrica, v. capitolo 9 §9.6). **Non chiama i validatori di pianificazione** del carburante (`Mission_Adapter.check_mission_fuel`,
-`check_mission_bingo`), che sono del pianificatore (§6.19, capitolo 9 §9.1). Il filtro delle armi per tipo di
+`check_mission_bingo`), che dalla F8a chiama il validatore di sessione (§6.19, §6.25, capitolo 9 §9.1). Il filtro delle armi per tipo di
 missione e le regole di bersaglio (fase F7a) **non** sono dell'orchestratore, che li cabla soltanto (§6.22). Non legge
 `abort_on_threat` né `last_waypoint` di `EndCriteria`, né di `MissionRules` allerta, reazione alla minaccia, EMCON e
 formazione. Nessun componente LLM.
 
 ## 6.8 Diagramma D8 — flusso dati di `run_session`
 
-Aggiornato a `dcedc541`: dopo la validazione delle missioni (con la regola A e, dalla F7a, il controllo del loadout)
+Aggiornato a `fa5fbf1e`: in fondo alla fila si aggiunge l'**esito per la campagna** (F8b: `final_positions`, `movement_ends`,
+`operation_outcomes`, §6.24) e, subito dopo il calcolo dei movimenti, un **warning** per le missioni pianificate oltre la fine
+della sessione (F8a, E4); il resto è come a `dcedc541`. Dopo la validazione delle missioni (con la regola A e, dalla F7a, il controllo del loadout)
 l'orchestratore costruisce le **forze d'ingaggio**, il **dominio di coordinamento** e il **programma degli aerei a
 terra**; prepara i **tratti** degli asset di missione (presenza, attese, bingo alla partenza, troncamento per
 esaurimento); **dalla F7** avvolge la fire control con la politica d'armi, costruisce le regole di bersaglio per il
@@ -315,6 +351,7 @@ flowchart TD
     ORD --> CHECK
     CHECK --> POL["F7a: weapon_policies + restrict_by_policy<br/>(involucro della fire control)<br/>target_rules (regole di bersaglio)"]
     CHECK --> MA["Mission_Adapter.mission_movements<br/>rotta, partenza, velocita', attese, presenza"]
+    MA -.->|"F8a: fine pianificata > session_end"| WARN["logger.warning (E4),<br/>nessun altro effetto"]
     CHECK --> EF["_engagement_forces<br/>MissionForce per missione + vista residua"]
     EF --> DOM["coordination_domains"]
     EF --> GRD["grounded_schedule<br/>(aerei a terra nel tempo)"]
@@ -351,17 +388,20 @@ flowchart TD
     LEGS --> MOUT
     STATE --> MOUT
     MOUT --> MOS["mission_outcomes + postures"]
+    LEGS --> CAMP["F8b: final_positions (position_on_legs a session_end),<br/>movement_ends (fine dei tratti di movimento),<br/>operation_outcomes (operation_outcome)"]
+    MOS --> CAMP
 
     RESULTS --> ASSEMBLE["Session_Types.assemble_session_outcome<br/>(chained=True)"]
     FEVENTS --> ASSEMBLE
     MOS --> ASSEMBLE
+    CAMP --> ASSEMBLE
     ASSEMBLE --> OUT["SessionOutcome"]
 ```
 
 ## 6.9 Diagramma D9 — coda eventi di sessione (schema)
 
 Esempio minimo: due episodi d'ingaggio dello stesso aereo, ciascuno con la ri-pianificazione, e la contabilità finale
-del carburante. Aggiornato a `dcedc541`: due passi, un `resolve_engagement` per episodio, e — dalla F7b — un fuoco su
+del carburante. Aggiornato a `dcedc541` (a `fa5fbf1e` cambia solo l'ultima riga: i tre dati della F8b): due passi, un `resolve_engagement` per episodio, e — dalla F7b — un fuoco su
 posizione risolto fra i due episodi (se il suo impatto precede l'inizio del secondo); il dettaglio del ciclo
 episodio → ri-pianificazione → ri-scheduling è nel D40 (§6.20), quello del fuoco su posizione nel D50 (§6.23).
 
@@ -390,7 +430,7 @@ sequenceDiagram
     FM-->>OUT: FuelEvent (uno per tratto, uno istantaneo per ingaggio)
     ER-->>OUT: EngagementResult (uno per episodio)
     AF-->>OUT: EngagementResult (uno per fuoco su posizione, forze vuote)
-    OUT->>OUT: assemble_session_outcome(..., mission_outcomes, postures, chained=True)
+    OUT->>OUT: assemble_session_outcome(..., mission_outcomes, postures, chained=True,<br/>operation_outcomes, final_positions, movement_ends)
 ```
 
 ## 6.10 La Missione nell'orchestratore: `Logic/Mission_Adapter.py` (fase F3, commit `533cd1f5`; esteso da F4 a G4b e dalla F7a)
@@ -404,26 +444,26 @@ terra (§6.14); dalla F6 i **validatori di pianificazione** del carburante e le 
 **dalla F7a** le quattro funzioni che traducono bersaglio, ROE e armi designate della missione nelle forme che il motore
 consuma (`designated_targets`, `weapon_policies`, `attack_point`, `target_rules`: §6.22).
 `Command/Mission_Types` (capitolo 2 §2.6) è solo struttura. Funzioni pure: nessun RNG, nessuna mutazione
-(`Logic/Mission_Adapter.py:1-294`, docstring del modulo).
+(`Logic/Mission_Adapter.py:1-296`, docstring del modulo).
 
 ### Rotta per asset: rotta di riferimento + offset di formazione (D3.b)
 
 La missione ha **una** rotta di riferimento (`Mission.route`, o in mancanza la spezzata dei
-`MissionWaypoint`, `reference_route`, `:471-486`; `_route_from_waypoints`, `:448-468`, richiede la velocità
+`MissionWaypoint`, `reference_route`, `:473-488`; `_route_from_waypoints`, `:450-470`, richiede la velocità
 dichiarata su ogni punto d'arrivo, altrimenti `ValueError`); ogni `MissionAsset` dichiara un offset
 (`forward_m`, `right_m`, `up_m`) nella terna della direzione di marcia, con la convenzione del progetto
 (nord = +y, est = +x, azimut orario):
 
 - **avanti**: versore **orizzontale** della direzione di marcia (la quota non inclina la formazione);
-- **destra**: avanti ruotato di 90° in senso orario visto dall'alto, `(hy, −hx)` (`:592`);
+- **destra**: avanti ruotato di 90° in senso orario visto dall'alto, `(hy, −hx)` (`:594`);
 - **alto**: `+z`.
 
-`asset_route(mission, mission_asset)` (`:626-654`) restituisce `(rotta, velocità uniforme)`. **Offset nullo e
+`asset_route(mission, mission_asset)` (`:628-656`) restituisce `(rotta, velocità uniforme)`. **Offset nullo e
 nessuna velocità per tratto = la STESSA rotta** (lo stesso oggetto `Route`): i tratti sono identici a quelli
 della rotta di riferimento, senza alcuna aritmetica in mezzo.
 
 **Regola ai cambi di direzione, decisa in F3: la formazione ruota con la rotta, sulla bisettrice**
-(`offset_points`, `:561-599`; `_point_frame`, `:541-558`). L'offset si applica **punto per punto**, non tratto
+(`offset_points`, `:563-601`; `_point_frame`, `:543-560`). L'offset si applica **punto per punto**, non tratto
 per tratto (applicarlo per tratto staccherebbe i tratti consecutivi):
 
 - primo punto: terna del primo tratto; ultimo punto: terna dell'ultimo tratto;
@@ -431,16 +471,16 @@ per tratto (applicarlo per tratto staccherebbe i tratti consecutivi):
   fra il tratto in arrivo e quello in partenza;
 - la componente **laterale** è scalata di `1/cos(θ/2)` (θ = angolo di virata; giunzione "a spigolo", la
   stessa delle spezzate parallele): i tratti dell'asset restano **paralleli** a quelli di riferimento, a
-  distanza `right_m`, prima e dopo la virata. Il fattore è limitato a `MITER_LIMIT = 2.0` (`:344`, **stima di
+  distanza `right_m`, prima e dopo la virata. Il fattore è limitato a `MITER_LIMIT = 2.0` (`:346`, **stima di
   progetto**, esatto fino a virate di 120°, tagliato oltre); la componente **avanti** è presa lungo la
   bisettrice, senza scala;
 - **inversione esatta** (`h_uscita = −h_entrata`, bisettrice indefinita): si usa la terna del tratto in
   **entrata**; il tratto successivo porta l'asset nella terna d'uscita al punto dopo (in una virata di 180° il
   gregario di destra finisce dall'altra parte del riferimento, come in una formazione vera);
 - i tratti senza componente orizzontale (salita o discesa sulla verticale, punti ripetuti) ereditano la
-  direzione dal tratto orizzontale più vicino (prima il precedente, `_leg_headings`, `:521-538`); una rotta
+  direzione dal tratto orizzontale più vicino (prima il precedente, `_leg_headings`, `:523-540`); una rotta
   senza alcun tratto orizzontale ammette solo `up_m` (altrimenti `ValueError`);
-- le coordinate sono arrotondate al micrometro (`OFFSET_DECIMALS = 6`, `:347`): il rumore della rotazione
+- le coordinate sono arrotondate al micrometro (`OFFSET_DECIMALS = 6`, `:349`): il rumore della rotazione
   (ordine 1e-12 m) non ha significato fisico e non deve comparire come differenza di posizione (sympy
   `Point3D` conserva i float come razionali).
 
@@ -453,58 +493,59 @@ propria.
 ### Velocità
 
 `MissionWaypoint.speed_kmh` è la velocità del tratto **in arrivo** al punto (`None` = quella dell'arco della
-rotta, in m/s); quella del primo punto non ha tratto in arrivo ed è ignorata (`_leg_speeds`, `:489-506`).
+rotta, in m/s); quella del primo punto non ha tratto in arrivo ed è ignorata (`_leg_speeds`, `:491-508`).
 Nessuna velocità dichiarata: valgono quelle degli archi, nessuna voce in `speeds`. Tutti i tratti dichiarano la
 **stessa** velocità: una voce in `speeds` [m/s] (sostituisce quella degli archi, semantica di `route_legs`),
 rotta invariata. Dichiarazioni diverse o parziali: la rotta per asset è ricostruita (`_rebuild_route`,
-`:602-621`) con la velocità dichiarata sui tratti che la dichiarano e quella dell'arco sugli altri.
-Conversione `kmh_to_ms` (`:408-410`): `km/h / 3.6`.
+`:604-623`) con la velocità dichiarata sui tratti che la dichiarano e quella dell'arco sugli altri.
+Conversione `kmh_to_ms` (`:410-412`): `km/h / 3.6`.
 
 **Regola A: la missione si muove insieme, alla velocità del mezzo più lento** (F4a, `951b0ee2`, decisione
 dell'utente: una missione è un gruppo, come un gruppo DCS; chi vuole velocità diverse fa missioni separate,
-eventualmente coordinate da un'Operazione). `check_mission_speed(mission, assets, t0)` (`:1136-1184`, chiamata da
-`Session_Simulator._check_missions`, `:1909-1911`) verifica che la velocità pianificata di ogni tratto
-(`planned_speeds`, `:1125-1133`: quella di missione, o in mancanza quella dell'arco) non superi la velocità
-**massima** (`asset.speed['max']`, m/s, `_max_speed`, `:1114-1122`) del mezzo più lento della missione; altrimenti
+eventualmente coordinate da un'Operazione). `check_mission_speed(mission, assets, t0)` (`:1163-1211`, chiamata da
+`Session_Simulator._check_missions`, `:1942-1944`) verifica che la velocità pianificata di ogni tratto
+(`planned_speeds`, `:1152-1160`: quella di missione, o in mancanza quella dell'arco) non superi la velocità
+**massima** (`asset.speed['max']`, m/s, `_max_speed`, `:1141-1149`) del mezzo più lento della missione; altrimenti
 `ValueError`. Ritorna il limite applicato, o `None` se nessun asset ha il dato o la missione non si muove.
 Dettagli (docstring `:76-91`):
 
 - un asset senza velocità massima nota (modello senza dato, asset non `Mobile`) è **escluso dal confronto con un
-  warning**, non blocca la missione (`:1164-1167`);
+  warning**, non blocca la missione (`:1191-1194`);
 - il limite è il regime `'max'` **generico**, non quello per terreno (`speed['off_road']['max']`): gli scenari
   pianificano oggi i mezzi terrestri al regime nominale su archi 'offroad', e il vincolo per tipo d'arco va
   deciso con il modulo mappe (limite noto);
-- tolleranza `SPEED_TOLERANCE = 1e-6` m/s (`:360`): rumore di conversione delle unità, non un margine fisico.
+- tolleranza `SPEED_TOLERANCE = 1e-6` m/s (`:362`): rumore di conversione delle unità, non un margine fisico.
 
 Negli scenari il controllo non scatta mai: le velocità pianificate sono le nominali del registro, sotto le
 massime. Esempio verificato sul registro (`Asset/Vehicle_Data.py`): M1A2 con velocità sostenuta 55 km/h e massima
 67 km/h (18,611 m/s), M2-Bradley 56 e 66 km/h (18,333 m/s); la missione Blue-Armor procede a 55 km/h
 (15,278 m/s), la nominale del più lento (capitolo 8 §8.1).
 
-### Partenza (`mission_start`, `:670-725`)
+### Partenza (`mission_start`, `:672-727`)
 
 Gli istanti di una missione sono in secondi dall'inizio della sessione; la partenza assoluta è `t0 + ...` con
 `t0 = SessionOrder.t_start`. In ordine di precedenza: (1) `start_time` (dalla F5-C **ritardata** da un'ETA bloccata più
-tarda sul punto di partenza, `:684-687`); (2) il primo waypoint con `eta_locked`: partenza = ETA − tempo di percorrenza
-fino a quel punto sulla rotta di riferimento (con le velocità di missione, `_travel_time_to`, `:657-667`, e le attese di
+tarda sul punto di partenza, `:686-689`); (2) il primo waypoint con `eta_locked`: partenza = ETA − tempo di percorrenza
+fino a quel punto sulla rotta di riferimento (con le velocità di missione, `_travel_time_to`, `:659-669`, e le attese di
 durata nota prima del punto, `:717-719`); (3) `tot`, ancorato al primo waypoint `ATTACK` (o, in mancanza, `OBJECTIVE`,
-`_TOT_ANCHOR_ROLES`, `:363`): stessa derivazione; senza punto d'ancoraggio `ValueError`. **Il TOT è della missione**, non
+`_TOT_ANCHOR_ROLES`, `:365`): stessa derivazione; senza punto d'ancoraggio `ValueError`. **Il TOT è della missione**, non
 dell'Operazione (§6.16). Tutti gli asset di una missione partono **insieme** (la formazione è una). Una partenza derivata
-**anteriore all'inizio della sessione** è un errore (le missioni fuori finestra saranno rifiutate dal validatore della fase
-F8; qui non si tagliano in silenzio). `Activation.ON_EVENT` è solo dichiarabile: `ValueError`.
+**anteriore all'inizio della sessione** è un errore (le missioni fuori finestra sono rifiutate dal validatore di sessione,
+`Logic/Session_Validator`, F8a, §6.25; qui non si tagliano in silenzio: `mission_start` solleva `ValueError`, che il validatore traduce in
+`MISSION_START_INVALID`). `Activation.ON_EVENT` è solo dichiarabile: `ValueError`.
 
 ### API
 
 `AssetMovement(mission_id, asset_id, route, start, speed, holds, present_before, present_after, grounded_before,
 grounded_after)` (`:415-443`; gli ultimi cinque campi sono della F5 e hanno default «nessuna attesa, nessuna presenza»);
-`mission_movements(mission, t0, air_bases)` (`:937-954`, uno per asset nell'ordine degli asset; `air_bases` serve al
-criterio d'atterraggio, §6.15); `session_movements(missions, t0)` (`:1069-1104`): `(routes, starts, speeds)` per
+`mission_movements(mission, t0, air_bases)` (`:939-956`, uno per asset nell'ordine degli asset; `air_bases` serve al
+criterio d'atterraggio, §6.15); `session_movements(missions, t0)` (`:1071-1106`): `(routes, starts, speeds)` per
 `schedule_contacts`, **solo** per gli asset con rotta (gli altri restano fermi) e `speeds` solo per quelli con velocità
 uniforme dichiarata; **non portano le attese né la presenza** (in sessione i tratti completi vanno allo scheduler come
 `legs`, §6.15); solleva `ValueError` se un asset è in due missioni (già vietato da `SessionOrder`, qui per chi chiama
-direttamente); `waypoint_times(movement)` (`:1107-1111`): gli istanti assoluti d'**arrivo** ai punti della rotta
+direttamente); `waypoint_times(movement)` (`:1109-1113`): gli istanti assoluti d'**arrivo** ai punti della rotta
 dell'asset, **attese comprese** (F5-C), senza taglio alla sessione (base delle ETA effettive, §6.11); `mission_routes`
-(`:1485-1487`); `check_mission_speed` (regola A, sopra).
+(`:1512-1514`); `check_mission_speed` (regola A, sopra).
 
 Le funzioni delle fasi successive, tutte descritte nelle sezioni indicate:
 
@@ -523,14 +564,14 @@ letti da `Logic`; nessun rientro (RTB) nella rotta: lo costruisce la sessione, d
 (§6.19). Nessun RNG, nessuna mutazione: funzioni pure (la vista non copia né muta gli asset). (Il docstring ha dalla F7a il
 punto sulle regole d'ingaggio, e dalla pulizia `d1686b28` le due righe sulla postura `off_scene`, §6.15.)
 
-## 6.11 Esito di missione (`_mission_outcome`, `:2016-2123`; prima forma alla F3, regola unica dalla F6-B1)
+## 6.11 Esito di missione (`_mission_outcome`, `:2049-2158`; prima forma alla F3, regola unica dalla F6-B1, `IN_PROGRESS` dalla F8b)
 
 Dopo che tutti gli eventi sono stati applicati, `run_session` calcola un `MissionOutcome` per ogni missione
-dell'ordine (`:3055-3061`), con gli asset nello stato **finale** (salute dopo l'applicazione, rientri ed esaurimenti
+dell'ordine (`:3098-3104`), con gli asset nello stato **finale** (salute dopo l'applicazione, rientri ed esaurimenti
 come risultano dopo tutte le ri-pianificazioni). Alla F3 la regola era una «prima forma» a tre casi (completata,
 distrutta, non completata); dalla F6-A/F6-B in poi è la **regola unica** qui sotto, che legge fino a quattro fonti:
-le distruzioni in combattimento (`_destruction_times`, `:1996-2013`), le fini di attività dei criteri di missione
-(`_activity_ends`, `:1852-1895`, §6.18), l'esaurimento del carburante (`fuel_ends`, §6.17) e i rientri
+le distruzioni in combattimento (`_destruction_times`, `:2029-2046`), le fini di attività dei criteri di missione
+(`_activity_ends`, `:1885-1928`, §6.18), l'esaurimento del carburante (`fuel_ends`, §6.17) e i rientri
 (`bingo_ends`, §6.19-6.20).
 
 **Per asset** (`AssetMissionOutcome`), nell'ordine in cui i casi sono provati:
@@ -549,36 +590,50 @@ le distruzioni in combattimento (`_destruction_times`, `:1996-2013`), le fini di
      planata), anche se a secco sul rientro: conta l'ultimo fatto;
    - altrimenti il **rientro**: `BINGO` o, dal G4b, `DISENGAGED` (`BingoEnd.reason`), all'istante della decisione;
    - altrimenti `SESSION_END` alla fine della sessione: rotta tagliata, o missione senza rotta (sul posto), ancora
-     in corso.
+     in corso. È il motivo che, **dalla F8b**, può dare alla missione lo stato `IN_PROGRESS` (sotto).
 
 **Per missione** (regola unica, F6-B1/D2.d, confermata dall'utente il 2026-10-12; `:2090-2109`):
 
-`DESTROYED` (tutti gli asset persi, anche per carburante) **>** `COMPLETED` **>** `ABORTED(motivo)` **>** `FAILED`.
+`DESTROYED` (tutti gli asset persi, anche per carburante) **>** `COMPLETED` **>** `ABORTED(motivo)` **>** `IN_PROGRESS` **>**
+`FAILED` (`IN_PROGRESS` dalla F8b, con `F8_IN_PROGRESS` acceso; spento la catena è quella di prima).
 
 - `COMPLETED` = **obiettivo raggiunto**: con `target_destroyed` dichiarato **e rappresentabile** (bersaglio `ASSET` o
   `GROUP`) i bersagli tutti distrutti nella sessione; altrimenti un asset all'ultimo punto **prima** di una distruzione
   e di una fine di attività, oppure la fine per `MAX_DURATION` (durata o tempo sulla stazione esaurito: una fine
   *regolare*). Con `target_destroyed` dichiarato la sola rotta completata **non** è l'obiettivo: `FAILED`.
 - `ABORTED` = **ogni asset superstite** ha chiuso per carburante, bingo, disingaggio, munizioni o danno
-  (`_ABORT_REASON_OF`, `:1652-1656`); il motivo è quello dell'asset che ha chiuso per **ultimo** e, a parità d'istante,
+  (`_ABORT_REASON_OF`, `:1685-1689`); il motivo è quello dell'asset che ha chiuso per **ultimo** e, a parità d'istante,
   la precedenza è `FUEL > BINGO > DISENGAGED > AMMUNITION > DAMAGE` (prima i fatti fisici sul carburante, poi la
   decisione tattica, poi munizioni e danno). Un gregario in winchester con il capo ancora in missione **non** fa
   abortire la missione (prima della F6-B1, con la precedenza provvisoria della F6-A, bastava un asset a secco).
-- `FAILED` = fine senza obiettivo e senza motivo, compreso «ancora in corso» a fine sessione.
+- **`IN_PROGRESS` (F8b, `:2141-2142`)** = la missione non è finita alla fine della sessione: non è distrutta, non è completata, non è
+  abortita (esiste almeno un asset superstite che **non** ha chiuso per un motivo di aborto) **e** almeno un asset superstite ha come
+  motivo di fine `SESSION_END`, cioè è ancora sulla rotta tagliata dalla fine della sessione o, per una missione senza rotta, è ancora sul
+  posto. È la risposta al punto aperto D4.e del piano («manca uno stato "in corso"»): una missione sul posto non è più `FAILED`. Con
+  `F8_IN_PROGRESS` spento il ramo non esiste e quella missione è `FAILED`. Non ammette un `reason` (come ogni stato diverso da `ABORTED`).
+- `FAILED` = fine senza obiettivo e senza motivo: **non più** «ancora in corso» a fine sessione (che dalla F8b è `IN_PROGRESS`), ma
+  l'obiettivo mancato con la rotta completata (per esempio con `target_destroyed` dichiarato e bersaglio non distrutto) o il caso con
+  `F8_IN_PROGRESS` spento.
 
 Con `F6_END_CRITERIA` spento resta la precedenza provvisoria della F6-A (`ABORTED(FUEL)` se *almeno* un asset
-superstite è fermo o atterrato per carburante, `:2099`).
+superstite è fermo o atterrato per carburante, `:2132`).
 
 **ETA effettive** per punto (`actual_etas`): il primo passaggio, fra gli asset non ancora distrutti a quell'istante,
 dentro la sessione, calcolato dai tratti con le attese (`Mission_Adapter.waypoint_times`, F5-C), **non** dalle ETA
 pianificate; `None` se nessuno ci arriva (oltre un esaurimento o un bingo i punti successivi non sono raggiunti,
 `:2037-2039`). È l'istante d'**arrivo** al punto, prima di un'eventuale attesa (`:2111-2123`).
 
-Conseguenza dichiarata dal codice, non dal piano: una missione **senza rotta** (sul posto) e con almeno un
-asset sopravvissuto risulta `FAILED` (nessun asset raggiunge "l'ultimo punto"); il piano della Missione la
-descrive come "ancora in corso", stato che il `MissionStatus` non ha (capitolo 9 §9.5).
+**Missione senza rotta (sul posto).** Nessun asset raggiunge «l'ultimo punto»: fino alla F7 con almeno un superstite la missione
+risultava `FAILED`, perché il `MissionStatus` non aveva lo stato «in corso» che il piano le attribuiva. **Dalla F8b** risulta
+`IN_PROGRESS` (con `F8_IN_PROGRESS` acceso, il default). Se invece la missione dichiara `EndCriteria.max_duration_s`, al suo scadere dentro la
+sessione l'asset chiude con `MAX_DURATION` e la missione è `COMPLETED` (fine regolare). Nella fotografia l'unico effetto dell'interruttore
+è, secondo la sonda in sola lettura della Proposta F8 §1.8 (non rieseguita per questo aggiornamento), su due esiti non registrati (`S22-E3`,
+seed 3 e 4, variante `not_departed`: il carro non ancora partito alla fine della sessione), e su un
+test (`Test_Session_Simulator.test_route_cut_by_the_session_end_is_in_progress`, con la controprova a interruttore spento
+`test_route_cut_by_the_session_end_off_is_failed`); la fotografia non registra lo stato di missione (capitolo 8 §8.7).
 
-*Diagramma D19 — esito di missione, regola unica (`_mission_outcome`). Aggiornato a `a784a9e7`.*
+*Diagramma D19 — esito di missione, regola unica (`_mission_outcome`). Aggiornato a `a784a9e7`; **a `fa5fbf1e`** l'ultimo rombo prima di
+`FAILED` è il ramo `IN_PROGRESS` della F8b.*
 
 ```mermaid
 flowchart TD
@@ -607,7 +662,9 @@ flowchart TD
     O -->|si| ST2["COMPLETED"]
     O -->|no| AB2{"ogni superstite ha chiuso per<br/>carburante, bingo, disingaggio,<br/>munizioni o danno?"}
     AB2 -->|si| ST3["ABORTED(motivo dell'ultimo,<br/>FUEL > BINGO > DISENGAGED ><br/>AMMUNITION > DAMAGE)"]
-    AB2 -->|no| ST4["FAILED"]
+    AB2 -->|no| IP{"F8_IN_PROGRESS e almeno un<br/>superstite con SESSION_END?"}
+    IP -->|si| ST5["IN_PROGRESS (F8b)"]
+    IP -->|no| ST4["FAILED"]
 ```
 
 *Diagramma D20 — pipeline di `Mission_Adapter`: dalla `Mission` a rotta, partenza e velocità per asset.*
@@ -652,7 +709,7 @@ missione. Lo scheduler continua a ricevere i blocchi (`items_a`/`items_b`): le f
 coppia di asset e la potatura per blocco non dipende da come gli asset sono raggruppati in forze, quindi le
 finestre sono **le stesse di prima**. Il raggruppamento in forze avviene dopo lo scheduler.
 
-**`_engagement_forces(order, blocks, block_owner)`** (`:1927-1970`) costruisce, per ogni blocco in ordine di id:
+**`_engagement_forces(order, blocks, block_owner)`** (`:1960-2003`) costruisce, per ogni blocco in ordine di id:
 
 - **blocco senza missioni**: la forza è il blocco stesso (stesso id e stessa classe di prima della F4b);
 - **blocco con missioni**: una `MissionForce.of_mission(mission, block)` per missione, nell'ordine dell'ordine di
@@ -663,7 +720,7 @@ Restituisce `forces` (`{id di forza: forza}`) e `owner` (`{asset_id: (lato, id d
 `_group_windows` usa per raggruppare le finestre per coppia di forze (§6.3). Un `mission_id` uguale all'id di un
 blocco passato è rifiutato in `_check_missions` (`:1922-1924`).
 
-**`MissionForce`** (`Logic/Mission_Adapter.py:1622-1719`) è una *vista*, non una copia: i suoi `assets` sono gli
+**`MissionForce`** (`Logic/Mission_Adapter.py:1649-1746`) è una *vista*, non una copia: i suoi `assets` sono gli
 oggetti **reali** del blocco ristretti a quelli della vista (con le chiavi e nell'ordine del blocco), quindi danno,
 munizioni e carburante applicati dal motore arrivano al blocco; il blocco resta l'unità di appartenenza,
 rifornimento e comando (`asset.block` non cambia). Espone solo ciò che il risolutore legge (capitolo 4 §4.27):
@@ -675,9 +732,9 @@ rifornimento e comando (`asset.block` non cambia). Espone solo ciò che il risol
 | `owner_block`, `block_id` | il blocco d'appartenenza e il suo id di dominio. Il riferimento si chiama `owner_block`, **non** `block`: `Contact_Scheduler._as_block` e `Session_Simulator._as_block` scartano un `.block` (forma del `BlockItem`) e scambierebbero la vista per il suo blocco |
 | `side` | lato del blocco |
 | `assets` | `{chiave: asset}` del blocco ristretto alla vista |
-| `can_disengage` | calcolato sul **blocco** con la regola di `_can_disengage` (`validate_class(block, 'Military') or not validate_class(block, 'Block')`, `:1664`): adattatore, perché la vista non è né `Military` né `Block` (capitolo 4 §4.7) |
-| `postures`, `grounded` | postura continua e insieme degli aerei a terra della vista: valorizzati **solo** per la vista residua, vuoti per una vista di missione (`:1671-1673`, §6.14) |
-| `salvo_interceptors()` | quella del blocco ristretta agli asset della vista, stesso ordine (`:1706-1715`) |
+| `can_disengage` | calcolato sul **blocco** con la regola di `_can_disengage` (`validate_class(block, 'Military') or not validate_class(block, 'Block')`, `:1691`): adattatore, perché la vista non è né `Military` né `Block` (capitolo 4 §4.7) |
+| `postures`, `grounded` | postura continua e insieme degli aerei a terra della vista: valorizzati **solo** per la vista residua, vuoti per una vista di missione (`:1698-1700`, §6.14) |
+| `salvo_interceptors()` | quella del blocco ristretta agli asset della vista, stesso ordine (`:1733-1742`) |
 
 Non c'è nessuna delega generica degli attributi al blocco (niente `__getattr__`): le grandezze aggregate del
 blocco (potenza di combattimento, volumi, ...) riguardano **tutti** i suoi asset e, lette sulla vista, sarebbero
@@ -686,7 +743,7 @@ sbagliate in silenzio. Un asset che non appartiene al blocco, o un blocco senza 
 quello della missione.
 
 **`SessionOrder.committed` per forza.** La porta lo chiavava per blocco e continua a farlo.
-`_engagement_committed` (`:1973-1993`) lo traduce: per ogni forza d'ingaggio, se il blocco della forza è in
+`_engagement_committed` (`:2006-2026`) lo traduce: per ogni forza d'ingaggio, se il blocco della forza è in
 `committed`, la restrizione vale **intersecata con gli asset della forza**; una forza di un blocco non elencato
 non ha restrizione. `None` se l'ordine non restringe nulla.
 
@@ -746,30 +803,30 @@ flowchart TD
 
 ## 6.13 Il dominio di coordinamento: `coordination_domains` (F4b+, `098671d7`)
 
-`Mission_Adapter.coordination_domains(forces, operations)` (`Logic/Mission_Adapter.py:1724-1804`) assegna a ogni
+`Mission_Adapter.coordination_domains(forces, operations)` (`Logic/Mission_Adapter.py:1751-1831`) assegna a ogni
 forza d'ingaggio la **chiave del suo dominio di coordinamento** che il risolutore riceve come `coordination_of`
 (capitolo 4 §4.28). La regola è dell'utente (decisioni 6 e 7 del 2026-10-11): due forze **dello stesso lato**
 sono nello stesso dominio se hanno lo stesso **blocco** *oppure* appartengono alla stessa **Operazione**, con
-**unione transitiva**. Realizzata con un union-find (`find`/`union`, `:1753-1766`) su nodi `('force', id)`,
+**unione transitiva**. Realizzata con un union-find (`find`/`union`, `:1780-1793`) su nodi `('force', id)`,
 `('block', lato, id del blocco)` e `('operation', lato, id dell'Operazione)`:
 
-- ogni forza è unita al proprio nodo-blocco (`:1784`): per una `MissionForce` è `block_id`, per un blocco senza
+- ogni forza è unita al proprio nodo-blocco (`:1811`): per una `MissionForce` è `block_id`, per un blocco senza
   missioni è l'id del blocco; **la vista residua e il blocco senza missioni hanno l'id del blocco, quindi stanno
   nel dominio delle missioni del blocco**;
-- se la forza è una missione in un'Operazione, è unita anche al nodo-Operazione (`:1786-1791`). L'appartenenza si
+- se la forza è una missione in un'Operazione, è unita anche al nodo-Operazione (`:1813-1818`). L'appartenenza si
   legge da `Operation.mission_ids` e da `Mission.operation_id` (`SessionOrder` ne garantisce la coerenza);
 - **mai a cavallo di due lati**: i nodi-blocco e -Operazione portano il lato nella chiave, quindi un'Operazione
   che elenca missioni di lati diversi (`SessionOrder` non conosce i blocchi e non può vietarlo) lega solo le
-  missioni dello stesso lato — **un dominio per lato**, con un `warning` (`:1793-1797`). È una scelta dichiarata:
+  missioni dello stesso lato — **un dominio per lato**, con un `warning` (`:1820-1824`). È una scelta dichiarata:
   l'Operazione è un raggruppamento di scopo, non di comando, quindi l'ordine non è rifiutato. Il risolutore
   verifica comunque l'invariante (`ValueError`, capitolo 4 §4.28);
-- **chiave** = l'id di forza minore (ordine delle stringhe) fra i membri del dominio (`:1799-1804`): è l'id di una
+- **chiave** = l'id di forza minore (ordine delle stringhe) fra i membri del dominio (`:1826-1831`): è l'id di una
   delle sue forze, quindi non può coincidere con la chiave di un altro dominio, e senza legami la chiave di una
   forza è il suo id (comportamento precedente). La funzione è pura, deterministica, indipendente dall'ordine dei
   dizionari.
 
 Solleva `TypeError` se `forces` non è una mappa o se `operations` contiene altro che `Operation`
-(`:1812-1819`). Chi la usa: `run_session` (`:2202`) la passa a `_connected_components` (le forze di un dominio vanno
+(`:1839-1846`). Chi la usa: `run_session` (`:2237`) la passa a `_connected_components` (le forze di un dominio vanno
 nella stessa run, §6.3) e a ogni `resolve_engagement`.
 
 *Diagramma D35 — regole di unione di `coordination_domains` (§6.13).*
@@ -796,22 +853,22 @@ flowchart TD
 "fermi": hanno una *postura continua*. Un **aereo** è a terra; un'**unità terrestre o navale** è in postura
 `Defense` dichiarata, con il tiro invariato (capitolo 4 §4.30).
 
-**`continuous_posture(asset)`** (`Logic/Mission_Adapter.py:1505-1518`) è una funzione pura che legge solo la classe
+**`continuous_posture(asset)`** (`Logic/Mission_Adapter.py:1532-1545`) è una funzione pura che legge solo la classe
 dell'asset (`validate_class`), senza leggere né mutare il suo stato: `Aircraft` → `PARKED_POSTURE`
 (`StartMode.PARKING_COLD.value`, cioè `'parking_cold'`, "l'aereo sul parcheggio a motori spenti"); `Ship` →
 `SEA_DEFENSE_POSTURE` (`Sea_Task.DEFENSE.value`, `'Defense'`); ogni altro asset (veicolo, struttura, stub) →
-`GROUND_DEFENSE_POSTURE` (`Ground_Action.DEFENSE.value`, `'Defense'`); le costanti sono a `:368-370`. Le etichette
+`GROUND_DEFENSE_POSTURE` (`Ground_Action.DEFENSE.value`, `'Defense'`); le costanti sono a `:370-372`. Le etichette
 sono **valori già esistenti** di `Context`/`Mission_Types`, non costanti nuove. `unassigned_postures(assets)`
-(`:1521-1531`) dà `{asset_id: postura}` saltando gli asset senza id.
+(`:1548-1558`) dà `{asset_id: postura}` saltando gli asset senza id.
 
-**`grounded_assets(forces)`** (`:1534-1557`) raccoglie gli id degli aerei a terra fra le forze d'ingaggio della
-sessione: per una `MissionForce` residua è `force.grounded` (`:1672-1673`, aerei con postura `PARKED_POSTURE`);
+**`grounded_assets(forces)`** (`:1561-1584`) raccoglie gli id degli aerei a terra fra le forze d'ingaggio della
+sessione: per una `MissionForce` residua è `force.grounded` (`:1699-1700`, aerei con postura `PARKED_POSTURE`);
 per un **blocco senza missioni** (passato tale e quale) si applica la stessa regola agli asset del blocco
-(`:1554-1555`); gli aerei di una vista di **missione** non sono a terra (`grounded` vuoto, `postures` vuota,
-`:1671`). Restituisce un `frozenset`; vuoto se non ci sono aerei fuori missione, e allora la sessione è identica a
+(`:1581-1582`); gli aerei di una vista di **missione** non sono a terra (`grounded` vuoto, `postures` vuota,
+`:1698`). Restituisce un `frozenset`; vuoto se non ci sono aerei fuori missione, e allora la sessione è identica a
 quella precedente alla F4c. Alla F4c `run_session` lo passava tale e quale a scheduler e risolutore; **dalla F5** lo
-include come intervalli `ALWAYS` nel programma `Mission_Adapter.grounded_schedule` (`:1052-1066`), calcolato una volta
-(`Session_Simulator.py:2215`) e passato allo scheduler e a ogni ingaggio (§6.1, §6.15).
+include come intervalli `ALWAYS` nel programma `Mission_Adapter.grounded_schedule` (`:1054-1068`), calcolato una volta
+(`Session_Simulator.py:2258`) e passato allo scheduler e a ogni ingaggio (§6.1, §6.15).
 
 **La postura è un dato della vista, non un effetto.** `MissionForce.postures` non cambia estrazioni né esiti
 (`Defense` non entra nel fattore di postura della soglia di rottura, che si legge dai tratti di rotta: capitolo 4
@@ -841,7 +898,7 @@ flowchart TD
 
 **La decisione** (utente, 2026-10-11/12, D1.a/b, deviazioni 12-13 del piano): un asset di missione **non sparisce
 fuori dalla sua rotta**. Prima della F5 un asset con missione esisteva per lo scheduler solo fra la partenza e l'arrivo;
-ora (`F5_PRESENCE`, attivo dalla F5-B, `Mission_Adapter:404`):
+ora (`F5_PRESENCE`, attivo dalla F5-B, `Mission_Adapter:406`):
 
 - **unità terrestri e navali**: presenti **ferme** nella posizione di partenza prima di partire e in quella finale dopo
   la fine, in postura `Defense`, quindi rilevabili e ingaggiabili in quei tratti (il carro fermo a 4 km dal nemico
@@ -850,38 +907,38 @@ ora (`F5_PRESENCE`, attivo dalla F5-B, `Mission_Adapter:404`):
   dall'inizio della sessione al decollo — bersagli di superficie passivi come gli aerei senza missione della F4c
   (capitolo 4 §4.30);
 - **aerei dopo la fine della rotta**: a terra **solo se** l'ultimo punto è un `LAND` su una **base vera**
-  (`lands_on_air_base`, `Mission_Adapter:904-924`: il riferimento del waypoint è un asset di un blocco `is_Air_Base()`,
-  oppure il punto cade entro `AIR_BASE_AREA_RADIUS_M = 3000 m` — **STIMA di progetto**, `:385` — da un asset non aereo
-  di una base del **lato della missione**, `air_base_points`, `:872-901`); altrimenti **escono di scena all'arrivo**
+  (`lands_on_air_base`, `Mission_Adapter:906-926`: il riferimento del waypoint è un asset di un blocco `is_Air_Base()`,
+  oppure il punto cade entro `AIR_BASE_AREA_RADIUS_M = 3000 m` — **STIMA di progetto**, `:387` — da un asset non aereo
+  di una base del **lato della missione**, `air_base_points`, `:874-903`); altrimenti **escono di scena all'arrivo**
   (postura `off_scene`). Atterrare su una base nemica non è un atterraggio.
 
-**Come lo realizza `Mission_Adapter`.** `AssetMovement` (`:415-443`) ha quattro campi nuovi (`present_before`,
-`present_after`, `grounded_before`, `grounded_after`) che `_presence` (`:927-934`) riempie per missione: terra e mare
+**Come lo realizza `Mission_Adapter`.** `AssetMovement` (`:417-445`) ha quattro campi nuovi (`present_before`,
+`present_after`, `grounded_before`, `grounded_after`) che `_presence` (`:929-936`) riempie per missione: terra e mare
 presenti prima e dopo e mai a terra; aria presente e a terra prima se non parte in volo, presente e a terra dopo se
 atterra su una base vera. Poi:
 
 | Funzione | Cosa dà | Riga |
 |---|---|---|
-| `movement_legs(movement, t0, t_end, presence=True)` | i tratti di un asset nella sessione: movimento con attese (`_timeline`) più, con `presence`, il tratto fermo da `t0` alla partenza e dalla fine a `t_end`; ritagliati a `[t0, t_end]`. `presence=False` = solo movimento (carburante) | `:1000-1025` |
-| `grounded_intervals(movement)` | gli intervalli `[lo, hi)` a terra: prima `(-inf, fine delle attese al punto di partenza)`, dopo `[arrivo all'ultimo punto, +inf)` | `:1028-1049` |
-| `grounded_schedule(forces, movements)` | un `GroundedSchedule` (capitolo 3 §3.7): `ALWAYS` per gli aerei senza missione (`grounded_assets`, §6.14), gli intervalli sopra per gli aerei di missione | `:1052-1066` |
-| `final_posture(mission, movement, grounded, session_end)` | la postura di un asset di missione a fine sessione | `:1562-1589` |
-| `session_postures(forces, movements, grounded, session_end)` | `{asset_id: postura}` di **tutti** gli asset delle forze (di missione: `final_posture`; senza missione: la postura continua della F4c) | `:1592-1619` |
+| `movement_legs(movement, t0, t_end, presence=True)` | i tratti di un asset nella sessione: movimento con attese (`_timeline`) più, con `presence`, il tratto fermo da `t0` alla partenza e dalla fine a `t_end`; ritagliati a `[t0, t_end]`. `presence=False` = solo movimento (carburante) | `:1002-1027` |
+| `grounded_intervals(movement)` | gli intervalli `[lo, hi)` a terra: prima `(-inf, fine delle attese al punto di partenza)`, dopo `[arrivo all'ultimo punto, +inf)` | `:1030-1051` |
+| `grounded_schedule(forces, movements)` | un `GroundedSchedule` (capitolo 3 §3.7): `ALWAYS` per gli aerei senza missione (`grounded_assets`, §6.14), gli intervalli sopra per gli aerei di missione | `:1054-1068` |
+| `final_posture(mission, movement, grounded, session_end)` | la postura di un asset di missione a fine sessione | `:1589-1616` |
+| `session_postures(forces, movements, grounded, session_end)` | `{asset_id: postura}` di **tutti** gli asset delle forze (di missione: `final_posture`; senza missione: la postura continua della F4c) | `:1619-1646` |
 
 **Le posture** (`final_posture`): a terra a fine sessione → `PARKED_POSTURE` (`parking_cold`); aereo in volo → il tipo di
-missione; aereo uscito di scena alla fine della rotta → `OFF_SCENE_POSTURE = 'off_scene'` (`:374`, etichetta, non un
+missione; aereo uscito di scena alla fine della rotta → `OFF_SCENE_POSTURE = 'off_scene'` (`:376`, etichetta, non un
 valore di `Context`); terra e mare → `Defense` a movimento finito o non ancora iniziato (D1.a/b), altrimenti la postura
 di riferimento del tipo di missione (`Context.postures_for`). `Session_Simulator` la corregge poi per i casi che
-`Mission_Adapter` non vede — il rientro (`_postures_after_bingo`, `:1625-1639`) e l'esaurimento
-(`_postures_after_fuel`, `:1501-1521`) — e per i distrutti (`destroyed`, §6.18) in tre passi successivi
-(`:3080-3096`). `SessionOutcome.postures` è un'**uscita**: non cambia la storia (contatti, colpi, danni), è riportata
+`Mission_Adapter` non vede — il rientro (`_postures_after_bingo`, `:1658-1672`) e l'esaurimento
+(`_postures_after_fuel`, `:1534-1554`) — e per i distrutti (`destroyed`, §6.18) in tre passi successivi
+(`:3123-3139`). `SessionOutcome.postures` è un'**uscita**: non cambia la storia (contatti, colpi, danni), è riportata
 in ogni caso anche con `F5_PRESENCE` spento.
 
 **Il cablaggio in `run_session`.** `mission_movements(mission, t0, air_bases)` riceve le basi del lato della missione
-(`:2205-2210`); `grounded = MA.grounded_schedule(forces, movement_of.values())` (`:2215`) è passato a scheduler e
-risolutore; i **tratti di movimento** senza presenza (`presence=False`, `:2249-2250`) vanno al carburante (la presenza
-ferma non consuma), quelli con presenza (`movement_legs(movement, t0, session_end)`, `:2323`) allo scheduler come `legs`
-e al risolutore come tratti degli asset (`all_legs`, `:2349-2361`).
+(`:2240-2245`); `grounded = MA.grounded_schedule(forces, movement_of.values())` (`:2258`) è passato a scheduler e
+risolutore; i **tratti di movimento** senza presenza (`presence=False`, `:2292-2293`) vanno al carburante (la presenza
+ferma non consuma), quelli con presenza (`movement_legs(movement, t0, session_end)`, `:2366`) allo scheduler come `legs`
+e al risolutore come tratti degli asset (`all_legs`, `:2392-2404`).
 
 *Diagramma D41 — ciclo di vita di un aereo di missione in sessione (stati e transizioni che la sessione modella).*
 
@@ -931,39 +988,39 @@ a lanciare), accettate dall'utente il 2026-10-12.
 
 ## 6.16 Attese, ETA bloccate e TOT per missione (F5-C)
 
-Interruttore `Mission_Adapter.F5_WAITS` (attivo dalla F5-C, `:405`). Le azioni **WAIT** di una missione
+Interruttore `Mission_Adapter.F5_WAITS` (attivo dalla F5-C, `:407`). Le azioni **WAIT** di una missione
 (`MissionAction` con `ActionKind.WAIT`, modo `'hold'` o `'orbit'`, durata `wait_duration_s` **oppure** fino a un
 istante `wait_until`), le **ETA bloccate** dei punti (`MissionWaypoint.eta_locked`) e il **TOT** della missione
 entrano nel movimento come **tratti fermi** nel punto della rotta (`AssetMovement.holds`, `((indice del punto, durata
-[s]), ...)`): `_timeline` (`:957-997`) li inserisce e sposta i successivi della durata. Le attese sono **le stesse per
+[s]), ...)`): `_timeline` (`:959-999`) li inserisce e sposta i successivi della durata. Le attese sono **le stesse per
 tutti gli asset della missione** (la formazione attende insieme: regola A).
 
 - **`hold` e `orbit` sono la stessa cosa per il motore**: presenza ferma nel punto per la durata. Per l'orbita è
   un'**approssimazione dichiarata**: nessun circuito geometrico (`MissionAction` non dichiara raggio né velocità
   d'orbita, e non se ne inventano); le finestre di contatto coprono quindi tutta l'attesa intorno al punto, con
   un errore di posizione pari al raggio del circuito reale (qualche km per un caccia).
-- **`mission_holds(mission, start, t0)`** (`:796-851`) le calcola una volta sulla rotta di riferimento con le
+- **`mission_holds(mission, start, t0)`** (`:798-853`) le calcola una volta sulla rotta di riferimento con le
   velocità di missione (la stessa temporizzazione di `mission_start`). Per ogni punto: le azioni WAIT del punto
-  (`_wait_end`, `:751-774`, con la condizione d'avvio `ON_ARRIVAL`/`AT_TIME`/`AFTER_DURATION`) e la **sincronizzazione**:
+  (`_wait_end`, `:753-776`, con la condizione d'avvio `ON_ARRIVAL`/`AT_TIME`/`AFTER_DURATION`) e la **sincronizzazione**:
   se il punto *successivo* ha un'ETA bloccata (o è l'ancoraggio del TOT) e sarebbe raggiunto in anticipo, l'attesa si
   allunga fino a raggiungerlo esattamente all'istante bloccato (attesa *prima* del punto). In **ritardo**: un warning;
   la velocità non cambia, e le ETA effettive lo riportano. Restituisce `()` senza rotta, senza attese o se la rotta non
   ha un tratto per ogni coppia di waypoint.
-- **La partenza** (`mission_start`, `:670-725`): precedenza `start_time` (ritardata, dalla F5-C, da un'ETA bloccata sul
-  punto di partenza più tarda, `:684-687`), poi la prima ETA bloccata, poi il `tot`. Senza `start_time` la partenza è
+- **La partenza** (`mission_start`, `:672-727`): precedenza `start_time` (ritardata, dalla F5-C, da un'ETA bloccata sul
+  punto di partenza più tarda, `:686-689`), poi la prima ETA bloccata, poi il `tot`. Senza `start_time` la partenza è
   derivata **all'indietro** dall'istante bloccato meno la percorrenza **e** le attese di durata nota dei punti prima
-  dell'ancoraggio (`_relative_wait`, `:734-748`, anticipo `:717-719`); le attese fino a un istante assoluto non anticipano
+  dell'ancoraggio (`_relative_wait`, `:736-750`, anticipo `:719-721`); le attese fino a un istante assoluto non anticipano
   (dipendono dalla partenza stessa). Con `start_time` la missione attende prima del punto d'ancoraggio.
 - **Il TOT è di ogni missione, non dell'Operazione** (decisione dell'utente, 2026-10-12, commit `03d77640`). La F5-C
   (`4da618b1`) aveva introdotto un TOT comune d'Operazione (`Operation.tot`, `operation_tots`) usato per le missioni
   che non ne dichiaravano uno; l'utente l'ha **rimosso** lo stesso 2026-10-12: missioni coordinate dichiarano ciascuna il
   proprio TOT, uguali o sfalsati. L'esempio dell'utente: una *Fighter Sweep* su una zona che anticipa di qualche minuto
   l'arrivo dei bombardieri di un'altra missione sulla stessa zona ha un TOT diverso da quello dei bombardieri,
-  anche se le due missioni partono insieme nella stessa Operazione. `_locked_targets` (`:777-793`) usa solo il
-  `Mission.tot`, ancorato al primo waypoint `ATTACK` (o, in mancanza, `OBJECTIVE`, `_TOT_ANCHOR_ROLES`, `:363`); un TOT
-  senza punto d'ancoraggio e con `start_time` è ignorato con un warning (`:790-791`), senza `start_time` è un `ValueError`
-  (`:700-702`). Nell'Operazione resta solo la regola d'esito (`OutcomeRule`), che nessuno calcola ancora.
-- **ETA effettive** (`waypoint_times`, `:1107-1111`): gli istanti d'**arrivo** ai punti dai tratti, attese comprese; vanno
+  anche se le due missioni partono insieme nella stessa Operazione. `_locked_targets` (`:779-795`) usa solo il
+  `Mission.tot`, ancorato al primo waypoint `ATTACK` (o, in mancanza, `OBJECTIVE`, `_TOT_ANCHOR_ROLES`, `:365`); un TOT
+  senza punto d'ancoraggio e con `start_time` è ignorato con un warning (`:811-812`), senza `start_time` è un `ValueError`
+  (`:701-703`). Nell'Operazione resta solo la regola d'esito (`OutcomeRule`), che nessuno calcola ancora.
+- **ETA effettive** (`waypoint_times`, `:1109-1113`): gli istanti d'**arrivo** ai punti dai tratti, attese comprese; vanno
   in `MissionOutcome.actual_etas`, mentre le ETA pianificate restano nei `MissionWaypoint`.
 - **Carburante**: dalla F6-A le attese consumano **nel tempo alla crociera** dell'asset, con un `FuelEvent` per tratto
   (§6.17); nella F5-C non consumavano.
@@ -977,10 +1034,10 @@ partenza, come dalla F3). Scenari: S23 (CAP in orbita, sosta di un carro, TOT pe
 **La decisione** (utente, 2026-10-12): fino alla F5 il carburante era un vincolo *a posteriori* — un solo `FuelEvent` a
 fine movimento — e un asset a secco continuava a muoversi e a combattere (esperimento E5 dell'analisi: un carro a secco
 dopo 852 m di 7 km ingaggiato 3 km più avanti). Dalla F6-A il carburante **vincola il movimento e i contatti**, dietro
-due interruttori separati (`F6_FUEL_PER_LEG`, `F6_FUEL_CONSTRAINT`, `:786-787`) per attribuire le differenze a una sola
+due interruttori separati (`F6_FUEL_PER_LEG`, `F6_FUEL_CONSTRAINT`, `:807-808`) per attribuire le differenze a una sola
 causa.
 
-**Quali tratti consumano** (`_consuming_legs`, `:1362-1379`): per ogni asset di missione i tratti di **movimento**
+**Quali tratti consumano** (`_consuming_legs`, `:1395-1412`): per ogni asset di missione i tratti di **movimento**
 ritagliati alla sessione (`movement_legs(..., presence=False)`), attese comprese; esclusi i tratti degeneri (durata
 nulla) e i tratti **fermi di un aereo a terra** (parcheggio prima del decollo, sosta dopo l'atterraggio: motori
 spenti). Con `F6_FUEL_PER_LEG` spento i tratti fermi non consumano mai (come prima della F6-A).
@@ -988,31 +1045,31 @@ spenti). Con `F6_FUEL_PER_LEG` spento i tratti fermi non consumano mai (come pri
 **Esaurimento a monte (`F6_FUEL_CONSTRAINT`).** Il carburante dipende solo dai tratti e dal carburante di partenza, quindi
 istante e punto dell'esaurimento si calcolano **prima** dello scheduler (`Fuel_Model.fuel_exhaustion`, alla crociera,
 capitolo 5 §5.2.3) e i tratti oltre quel punto **non esistono**: i tratti troncati vanno allo scheduler (`legs`) e al
-risolutore, quindi i contatti sono calcolati sui tratti reali. L'esito (`_fuel_end` → `_exhaustion_end`, `:1395-1439`,
-`FuelEnd`, `:896-913`) dipende dall'asset:
+risolutore, quindi i contatti sono calcolati sui tratti reali. L'esito (`_fuel_end` → `_exhaustion_end`, `:1428-1472`,
+`FuelEnd`, `:923-940`) dipende dall'asset:
 
 | Esito (`FuelEnd.kind`) | Chi | Che cosa succede |
 |---|---|---|
 | `FUEL_HALT` | terra/mare, o aereo ancora a terra o a quota ≤ 0 (serbatoio vuoto al decollo, `on_ground`) | **fermo** nel punto di esaurimento fino a fine sessione, presente e bersaglio (come la presenza fuori rotta, §6.15), postura `Defense`; **non** distrutto |
 | `FUEL_GLIDE` | aereo in volo con una base aerea **del suo lato** entro quota × `GLIDE_RATIO` | **planata** in linea retta sulla base più vicina alla velocità di crociera (semplificazione dichiarata), poi **a terra** sulla base (programma `grounded` dall'atterraggio, bersaglio di superficie passivo, postura `parking_cold`); durante la planata è un aereo in volo come gli altri |
-| `FUEL_CRASH` | aereo in volo senza base raggiungibile in planata | **perso** all'esaurimento: i tratti finiscono lì e, dopo gli ingaggi, la salute è portata a 0 con `Asset.apply_damage` (`:3067-3077`) — lo stesso canale del danno da combattimento, stato `Destroyed` — **senza un `DamageEvent`** nell'esito (non è un colpo: nessun tiratore, nessuna arma); esito per asset `DESTROYED`/`FUEL_EXHAUSTED` con `crew_recovered=True` |
+| `FUEL_CRASH` | aereo in volo senza base raggiungibile in planata | **perso** all'esaurimento: i tratti finiscono lì e, dopo gli ingaggi, la salute è portata a 0 con `Asset.apply_damage` (`:3110-3120`) — lo stesso canale del danno da combattimento, stato `Destroyed` — **senza un `DamageEvent`** nell'esito (non è un colpo: nessun tiratore, nessuna arma); esito per asset `DESTROYED`/`FUEL_EXHAUSTED` con `crew_recovered=True` |
 
 Il punto di atterraggio è la posizione dell'asset di base più vicino, a quota 0 (terreno non modellato); la quota è
 quella del punto di esaurimento, interpolata fra i waypoint, trattata come altezza sulla base. L'idoneità della base per
 tipo d'aereo (lunghezza della pista, elicotteri, portaerei) **non è modellata**: qualunque base aerea amica va bene
 (`air_base_points`).
 
-Le funzioni di supporto: `_truncate_at_fuel_end` (`:1442-1455`) tronca i tratti di presenza e li chiude con l'esito
+Le funzioni di supporto: `_truncate_at_fuel_end` (`:1475-1488`) tronca i tratti di presenza e li chiude con l'esito
 (fermo nel punto, planata e sosta sulla base, nulla se perso; lista **vuota** = l'asset non esiste nella sessione, aereo
-perso alla partenza); `_grounded_after_fuel` (`:1458-1486`) corregge il programma a terra (gli intervalli che
+perso alla partenza); `_grounded_after_fuel` (`:1491-1519`) corregge il programma a terra (gli intervalli che
 cominciano dopo l'esaurimento cadono; un aereo a terra all'esaurimento ci resta; uno in planata è a terra
-dall'atterraggio); `_fuel_truncated` (`:1489-1498`) applica il troncamento a presenza e movimento insieme;
-`_postures_after_fuel` (`:1501-1521`) la postura finale.
+dall'atterraggio); `_fuel_truncated` (`:1522-1531`) applica il troncamento a presenza e movimento insieme;
+`_postures_after_fuel` (`:1534-1554`) la postura finale.
 
 **Contabilità (`F6_FUEL_PER_LEG`).** Nel passo finale (§6.2), all'evento MOVEMENT dell'asset, **un `FuelEvent` per tratto
 che consuma**, in ordine, applicato subito (`Fuel_Model.apply_fuel_event`); dopo un evento esaurito nessun altro
-(`:2973-3000`). Spento: un solo `FuelEvent` per asset sulla distanza dei tratti di movimento, le attese non consumano
-(`:3002-3029`).
+(`:3016-3043`). Spento: un solo `FuelEvent` per asset sulla distanza dei tratti di movimento, le attese non consumano
+(`:3045-3072`).
 
 *Diagramma D42 — come si compongono i tratti di un asset di missione prima dello scheduler.*
 
@@ -1043,33 +1100,33 @@ fine attività); terreno non modellato; idoneità della base non modellata.
 **La decisione** (utente, 2026-10-12, D2.a/D2.d): i criteri di stato *dichiarati* in `EndCriteria` chiudono l'**attività**
 dell'asset senza cambiargli la rotta (per il risolutore, capitolo 4 §4.31): dall'istante della fine l'asset non lancia
 più salve offensive, prosegue **passivo** sulla rotta pianificata, resta presente, bersaglio e intercettore. Interruttori
-`F6_END_CRITERIA` e `F6_DESTROYED_POSTURE` (`:798-799`), entrambi attivi; nei default di `EndCriteria` nessun criterio è
+`F6_END_CRITERIA` e `F6_DESTROYED_POSTURE` (`:819-820`), entrambi attivi; nei default di `EndCriteria` nessun criterio è
 attivo, quindi nessuno scenario preesistente cambia.
 
-**Costruzione dei criteri** (`_activity_plans`, `:1763-1806`, un `ActivityPlan` per asset, `:1660-1678`):
+**Costruzione dei criteri** (`_activity_plans`, `:1796-1839`, un `ActivityPlan` per asset, `:1693-1711`):
 
 | Criterio | Come la sessione lo legge |
 |---|---|
-| `winchester` | le **voci della scorta per arma** dell'asset nelle categorie elencate (`_winchester_weapons`, `:1734-1760`; categoria = chiave di primo livello del registro d'arma del dominio, `Fire_Control.weapon_category`, capitolo 4 §4.31). Scatta quando sono **tutte** a zero nello stato ombra. **Inattivo con un warning** per un asset senza scorta per arma, senza armi di quelle categorie, o con un'arma di quelle categorie **non modellata** (contata a unità: non si esaurisce mai). Già a zero alla partenza: fine alla partenza della missione |
+| `winchester` | le **voci della scorta per arma** dell'asset nelle categorie elencate (`_winchester_weapons`, `:1767-1793`; categoria = chiave di primo livello del registro d'arma del dominio, `Fire_Control.weapon_category`, capitolo 4 §4.31). Scatta quando sono **tutte** a zero nello stato ombra. **Inattivo con un warning** per un asset senza scorta per arma, senza armi di quelle categorie, o con un'arma di quelle categorie **non modellata** (contata a unità: non si esaurisce mai). Già a zero alla partenza: fine alla partenza della missione |
 | `damage_threshold` | salute persa / salute **a inizio sessione** ≥ soglia (*mission kill*, asset non distrutto) |
-| `target_destroyed` | bersaglio `ASSET` (l'asset) o `GROUP` (gli asset del blocco, o della missione, con quell'id: `_mission_target_ids`, `:1697-1731`; **dalla F7a** ristretti a `Target.asset_ids` se dichiarato, `_restrict_to_asset_ids`, `:1681-1694`: gli id fuori dal gruppo sono ignorati con un warning; il criterio **non** filtra per lato); tutti distrutti (in combattimento, già all'inizio, o persi per carburante) → fine all'istante dell'ultima distruzione, non prima della partenza. Bersagli `POINT`/`AREA`/`ZONE`: **non rappresentabili** (decisione 12 della F7a: nessun asset da distruggere, nemmeno per una missione di fuoco su posizione), criterio ignorato con un warning; id sconosciuto: ignorato con un warning |
+| `target_destroyed` | bersaglio `ASSET` (l'asset) o `GROUP` (gli asset del blocco, o della missione, con quell'id: `_mission_target_ids`, `:1730-1764`; **dalla F7a** ristretti a `Target.asset_ids` se dichiarato, `_restrict_to_asset_ids`, `:1714-1727`: gli id fuori dal gruppo sono ignorati con un warning; il criterio **non** filtra per lato); tutti distrutti (in combattimento, già all'inizio, o persi per carburante) → fine all'istante dell'ultima distruzione, non prima della partenza. Bersagli `POINT`/`AREA`/`ZONE`: **non rappresentabili** (decisione 12 della F7a: nessun asset da distruggere, nemmeno per una missione di fuoco su posizione), criterio ignorato con un warning; id sconosciuto: ignorato con un warning |
 | `max_duration_s` | fine all'istante di **partenza della missione** + durata (la semantica più semplice: «durata o tempo sulla stazione» contata dalla partenza), passata al risolutore come fine nota a monte (`until`) |
 
-`_activity_criteria` (`:1823-1840`) li traduce in `ER.ActivityCriteria`, con le distruzioni già note
-(`_known_destructions`, `:1809-1820`: ingaggi già risolti, asset distrutti all'inizio, persi per carburante) e, dal G4a,
-la salute d'inizio sessione come `reference_health`; `engage` li passa al risolutore (`:2855-2860`). Il bingo
-aggiunge `until=bingo.time` agli asset che rientrano (`:2674-2681`) e, dal G4a, la passività da episodi precedenti
-(`passive_from`, `:2683-2697`).
+`_activity_criteria` (`:1856-1873`) li traduce in `ER.ActivityCriteria`, con le distruzioni già note
+(`_known_destructions`, `:1842-1853`: ingaggi già risolti, asset distrutti all'inizio, persi per carburante) e, dal G4a,
+la salute d'inizio sessione come `reference_health`; `engage` li passa al risolutore (`:2898-2903`). Il bingo
+aggiunge `until=bingo.time` agli asset che rientrano (`:2717-2724`) e, dal G4a, la passività da episodi precedenti
+(`passive_from`, `:2726-2740`).
 
-**L'esito per asset** (`_activity_ends`, `:1852-1895`) è la **prima** fra: la fine nota a monte (`static_end`), le fini
+**L'esito per asset** (`_activity_ends`, `:1885-1928`) è la **prima** fra: la fine nota a monte (`static_end`), le fini
 scattate nel risolutore (`EngagementResult.activity_ends`, escluso il bersaglio distrutto) e il **bersaglio
 distrutto valutato sull'intera sessione** — non sulle fini del risolutore, perché un ingaggio risolto prima può non
 sapere di una distruzione avvenuta in un ingaggio risolto dopo (limite dichiarato del risolutore); la fine per bersaglio
-non è anteriore alla partenza. A parità d'istante: danno, winchester, bersaglio, durata (`_ACTIVITY_ORDER`, `:1646`).
+non è anteriore alla partenza. A parità d'istante: danno, winchester, bersaglio, durata (`_ACTIVITY_ORDER`, `:1679`).
 Un asset che completa la rotta *prima* della fine resta `ROUTE_COMPLETED` (per esempio un'unità terrestre in `Defense`
 danneggiata dopo l'arrivo smette comunque di sparare); un arrivo *dopo* non completa la missione.
 
-**Lo stato di missione** è la regola unica del §6.11. **Motivi di aborto** (`_ABORT_REASON_OF`, `:1652-1656`):
+**Lo stato di missione** è la regola unica del §6.11. **Motivi di aborto** (`_ABORT_REASON_OF`, `:1685-1689`):
 
 | Motivo di fine dell'asset (`AssetEndReason`) | Motivo di aborto (`AbortReason`) | Prodotto da |
 |---|---|---|
@@ -1084,7 +1141,7 @@ danneggiata dopo l'arrivo smette comunque di sparare); un arrivo *dopo* non comp
 
 **Postura `destroyed`** (`F6_DESTROYED_POSTURE`, decisione dell'utente del 2026-10-12, rimandata dalla F5-B): un asset
 **distrutto a fine sessione** — in combattimento o per carburante — ha postura `Mission_Adapter.DESTROYED_POSTURE =
-'destroyed'` (`:360`) nell'esito (`:3089-3096`). `Mission_Adapter.session_postures` resta la postura di piano (non legge
+'destroyed'` (`:361`) nell'esito (`:3132-3139`). `Mission_Adapter.session_postures` resta la postura di piano (non legge
 lo stato dell'asset). Cambia solo `SessionOutcome.postures`: 429 esecuzioni della fotografia cambiarono nella sola voce
 `postures` (capitolo 8 §8.10).
 
@@ -1113,40 +1170,41 @@ riserva. Al bingo l'**albero** dipende dal tipo di missione (trasferimento `TRAN
 vicina / regole F6-A; combattimento: interrompe sempre, base di partenza o base alternativa entro 3 km dalla rotta
 (`ALTERNATE_BASE_MAX_OFFSET`, stima), la più breve raggiungibile; poi base più vicina in linea retta; poi regole F6-A).
 
-**La valutazione alla partenza (G2)** (`:2252-2294`). Per ogni asset di missione **aerea** con `EndCriteria.bingo`
+**La valutazione alla partenza (G2)** (`:2295-2337`). Per ogni asset di missione **aerea** con `EndCriteria.bingo`
 (default `True`), con `F6_BINGO` acceso e almeno un tratto di movimento: con `F6_BINGO_DISENGAGE_RESERVE` acceso
-`_decision_end` (`:1549-1566`) chiama `Mission_Adapter.mission_bingo_decision` **all'inizio dei tratti della missione
+`_decision_end` (`:1582-1599`) chiama `Mission_Adapter.mission_bingo_decision` **all'inizio dei tratti della missione
 intera** (`airborne_legs`, anche oltre la fine della sessione, perché l'anello legge il resto della rotta fino al
 `LAND`) con il carburante di partenza. Se la decisione è «non in bingo», «continua» (trasferimento: il residuo basta a
-concludere) o «nessuna base» (`NO_BASE`: regole della F6-A), nessun rientro; altrimenti `_return_end` (`:1526-1534`)
-costruisce il `BingoEnd` (`:917-941`: `time`, `point`, `landing_point`, `landing_time` a velocità di crociera, `route`,
-`reason`, `exits`) e un bingo che cadrebbe **dopo la fine della sessione non c'è** (`:2276-2277`). Con **il solo consumo di
+concludere) o «nessuna base» (`NO_BASE`: regole della F6-A), nessun rientro; altrimenti `_return_end` (`:1559-1567`)
+costruisce il `BingoEnd` (`:944-968`: `time`, `point`, `landing_point`, `landing_time` a velocità di crociera, `route`,
+`reason`, `exits`) e un bingo che cadrebbe **dopo la fine della sessione non c'è** (`:2319-2320`). Con **il solo consumo di
 movimento** residuo e resto della rotta calano insieme, quindi la soglia scatta all'inizio dei tratti **o mai**:
 l'istante del bingo è l'inizio del primo tratto che consuma (dopo un'eventuale sosta a terra). Dal G3 il consumo
 d'ingaggio abbassa il residuo e la soglia può scattare *dopo*: lo rivaluta la ri-pianificazione (§6.20).
 
 **Il rientro.** Dal bingo i tratti dell'asset sono quelli pianificati **fino al bingo**, poi la spezzata del rientro
-(`_return_legs`, `:1569-1587`, a velocità costante da `time` a `landing_time`, istanti proporzionali alla lunghezza) e,
-nei tratti di presenza, la sosta a terra sulla base fino a fine sessione (`_legs_after_bingo`, `:1590-1602`, con
-`park`); `_grounded_after_bingo` (`:1605-1622`) fa cadere gli intervalli a terra che cominciano dopo il bingo e mette
-l'aereo a terra dall'atterraggio; `_postures_after_bingo` (`:1625-1639`) dà `parking_cold` a terra, il tipo di missione se
+(`_return_legs`, `:1602-1620`, a velocità costante da `time` a `landing_time`, istanti proporzionali alla lunghezza) e,
+nei tratti di presenza, la sosta a terra sulla base fino a fine sessione (`_legs_after_bingo`, `:1623-1635`, con
+`park`); `_grounded_after_bingo` (`:1638-1655`) fa cadere gli intervalli a terra che cominciano dopo il bingo e mette
+l'aereo a terra dall'atterraggio; `_postures_after_bingo` (`:1658-1672`) dà `parking_cold` a terra, il tipo di missione se
 ancora in volo, `off_scene` se uscito di scena. I tratti del rientro vanno a scheduler, risolutore e carburante come
 tutti gli altri (il rientro consuma, alla crociera). Dal bingo l'aereo **non lancia più salve offensive** (fine di
-attività nota a monte, `until=bingo.time`, `:2674-2681`) ma resta **bersaglio e intercettore**; a **secco anche sul
+attività nota a monte, `until=bingo.time`, `:2717-2724`) ma resta **bersaglio e intercettore**; a **secco anche sul
 rientro** valgono le regole della F6-A sui tratti col rientro (planata: `ABORTED(FUEL)`; perso: `DESTROYED`/
 `FUEL_EXHAUSTED`); l'esito per asset è `BINGO` all'istante del bingo, per la missione `ABORTED(BINGO)` (§6.11). Terra e mare
 non hanno bingo. `EndCriteria.bingo = False` = nessun controllo e nessun rientro (l'aereo vola fino all'esaurimento, regole
 F6-A); il rientro **forzato** dopo il disingaggio (§6.20) non dipende da questo criterio.
 
 **I validatori di pianificazione — fuori da `run_session`.** Le due funzioni di `Mission_Adapter` sono del
-**pianificatore** (il futuro C2, fase F8, da confermare), non dell'esecutore:
+**pianificatore**, non dell'esecutore; **dalla F8a le chiama il validatore di sessione** (`Logic/Session_Validator`, §6.25), che a sua
+volta è chiamato dal conduttore di campagna (§6.27) prima di `run_session`:
 
-- **`check_mission_fuel`** (G1, `:1422-1482`): ogni aereo della missione deve caricare **più** del carburante della rotta
-  *intera* (`airborne_legs` alla crociera, attese comprese, `route_fuel_demand`, `:1406-1419`) più la riserva di
+- **`check_mission_fuel`** (G1, `:1449-1509`): ogni aereo della missione deve caricare **più** del carburante della rotta
+  *intera* (`airborne_legs` alla crociera, attese comprese, `route_fuel_demand`, `:1433-1446`) più la riserva di
   disimpegno (`Fuel_Model.disengagement_reserve_with_source`); altrimenti `ValueError` con asset, carburante,
   fabbisogno, riserva con la provenienza e mancanza. Restituisce `{asset: margine}`.
-- **`check_mission_bingo`** (F6-B2, rifatto dal G2, `:1280-1369`): con `disengage_reserve=True` (default,
-  `_check_reserve_bingo`, `:1372-1403`) rifiuta **esattamente** le missioni che in sessione vanno in bingo alla partenza
+- **`check_mission_bingo`** (F6-B2, rifatto dal G2, `:1307-1396`): con `disengage_reserve=True` (default,
+  `_check_reserve_bingo`, `:1399-1430`) rifiuta **esattamente** le missioni che in sessione vanno in bingo alla partenza
   (anche un trasferimento che poi continua consumando la riserva: è sotto il minimo), con soglia, riserva, istante e
   decisione nel messaggio; le basi non sono richieste. Con `disengage_reserve=False` applica la regola F6-B2bis
   (`reverse_route=True`) o F6-B2 (`False`), dove serve una base idonea e `reserve` è la riserva fissa.
@@ -1154,15 +1212,17 @@ F6-A); il rientro **forzato** dopo il disingaggio (§6.20) non dipende da questo
 Le due sono **funzioni separate** perché sono regole diverse (il carico contro il criterio del rientro in volo
 dell'esecutore) e si possono chiamare entrambe; la prima rifiuta con carburante ≤ minimo, la seconda con carburante <
 soglia: differiscono solo all'uguaglianza esatta. Entrambe non si applicano alle missioni non aeree né a quelle con
-`EndCriteria.bingo` False, e non controllano un asset senza carburante o riserva modellati. **Nessun codice di produzione
-le chiama**: le chiamano solo i test (`Test_Mission_Adapter`, `Test_Session_Simulator`) e lo scenario S26, che ne verifica l'accordo con
-la sessione. `run_session` **non rifiuta** un ordine per carburante: un rifiuto dentro `run_session` renderebbe irraggiungibile il
+`EndCriteria.bingo` False, e non controllano un asset senza carburante o riserva modellati. **Chi le chiama**: dalla F8a il validatore
+di sessione (`Logic/Session_Validator.py:197-218`), insieme ai test (`Test_Mission_Adapter`, `Test_Session_Simulator`,
+`Test_Session_Validator`) e allo scenario S26, che ne verifica l'accordo con la sessione. Il validatore è chiamato a sua volta solo dal
+conduttore di campagna (§6.27), che ha come chiamanti i soli test e lo scenario S30: **il ciclo di campagna non ha ancora un chiamante
+di produzione** (capitolo 9 §9.1). `run_session` **non rifiuta** un ordine per carburante: un rifiuto dentro `run_session` renderebbe irraggiungibile il
 bingo in volo, e l'esecutore (come DCS con «RTB on bingo») fa tornare l'aereo.
 
-Le funzioni di `Mission_Adapter` che servono al bingo: `airborne_legs` (`:1189-1211`, i tratti che consumano della
-missione intera), `is_loop_mission` (`:1214-1238`, anello: `LAND` sulla stessa base del `DEPARTURE`, per blocco del
-riferimento o entro `AIR_BASE_AREA_RADIUS_M`), `bingo_return_rule` (`:1241-1247`, `Fuel_Model.ReturnRule`),
-`is_transfer_mission` (`:1250-1254`, categoria `TRANSPORT`), `mission_bingo_decision` (`:1257-1277`, il tramite verso
+Le funzioni di `Mission_Adapter` che servono al bingo: `airborne_legs` (`:1216-1238`, i tratti che consumano della
+missione intera), `is_loop_mission` (`:1241-1265`, anello: `LAND` sulla stessa base del `DEPARTURE`, per blocco del
+riferimento o entro `AIR_BASE_AREA_RADIUS_M`), `bingo_return_rule` (`:1268-1274`, `Fuel_Model.ReturnRule`),
+`is_transfer_mission` (`:1277-1281`, categoria `TRANSPORT`), `mission_bingo_decision` (`:1284-1304`, il tramite verso
 `Fuel_Model.bingo_decision`, con `forced` ed `exit_scene`). Le usano allo stesso modo il validatore e l'esecutore: **stesso
 criterio**.
 
@@ -1179,7 +1239,7 @@ aerei WW2 non è implementata (capitolo 9 §9.1).
 
 A ogni ingaggio a cui un aereo **partecipa**, nell'istante della sua prima partecipazione, l'aereo consuma
 `Fuel_Model.engagement_fuel` (la quantità della riserva di disimpegno, capitolo 5 §5.2.8) con un `FuelEvent` istantaneo.
-**Partecipa** (`_engagement_instants`, `:1311-1331`) chi ha **combattuto** secondo la definizione della F6-A
+**Partecipa** (`_engagement_instants`, `:1344-1364`) chi ha **combattuto** secondo la definizione della F6-A
 (`_engaged_assets`): ha lanciato una salva, è stato **bersaglio** di una salva (anche mancato o intercettato) o ha
 **intercettato**; l'istante è il primo fra il lancio delle salve sue o dirette a lui (`Salvo.t_launch`) e le sue
 intercettazioni. Il solo rilevamento reciproco senza salve **non** è partecipazione (nessuna manovra decisa dal
@@ -1187,11 +1247,11 @@ modello). Solo gli **aerei di missione** (`air_assets`, dominio `'air'`) **in vo
 sul parcheggio non consuma (`grounded.at`). Terra e mare invariati. Il codice conta un consumo per esito d'ingaggio: dal
 G4a **uno per episodio** a cui l'aereo partecipa.
 
-Nella contabilità (`:2949-2963`, `:2971-3000`) i consumi d'ingaggio di un aereo sono messi in attesa (`pending_charges`)
+Nella contabilità (`:2992-3006`, `:3014-3043`) i consumi d'ingaggio di un aereo sono messi in attesa (`pending_charges`)
 e inseriti **in ordine di tempo fra gli eventi per tratto, prima del tratto in cui cadono** (nessun tratto è spezzato,
-«un evento per tratto» resta), applicati con `charge` (`:2930-2938`); se l'asset non ha movimento o è già contabilizzato,
+«un evento per tratto» resta), applicati con `charge` (`:2973-2981`); se l'asset non ha movimento o è già contabilizzato,
 subito. Il movimento di un aereo è **sempre alla crociera**: il consumo d'ingaggio sostituisce, per gli aerei, la
-sovrastima «tutto il movimento al regime `'max'`» (`g3`, `:2967-2970`). Esaurimento in ingaggio: il contatore va a zero,
+sovrastima «tutto il movimento al regime `'max'`» (`g3`, `:3010-3013`). Esaurimento in ingaggio: il contatore va a zero,
 nessun evento dopo; per il resto vedi la ri-pianificazione.
 
 ### Gli episodi d'ingaggio (G4a, `G4_EPISODES`)
@@ -1200,9 +1260,9 @@ nessun evento dopo; per il resto vedi la ri-pianificazione.
 sera era un solo ingaggio, un solo consumo, nessuna decisione possibile «dopo l'ingaggio». **La soluzione** (decisioni
 dell'utente del 2026-10-17, `Proposta_G4_Ri_scheduling.md`): l'ingaggio diventa un evento *nel tempo*.
 
-- **Episodio** (`_episodes`, `:1184-1255`): gruppo di finestre di contatto legate, direttamente o per tramite di altre,
+- **Episodio** (`_episodes`, `:1217-1288`): gruppo di finestre di contatto legate, direttamente o per tramite di altre,
   perché appartengono a coppie di forze che **condividono una forza** (o forze dello **stesso dominio di coordinamento**,
-  §6.13) **e** i loro intervalli si sovrappongono o distano al più **`EPISODE_GAP` = 300 s** (`:887`, `= Fuel_Model.
+  §6.13) **e** i loro intervalli si sovrappongono o distano al più **`EPISODE_GAP` = 300 s** (`:914`, `= Fuel_Model.
   DISENGAGE_TIME`: ritrovare il contatto entro i 5 minuti del disimpegno è lo stesso combattimento; **legato per
   costruzione**: cambiare la durata del disimpegno cambia anche questo intervallo). Per ogni chiave (forza o dominio) le sue
   finestre, in ordine `(t_start, t_end, posizione)`, sono scandite una volta come una fusione di intervalli; le chiavi sono
@@ -1211,7 +1271,7 @@ dell'utente del 2026-10-17, `Proposta_G4_Ri_scheduling.md`): l'ingaggio diventa 
 - **Coda**: un ENGAGEMENT per episodio all'istante della sua prima finestra; `resolve_engagement` sulle sole finestre e
   forze dell'episodio; esito **applicato subito** (concatenazione di salute e scorte fra episodi,
   `assemble_session_outcome(chained=True)`, capitolo 2 §2.4).
-- **Forza occupata** (`_trim_busy`, `:1258-1291`; `busy_until`, aggiornato in `engage`, `:2759-2761`): una forza è
+- **Forza occupata** (`_trim_busy`, `:1291-1324`; `busy_until`, aggiornato in `engage`, `:2802-2804`): una forza è
   impegnata dal primo istante del suo episodio al `t_end` del suo esito (salve in volo comprese); le finestre non ancora
   risolte delle sue forze che cominciano prima sono **ritagliate** per partire da lì (`Contact_Scheduler.trim_contact_window`,
   capitolo 3 §3.8: CPA e reciproco ricalcolati), **scartate** se si svuotano, e gli episodi rimasti sono **ricostruiti**
@@ -1220,12 +1280,12 @@ dell'utente del 2026-10-17, `Proposta_G4_Ri_scheduling.md`): l'ingaggio diventa 
   l'ultima finestra (per esempio missili da crociera). Una forza che entra tardi in un episodio lungo è «occupata»
   dall'inizio dell'episodio.
 - **RNG**: `counter` = ordinale degli episodi con lo stesso insieme di forze (§6.4).
-- **Forza disingaggiata passiva** (`passive_from`, `:2376`, `:2757-2776`): negli episodi successivi tutti i suoi asset non
+- **Forza disingaggiata passiva** (`passive_from`, `:2419`, `:2800-2819`): negli episodi successivi tutti i suoi asset non
   lanciano salve offensive (`ActivityCriteria.until` = istante del disingaggio, combinato con i criteri esistenti come per il
-  bingo, `:2683-2697`), restano bersaglio e intercettore; stessa regola per una fine di attività della F6-B1 scattata in un
+  bingo, `:2726-2740`), restano bersaglio e intercettore; stessa regola per una fine di attività della F6-B1 scattata in un
   episodio precedente. Nel solo G4a il DES non la ri-instrada e l'esito di missione non cambia; dal G4b gli **aerei** di una
   missione disingaggiata rientrano (sotto).
-- **Soglia di danno** (`ActivityCriteria.reference_health`): la salute d'inizio **sessione** (`start_health`, `:2373-2375`),
+- **Soglia di danno** (`ActivityCriteria.reference_health`): la salute d'inizio **sessione** (`start_health`, `:2416-2418`),
   così il danno di episodi diversi si somma. Erosione e shock della soglia di rottura sono contati sugli asset impegnati
   all'inizio dell'episodio: le perdite degli episodi precedenti non entrano nell'erosione di quello successivo (ingaggio
   diverso, tempra nuova).
@@ -1239,24 +1299,24 @@ dell'utente del 2026-10-17, `Proposta_G4_Ri_scheduling.md`): l'ingaggio diventa 
 carburante in ingaggio ha il contatore a zero ma vola e combatte (S26 `transfer_continue`); col G4a, una forza
 disingaggiata prosegue **passiva** sulla rotta e incontra gli strati successivi (S5).
 
-**Quando e chi** (`replan`, `:2473-2657`, chiamata dopo ogni episodio, `:2851`). Alla fine dell'episodio (istante `t_r` =
+**Quando e chi** (`replan`, `:2516-2700`, chiamata dopo ogni episodio, `:2894`). Alla fine dell'episodio (istante `t_r` =
 `t_end` dell'esito: l'ultimo evento, salve in volo comprese) sono candidati gli aerei di **missione** (dominio `'air'`)
-che vi hanno **consumato** (G3, la stessa regola della contabilità, `:2486-2498`) **o** la cui **forza** d'ingaggio vi è
-stata **disingaggiata** (con `F6_BINGO` e `F6_BINGO_DISENGAGE_RESERVE` accesi, `:2500-2509`); esclusi quelli distrutti, a
+che vi hanno **consumato** (G3, la stessa regola della contabilità, `:2529-2541`) **o** la cui **forza** d'ingaggio vi è
+stata **disingaggiata** (con `F6_BINGO` e `F6_BINGO_DISENGAGE_RESERVE` accesi, `:2543-2552`); esclusi quelli distrutti, a
 terra a `t_d`, già a secco (planata o persi), oltre la fine della sessione, o con il carburante non modellato
-(`:2517-2540`). Per ciascuno, in ordine di id:
+(`:2560-2583`). Per ciascuno, in ordine di id:
 
-1. **Istante della decisione** `t_d = min(t_r, fine dei tratti di movimento dell'aereo)` (`:2530`): se la rotta finisce
+1. **Istante della decisione** `t_d = min(t_r, fine dei tratti di movimento dell'aereo)` (`:2573`): se la rotta finisce
    *dentro* l'episodio (S26 `transfer_continue`, dove l'episodio dura oltre la fine della rotta) conta solo
-   l'esaurimento, non c'è più rotta da cui rientrare (`completed`, `:2531`, `:2566-2567`).
-2. **Residuo analitico** a `t_d` (`Fuel_Model.fuel_at`, `:2544-2545`): carburante d'inizio sessione (`start_fuel`) meno i
+   l'esaurimento, non c'è più rotta da cui rientrare (`completed`, `:2574`, `:2609-2610`).
+2. **Residuo analitico** a `t_d` (`Fuel_Model.fuel_at`, `:2587-2588`): carburante d'inizio sessione (`start_fuel`) meno i
    tratti che consumano fino a `t_d` alla crociera meno i consumi d'ingaggio fino a `t_d` (`charges_of`). Non è letto
    dall'asset perché la contabilità è un passo finale e durante gli episodi il contatore è ancora quello di partenza.
 3. **Residuo zero** (esaurito in ingaggio): regole della F6-A **dal punto in cui l'aereo è a `t_d`** (`_exhaustion_end`,
-   `:2555-2565`): planata su una base raggiungibile, o perso con l'equipaggio recuperato. Il punto è quello a fine
+   `:2598-2608`): planata su una base raggiungibile, o perso con l'equipaggio recuperato. Il punto è quello a fine
    episodio e non quello dell'esaurimento analitico (anteriore): la storia dell'episodio, risolto in blocco con l'aereo in
    volo fino a `t_d`, resta fissata (causalità).
-4. **Altrimenti, se non è già in rientro** (`:2568-2603`):
+4. **Altrimenti, se non è già in rientro** (`:2611-2646`):
    - **bingo** (ha consumato e `EndCriteria.bingo`): `mission_bingo_decision(..., time=t_d, fuel=residuo, legs=missione
      intera)`, albero del G2 per tipo di missione; **qui le basi alternative entro 3 km dalla rotta contano davvero**
      (all'inizio dei tratti non potevano vincere); se la decisione non fa rientrare (continua, nessuna base) è scartata;
@@ -1266,17 +1326,17 @@ terra a `t_d`, già a secco (planata o persi), oltre la fine della sessione, o c
      (precedenza a parità d'istante subito dopo il bingo). Consumo d'ingaggio e disingaggio coesistono: prima il consumo
      (residuo), poi la decisione; se entrambe le regole fanno rientrare **vince il bingo**;
    - il rientro deciso è un `BingoEnd` da `t_d` con la meccanica del G2 (`_return_end`, `_legs_after_bingo`; reason
-     BINGO o DISENGAGED, `dataclasses.replace`, `:2598-2603`).
-5. **Esaurimento sui nuovi tratti** (`_fuel_end(..., fuel=residuo)`, `:2617-2621`): `fuel_exhaustion` da `t_d` con il
+     BINGO o DISENGAGED, `dataclasses.replace`, `:2641-2646`).
+5. **Esaurimento sui nuovi tratti** (`_fuel_end(..., fuel=residuo)`, `:2660-2664`): `fuel_exhaustion` da `t_d` con il
    residuo (planata o perdita della F6-A anche sul rientro). Un aereo già in rientro è ri-pianificato di nuovo **solo per
    esaurimento**, mai per un nuovo rientro.
-6. **Aggiornamento** (`:2623-2652`): `bingo_ends`, `fuel_ends`, tratti di presenza (`presence_legs`, `all_legs`) e di
+6. **Aggiornamento** (`:2666-2695`): `bingo_ends`, `fuel_ends`, tratti di presenza (`presence_legs`, `all_legs`) e di
    movimento (`moving_legs`) sostituiti da `t_d` in poi (`_fuel_truncated` sui tratti pianificati, `route_presence`/
    `route_moving`); programma a terra ricalcolato dal programma **pianificato** (`planned_grounded`) con
-   `_grounded_after_bingo` e `_grounded_after_fuel` (`:2654-2655`). `replan` restituisce `{asset: istante da cui i suoi
+   `_grounded_after_bingo` e `_grounded_after_fuel` (`:2697-2698`). `replan` restituisce `{asset: istante da cui i suoi
    tratti sono cambiati}`.
 
-**Ri-scheduling** (`reschedule`, `:2780-2818`, se `replan` ha restituito qualcosa, `:2853-2858`): `schedule_contacts` è
+**Ri-scheduling** (`reschedule`, `:2823-2861`, se `replan` ha restituito qualcosa, `:2896-2901`): `schedule_contacts` è
 rieseguito con i tratti aggiornati sulle sole coppie con un aereo ri-pianificato (`only_assets`, capitolo 3 §3.6); delle
 finestre nuove si tengono quelle che finiscono dopo `t_r`, **ritagliate a `t_r`** (la storia prima è fissata) e poi alle
 forze occupate (`_trim_busy`); le finestre non ancora risolte di quegli aerei sono **scartate** (`left[pair]`); gli
@@ -1300,7 +1360,7 @@ missione, in volo sul ritroso), non distrutto; nessuna salva offensiva dal rient
 rientro (`DISENGAGED` o `BINGO`, `ABORTED(...)`) all'istante della decisione. Il ritroso consuma alla crociera; se il
 residuo non basta per raggiungere il punto di comparsa valgono le regole della F6-A (senza basi: perso,
 `DESTROYED`/`FUEL_EXHAUSTED`, equipaggio recuperato). **Ambito conservativo**: SOLO la ri-pianificazione dopo un episodio
-(`exit_scene = G4_OFF_SCENE_EXIT` nelle due chiamate, `:2574`); la decisione del G2 alla partenza (`_decision_end`) e il
+(`exit_scene = G4_OFF_SCENE_EXIT` nelle due chiamate, `:2617`); la decisione del G2 alla partenza (`_decision_end`) e il
 validatore restano senza uscita (`BINGO_NO_BASE`, regole della F6-A).
 
 *Diagramma D40 — il ciclo episodio → contabilità del carburante → ri-pianificazione → ri-scheduling dei contatti.*
@@ -1358,40 +1418,49 @@ distrutti (lo scheduler non le tronca).
 
 ## 6.21 Interruttori e valori di default
 
-Tutti i comportamenti introdotti dalle fasi F5, F6, G1-G5 e F7 sono dietro **interruttori del modulo**, ciascuno pensato per
+Tutti i comportamenti introdotti dalle fasi F5, F6, G1-G5, F7 e F8b sono dietro **interruttori del modulo**, ciascuno pensato per
 attribuire le differenze della fotografia a una sola causa e per fornire una **controprova** negli scenari. Sono
 costanti a livello di modulo (nessun parametro di `run_session`): **tutti attivi** nel default, e spegnerli riporta
 esattamente il comportamento della fase precedente.
 
 | Interruttore | Modulo | Default | Fase | Effetto se spento |
 |---|---|---|---|---|
-| `F5_PRESENCE` | `Mission_Adapter` (`:404`) | `True` | F5-B | nessuna presenza prima/dopo: i tratti sono quelli della sola rotta (la storia è quella della F5-A); la postura è riportata comunque |
-| `F5_WAITS` | `Mission_Adapter` (`:405`) | `True` | F5-C | nessuna attesa WAIT, ETA bloccate e TOT non sincronizzano; partenza come prima della F5 |
-| `F6_FUEL_PER_LEG` | `Session_Simulator` (`:786`) | `True` | F6-A | un solo `FuelEvent` per asset sulla distanza dei tratti di movimento; le soste non consumano |
-| `F6_FUEL_CONSTRAINT` | `Session_Simulator` (`:787`) | `True` | F6-A | nessun vincolo: l'asset a secco continua (come prima, esperimento E5) |
-| `F6_END_CRITERIA` | `Session_Simulator` (`:798`) | `True` | F6-B1 | i criteri `EndCriteria` non sono letti; stato di missione con la precedenza provvisoria della F6-A |
-| `F6_DESTROYED_POSTURE` | `Session_Simulator` (`:799`) | `True` | F6-B1 | un asset distrutto ha la postura di prima (`off_scene`, `Defense`, ...) |
-| `F6_BINGO` | `Session_Simulator` (`:809`) | `True` | F6-B2 | nessun bingo: l'aereo vola fino all'esaurimento (F6-A/F6-B1); il validatore a priori non dipende dall'interruttore |
-| `F6_BINGO_REVERSE_ROUTE` | `Session_Simulator` (`:819`) | `True` | F6-B2bis | rientro rettilineo con la riserva `BINGO_RESERVE` (F6-B2); **letto solo** con `F6_BINGO` acceso e `F6_BINGO_DISENGAGE_RESERVE` spento |
-| `F6_BINGO_DISENGAGE_RESERVE` | `Session_Simulator` (`:830`) | `True` | G2 | la regola 1,2 della F6-B2bis (o la F6-B2); **sostituisce** `F6_BINGO_REVERSE_ROUTE` quando è acceso; letto solo con `F6_BINGO` |
-| `G3_ENGAGEMENT_FUEL` | `Session_Simulator` (`:839`) | `True` | G3 | nessun consumo d'ingaggio: la regola della F6-A (tutto il movimento di chi ha combattuto al regime `'max'`); terra e mare non cambiano mai |
-| `G4_EPISODES` | `Session_Simulator` (`:848`) | `True` | G4a | l'ingaggio è la componente connessa di forze (§6.3) |
-| `G4_REPLAN` | `Session_Simulator` (`:858`) | `True` | G4b | il G4a esattamente: bingo valutato solo alla partenza, esaurimento in ingaggio nel solo contatore; **letto solo** con `G4_EPISODES` (`replanning`, `:2388`) |
-| `G4_OFF_SCENE_EXIT` | `Session_Simulator` (`:864`) | `True` | G4b (uscita) | `BINGO_NO_BASE`: l'aereo senza basi resta passivo sulla rotta (il G4b prima dell'uscita di scena); **letto solo** con `G4_REPLAN` |
-| `F7_WEAPON_POLICY` | `Session_Simulator` (`:873`) | `True` | F7a | strato W spento: la `fire_control` iniettata è usata com'è (nessun `restrict_by_policy`); con `F7_TARGET_RULES` spento pure, comportamento precedente alla F7a anche per missioni che dichiarano ROE e armi |
-| `F7_TARGET_RULES` | `Session_Simulator` (`:874`) | `True` | F7a | strato T spento: nessuna `TargetRules` al risolutore (`target_rules` è `{}`); le validazioni nuove di `Mission_Types` e il controllo del loadout **non** dipendono dall'interruttore |
-| `F7_AREA_FIRE` | `Session_Simulator` (`:881`) | `True` | F7b | le azioni `Fire_At_Point` sono ignorate con **un warning per sessione** se esiste almeno un'azione (come prima della F7b, quando non c'era nemmeno il warning); nessuno scenario precedente le dichiara |
+| `F5_PRESENCE` | `Mission_Adapter` (`:406`) | `True` | F5-B | nessuna presenza prima/dopo: i tratti sono quelli della sola rotta (la storia è quella della F5-A); la postura è riportata comunque |
+| `F5_WAITS` | `Mission_Adapter` (`:407`) | `True` | F5-C | nessuna attesa WAIT, ETA bloccate e TOT non sincronizzano; partenza come prima della F5 |
+| `F6_FUEL_PER_LEG` | `Session_Simulator` (`:807`) | `True` | F6-A | un solo `FuelEvent` per asset sulla distanza dei tratti di movimento; le soste non consumano |
+| `F6_FUEL_CONSTRAINT` | `Session_Simulator` (`:808`) | `True` | F6-A | nessun vincolo: l'asset a secco continua (come prima, esperimento E5) |
+| `F6_END_CRITERIA` | `Session_Simulator` (`:819`) | `True` | F6-B1 | i criteri `EndCriteria` non sono letti; stato di missione con la precedenza provvisoria della F6-A |
+| `F6_DESTROYED_POSTURE` | `Session_Simulator` (`:820`) | `True` | F6-B1 | un asset distrutto ha la postura di prima (`off_scene`, `Defense`, ...) |
+| `F6_BINGO` | `Session_Simulator` (`:830`) | `True` | F6-B2 | nessun bingo: l'aereo vola fino all'esaurimento (F6-A/F6-B1); il validatore a priori non dipende dall'interruttore |
+| `F6_BINGO_REVERSE_ROUTE` | `Session_Simulator` (`:840`) | `True` | F6-B2bis | rientro rettilineo con la riserva `BINGO_RESERVE` (F6-B2); **letto solo** con `F6_BINGO` acceso e `F6_BINGO_DISENGAGE_RESERVE` spento |
+| `F6_BINGO_DISENGAGE_RESERVE` | `Session_Simulator` (`:851`) | `True` | G2 | la regola 1,2 della F6-B2bis (o la F6-B2); **sostituisce** `F6_BINGO_REVERSE_ROUTE` quando è acceso; letto solo con `F6_BINGO` |
+| `G3_ENGAGEMENT_FUEL` | `Session_Simulator` (`:860`) | `True` | G3 | nessun consumo d'ingaggio: la regola della F6-A (tutto il movimento di chi ha combattuto al regime `'max'`); terra e mare non cambiano mai |
+| `G4_EPISODES` | `Session_Simulator` (`:869`) | `True` | G4a | l'ingaggio è la componente connessa di forze (§6.3) |
+| `G4_REPLAN` | `Session_Simulator` (`:879`) | `True` | G4b | il G4a esattamente: bingo valutato solo alla partenza, esaurimento in ingaggio nel solo contatore; **letto solo** con `G4_EPISODES` (`replanning`, `:2431`) |
+| `G4_OFF_SCENE_EXIT` | `Session_Simulator` (`:885`) | `True` | G4b (uscita) | `BINGO_NO_BASE`: l'aereo senza basi resta passivo sulla rotta (il G4b prima dell'uscita di scena); **letto solo** con `G4_REPLAN` |
+| `F7_WEAPON_POLICY` | `Session_Simulator` (`:894`) | `True` | F7a | strato W spento: la `fire_control` iniettata è usata com'è (nessun `restrict_by_policy`); con `F7_TARGET_RULES` spento pure, comportamento precedente alla F7a anche per missioni che dichiarano ROE e armi |
+| `F7_TARGET_RULES` | `Session_Simulator` (`:895`) | `True` | F7a | strato T spento: nessuna `TargetRules` al risolutore (`target_rules` è `{}`); le validazioni nuove di `Mission_Types` e il controllo del loadout **non** dipendono dall'interruttore |
+| `F7_AREA_FIRE` | `Session_Simulator` (`:902`) | `True` | F7b | le azioni `Fire_At_Point` sono ignorate con **un warning per sessione** se esiste almeno un'azione (come prima della F7b, quando non c'era nemmeno il warning); nessuno scenario precedente le dichiara |
+| `F8_IN_PROGRESS` | `Session_Simulator` (`:908`) | `True` | F8b | lo stato `IN_PROGRESS` non esiste: la missione non finita alla fine della sessione è `FAILED`, come prima della F8b; di conseguenza `operation_outcome` non vede mai `IN_PROGRESS` |
 
 Gli interruttori della F7 sono tre e **indipendenti** fra loro, ciascuno pensato (come i precedenti) per attribuire le
 differenze della fotografia a una sola causa; sono costanti del modulo, non parametri di `run_session`. Con i primi due
 spenti il comportamento è quello precedente alla F7a; con il terzo spento, quello precedente alla F7b. **Con tutti e tre
 accesi nessuna sessione precedente alla F7 cambia** (la fotografia a 918 esecuzioni è rimasta identica: capitolo 8 §8.11).
 
-Il modulo ha quindi **quattordici** interruttori propri (undici a `a784a9e7`, più i tre della F7), oltre ai due di
+Il modulo ha quindi **quindici** interruttori propri (undici a `a784a9e7`, più i tre della F7, più `F8_IN_PROGRESS`), oltre ai due di
 `Mission_Adapter` (`F5_PRESENCE`, `F5_WAITS`).
 
-Costanti non-interruttore che il modulo definisce: `EPISODE_GAP = FM.DISENGAGE_TIME` (`:887`), le etichette
-`FUEL_HALT`/`FUEL_GLIDE`/`FUEL_CRASH` (`:890-892`) e i regimi `CRUISE_REGIME`/`COMBAT_REGIME` (`:775-776`).
+**`F8_IN_PROGRESS` è l'unico interruttore della F8** e l'unico il cui default **non** riproduce esattamente il comportamento precedente: è
+acceso per decisione dell'utente (decisione 23, 2026-10-21), come eccezione dichiarata alla regola dei default («ogni regola nuova sta
+dietro un interruttore il cui default riproduce il comportamento precedente»), perché cambia solo l'esito di missione di chi prima era
+`FAILED` per «ancora in corso», una grandezza che la fotografia non registra. Il validatore, la prontezza, le posizioni persistenti e
+l'esito d'Operazione **non** sono regole del motore e non hanno interruttori: sono funzioni nuove fuori da `run_session`, quindi gli
+scenari che chiamano `run_session` non cambiano. Controprova a interruttore spento: `test_route_cut_by_the_session_end_off_is_failed` e
+`TestF8bCampaignOutcome.test_operation_outcomes` (capitolo 8 §8.12).
+
+Costanti non-interruttore che il modulo definisce: `EPISODE_GAP = FM.DISENGAGE_TIME` (`:914`), le etichette
+`FUEL_HALT`/`FUEL_GLIDE`/`FUEL_CRASH` (`:917-919`) e i regimi `CRUISE_REGIME`/`COMBAT_REGIME` (`:796-797`).
 
 *Dipendenze fra gli interruttori*: `G4_OFF_SCENE_EXIT` ⊂ `G4_REPLAN` ⊂ `G4_EPISODES`; il bingo dopo l'episodio richiede
 anche `F6_BINGO` e `F6_BINGO_DISENGAGE_RESERVE` (l'albero del G2); il consumo d'ingaggio (`G3_ENGAGEMENT_FUEL`) alimenta la
@@ -1410,36 +1479,36 @@ variante a interruttore spento per ogni caso (`rules_off`, `cap_low_off`, `sead_
 (`F7_WEAPON_POLICY`, `F7_TARGET_RULES`, §6.21), ai quali l'orchestratore fa solo da **cablaggio**: la regola sta nel risolutore
 (strato T, capitolo 4 §4.32) e nell'involucro della fire control (strato W, capitolo 4 §4.33), che **non leggono mai la
 `Mission`**; la traduzione dalla missione alle loro forme è in `Logic/Mission_Adapter` (sotto). Il docstring del modulo ne è la
-fonte (`Logic/Session_Simulator.py:451-477`).
+fonte (`Logic/Session_Simulator.py:452-478`).
 
-**Le quattro funzioni di `Mission_Adapter`** (`Logic/Mission_Adapter.py:1807-1973`, sezione «REGOLE D'INGAGGIO DI MISSIONE (F7a)»;
+**Le quattro funzioni di `Mission_Adapter`** (`Logic/Mission_Adapter.py:1834-2000`, sezione «REGOLE D'INGAGGIO DI MISSIONE (F7a)»;
 pure, nessun RNG):
 
 | Funzione | Righe | Che cosa fa |
 |---|---|---|
-| `_asset_sides(blocks)` | `:1809-1822` | `{asset_id: lato del blocco proprietario}` di tutti gli asset dei blocchi passati |
-| `designated_targets(mission, blocks, mission_of, assets, side)` | `:1825-1888` | il bersaglio designato come `(id degli asset nemici, area)`. **ASSET**: l'asset `target_id`. **GROUP**: gli asset del blocco `target_id`, oppure della missione `target_id`, oppure l'asset stesso, ristretti a `Target.asset_ids` se dichiarato (id non presenti nel gruppo: ignorati con un warning), **sempre filtrati ai nemici** (lato diverso da `side`): un gruppo amico (la missione protetta da una scorta, un trasporto) non designa nessuno (log informativo). Id sconosciuto: insieme vuoto con un warning. **POINT/AREA/ZONE**: nessun id e un'area `(x, y, raggio efficace)` con raggio efficace = `radius_m` (un `POINT` senza raggio: `TARGET_POINT_RADIUS_M`) **più** `uncertainty_m` se la provenienza è `ESTIMATED`. **NONE**: niente |
-| `weapon_policies(missions, assets)` | `:1891-1918` | `{asset_id: WeaponPolicy}` degli asset delle missioni la cui politica ha vincoli, cioè le **sole missioni aeree** (`Context.mission_weapon_policy`; terra e mare `None`). `self_escort` viene dal loadout *assegnato* (`AIRCRAFT_LOADOUTS[asset._model][asset.assigned_loadout]['self_escort_capability']`), `False` se manca. Gli asset non passati in `assets` sono saltati |
-| `attack_point(mission, mission_asset)` | `:1921-1940` | la posizione `(x, y, z)` del punto `ATTACK` sulla rotta *dell'asset* (con l'offset di formazione, da `asset_route`); con più punti `ATTACK` vale l'**ultimo**; `None` se la missione non ha punto `ATTACK` o la rotta dell'asset non è ricavabile (allora l'aereo resta in avvicinamento: comportamento conservativo) |
-| `target_rules(missions, blocks, mission_of, assets, side_of)` | `:1943-1973` | `{asset_id: TargetRules}`, **solo** per gli asset la cui missione ha una ROE diversa da `weapon_free` **oppure** armi designate non vuote (`MissionAsset.designated_weapons`): senza, nessuna voce e il risolutore è identico a quello di prima. `side_of` è `{block_id: lato}`. `air_self_defence` è `True` se la politica d'armi della missione dà all'aria la regola `self_defence` (le missioni aria-suolo; per un CAP, regola `any`, e per terra e mare, politica `None`, è `False`). `attack_point` è passato solo con la ROE `priority_designated` |
+| `_asset_sides(blocks)` | `:1836-1849` | `{asset_id: lato del blocco proprietario}` di tutti gli asset dei blocchi passati |
+| `designated_targets(mission, blocks, mission_of, assets, side)` | `:1852-1915` | il bersaglio designato come `(id degli asset nemici, area)`. **ASSET**: l'asset `target_id`. **GROUP**: gli asset del blocco `target_id`, oppure della missione `target_id`, oppure l'asset stesso, ristretti a `Target.asset_ids` se dichiarato (id non presenti nel gruppo: ignorati con un warning), **sempre filtrati ai nemici** (lato diverso da `side`): un gruppo amico (la missione protetta da una scorta, un trasporto) non designa nessuno (log informativo). Id sconosciuto: insieme vuoto con un warning. **POINT/AREA/ZONE**: nessun id e un'area `(x, y, raggio efficace)` con raggio efficace = `radius_m` (un `POINT` senza raggio: `TARGET_POINT_RADIUS_M`) **più** `uncertainty_m` se la provenienza è `ESTIMATED`. **NONE**: niente |
+| `weapon_policies(missions, assets)` | `:1918-1945` | `{asset_id: WeaponPolicy}` degli asset delle missioni la cui politica ha vincoli, cioè le **sole missioni aeree** (`Context.mission_weapon_policy`; terra e mare `None`). `self_escort` viene dal loadout *assegnato* (`AIRCRAFT_LOADOUTS[asset._model][asset.assigned_loadout]['self_escort_capability']`), `False` se manca. Gli asset non passati in `assets` sono saltati |
+| `attack_point(mission, mission_asset)` | `:1948-1967` | la posizione `(x, y, z)` del punto `ATTACK` sulla rotta *dell'asset* (con l'offset di formazione, da `asset_route`); con più punti `ATTACK` vale l'**ultimo**; `None` se la missione non ha punto `ATTACK` o la rotta dell'asset non è ricavabile (allora l'aereo resta in avvicinamento: comportamento conservativo) |
+| `target_rules(missions, blocks, mission_of, assets, side_of)` | `:1970-2000` | `{asset_id: TargetRules}`, **solo** per gli asset la cui missione ha una ROE diversa da `weapon_free` **oppure** armi designate non vuote (`MissionAsset.designated_weapons`): senza, nessuna voce e il risolutore è identico a quello di prima. `side_of` è `{block_id: lato}`. `air_self_defence` è `True` se la politica d'armi della missione dà all'aria la regola `self_defence` (le missioni aria-suolo; per un CAP, regola `any`, e per terra e mare, politica `None`, è `False`). `attack_point` è passato solo con la ROE `priority_designated` |
 
-`TARGET_POINT_RADIUS_M = 500` m (`Logic/Mission_Adapter.py:390`) è una **STIMA DI PROGETTO**, non un dato (decisione 11 del
+`TARGET_POINT_RADIUS_M = 500` m (`Logic/Mission_Adapter.py:392`) è una **STIMA DI PROGETTO**, non un dato (decisione 11 del
 2026-10-18): l'ordine di grandezza dell'errore di un punto d'impatto o di posizione per un obiettivo puntiforme (un compound,
 una batteria); da ricalibrare con i dati di precisione.
 
 **Il cablaggio in `run_session`** (diagramma D48):
 
-1. **Strato W** (`:2230-2234`): con `F7_WEAPON_POLICY`, `policies = MA.weapon_policies(order.missions, assets_by_id)` e, se non
+1. **Strato W** (`:2273-2277`): con `F7_WEAPON_POLICY`, `policies = MA.weapon_policies(order.missions, assets_by_id)` e, se non
    vuote, `fire_control = FC.restrict_by_policy(fire_control, policies)` — **prima di ogni uso** della fire control (tutti gli
    episodi e la ri-pianificazione). Spento, o senza missioni aeree: la fire control iniettata com'è.
-2. **Strato T** (`:2236-2238`): con `F7_TARGET_RULES`, `target_rules = MA.target_rules(...)` una volta per sessione (altrimenti
-   `{}`); `hostile_of` (`:2241`) è la memoria di `return_fire` **per sessione**, `{dominio di coordinamento: {asset ostili}}`.
-3. **Per ogni episodio** (`engage`, `:2702-2720`): per ogni asset con regole *e presente nell'episodio* (`asset_id in owner`) la
+2. **Strato T** (`:2279-2281`): con `F7_TARGET_RULES`, `target_rules = MA.target_rules(...)` una volta per sessione (altrimenti
+   `{}`); `hostile_of` (`:2284`) è la memoria di `return_fire` **per sessione**, `{dominio di coordinamento: {asset ostili}}`.
+3. **Per ogni episodio** (`engage`, `:2745-2763`): per ogni asset con regole *e presente nell'episodio* (`asset_id in owner`) la
    sessione sostituisce (`dataclasses.replace`) `known_hostile_ids` con gli asset che hanno già lanciato contro il dominio di
    coordinamento della sua forza e `known_destroyed_ids` con i suoi designati per id già distrutti **sullo stato reale**
    (`is_destroyed()`: gli episodi precedenti sono già applicati, come lo sono i fuochi su posizione, §6.23, e come lo è
    la distruzione precedente alla sessione); poi passa la mappa a `resolve_engagement(..., target_rules=...)`.
-4. **Dopo ogni episodio** (`:2749-2752`): per ogni salva del risultato, l'autore del lancio entra in
+4. **Dopo ogni episodio** (`:2792-2795`): per ogni salva del risultato, l'autore del lancio entra in
    `hostile_of[dominio della forza colpita]` — vale per **qualunque** tiratore, con o senza regole.
 
 *Diagramma D48 — il cablaggio delle regole d'ingaggio di missione in `run_session` (F7a).*
@@ -1542,9 +1611,9 @@ di dispersione uniforme e letalità a soglia, decisione 15b/15c):
 probabilità (38/200)² ≈ 0,036, quindi ≈ 1,4 colpi a segno in media su 40 (valore dello stesso ordine citato nel docstring di
 S29); il tempo di volo è 0,5 x 24 700 / 810 ≈ 15,2 s.
 
-**Il cablaggio in `run_session`** (`:2394-2471`, diagramma D50):
+**Il cablaggio in `run_session`** (`:2437-2514`, diagramma D50):
 
-- **Pianificazione a monte** (`:2451-2467`, con `F7_AREA_FIRE`): per ogni asset di `movement_of` e per ogni ordine di
+- **Pianificazione a monte** (`:2494-2510`, con `F7_AREA_FIRE`): per ogni asset di `movement_of` e per ogni ordine di
   `fire_orders`, `plan_shot` **senza** la scorta; senza arma/portata/posizione, o con `t_fire` oltre la fine della sessione, l'ordine
   **non è schedulato** (un warning). Altrimenti entra in `area_events` con l'istante d'impatto stimato come chiave, ordinato per
   `(istante, event_id)`. **L'istante che ordina l'evento è quindi stimato con l'arma preferita senza la scorta**: se
@@ -1552,21 +1621,21 @@ S29); il tempo di volo è 0,5 x 24 700 / 810 ≈ 15,2 s.
   quello d'ordinamento (limite dichiarato).
 - **Interruttore spento** (`:2468-2471`): le azioni `Fire_At_Point` sono ignorate con **un warning per sessione** se esiste almeno
   un'azione.
-- **Risoluzione** (`fire_area`, `:2424-2443`): `positions_at` = `position_of` (`:2396-2398`, la posizione sui tratti
+- **Risoluzione** (`fire_area`, `:2467-2486`): `positions_at` = `position_of` (`:2439-2441`, la posizione sui tratti
   `all_legs`, saturata agli estremi); **nemici** = gli asset dell'**altro schieramento** (A/B) rispetto al tiratore
   (`block_owner[asset][0] != side`), non il `side` del blocco: niente fuoco amico (15d); `inactive_from(asset)`
-  (`:2400-2422`) = il **più vecchio** fra distruzione (`_destruction_times` sui risultati già risolti), `passive_from`
+  (`:2443-2465`) = il **più vecchio** fra distruzione (`_destruction_times` sui risultati già risolti), `passive_from`
   (disingaggio o fine di attività scattata in un episodio precedente), fine di attività nota a monte (`static_end`: durata
   massima, winchester) e fine del carburante (`fuel_ends`, FUEL_HALT: «a secco»); RNG
-  `order.rng(mission_id=ordine.mission_id, event_id=area_fire_event_id(ordine), counter=0)` (`:2432`, **primo uso dello slot
+  `order.rng(mission_id=ordine.mission_id, event_id=area_fire_event_id(ordine), counter=0)` (`:2475`, **primo uso dello slot
   `mission_id`**, corretto perché il tiro appartiene a UNA missione); `grounded_at` = `grounded.at`. Il risultato è
   accodato a `results` e a `resolved` come `(t_end, event_id, result)` e **applicato subito** a tutti i blocchi
   (`ER.apply_engagement_result(result, *blocks.values())`): scorta del tiratore e salute dei colpiti; le distruzioni entrano in
   `_known_destructions` e quindi nelle conoscenze degli episodi successivi e nell'esito per missione.
-- **Quando** (`fire_due`, `:2445-2449`): gli ordini con impatto *strettamente anteriore* (di `CS.TIME_EPS`) a un istante `before`
-  (l'inizio dell'episodio che sta per essere risolto, `:2838`; a parità d'istante l'ingaggio precede) o, alla fine, tutti i
+- **Quando** (`fire_due`, `:2488-2492`): gli ordini con impatto *strettamente anteriore* (di `CS.TIME_EPS`) a un istante `before`
+  (l'inizio dell'episodio che sta per essere risolto, `:2881`; a parità d'istante l'ingaggio precede) o, alla fine, tutti i
   rimasti (`:2867`). Con `G4_EPISODES` spento stanno nello stesso `heapq` degli ingaggi, con tipo `AREA_FIRE_EVENT`
-  (`:2879-2893`). In entrambi i casi **non passa dal risolutore** e non tocca gli stream degli ingaggi né della tempra: **ogni
+  (`:2922-2936`). In entrambi i casi **non passa dal risolutore** e non tocca gli stream degli ingaggi né della tempra: **ogni
   sessione senza azioni `Fire_At_Point` è identica a prima**.
 - **Nell'esito**: `SessionOutcome.engagement_outcomes` contiene l'evento come un ingaggio con **zero forze** (`assemble_session_outcome`
   riporta `r.forces`, `()`), e `counts.engagements` della fotografia lo conta; nella contabilità del carburante passa come un
@@ -1620,3 +1689,254 @@ un altro episodio fra `t_fire` e `t_impact` è già distrutto all'impatto (corre
 applicazione anche se l'`AmmunitionEvent` porta l'istante `t_fire`; un nemico distrutto da un episodio già risolto con un impatto
 **posteriore** a quello dell'evento è visto come già distrutto; `target_destroyed` per `POINT`/`AREA` resta non rappresentabile
 (decisione 12 della F7a).
+
+## 6.24 Esito per la campagna: `final_positions`, `movement_ends`, `operation_outcomes` (F8b, `33698fb4`)
+
+Alla fine di `run_session`, dopo le posture e prima di assemblare l'esito, la porta di uscita calcola tre dati nuovi per chi conduce
+la campagna (`Logic/Session_Simulator.py:3141-3154`; docstring "Esito per la campagna (F8)", `:720-728`). Sono **solo dati**: nessun asset
+è mosso, nessun registro è scritto (`:730-739`).
+
+- **`final_positions`** (`:3144-3151`). Per ogni asset (ordine di id) si prendono i suoi tratti **definitivi** `all_legs[asset_id]` —
+  quelli dopo bingo, esaurimento e ri-pianificazione G4b (`:2392-2404`, aggiornati in `replan` a `:2690-2693`): per un asset di missione la
+  presenza ferma prima, la rotta e la presenza dopo; per un asset senza missione un tratto statico nella sua posizione iniziale
+  (`Contact_Scheduler.static_legs`) — e si calcola `Contact_Scheduler.position_on_legs(legs, session_end)` (`Contact_Scheduler.py:508`), che **satura
+  agli estremi** dei tratti. `session_end` è la fine **nominale** (`t0 + horizon`), non `latest`: una salva in volo oltre la fine non muove
+  nessuno. Ne escono: l'ultimo punto per chi ha completato la rotta, il punto d'atterraggio per un aereo rientrato, la posizione di partenza per
+  chi è rimasto fermo, la posizione sulla rotta tagliata per chi la sta ancora percorrendo, e (**per costruzione**, seguendo i tratti
+  definitivi, e non provato da un test di sessione) il punto d'uscita per un aereo uscito di scena. Un asset **senza tratti** (un aereo perso alla
+  partenza per carburante) non ha voce. Le componenti sono `float` di Python, mai `Point3D` di sympy.
+- **`movement_ends`** (`:3153`): `{asset_id: float(legs[-1].t_end)}` per gli asset di **missione** con tratti di movimento non vuoti
+  (`moving_legs`, i tratti senza la presenza, ritagliati a `[t0, session_end]` da `Mission_Adapter.movement_legs`, `:2293`, e poi accorciati
+  dal bingo, dall'esaurimento e dalla ri-pianificazione). È l'istante di arrivo all'ultimo punto, o di esaurimento del carburante, o
+  l'istante in cui l'aereo ha toccato terra dopo il rientro; per una rotta tagliata dalla fine della sessione vale `session_end`.
+  Assente per gli asset senza missione. È l'istante da cui parte il turnaround (§6.26).
+- **`operation_outcomes`** (`:3154`): `operation_outcome(op, mission_outcomes)` per ogni `Operation` dell'ordine (capitolo 2 §2.4). L'esito
+  d'Operazione eredita `IN_PROGRESS` dagli esiti di missione, quindi dipende da `F8_IN_PROGRESS` (§6.11, §6.21).
+
+I tre dati sono passati ad `assemble_session_outcome` (`:3158-3163`). **Non sono nella fotografia di non regressione** (decisione 27 della
+F8): una voce nuova avrebbe cambiato la forma di tutte le esecuzioni; li verificano i test (`TestF8bCampaignOutcome`, capitolo 8 §8.12).
+
+**Che cosa NON sono.** `final_positions` non è un movimento fisico persistente: `run_session` **non** assegna la posizione agli asset (le
+sessioni successive chiamate direttamente ripartono dalle posizioni iniziali, come prima: è il limite storico di S11 e della mini-campagna
+di validazione, ora dichiarato nei loro docstring come limite «per chi chiama `run_session` direttamente», capitolo 8 §8.3). La persistenza è
+del conduttore di campagna (§6.27).
+
+## 6.25 Il validatore di sessione: `Logic/Session_Validator.py` (F8a, `c1182d8a`)
+
+**Dove sta e perché.** Modulo nuovo (269 righe) **fuori** da `run_session`: l'esecutore (sintetico o DCS) esegue, il pianificatore valida.
+È la stessa scelta già fatta per il bingo a priori (deviazione 15 del Piano; decisione 17 dell'utente): un chiamante che salta il
+validatore può ancora far girare un ordine non valido, ed è ciò che fanno, di proposito, i test dell'esecutore. Misura della Proposta F8
+§1.7 (una sonda in sola lettura sulle esecuzioni della fotografia di allora, **non rieseguita** per questo aggiornamento): con il validatore
+dentro `run_session`, **57 delle 982 esecuzioni** sarebbero diventate errori (48 per carburante — S24-ORBIT e S26-BINGO —, 8 per una fine
+pianificata oltre la sessione — `S22-E3/*/not_departed` —, 1 per sessione aperta): sono scenari *voluti*, che provano proprio il taglio, il
+bingo e l'esaurimento. Da qui la decisione 17.
+
+**API.** `validate_session(order, forces_a, forces_b, *, ledger=None, rules=None, horizon=None) -> Tuple[SessionViolation, ...]`
+(`Logic/Session_Validator.py:36-228`) e `check_session(...)` (`:231-244`), che chiama la prima e, se c'è almeno una violazione, solleva
+`SessionValidationError(order.session_id, violazioni)` (capitolo 2 §2.10). `validate_session` è una **funzione pura**: nessuna
+mutazione degli asset, nessuna estrazione casuale. Le violazioni sono **raccolte tutte** (non si ferma alla prima), nell'ordine dei
+controlli: finestra, disgiunzione, poi missione per missione (nell'ordine dell'ordine) e, dentro la missione, nell'ordine a–f sotto. Le regole
+di finestra sono `rules` se dato, altrimenti `ledger.rules`, altrimenti `SessionRules()` (`:62-65`).
+
+*Diagramma D52 — i controlli di `validate_session` (F8a).*
+
+```mermaid
+flowchart TD
+    IN["order + forze (+ registro, regole, horizon)"] --> W{"t_end None?"}
+    W -->|si| V1["SESSION_OPEN<br/>session_end = t_start + horizon<br/>(None senza horizon)"]
+    W -->|no| L{"durata > max?"}
+    L -->|si| V2["SESSION_TOO_LONG"]
+    V1 --> OV
+    V2 --> OV
+    L -->|no| OV{"registro: t_start prima della fine effettiva<br/>della sessione precedente?"}
+    OV -->|si| V3["SESSION_OVERLAP"]
+    OV -->|no| BL["session_blocks:<br/>errori strutturali = ValueError propagato"]
+    V3 --> BL
+    BL --> M["per ogni missione, in ordine"]
+    M --> A{"blocco passato e<br/>asset del blocco?"}
+    A -->|no| V4["MISSION_ASSETS<br/>(si passa alla missione successiva)"]
+    A -->|si| B["per ogni asset:<br/>ASSET_DESTROYED, oppure<br/>ASSET_NOT_READY (registro, a t_start)"]
+    B --> C{"mission_movements<br/>in errore?"}
+    C -->|si| V5["MISSION_START_INVALID<br/>(salta d-f)"]
+    C -->|no| D["d: MISSION_BEYOND_SESSION<br/>se fine pianificata > session_end<br/>e: MISSION_SPEED (regola A)<br/>f: FUEL_MINIMUM e BINGO_AT_START (solo aria)"]
+```
+
+I **controlli per missione** (`:115-222`), con i codici di `ViolationCode`:
+
+| Passo | Codice | Quando scatta |
+|---|---|---|
+| finestra (`:69-89`) | `SESSION_OPEN` | `order.t_end is None`: una campagna non ha sessioni aperte (D4.b); la finestra si costruisce con `SessionRules.window`. Con `horizon` il validatore ricava `session_end = t_start + horizon` e continua; senza, **salta** i controlli di fine missione |
+| finestra | `SESSION_TOO_LONG` | durata > `rules.max_duration_s` + eps (default 4 h) |
+| disgiunzione (`:91-98`) | `SESSION_OVERLAP` | con un registro con almeno una sessione, `t_start < ledger.last_end − eps`: la fine considerata è quella **effettiva** della precedente (`SessionOutcome.t_end`, che comprende le salve in volo), non la nominale (decisione 25) |
+| a (`:120-138`) | `MISSION_ASSETS` | blocco della missione non passato fra le forze, o `Mission_Types.check_mission_assets` che solleva (un asset non è del blocco) |
+| b (`:140-160`) | `ASSET_DESTROYED` | l'asset è distrutto (`is_destroyed()`) |
+| b | `ASSET_NOT_READY` | col registro, `not ledger.is_ready(asset_id, order.t_start)`: la prontezza si controlla **all'inizio della sessione** (D6.a), non alla partenza della missione; il messaggio porta `ready_at` e il tipo di processo (`turnaround`, `repair` o `turnaround+repair`) |
+| c (`:162-174`) | `MISSION_START_INVALID` | `MA.mission_movements(mission, t_start, basi)` solleva `ValueError` (per esempio una partenza derivata anteriore a `t_start`); le basi aeree si calcolano solo per le missioni aeree; si saltano i passi d–f |
+| d (`:176-185`) | `MISSION_BEYOND_SESSION` | `MA.mission_planned_end(...)` > `session_end` + eps (solo se `session_end` è noto): la **fine pianificata** (arrivo all'ultimo punto, attese comprese; per una missione senza rotta la partenza più `max_duration_s` se dichiarata, altrimenti `None` e nessun rifiuto) supera la sessione |
+| e (`:187-195`) | `MISSION_SPEED` | `MA.check_mission_speed` solleva (regola A, capitolo 6 §6.10) |
+| f (`:197-206`) | `FUEL_MINIMUM` | solo missioni aeree: `MA.check_mission_fuel` solleva (G1: carburante ≤ rotta intera + riserva di disimpegno) |
+| f (`:208-218`) | `BINGO_AT_START` | con `SS.F6_BINGO` acceso: `MA.check_mission_bingo(..., reverse_route=SS.F6_BINGO_REVERSE_ROUTE, disengage_reserve=SS.F6_BINGO_DISENGAGE_RESERVE)` solleva |
+
+Gli interruttori del bingo sono letti **al momento della chiamata come attributi del modulo `SS`** (non importati per nome), così un test che li
+spegne con `patch.object` li vede, e il bingo a priori del validatore segue sempre la regola dell'esecutore. Con il modello attuale (G2) i due
+controlli di carburante coincidono (la sonda ne contava 48 e 48 sugli stessi casi): un ordine sotto il minimo di G1 è anche sotto la soglia del
+bingo, quindi produce **due** violazioni. `MISSION_ASSETS`, `MISSION_START_INVALID` interrompono l'esame della missione; le altre si
+sommano. Per ogni missione con violazioni c'è un `logger.debug`, e un `logger.info` col totale (`:220-226`).
+
+**Che cosa NON ripete.** Il validatore non rifà i controlli della porta (`SessionOrder` rifiuta già un asset in due missioni, `mission_id` duplicati,
+blocchi fuori da `force_ids`) né il controllo del loadout della F7a, che resta in `_check_missions` (§6.1). Gli errori strutturali delle
+forze (forze duplicate, fuori da `force_ids`) restano `ValueError` e non diventano violazioni: sono errori di programma, non di pianificazione.
+Una missione con `EndCriteria(bingo=False)` non è controllata sul carburante (le funzioni di `Mission_Adapter` la escludono); una missione
+sul posto (terra, senza rotta) è ammessa.
+
+**`Mission_Adapter.mission_planned_end`** (F8a, `Logic/Mission_Adapter.py:1116-1138`, funzione pura): il più tardo fra gli istanti di arrivo
+all'ultimo punto dei movimenti degli asset (`waypoint_times(movement)[-1]`, attese comprese); se nessun asset ha rotta, `movements[0].start +
+max_duration_s` quando `max_duration_s` è dichiarato e positivo, altrimenti `None`. È la stessa funzione che `run_session` usa per il warning
+E4 (§6.1).
+
+## 6.26 Prontezza degli asset e processi fra sessioni: `Logic/Readiness.py` (F8c, `87aa7dea`; dati F8-R `dc53af99`)
+
+**Il problema.** Un aereo atterrato deve essere riarmato e rifornito, un mezzo danneggiato riparato, un reparto riorganizzato: a campagna
+iniziata, un asset non è impiegabile in qualunque sessione. `Logic/Readiness.py` (343 righe) tiene il tempo in cui un asset torna pronto
+come **registro immutabile** (`CampaignLedger.readiness`, capitolo 2 §2.10) invece che come attributo dell'asset (decisione 19: nessuno stato
+nuovo negli asset, la stessa scelta della F4c per gli aerei a terra; nessuna modifica alle sei classi d'asset). Funzioni **pure**, salvo
+`apply_campaign_processes` (muta gli asset, come `apply_engagement_result`); **nessun RNG**; iterazioni sempre in ordine di id. Il
+motore (`run_session`) **non legge mai** il registro: la prontezza è un dato di campagna.
+
+**Quanto dura (STIME).** I tempi sono nelle cinque tabelle di `Context/Context.py:1013-1038` (capitolo 7 §7.13): un turnaround per classe
+aerea, uno per terra, uno per mare e una riparazione completa per dominio. **Non sono dati tarati**: sono ordini di grandezza, alcuni derivati dalla ricerca
+F8-R (`Analysis/Document/Ricerca_Turnaround_Riparazione.md`, di cui **una sola fonte è stata verificata sulla pagina originale**, il turnaround
+dell'F-35), altri rimasti stime di progetto; il turnaround navale (48 h) è una stima informata **senza fonte numerica**. Il dettaglio, valore per valore, è
+nel capitolo 7 §7.13.
+
+| Funzione | Righe | Cosa fa |
+|---|---|---|
+| `asset_domain(asset)` | `:49-58` | `'air'` (`validate_class(asset, 'Aircraft')`), `'sea'` (`'Ship'`), altrimenti `'ground'` (veicoli e strutture): la stessa partizione di `Mission_Adapter.continuous_posture` |
+| `turnaround_class(asset)` | `:69-94` | classe aerea per il turnaround: `asset.asset_type` (valore dell'enum `Air_Asset_Type`, o il membro) se è una chiave di `AIR_TURNAROUND_S`; altrimenti la prima categoria di `Aircraft_Data` per `asset.model`; altrimenti `None` (e `None` per i non aerei). L'import di `Aircraft_Data` è locale (cicli) |
+| `turnaround_s(asset)` | `:97-115` | `(secondi, provenienza)`: aereo = `AIR_TURNAROUND_S[classe]` (`'class:<classe>'`) o `AIR_TURNAROUND_DEFAULT_S` (`'default'`, con un warning); terra = `GROUND_TURNAROUND_S` (`'ground'`); mare = `SEA_TURNAROUND_S` (`'sea'`) |
+| `repair_s(asset)` | `:118-135` | tempo di riparazione dal danno attuale: `None` se distrutto o salute non leggibile; `0.0` se salute ≥ 100; altrimenti `REPAIR_TIME_FULL_S[dominio] × (100 − salute) / 100` — **lineare** nel danno, **a gradino** (la salute torna a 100 solo alla fine) |
+| `readiness_after_session(ledger, order, outcome, assets)` | `:168-249` | la nuova mappa di prontezza dopo la sessione (regola sotto) |
+| `record_session(ledger, order, outcome, assets)` | `:252-259` | `ledger.with_session(SessionRecord(order.session_id, order.t_start, outcome.t_end))` più `.with_readiness(readiness_after_session(...))`; `outcome.t_end` `None` → `order.t_end` |
+| `apply_campaign_processes(ledger, assets, t)` | `:284-321` | i processi di campagna conclusi entro `t`: per ogni record con `ready_at ≤ t + eps` (ordine di id): asset assente → record tolto con warning; distrutto → record tolto; `record.repair` → `asset.health = 100`; `record.rearm` → `_rearm_and_refuel`; record tolto. Restituisce il registro con i soli record non conclusi. **Idempotente** |
+| `_rearm_and_refuel(asset)` | `:262-281` | aereo con `assigned_loadout`: lo riassegna a sé stesso (il setter ricarica scorta **e** carburante del loadout, `Asset/Aircraft.py:176-214`); aereo senza loadout: niente («non modellato»); veicolo/nave: `load_stores_from_registry()` e `load_fuel_from_registry()` se esistono. **Senza consumare le scorte del blocco** |
+| `ready_assets(ledger, assets, t)` | `:324-334` | id (ordinati) degli asset non distrutti e pronti a `t` (`ledger.is_ready`): ciò che il pianificatore può impiegare (D6.a) |
+
+**La regola di `readiness_after_session`** (decisioni 19-21; per ogni `asset_id` in `sorted(assets)`). Definizioni: `end_nominal` = `order.t_end`
+(o `outcome.t_end` per un ordine aperto); `previous` = il record già nel registro; `in_mission` = l'asset è in una missione dell'ordine;
+`consumed` = compare con valore > 0 in `outcome.ammunition_consumed()`, `interceptions_consumed()` o `fuel_consumed()`; `last_damage` =
+l'istante del suo ultimo `DamageEvent` come bersaglio (`None` se nessuno).
+
+1. **Asset distrutto**: nessun record (mai pronto; il validatore lo rifiuta con `ASSET_DESTROYED`).
+2. **Nulla di nuovo nella sessione** (`not in_mission and not consumed and last_damage is None`): un `previous` resta **com'è** (un processo in
+   corso non riparte); senza `previous`, se `repair_s > 0` (un danno **anteriore al registro**) nasce un record di sola riparazione con
+   `since = end_nominal` e `ready_at = end_nominal + riparazione`; altrimenti nessun record.
+3. **Altrimenti**: `turnaround = turnaround_s(asset)` se `in_mission or consumed`, altrimenti 0; `repair = repair_s(asset)` (0 se intatto). Se
+   entrambi sono 0, `previous` resta (o nessun record).
+4. **Inizio** `base`: per un asset di missione `outcome.movement_ends[asset_id]` (§6.24), altrimenti l'`end_time` del suo `AssetMissionOutcome`,
+   altrimenti `end_nominal`; per un asset senza missione `end_nominal`.
+5. `since = max(base, last_damage)` (sui valori non `None`); `ready_at = since + turnaround + repair`; se c'è `previous`,
+   `ready_at = max(ready_at, previous.ready_at)` (un processo precedente più lungo prevale).
+6. Record `ReadyRecord(asset_id, ready_at, since, turnaround, repair)`.
+
+*Diagramma D53 — la regola di `readiness_after_session` per un asset (F8c).*
+
+```mermaid
+flowchart TD
+    S["asset"] --> D{"distrutto?"}
+    D -->|si| N0["nessun record"]
+    D -->|no| Q{"in missione o ha consumato<br/>o ha subito danno nella sessione?"}
+    Q -->|no| P0{"c'e' un record precedente?"}
+    P0 -->|si| KEEP["il record resta com'e'"]
+    P0 -->|no| R0{"salute inferiore a 100<br/>(danno anteriore al registro)?"}
+    R0 -->|si| REC0["record di sola riparazione<br/>since = fine nominale"]
+    R0 -->|no| N0
+    Q -->|si| T["turnaround = tempo di classe/dominio<br/>se in missione o ha consumato, altrimenti 0<br/>riparazione = lineare nel danno"]
+    T --> Z{"entrambi 0?"}
+    Z -->|si| KEEP
+    Z -->|no| BASE["base = movement_ends (o end_time,<br/>o fine nominale)<br/>since = max(base, ultimo danno)"]
+    BASE --> RA["ready_at = since + turnaround + riparazione<br/>= max(., ready_at del record precedente)"]
+```
+
+**Quando si applicano i processi.** `apply_campaign_processes` non gira alla `ready_at` ma **all'inizio della sessione successiva** (il
+conduttore la chiama con `t = order.t_start`, §6.27): fino ad allora, in memoria, l'asset conserva carburante, scorta e salute della sessione
+precedente, e il registro dice solo *quando* sarebbe pronto. Il validatore, che confronta `ready_at` con `t_start`, vede la stessa cosa. Un
+asset il cui turnaround finisce *durante* una sessione resta quindi non pronto per quella sessione, e viene rifornito all'inizio della
+successiva. Il processo corre comunque dentro il tempo: un aereo atterrato è a terra (e bersaglio) nel resto della sessione (§6.15).
+
+**Limiti dichiarati** (capitolo 9 §9.1): un solo tempo per classe e per dominio, uguale per chi ha volato 10 minuti e per chi ne ha volati
+120, o per un reparto che si è solo spostato; il turnaround corre da `movement_ends`, ma un aereo atterrato e **poi colpito sul parcheggio** somma
+riparazione e turnaround dall'ultimo danno; **nessuna logistica** (riarmo, rifornimento e riparazione non consumano le scorte del blocco né
+dipendono dalle risorse della base: `Resource_Manager` non è collegato); la riparazione è a gradino e lineare nel danno; un aereo `off_scene`
+torna «alla base» senza sapere quale (§6.27). **Divergenza trovata** (capitolo 9 §9.6, voce 26): il docstring di `readiness_after_session` (`:170-172`)
+e la Proposta dicono che i record degli asset non presenti in `assets` «restano nel registro», ma il codice costruisce la nuova mappa
+**solo** dagli asset passati e `record_session` usa `with_readiness`, che **sostituisce** l'intera mappa: i record degli asset assenti
+**sono persi**. Non ha effetto in S30 (le stesse forze in ogni sessione) e nessun test lo copre.
+
+## 6.27 Il conduttore di campagna e la posizione persistente: `Logic/Session_Campaign.py` (F8c, `6d3497bc`)
+
+**Il conduttore minimo, non il `Theater_Session_Manager`.** Modulo nuovo (153 righe), il minimo che serve per provare prontezza e posizione
+persistente (scenario S30, capitolo 8 §8.12). Non decide *quali* missioni dare né quando: esegue **una sessione** nel ciclo di campagna. Il
+modulo è del core e **non sa nulla del simulatore**: un adapter DCS sostituirebbe il solo passo (3) sotto.
+
+`run_campaign_session(ledger, order, forces_a, forces_b, fire_control, *, apply_positions=True, **run_kwargs) -> (SessionOutcome, CampaignLedger)`
+(`Logic/Session_Campaign.py:109-153`). I cinque passi, nell'ordine del codice:
+
+1. `Readiness.apply_campaign_processes(ledger, assets, order.t_start)` (`:139`): i processi (riparazione, riarmo, rifornimento) conclusi entro
+   l'inizio della sessione sono applicati agli asset e tolti dal registro;
+2. `Session_Validator.check_session(order, forces_a, forces_b, ledger=ledger, horizon=run_kwargs.get('horizon'))` (`:142-143`): solleva
+   `SessionValidationError` **prima** di `run_session`, che non viene chiamata;
+3. `SS.run_session(order, forces_a, forces_b, fire_control, **run_kwargs)` (`:146`), chiamata **come attributo del modulo** (`from ...Logic
+   import Session_Simulator as SS`), mai importata per nome: `Scenario_Baseline` la intercetta così (`Scenario_Baseline.py:20-26`) e la
+   fotografia registra le esecuzioni di S30;
+4. con `apply_positions` (default `True`) `apply_final_positions(outcome, forces_a, forces_b)` (`:149-150`);
+5. `Readiness.record_session(ledger, order, outcome, assets)` (`:153`): registra la sessione e la nuova prontezza.
+
+Il passo 1 modifica gli asset anche se il passo 2 rifiuta poi l'ordine (i processi sono già applicati), ma riapplicarli è **idempotente**, e il
+registro del chiamante, immutabile, non cambia. `**run_kwargs` va a `run_session` (`horizon`, `reaction_profile_for`, ...). Chiamanti di
+produzione: **nessuno** (solo i test, `Test_Session_Campaign`, e S30).
+
+*Diagramma D54 — un passo del ciclo di campagna (`run_campaign_session`, F8c).*
+
+```mermaid
+sequenceDiagram
+    participant C as chiamante
+    participant SC as Session_Campaign
+    participant RD as Readiness
+    participant SV as Session_Validator
+    participant SS as Session_Simulator
+    C->>SC: run_campaign_session(ledger, order, forze, fire_control)
+    SC->>RD: apply_campaign_processes(ledger, assets, t_start)
+    RD-->>SC: registro senza i processi conclusi (asset riparati/riforniti)
+    SC->>SV: check_session(order, forze, ledger)
+    alt ordine non valido
+        SV-->>C: SessionValidationError (run_session non chiamata)
+    else ordine valido
+        SC->>SS: run_session(order, forze, fire_control)
+        SS-->>SC: SessionOutcome (final_positions, movement_ends, ...)
+        SC->>SC: apply_final_positions(outcome, forze)
+        SC->>RD: record_session(ledger, order, outcome, assets)
+        RD-->>SC: nuovo registro (sessione + prontezza)
+        SC-->>C: (SessionOutcome, nuovo registro)
+    end
+```
+
+**`apply_final_positions(outcome, forces_a, forces_b)`** (`:62-106`, decisione 22). Per ogni asset (ordine di id) che ha una voce in
+`outcome.final_positions` e che si trova nelle forze (se non c'è è saltato in silenzio):
+
+- postura `Mission_Adapter.OFF_SCENE_POSTURE` (`'off_scene'`): la posizione **non è applicata** — l'aereo uscito di scena senza atterrare su
+  una base vera è «rientrato a una base fuori scena» e la sua posizione resta quella di partenza (scelta di progetto della decisione 22;
+  la base vera, che il motore non conosce, è del modulo mappe/C2);
+- un **aereo** con una postura diversa da `PARKED_POSTURE` e da `DESTROYED_POSTURE` (cioè ancora in volo a fine sessione: possibile solo se il
+  validatore è stato saltato) → posizione applicata **con un warning** «aircraft ... is still airborne at the end of the session» (non c'è movimento
+  fuori sessione, D4.d);
+- altrimenti applicata: `asset.position = Point3D(x, y, z)` con le coordinate arrotondate a `Mission_Adapter.OFFSET_DECIMALS` (6; il rumore della
+  rotazione di formazione), anche per un asset distrutto (il relitto dove è caduto).
+
+Restituisce `{asset_id: (x, y, z)}` delle sole posizioni applicate. Una sessione successiva che costruisce le sue missioni **dopo** questa
+chiamata (`F.missions_for` legge `asset.position`) parte dalla posizione persistita: è quanto prova S30 (capitolo 8 §8.12).
+
+**Persistenza su disco.** Il registro e le posizioni attraversano un'istantanea di campagna con `Context/Campaign_State` (`add_ledger`, `restore(..., restore_position=True)`,
+capitolo 7 §7.13); il conduttore **non** scrive `Campaign_State`: lo fa chi lo chiama.
+
+**Limiti.** Il conduttore e `CampaignState` non hanno chiamanti di produzione (solo scenario e test); nessuna logistica; un aereo `off_scene`
+non cambia posizione; le Operazioni valgono per sessione (nessun ordine «permanente» su più sessioni: è del C2). Capitolo 9 §9.1.

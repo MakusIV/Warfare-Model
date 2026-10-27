@@ -5,18 +5,51 @@ discreti (DES, *discrete event simulation*) che risolve le **sessioni virtuali**
 cioè i turni sintetici eseguiti senza un giocatore DCS (e, per costruzione, anche quelli con un
 giocatore: il core non distingue i due casi, v. capitolo 1).
 
-> **Aggiornato al commit `dcedc541`** (2026-10-20, "F7b verificata e approvata: fuoco su posizione ..."), branch
-> `analysis/dce-dcs-persistence`; HEAD del repository al momento dell'aggiornamento: `f2d19dd0` (un commit di configurazione
-> degli agenti OpenCode, che non tocca il motore). Il manuale descrive **lo stato di `dcedc541`**, cioè dopo le fasi F0-F7 del
-> piano di implementazione della Missione (F4 = regola A, missione come unità d'ingaggio, dominio di coordinamento, difesa di salva
-> per dominio, postura continua; F5 = presenza, `grounded` nel tempo, attese, TOT per missione; F6 = carburante per tratto,
-> criteri di fine, stato di missione, bingo e rientro; **F7 = regole d'ingaggio di missione e fuoco su posizione**) e i passi
-> **G1-G5** del modello di bingo (riserva di disimpegno, soglia e albero di decisione, consumo in ingaggio, episodi d'ingaggio,
-> ri-pianificazione, uscita di scena senza basi, scenari S26-S27). Suite di test: **4555 OK** (7 skipped; dichiarata dal messaggio di
-> `dcedc541` e da `F4_Differenze_Scenari.md`, sezione F7b; **non rieseguita** per questo aggiornamento); fotografia di non
-> regressione: **982 esecuzioni** (contate sul file `Test/baseline/scenario_baseline.json`). Le fasi **F8** (sessione e campagna) e
-> **F9** (documentazione: questo aggiornamento ne è parte) sono **da fare** e non sono descritte come codice; il **F6-B3** (S24-GLIDE
-> con `bingo=False`) è aperto (capitolo 9 §9.5). *(Stato precedente: `a784a9e7`, 2026-10-18, suite 4385 e 918 esecuzioni.)*
+> **Aggiornato al commit `fa5fbf1e`** (2026-10-23, "Memoria: F8-R applicata (dc53af99), prossimi passi F9, F8d, prova su osboxes"), branch
+> `analysis/dce-dcs-persistence`. `fa5fbf1e` è un commit di sola memoria: **l'ultimo commit che tocca `Code/` è `dc53af99`** (F8-R, 2026-10-23), quindi il codice descritto è quello di
+> `dc53af99`. Il manuale descrive **lo stato di `fa5fbf1e`**, cioè dopo le fasi F0-F8 del piano di implementazione della Missione (F4 = regola A, missione come unità d'ingaggio, dominio di
+> coordinamento, difesa di salva per dominio, postura continua; F5 = presenza, `grounded` nel tempo, attese, TOT per missione; F6 = carburante per tratto, criteri di fine, stato di missione,
+> bingo e rientro; F7 = regole d'ingaggio di missione e fuoco su posizione; **F8 = sessione e campagna**: validatore di sessione, esito per la campagna con lo stato di missione «in corso» e le
+> posizioni finali, prontezza degli asset, conduttore di campagna, posizione persistente, scenario S30), i passi **G1-G5** del modello di bingo, la chiusura del **F6-B3** (S24-GLIDE lasciato
+> con `bingo=False`, solo docstring) e i dati **F8-R** dei tempi di turnaround e riparazione. La **F9** (documentazione) è questo aggiornamento. **Non sono fatte** la logistica (F8d, per decisione
+> dell'utente) né un chiamante di produzione del ciclo di campagna. **Suite di test: 4701 OK (7 skipped); confronto con la fotografia: 986 esecuzioni IDENTICHE; fotografia di non regressione: 986
+> esecuzioni** (contate sul file `Test/baseline/scenario_baseline.json`). **I numeri di suite e confronto sono quelli dichiarati dalla verifica della sessione principale al commit `dc53af99` (messaggio
+> del commit e Piano §5, riga F8-R) e NON sono stati rieseguiti per questo aggiornamento.** Righe dei moduli (`grep -c ''`): `Command/Session_Types.py` 712, `Command/Mission_Types.py` 1387,
+> `Context/Context.py` 2252, `Context/Campaign_State.py` 760, `Logic/Mission_Adapter.py` 2000, `Logic/Session_Simulator.py` 3163, `Test/Scenario_Baseline.py` 932; moduli nuovi
+> `Command/Campaign_Types.py` 406, `Logic/Session_Validator.py` 269, `Logic/Session_Campaign.py` 153, `Logic/Readiness.py` 343.
+> *(Stato precedente: `dcedc541`, 2026-10-20, suite 4555 e 982 esecuzioni; prima ancora `a784a9e7`, 2026-10-18, suite 4385 e 918 esecuzioni.)*
+
+**Aggiornamento 2026-10-20 → 2026-10-23 (da `dcedc541` a `fa5fbf1e`, fase F8: F8a, F8b, F8c e dati F8-R)**, in ordine di capitolo. I commit di codice sono
+`c1182d8a` (F8a, unione; `e593bc9a` il commit di completamento), `33698fb4` (F8b, unione di `b19ab151`), `87aa7dea` (F8c blocco 1), `6d3497bc` (F8c blocco 2), `398ae3ef` (F8c blocco 3), `3fb25089` (chiusura della F8c:
+due test di S30, fotografia a 986, docstring di S24, seme fisso di `testCalcFightResult`) e `dc53af99` (F8-R, solo dati); gli altri commit del tratto sono piano, memoria, registro dei costi e configurazione degli agenti
+OpenCode e non toccano `Code/` (verificato con `git log dcedc541..HEAD -- Code`). Il codice toccato è `Command/Session_Types.py` (558 → 712 righe), `Command/Mission_Types.py` (1341 → 1387), `Context/Context.py` (2225 → 2252),
+`Context/Campaign_State.py` (725 → 760), `Logic/Mission_Adapter.py` (1973 → 2000) e `Logic/Session_Simulator.py` (3102 → 3163), più i **quattro moduli nuovi** `Command/Campaign_Types.py`, `Logic/Session_Validator.py`,
+`Logic/Session_Campaign.py` e `Logic/Readiness.py` e i test, lo scenario S30 e la fotografia. `Logic/Contact_Scheduler.py`, `Logic/Engagement_Resolver.py`, `Logic/Fire_Control.py`, `Logic/Fuel_Model.py`, `Logic/Damage_Model.py`, `Logic/Area_Fire.py`,
+`Asset/*` e tutti i moduli di supporto trasversale restano invariati.
+
+1. **Strato 0, porte e tipi della Missione** (capitolo 2 §2.1, §2.3-2.4, §2.6, §2.8, nuova **§2.10**): `SessionOutcome` guadagna `operation_outcomes`, `final_positions` e `movement_ends` (default vuoti); `assemble_session_outcome` tre parametri
+   omonimi; la funzione pura `operation_outcome` (le tre regole `ALL`/`ANY`/`MAIN_MISSION`); `MissionStatus.IN_PROGRESS`, `OperationStatus`, `OperationOutcome`; il modulo nuovo `Command/Campaign_Types.py` (`SessionRules`, `CampaignLedger`,
+   `ReadyRecord`, `SessionRecord`, `ViolationCode`, `SessionViolation`, `SessionValidationError`); il docstring «Cosa NON c'è» riscritto (le finestre di sessione di campagna esistono).
+2. **Scheduler** (capitolo 3): **invariato** (usato solo per `position_on_legs`).
+3. **Risolutore** (capitolo 4): **invariato**.
+4. **Applicazione dello stato** (capitolo 5): invariata; il rifornimento, assente da questo strato, ha ora un chiamante fuori (`Readiness._rearm_and_refuel`).
+5. **Orchestratore** (capitolo 6 §6.1, §6.5-6.8, §6.11, §6.19, §6.21, nuove **§6.24-6.27**): il warning per le missioni oltre la fine (E4), `session_blocks`, `F8_IN_PROGRESS` e il ramo `IN_PROGRESS` dello stato di missione,
+   la porta di uscita con i tre dati per la campagna (§6.24); **il validatore di sessione** (§6.25), **la prontezza degli asset e i processi fra sessioni** (§6.26), **il conduttore di campagna e la posizione persistente** (§6.27);
+   un interruttore nuovo (15 nel modulo).
+6. **Supporto trasversale** (capitolo 7, nuova **§7.13**): le tabelle dei tempi di turnaround e riparazione in `Context/Context.py` con provenienza e livello di verifica di ogni valore (una sola fonte verificata; turnaround navale = stima senza fonte
+   numerica) e `Campaign_State` (`restore_position`, `add_ledger`/`get_ledger`).
+7. **Validazione** (capitolo 8 §8.3-8.4, §8.7, nuova **§8.12**): scenario **S30-CAMPAIGN** (4 esecuzioni, 10 test), fotografia a **986** esecuzioni con la cronologia da 982, i test aggiunti (146 netti, 4555 → 4701).
+8. **Limiti** (capitolo 9): superati «missioni fuori finestra tagliate in silenzio», «missione sul posto `FAILED`», «esito d'Operazione non calcolato», «nessun produttore dei validatori», «posizione non persistente», «rifornimento assente», «F6-B3 aperto»; nuova sezione
+   **«Limiti della campagna (F8)»**; stato del piano (§9.5) con F8a-F8c e F8-R fatte, F8d non fatta, F6-B3 chiuso; incoerenze (§9.6): **voci 7, 11 e 23 chiuse, voci 24-27 nuove**; verificato che nel manuale non resta nessuna affermazione su un «TOT comune» d'Operazione (voce 15).
+
+**Riferimenti `:riga`.** Quelli delle sezioni nuove o riscritte sono stati verificati sul codice a `fa5fbf1e`. Quelli delle sezioni preesistenti sono stati **ricalcolati** con lo stesso metodo degli aggiornamenti
+precedenti, automatizzato: la mappa delle righe da `git diff -U0 dcedc541..HEAD` per ogni modulo cambiato, spostando un riferimento solo se la riga (o l'estremo dell'intervallo) cade fuori da un blocco modificato e il testo della riga è
+identico nelle due versioni. Il modulo a cui un riferimento senza percorso (`` `:riga` ``) si riferisce è stato dedotto dal contesto e controllato sull'identificatore citato nel testo vicino; nei capitoli 1, 3, 4, 5, 7 (file `02`, `04`-`06`, `08`)
+sono stati rimappati solo i riferimenti con percorso esplicito, perché lì un riferimento breve punta quasi sempre a moduli **non cambiati** (`Contact_Scheduler`, `Engagement_Resolver`, `Fuel_Model`...), mentre nei capitoli 2, 6, 8, 9
+(file `03`, `07`, `09`, `10`) sono stati rimappati anche quelli brevi, con revisione a mano dei casi in cui il file non era univoco (per esempio i riferimenti di §6.10 a `Mission_Adapter` e quelli di §2.7 a `Context`) e correzione di quelli
+che cadevano in righe riscritte (`assemble_session_outcome`, `run_session`). Un controllo automatico del tipo «l'identificatore citato compare entro due righe dal riferimento» sui riferimenti di forma `` `nome` (`:riga`) `` ha trovato 45 mancanze su
+324 riferimenti controllati: 39 stanno nei capitoli 3, 4, 5 e 7 (31 nel capitolo 4) e riguardano moduli **non cambiati** dalla F8 (già imprecise prima, perché la riga punta al corpo di una funzione e non alla sua definizione, o spostate da
+modifiche anteriori): **non sono state corrette**, come nell'aggiornamento precedente; le altre 6 (2 nel capitolo 2, 3 nel capitolo 6, 1 nel capitolo 9) puntano al corpo di una funzione o a un modulo invariato. I riferimenti a moduli non toccati restano quelli di prima.
 
 **Aggiornamento 2026-10-18 → 2026-10-20 (da `a784a9e7` a `dcedc541`, fase F7: F7a e F7b)**, in ordine di capitolo. I commit
 sono `9f87a3ad` (F7a), `3cbb4226` (correzione dei dati dei loadout A-10C), `d1686b28` (pulizia documentale: commenti e docstring,
@@ -64,14 +97,15 @@ rifatto un controllo indipendente di ogni riferimento già scorretto prima dell'
 **Stato del codice descritto, storia degli aggiornamenti.** Stesura iniziale al commit `f61aa2b7`
 (2026-09-23); aggiornamenti a `1d0c1127` (2026-09-26), `6754bf1c` (2026-09-27; manuale committato in
 `fb914f0e`), `533cd1f5` (2026-10-05; manuale committato in `004d26e8`), `84a47670` (2026-10-11; manuale committato in `355b1017`), `a784a9e7`
-(2026-10-18; manuale committato in `234071d3`) e, ora, `dcedc541` (2026-10-20). Il motore è
+(2026-10-18; manuale committato in `234071d3`), `dcedc541` (2026-10-20; manuale aggiornato in questa sede) e, ora, `fa5fbf1e` (2026-10-23). Il motore è
 **completo** nelle sue 7 fasi originali (wiki
 `Analysis/WIKI_LLM_SIMULATION/wiki/decisions/virtual-session-engine-des.md`); tutto ciò che è venuto dopo è
 estensione: fino al 2026-09-27 sui moduli satellite che lo alimentano dall'esterno (selezione dell'arma,
 nebbia di guerra, scorta per arma, cannone di bordo, volumi di rilevamento/intercettazione, pianificatore
 d'attacco), dal 2026-09-28 **anche nel risolutore e nella porta di sessione**, e dal 2026-10-05 nella
-**definizione di "forza d'ingaggio"**, dal 2026-10-11 nel **tempo** (presenza, carburante, episodi) e dal 2026-10-18 nelle **regole
-d'ingaggio di missione** (contro chi e con che arma si spara) e nel **fuoco su posizione**.
+**definizione di "forza d'ingaggio"**, dal 2026-10-11 nel **tempo** (presenza, carburante, episodi), dal 2026-10-18 nelle **regole
+d'ingaggio di missione** (contro chi e con che arma si spara) e nel **fuoco su posizione** e, dal 2026-10-22, nel **ciclo di campagna intorno al motore** (validatore di sessione,
+prontezza degli asset, posizione persistente: fase F8, quasi tutta *fuori* da `run_session`).
 
 **Aggiornamento 2026-10-11 → 2026-10-18 (da `84a47670` a `a784a9e7`, fasi F5, F6 e passi G1-G5)**, in ordine di capitolo. Il
 codice toccato è `Command/Mission_Types.py`, `Command/Session_Types.py`, `Asset/Aircraft.py`, `Logic/Contact_Scheduler.py`,
@@ -191,7 +225,7 @@ parametro `grounded`.
 ## Convenzioni di questo manuale
 
 - Ogni affermazione su codice è verificata leggendo il file, con riferimento `percorso:riga`
-  valido per `dcedc541`. I percorsi sono dati **relativi a `Code/Dynamic_War_Manager/Source/`** (es.
+  valido per `fa5fbf1e`. I percorsi sono dati **relativi a `Code/Dynamic_War_Manager/Source/`** (es.
   `Logic/Engagement_Resolver.py:2474` sta per
   `Code/Dynamic_War_Manager/Source/Logic/Engagement_Resolver.py:2474`); dentro una sezione una forma breve
   `` `:riga` `` si riferisce al file nominato nell'intestazione del capitolo o della sezione. I documenti di
@@ -206,7 +240,7 @@ parametro `grounded`.
 - Dove il manuale e la wiki di progetto (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/`)
   divergono, prevale il codice; le divergenze trovate sono raccolte nel capitolo 9 (§9.2 per la wiki,
   §9.6 per i documenti di progetto della Missione e delle regole SAM, con lo stato di ciascuna voce).
-- I diagrammi hanno un numero progressivo `D1`-`D50` (elenco in fondo); le didascalie sono nel capitolo
+- I diagrammi hanno un numero progressivo `D1`-`D55` (elenco in fondo); le didascalie sono nel capitolo
   che li contiene.
 
 ## Indice dei capitoli
@@ -220,7 +254,9 @@ parametro `grounded`.
    2026-10-08 `ForceOutcome.block_id` e `SessionOutcome.outcomes_of_block` (§2.3), il `mission_id` nell'RNG
    (§2.8); **dal 2026-10-12/18** `SessionOutcome.postures`, `chained`, `Operation` senza TOT comune,
    `crew_recovered` e i nuovi motivi di fine e di aborto (§2.3, §2.4, §2.6); **dal 2026-10-18/20** `Target.asset_ids`,
-   `MissionAsset.weapons`, l'azione `Fire_At_Point` e la tabella della politica d'armi per tipo di missione (§2.6, §2.7).
+   `MissionAsset.weapons`, l'azione `Fire_At_Point` e la tabella della politica d'armi per tipo di missione (§2.6, §2.7);
+   **dal 2026-10-22/23 (fase F8)** i tre campi della campagna di `SessionOutcome` (`operation_outcomes`, `final_positions`, `movement_ends`, §2.3), la funzione `operation_outcome` (§2.4),
+   `MissionStatus.IN_PROGRESS` e `OperationOutcome` (§2.6) e il modulo nuovo `Command/Campaign_Types.py` (registro di campagna, regole di finestra, violazioni, **§2.10**).
 3. [Lo strato 1: lo scheduler dei contatti](04_Strato1_Scheduler_Contatti.md) —
    `Logic/Contact_Scheduler.py`: rotta↔cilindro, CPA/TCPA, potatura gerarchica,
    `ContactWindow`; dal 2026-10-11 il parametro `grounded` per gli aerei a terra (§3.5-3.6); **dal 2026-10-12/17**
@@ -250,7 +286,8 @@ parametro `grounded`.
    **nuove §6.15-6.21**: presenza e postura nell'esito, attese e TOT per missione, carburante e vincolo del movimento, fine di
    attività, bingo e validatori, consumo in ingaggio / episodi / ri-pianificazione / uscita di scena, interruttori e default;
    **nuove §6.22-6.23 (F7)**: le regole d'ingaggio di missione in sessione e il fuoco su posizione (`Logic/Area_Fire.py`, terzo
-   tipo di evento di sessione).
+   tipo di evento di sessione); **nuove §6.24-6.27 (F8)**: l'esito per la campagna (`final_positions`, `movement_ends`, `operation_outcomes`, stato `IN_PROGRESS`), il validatore di sessione
+   (`Logic/Session_Validator.py`), la prontezza degli asset e i processi fra sessioni (`Logic/Readiness.py`), il conduttore di campagna e la posizione persistente (`Logic/Session_Campaign.py`).
 7. [Moduli di supporto trasversali](08_Supporto_Trasversale.md) — `Session_Rng`, `Doctrine`,
    `Reaction_Profile`, le dimensioni militari di `Military`, munizioni/carburante su
    `Mobile`/`Aircraft` (con `fuel_capacity_kg` e `emergency_fuel_flow`), i punti di iniezione meteo (`detection_factor`) e arma
@@ -260,17 +297,18 @@ parametro `grounded`.
    aggiunti (§7.12, compresa la correzione dei loadout A-10C); la `fire_control` avvolta dalla politica d'armi e `target_rules`
    come ingresso ricavato dalle missioni (§7.7); il pianificatore di rotta aerea con volumi di rilevamento e
    intercettazione distinti (§7.8, `Logic/Air_Route_Manager.py`) e il pianificatore d'attacco
-   a monte del motore (§7.9, `Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`).
+   a monte del motore (§7.9, `Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`); **nuova §7.13 (F8)**: i tempi di turnaround e riparazione in `Context/Context.py`
+   con la provenienza e il livello di verifica di ogni valore, e `Context/Campaign_State.py` (`restore_position`, `add_ledger`/`get_ledger`).
 8. [Validazione](09_Validazione.md) — determinismo, test di agnosticismo come test di
-   contratto (esteso alle porte della Missione), la batteria di scenari S1-S29 (§8.4), la
+   contratto (esteso alle porte della Missione), la batteria di scenari S1-S30 (§8.4), la
    migrazione alle missioni e la regola A negli scenari, lo strumento di non regressione
-   `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 982 esecuzioni
+   `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 986 esecuzioni
    (§8.7), i test aggiunti (§8.8), gli scenari della fase F4 (§8.9), gli scenari S22-S27 e i test delle fasi F5, F6 e
-   G1-G5 (§8.10), **gli scenari S28-S29 e i test della fase F7 (§8.11)**.
+   G1-G5 (§8.10), gli scenari S28-S29 e i test della fase F7 (§8.11), **lo scenario S30-CAMPAIGN e i test della fase F8 (§8.12)**.
 9. [Limiti noti, punti di estensione e divergenze codice/wiki](10_Limiti_Estensioni_Divergenze.md) —
-   limiti nuovi e superati (compresi quelli della fase F4, delle fasi F5, F6, G1-G5 e della fase F7, con le costanti STIMATE
-   del fuoco su posizione), stato del piano della Missione F0-F9 e dei passi G1-G5 (§9.5), incoerenze trovate fra documenti di
-   progetto e codice (§9.6, con lo stato di ciascuna voce: voci 14-18 chiuse, voci 22-23 nuove).
+   limiti nuovi e superati (compresi quelli della fase F4, delle fasi F5, F6, G1-G5, della fase F7, con le costanti STIMATE
+   del fuoco su posizione, e **della campagna, F8**, con i tempi non tarati e l'assenza di logistica), stato del piano della Missione F0-F9 e dei passi G1-G5 (§9.5, F8a-F8c e F8-R fatte,
+   F8d non fatta, F6-B3 chiuso), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce: voci 7, 11 e 23 chiuse, **voci 24-27 nuove**).
 
 ## Elenco dei diagrammi
 
@@ -326,6 +364,11 @@ parametro `grounded`.
 | D48 | Il cablaggio delle regole d'ingaggio di missione in `run_session` (F7a) | `flowchart TD` | 6 |
 | D49 | `resolve_area_fire`: dalla condizione di tiro alle estrazioni | `flowchart TD` | 6 |
 | D50 | Il fuoco su posizione nella coda di sessione | `sequenceDiagram` | 6 |
+| D51 | I tipi di `Command/Campaign_Types.py` (regole, registro, prontezza, violazioni) | `classDiagram` | 2 |
+| D52 | I controlli di `validate_session` | `flowchart TD` | 6 |
+| D53 | La regola di `readiness_after_session` per un asset | `flowchart TD` | 6 |
+| D54 | Un passo del ciclo di campagna (`run_campaign_session`) | `sequenceDiagram` | 6 |
+| D55 | La sequenza di S30-CAMPAIGN e i punti in cui gli asset tornano pronti | `flowchart LR` | 8 |
 
 I diagrammi D30-D36 sono quelli della fase F4 (a `84a47670`). **Aggiornati a `a784a9e7`**: D1 (il carburante è dell'orchestratore,
 non del risolutore), D2 (`postures`), D3 (`GroundedSchedule`), D4 (`ActivityCriteria`, `ActivityEnd`, `activity_ends`), D8 e D9
@@ -338,3 +381,7 @@ sono invariati.
 d'armi, regole di bersaglio, fuochi su posizione intercalati agli episodi), D16 (`Target.asset_ids`, `MissionAsset.weapons`),
 D29 (F7a e F7b fatte, F8 prossima). Sono **nuovi** D43-D50. Gli altri diagrammi sono invariati (D4 non mostra i tipi nuovi della F7,
 raccolti in D47; D5 resta quello dell'ingaggio senza regole di bersaglio, il testo di §4.14 dice dove si inseriscono).
+
+**Aggiornati a `fa5fbf1e`** (fase F8): D1 (blocco «Ciclo di campagna»: `Session_Campaign`, `Session_Validator`, `Readiness`, `Campaign_Types`, `Campaign_State`), D2 (`operation_outcomes`,
+`final_positions`, `movement_ends`, `OperationOutcome`), D8 e D9 (esito per la campagna e warning E4 in `run_session`), D17 (`MissionStatus.IN_PROGRESS`, `OperationStatus`, `OperationOutcome`),
+D19 (ramo `IN_PROGRESS`), D29 (F8a-F8c e F8-R fatte, F6-B3 chiuso, F8d non fatta). Sono **nuovi** D51-D55. Gli altri diagrammi sono invariati.

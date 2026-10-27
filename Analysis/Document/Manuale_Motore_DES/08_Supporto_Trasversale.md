@@ -1,5 +1,12 @@
 # Capitolo 7 — Moduli di supporto trasversali
 
+> **Aggiornato a `fa5fbf1e` (2026-10-23, fase F8).** I moduli di supporto elencati sotto **non cambiano** (`git diff dcedc541..HEAD -- Code` non
+> li tocca: `Utility/Session_Rng.py`, `Context/Doctrine.py`, `Context/Reaction_Profile.py`, `Block/Military.py`, `Asset/Mobile.py`,
+> `Asset/Aircraft.py`, ...). Cambiano due moduli di *dati e persistenza* che questo capitolo non descriveva e che qui trovano la nuova **§7.13**:
+> `Context/Context.py` (le cinque tabelle dei tempi di turnaround e riparazione, dalla ricerca F8-R, `:1013-1038`) e `Context/Campaign_State.py`
+> (`restore_position`, `add_ledger`/`get_ledger`). Nessun punto di iniezione nuovo per `run_session` (§7.7): il registro di campagna non è un ingresso del
+> motore, che non lo legge mai. I riferimenti `:riga` ai moduli citati sono ricalcolati su `fa5fbf1e`.
+>
 > **Verificato a `dcedc541` (2026-10-20).** Dei moduli di questo capitolo (elenco sotto) **nessuno è cambiato da `a784a9e7`**
 > (`git diff a784a9e7 HEAD` non li tocca); cambiano soltanto i moduli *citati* da questo capitolo, di cui i riferimenti
 > `:riga` sono ricalcolati: `Logic/Engagement_Resolver.py`, `Logic/Session_Simulator.py`, `Logic/Fire_Control.py`,
@@ -367,7 +374,9 @@ velivolo per la missione: **riarma** l'aereo (ricalcola la scorta per arma via
 `load_stores_from_registry()`, che chiama l'override di `stores_from_registry()` sotto, e il
 carburante via `load_fuel_from_registry()`, sovrascrivendo l'eventuale consumo precedente) — è
 quindi un'operazione del ciclo di campagna/assemblaggio missione, **non** un canale di
-rifornimento durante l'ingaggio (il risolutore non la chiama mai).
+rifornimento durante l'ingaggio (il risolutore non la chiama mai). **Dalla F8c è il meccanismo del rifornimento fra sessioni**:
+`Logic/Readiness._rearm_and_refuel` riassegna a un aereo il suo stesso loadout alla fine del turnaround, e il setter lo rifà pieno di scorta
+e carburante (capitolo 6 §6.26); un aereo **senza** loadout assegnato non è rifornito.
 
 `Aircraft.stores_from_registry()` (`:216-279`, override di `Mobile.stores_from_registry`, v.
 capitolo 4 §4.19) costruisce `{modello_arma: quantità}` dal loadout assegnato
@@ -396,7 +405,7 @@ il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo 9)
   quel modello d'arma (capitolo 4, §4.19); una `ShotSpec` singola resta un valore valido.
   `Session_Simulator.run_session` ne passa **una sola** a ogni ingaggio della sessione, non una
   per lato: la callable riceve gli asset reali e può distinguere lato/blocco/modello da sé
-  (`Logic/Session_Simulator.py:438-449`, capitolo 6; il docstring è stato esteso alla F7a con la frase sull'involucro). Una fabbrica che seleziona davvero l'arma
+  (`Logic/Session_Simulator.py:439-450`, capitolo 6; il docstring è stato esteso alla F7a con la frase sull'involucro). Una fabbrica che seleziona davvero l'arma
   dai registri, invece di una tabella di ruoli, esiste in
   `Logic/Fire_Control.make_registry_fire_control` (capitolo 4, §4.16). **Dalla F7a (2026-10-18)**, per gli asset delle missioni
   aeree, `run_session` la avvolge con `Fire_Control.restrict_by_policy` (politica d'armi per tipo di missione, capitolo 4 §4.33,
@@ -850,3 +859,62 @@ Modifiche ai registri d'arma e d'aereo, senza codice consumatore nuovo ma con ef
   I documenti di progetto (`F4_Differenze_Scenari.md`, `Piano_Implementazione_Missione.md`) dicono «5 loadout A-10C II» e
   citano `Low Level Bomb Run` come l'eccezione rimasta `False`: nel registro i cinque loadout sono ripartiti in **due
   modelli** e `Low Level Bomb Run` è un loadout dell'**A-20G Havoc**, non dell'A-10C (capitolo 9 §9.6, voce 22).
+
+## 7.13 Dati di campagna: i tempi di turnaround e riparazione e `Campaign_State` (F8c, F8-R)
+
+Due moduli già esistenti, `Context/Context.py` e `Context/Campaign_State.py`, hanno ricevuto nella F8 i dati e le funzioni che servono al ciclo di
+campagna (capitolo 6 §6.26-6.27). Nessuno dei due è letto da `run_session`.
+
+### I tempi: `Context/Context.py:1013-1038` (decisione 19, D6.b-d; ricerca F8-R)
+
+Cinque costanti, dopo `AIR_MILITARY_CRAFT_ASSET`, in **secondi**. Le ha scritte l'esecutore della F8c (blocco 1, `fea7f512`) come **STIME DI PROGETTO** (ordini di
+grandezza scelti perché abbiano il rapporto giusto con sessioni di 2 h: un caccia atterrato a metà sessione salta la successiva, un bombardiere pesante ne
+salta quattro), e il commit `dc53af99` (F8-R, 2026-10-23, valori **approvati dall'utente**) ne ha sostituiti **sette** (i sei della §6 della ricerca più `SEA_TURNAROUND_S`, dopo la ricerca mirata D4) con valori ricavati da una ricerca web
+(`Analysis/Document/Ricerca_Turnaround_Riparazione.md`). **Nessun valore è un dato tarato.** Livello di verifica della ricerca (§1 e §5 del documento): **una
+sola fonte è stata verificata sulla pagina originale** (Hadley, *Air & Space Forces Magazine*, 12/02/2025, F-35: «circa 3 h per preparare una sortie»); le altre
+sono riportate dal motore di ricerca e **non riverificate** (pagine che hanno risposto 402, 403 o errori di rete) oppure di forum o siti secondari.
+
+| Costante | Chiave | Valore | Provenienza (commento del codice e ricerca) |
+|---|---|---|---|
+| `AIR_TURNAROUND_S` (`:1018-1028`) | `Fighter` | 10 800 s (3 h) | F-35 ~3 h (**verificata**, ma di un solo velivolo); una formula attribuita a RAND (3,4 h + 0,68 × ore di volo) è solo in un forum, **non verificata**; confidenza media-bassa. Era 7 200 |
+| | `Fighter_Bomber`, `Attacker` | 10 800 s | **per analogia con `Fighter`**, nessuna fonte specifica (era 9 000) |
+| | `Bomber` | 16 200 s (4,5 h) | «4-5 h» di un colonnello PACAF (2003), **riportata e non riverificata**; la ricerca di conferma non ha ritrovato la frase; confidenza media-bassa. Era 14 400 |
+| | `Heavy_Bomber` | 28 800 s (8 h) | **STIMA DI PROGETTO** invariata: nessuna fonte affidabile su B-52/B-1 |
+| | `Awacs` | 43 200 s (12 h) | 1-2 sortite al giorno e ~8 h di autonomia (fonti riportate, non riverificate); confidenza bassa. Era 14 400 |
+| | `Recon` | 7 200 s (2 h) | **STIMA DI PROGETTO** invariata: nessun turnaround trovato (solo tassi di sortita) |
+| | `Transport` | 10 800 s (3 h) | C-17 da 2 h (turn ottimizzato) a 4-8 h (fonti riportate); stima **confermata**, invariata |
+| | `Helicopter` | 5 400 s (1,5 h) | **STIMA DI PROGETTO** invariata (il FARP di 45-60 min è documentato ma senza le ispezioni a terra) |
+| `AIR_TURNAROUND_DEFAULT_S` (`:1029`) | classe aerea ignota | 10 800 s | segue le classi tattiche (era 9 000) |
+| `GROUND_TURNAROUND_S` (`:1030`) | reparto terrestre | 21 600 s (6 h) | **STIMA DI PROGETTO**, **nessuna fonte** con tempi in ore per un reparto meccanizzato |
+| `SEA_TURNAROUND_S` (`:1031-1032`) | nave | 172 800 s (48 h) | **STIMA INFORMATA, solo indicativa e senza fonte numerica**: nessuna durata pubblica per ricaricare i VLS in banchina; le fonti sono qualitative (giorni per la ricarica, settimane contando il rientro). Era 43 200 (12 h), giudicata «probabilmente troppo bassa». Per navi senza missili in VLS il tempo reale è minore |
+| `REPAIR_TIME_FULL_S` (`:1034-1038`) | `'air'` | 86 400 s (24 h) | riparazione rapida *temporanea* (ABDR): 72% in 24 h (aviazione israeliana, 1973), livello «eccellente» NATO STO 50% a 24 h e 80% a 48 h (fonti riportate, non riverificate); confidenza media per quel significato. Invariato |
+| | `'ground'` | 86 400 s (24 h) | un esercito rimise in battaglia l'80% dei carri danneggiati in 24 h (DTIC, esercito non nominato); confidenza bassa. Invariato |
+| | `'sea'` | 259 200 s (72 h) | riparazione **temporanea in porto** (decisione D3 dell'utente): il danno grave di una nave (mesi in cantiere) **non è modellato** ed è lavoro della logistica (F8d, non fatta). Invariato |
+
+Sono valori per **classe e per dominio**, uguali per chi ha volato 10 minuti e per chi ne ha volati 120; la riparazione è per un danno da 100 a 0, **lineare** nel
+danno (`Readiness.repair_s`, capitolo 6 §6.26). `Asset.repair_time`/`t2r` (il segnaposto `(1, 7)` di unità ignota, ancora nelle tabelle di `Context`) **non è
+usato**. Un'avvertenza di lettura: i test della F8 sono scritti sulle **costanti e sul registro**, non sui numeri (S30 ne calcola gli istanti), quindi un
+nuovo commit di soli dati non rompe i test; lo ha dimostrato la F8-R, che ha cambiato sette valori lasciando il confronto a 986 identiche (dichiarato
+dalla sessione principale, non rieseguito per questo aggiornamento).
+
+### `Context/Campaign_State.py`: posizione e registro (F8c, `6d3497bc`)
+
+`CampaignState` (760 righe, 725 a `dcedc541`) salva istantanee di campagna per «missione di campagna» (`mission_id` qui è una sessione di campagna, **non** la `Mission`
+di una sessione). Tre modifiche, tutte con un default che riproduce il comportamento di prima (`Campaign_State.py:241-259`, `:333-370`, `:646-667`):
+
+- **`restore(mission_id, regions, restore_position=False)`** (`:333`). L'istantanea salvava già la posizione degli asset (`_serialize_asset`, campo
+  `position` con `x`, `y`, `z`, `:478-504`), ma il ripristino non la riportava. Con `restore_position=True` il flag è inoltrato a `_restore_region` (`:543`),
+  `_restore_block` (`:598`) e `_restore_asset` (`:646`), che per ogni asset vivo con `position` non `None` nell'istantanea assegna
+  `asset.position = Point3D(x, y, z)` (`:659-667`; un errore è un warning, come per gli altri campi). Con il default `False` la posizione degli asset
+  vivi **non** è toccata. Nuovo import: `sympy.Point3D` (`:8`).
+- **`add_ledger(mission_id, ledger)`** (`:241-254`): salva il dizionario del registro (`CampaignLedger.to_dict()`) in `_state[mission_id]["ledger"]`;
+  `KeyError` se la missione di campagna non è registrata (cioè se non c'è almeno un'istantanea con quell'id). **`get_ledger(mission_id)`** (`:256-259`):
+  il dizionario salvato, oppure `None` (anche per un id non registrato). Nessun import di `Command`: è il chiamante a convertire con `CampaignLedger.from_dict`. Le
+  istantanee di regione/blocco (`add_region_snapshot`, `add_block_snapshot`) scrivono solo sotto `regions` e **non** cancellano il registro; `save`/`load`
+  lo portano su JSON con il resto (`:376-397`).
+- Il docstring della classe (`:18-128`, struttura interna e «Read/Restore API») **non cita** la chiave `ledger`, né `add_ledger`/`get_ledger`, e
+  mostra `restore(mission_id, regions)` senza il parametro nuovo (lo documenta invece il docstring del metodo, `:345-347`): lacuna minore di
+  documentazione (capitolo 9 §9.6 voce 27).
+
+`CampaignState` **non ha chiamanti di produzione** (solo `Test_Campaign_State` e lo scenario S30): né il conduttore di campagna né `run_session` lo usano; lo scenario
+S30 prova il giro registro → istantanea → registro identico e posizione ripristinata su forze ricostruite (capitolo 8 §8.12).

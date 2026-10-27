@@ -1,5 +1,14 @@
 # Capitolo 5 — Lo strato 3: applicazione dello stato
 
+> **Verificato a `fa5fbf1e` (2026-10-23, fase F8): nessun modulo di questo capitolo è cambiato da `dcedc541`** (`Logic/Damage_Model.py`,
+> `Asset/Asset.py`, `Logic/Fuel_Model.py` e `Logic/Engagement_Resolver.py` non compaiono in `git diff dcedc541..HEAD -- Code`). Cambia
+> solo il **contorno**: il rifornimento, che qui è dichiarato assente (§5.2.1), ha ora un chiamante, ma **fuori** da questo strato e
+> fuori da `run_session`: lo fa `Logic/Readiness._rearm_and_refuel` alla fine del turnaround, fra una sessione e l'altra, riassegnando il
+> loadout agli aerei e richiamando i caricamenti dai registri per veicoli e navi (capitolo 6 §6.26). Gli asset che arrivano a una sessione
+> successiva col carburante consumato dalla precedente sono quindi rifatti pieni **da quel passo**, non dal modello del carburante. La
+> contabilità di questo capitolo (consumo per tratto, bingo, `FuelEvent`) non cambia. I riferimenti `:riga` del capitolo ai moduli
+> invariati restano quelli di prima.
+>
 > **Verificato a `dcedc541` (2026-10-20): nessun modulo di questo capitolo è cambiato da `a784a9e7`** (`Logic/Damage_Model.py`,
 > `Asset/Asset.py`, `Logic/Fuel_Model.py` non compaiono nel `git diff`; `apply_engagement_result` ha solo righe diverse perché il
 > risolutore sopra di lei è cresciuto, v. §5.3). Dalla fase F7 la funzione ha un **secondo chiamante**: il fuoco su posizione applica
@@ -125,7 +134,12 @@ quando rientra e quanto consuma. Il modulo è organizzato in sezioni: eventi e c
   costanti di `Damage_Model`: un adapter DCS produrrebbe eventi `MEASURED`).
 - **Mai eccezioni per dati mancanti**: carburante non modellato o asset senza id → `None` (o "nessun controllo") più
   un log.
-- Il rifornimento **non** c'è: nessuna funzione aumenta il carburante (è del ciclo di campagna, fase F8).
+- Il rifornimento **non** c'è: nessuna funzione **di questo modulo** aumenta il carburante. Dalla F8c lo fa il ciclo di campagna, **fuori** da
+  `Fuel_Model` e da `run_session`: `Logic/Readiness._rearm_and_refuel` (`:262-281`), chiamata da `apply_campaign_processes` quando un
+  record di turnaround è concluso, riassegna `assigned_loadout` all'aereo (il setter ricarica scorta **e** carburante del loadout:
+  `Asset/Aircraft.py:176-214`) o richiama `load_stores_from_registry`/`load_fuel_from_registry` per veicoli e navi, **senza consumare
+  le scorte del blocco** (la logistica è un limite dichiarato, capitolo 9 §9.1). Un aereo senza loadout assegnato non è rifornito
+  («non modellato»).
 - Il modulo non integra il consumo nel risolutore d'ingaggio (che non legge il carburante, capitolo 4 §4.31): lo fa
   l'orchestratore, che tronca i tratti all'esaurimento *prima* dello scheduler e contabilizza i consumi *dopo* gli
   ingaggi (capitolo 6 §6.17).
@@ -438,11 +452,11 @@ passo che collega lo strato 2 allo strato 3 per un singolo ingaggio, applicando 
 `Mobile.consume_ammunition`) e `InterceptionEvent` (via `Mobile.consume_interceptor_stock`).
 L'orchestratore (capitolo 6) la chiama **subito** dopo ogni ingaggio risolto — dal G4a ogni **episodio**
 d'ingaggio, prima ogni componente connessa — passando **tutte** le forze dell'ingaggio
-(`ER.apply_engagement_result(result, *component)`, `Logic/Session_Simulator.py:2747`): è la condizione perché gli
+(`ER.apply_engagement_result(result, *component)`, `Logic/Session_Simulator.py:2790`): è la condizione perché gli
 asset di un intercettore di dominio (capitolo 4 §4.29) vengano trovati, e perché l'episodio successivo parta dallo
 stato già consumato (salute e scorte).
 
-**Dalla F7b la chiamano anche i fuochi su posizione** (`fire_area`, `Logic/Session_Simulator.py:2443`): l'esito di un
+**Dalla F7b la chiamano anche i fuochi su posizione** (`fire_area`, `Logic/Session_Simulator.py:2486`): l'esito di un
 `Area_Fire.resolve_area_fire` — `forces=()`, `DamageEvent` a `t_impact` e un `AmmunitionEvent` a `t_fire` — è applicato subito con
 `ER.apply_engagement_result(result, *blocks.values())`, cioè a **tutti** i blocchi (il tiratore consuma la scorta, i colpiti
 perdono salute). Nessun `InterceptionEvent`. Il contratto della funzione non cambia (capitolo 6 §6.23).

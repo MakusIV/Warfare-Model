@@ -2,6 +2,10 @@
 
 Modulo: `Logic/Contact_Scheduler.py`.
 
+> **Verificato a `fa5fbf1e` (2026-10-23): il modulo è invariato da `dcedc541`** (`Logic/Contact_Scheduler.py` non compare in `git diff dcedc541..HEAD -- Code`; la
+> fase F8 non lo tocca: `position_on_legs` è usata dalla porta di uscita per le `final_positions`, capitolo 6 §6.24). Cambiano solo i riferimenti ai moduli che cambiano
+> (`Session_Simulator`), ricalcolati su `fa5fbf1e`; quelli a questo file restano validi.
+>
 > **Verificato a `dcedc541` (2026-10-20): il modulo è invariato da `a784a9e7`** (`Logic/Contact_Scheduler.py` non compare nel
 > `git diff a784a9e7 HEAD`, 1578 righe come prima); i riferimenti `:riga` a questo file sono quindi quelli di `a784a9e7`, mentre sono
 > stati ricalcolati su `dcedc541` quelli ai moduli che cambiano (`Session_Simulator`). La fase F7 non tocca lo scheduler: il fuoco su
@@ -164,7 +168,7 @@ prima la potatura a livello blocco (C), poi il CPA solo sulle coppie di asset su
 rotta in `routes` non è ignorato: se ha una posizione, è trattato come **fermo** per tutta la finestra
 (`static_legs`, ricaduta finale di `_asset_legs`, `:1578`) — il caso più comune in campagna (un sito SAM, un
 deposito, una base). Dal 2026-10-05 le tre mappe `routes`/`starts`/`speeds` arrivano a `schedule_contacts` da
-`Mission_Adapter.session_movements` (`Logic/Session_Simulator.py:2212`, `:2342-2344`): un asset senza missione è
+`Mission_Adapter.session_movements` (`Logic/Session_Simulator.py:2255`, `:2385-2387`): un asset senza missione è
 "senza rotta", cioè fermo. Tre parametri facoltativi, tutti a comportamento invariato se omessi:
 
 - **`grounded`** (F4c, esteso dalla F5): oggi è un iterabile di id (l'insieme della F4c: sempre a terra), una

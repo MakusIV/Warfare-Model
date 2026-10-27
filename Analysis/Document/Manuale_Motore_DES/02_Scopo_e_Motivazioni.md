@@ -1,7 +1,14 @@
 # Capitolo 1 — Scopo e motivazioni
 
-> **Aggiornato al commit `dcedc541`** (2026-10-20; rispetto a `a784a9e7` del 2026-10-18 cambiano la fase F7, v. sotto, e i
-> riferimenti `:riga`). Rispetto alla stesura iniziale cambiano quattro cose a
+> **Aggiornato al commit `fa5fbf1e`** (2026-10-23; rispetto a `dcedc541` del 2026-10-20 cambia la **fase F8**, sessione e campagna, v. sotto, e i
+> riferimenti `:riga`). **Dalla F8** attorno al motore c'è un ciclo di campagna *fuori* da `run_session`: un validatore di sessione, la prontezza degli asset
+> (turnaround e riparazione) e un conduttore che esegue una sessione alla volta, applica le posizioni finali e registra la sessione (capitolo 6
+> §6.24-6.27, capitolo 2 §2.10). **Non è un quinto strato**: i quattro strati e le motivazioni di questo capitolo non cambiano, e il motore non legge mai il registro di
+> campagna; è il primo pezzo del livello superiore (C2/campagna) che il motore, per costruzione, non conosce. **Il ciclo non ha ancora chiamanti di produzione**
+> (solo test e lo scenario S30).
+>
+> *Aggiornamento precedente, a `dcedc541` (2026-10-20; rispetto a `a784a9e7` del 2026-10-18 cambiava la fase F7, v. sotto, e i
+> riferimenti `:riga`).* Rispetto alla stesura iniziale cambiano quattro cose a
 > livello d'architettura: la **Missione** (fasi F0-F3 del piano, capitolo 2 §2.6-2.7 e capitolo 6 §6.10) è il
 > modo in cui un asset riceve rotta, partenza e velocità; dalla fase **F4** (2026-10-05/11) la missione è
 > anche l'**unità d'ingaggio** (capitolo 6 §6.12-6.14, capitolo 4 §4.27), con un **dominio di coordinamento**
@@ -27,7 +34,7 @@ L'architettura è a quattro strati, in secondi assoluti dall'inizio della sessio
 0. **Contratto** — `SessionOrder`/`SessionOutcome`, solo tipi di dominio, più l'RNG di sessione
    seedato esplicitamente. È la "porta" a cui qualunque esecutore di sessione deve conformarsi:
    il risolutore sintetico del core oggi, un adapter DCS domani
-   (`Command/Session_Types.py:1-40`). Dal 2026-10-05 la porta porta anche le **missioni**
+   (`Command/Session_Types.py:1-42`). Dal 2026-10-05 la porta porta anche le **missioni**
    (`Command/Mission_Types.py`, `SessionOrder.missions`/`operations`, `SessionOutcome.mission_outcomes`,
    capitolo 2 §2.6) e la tassonomia dei tipi di missione di `Context/Context.py` (§2.7).
 1. **Scheduler dei contatti** — risponde a **quando** (rotta↔volume di minaccia, CPA/TCPA,
@@ -72,6 +79,14 @@ flowchart TD
     MA["Logic/Mission_Adapter.py<br/>rotta, partenza, velocita' per asset"]
     AF["Logic/Area_Fire.py<br/>fuoco su posizione (F7b)"]
 
+    subgraph CAMP["Ciclo di campagna (F8) - fuori da run_session, senza chiamanti di produzione"]
+        SC["Logic/Session_Campaign.py<br/>run_campaign_session, apply_final_positions"]
+        SV["Logic/Session_Validator.py<br/>validate_session, check_session"]
+        RD["Logic/Readiness.py<br/>prontezza: turnaround + riparazione"]
+        CT["Command/Campaign_Types.py<br/>CampaignLedger, SessionRules, ..."]
+        CST["Context/Campaign_State.py<br/>add_ledger, restore_position"]
+    end
+
     MT --> ST
     ST --> ORCH
     ORCH --> MA
@@ -91,9 +106,19 @@ flowchart TD
     ORCH --> FM
     DM --> AD
     ORCH --> ST
+    SC --> SV
+    SC --> RD
+    SC -->|"SS.run_session"| ORCH
+    SV --> CT
+    RD --> CT
+    SV --> MA
+    CST -.->|"dizionario del registro"| CT
 ```
 
-*Nota sul diagramma D1*: la freccia da `ORCH` a `ST` rappresenta l'uscita
+*Nota sul diagramma D1* (aggiornato a `fa5fbf1e`: il blocco «Ciclo di campagna» e le sue frecce sono nuovi): `Session_Campaign` chiama `run_session` come attributo del modulo (`SS.run_session`) e
+non è chiamato da nessun modulo del motore; `Session_Validator` importa `Session_Simulator` (per `session_blocks` e per leggere gli interruttori del bingo) e `Mission_Adapter`, ma nessuno di
+loro importa il validatore. La freccia tratteggiata `CST` → `CT` non è un import: `Campaign_State` salva e restituisce il registro come dizionario (`to_dict`/`from_dict`), senza importare
+`Command`. La freccia da `ORCH` a `ST` rappresenta l'uscita
 (`assemble_session_outcome`, che produce il `SessionOutcome`), non una dipendenza a tempo di
 import. La freccia tratteggiata da `MA` a `ER` non è un import: `Mission_Adapter` produce le viste di
 missione (`MissionForce`), la mappa dei domini di coordinamento (`coordination_of`), l'insieme degli aerei
@@ -121,7 +146,7 @@ dell'utente registrati"), e si ritrovano nel codice come regole verificabili:
    dominio (`Logic/Contact_Scheduler.py:58-60`); la coda eventi del risolutore usa un tie-break
    deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:385-390`, `:536-544`); l'RNG di
    ogni ingaggio è derivato da una chiave canonica che non dipende dall'ordine di iterazione di
-   un dizionario Python (`Logic/Session_Simulator.py:966-987`, `engagement_event_id`; `:404-436`).
+   un dizionario Python (`Logic/Session_Simulator.py:993-1014`, `engagement_event_id`; `:405-437`).
 3. **Perdite e danni per singolo asset**, mai aggregati. È il motivo per cui esiste
    `Logic/Damage_Model.py` (un `DamageEvent` per colpo risolto, non un delta di forza) e per cui
    `Logic/Tactical_Evaluation.calcFightResult` — il modello aggregato a rapporto di forze

@@ -4,7 +4,9 @@ Modulo: `Logic/Engagement_Resolver.py`. È il modulo più esteso del motore (**3
 `a784a9e7`, 3160 a `84a47670`, 2858 a `533cd1f5`, 2063 a `6754bf1c`) e il primo punto in cui entra la casualità, sempre e
 solo attraverso l'RNG di sessione passato dal chiamante (`Logic/Engagement_Resolver.py:9-10`).
 Tutti i riferimenti `:riga` di questo capitolo, se non diversamente indicato, valgono per questo
-file a `dcedc541`.
+file a `dcedc541`, che è anche il suo stato a `fa5fbf1e`: **`Logic/Engagement_Resolver.py` e `Logic/Fire_Control.py` non sono cambiati nella fase F8**
+(non compaiono in `git diff dcedc541..HEAD -- Code`); sono stati ricalcolati solo i riferimenti ai moduli che cambiano (`Session_Simulator`,
+`Mission_Types`, `Context`).
 
 Il capitolo copre anche `Logic/Fire_Control.py` (§4.16-4.17, §4.16bis, §4.20), un modulo satellite
 che **non modifica** il contratto del risolutore: fornisce una `fire_control` reale, dai registri
@@ -508,9 +510,9 @@ dalle regole e dal bersaglio delle missioni (`TypeError` se non è una mappa di 
 comportamento precedente. `run_session` (capitolo 6 §6.1) passa `breakpoint_rng` (costruito da
 `order.rng(event_id=temper_event_id(...), counter=ordinale)`), `morale_for`, `enemy_estimate_for` e
 `fire_doctrine`, più `coordination_of`, `grounded` e, quando ve ne sono (criteri dichiarati, fine nota a monte per un rientro,
-passività derivata da un episodio precedente: capitolo 6 §6.20), `activity_criteria` (`Session_Simulator.py:2699-2700`) e,
+passività derivata da un episodio precedente: capitolo 6 §6.20), `activity_criteria` (`Session_Simulator.py:2742-2743`) e,
 quando qualche missione dichiara una ROE diversa da `weapon_free` o armi designate (capitolo 6 §6.22), `target_rules`
-(`Session_Simulator.py:2702-2720`);
+(`Session_Simulator.py:2745-2763`);
 **non** passa `rwr_catalogue`, disponibile solo chiamando
 `resolve_engagement` direttamente (capitolo 9 §9.6). Nuovi errori: `TypeError` se `coordination_of` non è una
 mappa di stringhe, `ValueError` se due forze di lati diversi stanno nello stesso dominio (lanciati da `_build_domains`, `:1862-1901`; dichiarati nel docstring a `:3719-3726`).
@@ -1380,7 +1382,7 @@ esponente 0, peso del fuoco senza risposta 0, postura 1, perdite minime dello sh
 - **Tempra**: flusso casuale **separato** (decisioni D1, D8). In `run_session` è
   `order.rng(mission_id=None, event_id=temper_event_id(*forze), counter=ordinale dell'episodio)` (0 per il primo
   episodio di quell'insieme di forze: tempra **nuova** per ogni episodio, G4a;
-  `Logic/Session_Simulator.py:990-1000`, `:2731-2733`), con tag `'temper'` diverso da `'engagement'`:
+  `Logic/Session_Simulator.py:1017-1027`, `:2774-2776`), con tag `'temper'` diverso da `'engagement'`:
   estrarre la tempra non sposta le estrazioni di rilevamento e danno (§4.11).
 - **Morale**: ingresso `morale_for(force) -> [0, 1] | None`. Il risolutore **non** legge
   `Block.morale` (`Block/Block.py:434-449`: vale `0.0` quando manca il dato, quindi "sconosciuto"
@@ -2174,7 +2176,7 @@ mini-campagna di agnosticismo (`VAL-agn` 2 e 3), in cui i 2 A-10C di Blue-CAS no
 sparavano da fermi *in volo*, ora sono a terra e non sparano più: l'utente ha accettato il cambio.
 
 **Limiti dichiarati**: un aereo a terra resta nella sua posizione registrata anche se la quota è di volo (caso
-`VAL-agn`: la posizione non persiste fra le sessioni, D1.d, F8) — e un aereo che parte dal parcheggio è a terra
+`VAL-agn`: `run_session` non fa persistere la posizione fra le sessioni, D1.d; dalla F8c la persistenza è del conduttore di campagna, capitolo 6 §6.27) — e un aereo che parte dal parcheggio è a terra
 nel *primo punto della rotta, alla sua quota*: la rotta deve cominciare sulla base, il motore non la porta a terra;
 nessuna fase di rullaggio (un aereo che atterra su una base vera è a terra dall'istante d'arrivo all'ultimo
 punto); nessuna protezione di shelter o hangar (un aereo parcheggiato è `'Soft'` come all'aperto); gli aerei a terra
@@ -2302,7 +2304,7 @@ il resto del modulo, capitolo 9 §9.1).
 | `only_designated` | solo i designati; **esenzione** dell'autodifesa aria-aria: un aereo nemico in volo si ingaggia anche se non designato, se `air_self_defence` |
 | `priority_designated` (solo aerei) | due fasi (sotto); i bersagli aerei (autodifesa e combattimento aria-aria) non cambiano |
 
-Le ROE valide per dominio sono in `Command/Mission_Types.py:237-241`: l'aria ha tutte e cinque, **terra e mare solo
+Le ROE valide per dominio sono in `Command/Mission_Types.py:247-251`: l'aria ha tutte e cinque, **terra e mare solo
 `weapon_free`, `return_fire`, `weapon_hold`**. `only_designated` e `priority_designated` sono quindi, di fatto, ROE di
 missioni aeree; `return_fire` e `weapon_hold` funzionano identiche in qualunque dominio (il risolutore non conosce il dominio
 della missione).
