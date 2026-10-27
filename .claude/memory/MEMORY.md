@@ -3,6 +3,7 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
+- [Sessione 2026-10-27 ProArt — CHIUSA, pushato: F9 fatta (manuale DES a fa5fbf1e)](project_session_2026_10_27_summary.md) — difetto aperto: readiness_after_session perde i record degli asset assenti; elenco attivita' nel file; prossimo: piano del difetto 26 (des-planner)
 - [Sessione 2026-10-23 ProArt — F8c completa, fotografia 986, suite 4701; routing fornitori per costo in ai-multimodel](project_session_2026_10_23_summary.md) — F8-R applicata (dc53af99); prossimo: F9, F8d, provare su osboxes
 - [Sessione 2026-10-22 osboxes — CHIUSA, pushato: F8a e F8b fatte (suite 4640, fotografia 982), costi OpenRouter, fornitori fissati](project_session_2026_10_22_summary.md) — prossimo F8c in 3 blocchi sul ProArt (comandi in project_f8c_comandi_blocchi)
 - [Sessione 2026-10-21 ProArt (ai-multimodel) — CHIUSA, pushato: ruoli multi-agente ridefiniti, prove U4 4/4, osboxes pronta](project_session_2026_10_21_multillm_summary.md) — voci 11 e 23 del manuale chiuse dal Piano allineato; ora si assegnano gli esecutori F8
