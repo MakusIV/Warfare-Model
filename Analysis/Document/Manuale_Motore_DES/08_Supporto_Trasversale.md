@@ -899,22 +899,22 @@ dalla sessione principale, non rieseguito per questo aggiornamento).
 
 ### `Context/Campaign_State.py`: posizione e registro (F8c, `6d3497bc`)
 
-`CampaignState` (760 righe, 725 a `dcedc541`) salva istantanee di campagna per «missione di campagna» (`mission_id` qui è una sessione di campagna, **non** la `Mission`
-di una sessione). Tre modifiche, tutte con un default che riproduce il comportamento di prima (`Campaign_State.py:241-259`, `:333-370`, `:646-667`):
+`CampaignState` (764 righe, 725 a `dcedc541`; 760 a `dc53af99`, prima della pulizia del docstring) salva istantanee di campagna per «missione di campagna» (`mission_id` qui è una sessione di campagna, **non** la `Mission`
+di una sessione). Tre modifiche, tutte con un default che riproduce il comportamento di prima (`Campaign_State.py:245-263`, `:337-374`, `:650-671`):
 
-- **`restore(mission_id, regions, restore_position=False)`** (`:333`). L'istantanea salvava già la posizione degli asset (`_serialize_asset`, campo
-  `position` con `x`, `y`, `z`, `:478-504`), ma il ripristino non la riportava. Con `restore_position=True` il flag è inoltrato a `_restore_region` (`:543`),
-  `_restore_block` (`:598`) e `_restore_asset` (`:646`), che per ogni asset vivo con `position` non `None` nell'istantanea assegna
-  `asset.position = Point3D(x, y, z)` (`:659-667`; un errore è un warning, come per gli altri campi). Con il default `False` la posizione degli asset
+- **`restore(mission_id, regions, restore_position=False)`** (`:337`). L'istantanea salvava già la posizione degli asset (`_serialize_asset`, campo
+  `position` con `x`, `y`, `z`, `:482-508`), ma il ripristino non la riportava. Con `restore_position=True` il flag è inoltrato a `_restore_region` (`:547`),
+  `_restore_block` (`:602`) e `_restore_asset` (`:650`), che per ogni asset vivo con `position` non `None` nell'istantanea assegna
+  `asset.position = Point3D(x, y, z)` (`:663-671`; un errore è un warning, come per gli altri campi). Con il default `False` la posizione degli asset
   vivi **non** è toccata. Nuovo import: `sympy.Point3D` (`:8`).
-- **`add_ledger(mission_id, ledger)`** (`:241-254`): salva il dizionario del registro (`CampaignLedger.to_dict()`) in `_state[mission_id]["ledger"]`;
-  `KeyError` se la missione di campagna non è registrata (cioè se non c'è almeno un'istantanea con quell'id). **`get_ledger(mission_id)`** (`:256-259`):
+- **`add_ledger(mission_id, ledger)`** (`:245-258`): salva il dizionario del registro (`CampaignLedger.to_dict()`) in `_state[mission_id]["ledger"]`;
+  `KeyError` se la missione di campagna non è registrata (cioè se non c'è almeno un'istantanea con quell'id). **`get_ledger(mission_id)`** (`:260-263`):
   il dizionario salvato, oppure `None` (anche per un id non registrato). Nessun import di `Command`: è il chiamante a convertire con `CampaignLedger.from_dict`. Le
   istantanee di regione/blocco (`add_region_snapshot`, `add_block_snapshot`) scrivono solo sotto `regions` e **non** cancellano il registro; `save`/`load`
-  lo portano su JSON con il resto (`:376-397`).
-- Il docstring della classe (`:18-128`, struttura interna e «Read/Restore API») **non cita** la chiave `ledger`, né `add_ledger`/`get_ledger`, e
-  mostra `restore(mission_id, regions)` senza il parametro nuovo (lo documenta invece il docstring del metodo, `:345-347`): lacuna minore di
-  documentazione (capitolo 9 §9.6 voce 27).
+  lo portano su JSON con il resto (`:380-401`).
+- Il docstring della classe (`:18-132`, struttura interna e «Write/Read/Restore API») descrive ora anche il registro: la chiave `"ledger": dict` (facoltativa, `CampaignLedger.to_dict()`) sotto `mission_id`,
+  `add_ledger(mission_id, ledger)`, `get_ledger(mission_id) → Optional[Dict]` e `restore(mission_id, regions, restore_position=False)` con la nota sulla posizione. La lacuna è stata chiusa
+  da una pulizia di soli docstring (`f009eb43`, punti P7-P10 della Proposta del difetto 26; capitolo 9 §9.6 voce 27, **CHIUSA**); nessuna riga di codice eseguibile è cambiata.
 
 `CampaignState` **non ha chiamanti di produzione** (solo `Test_Campaign_State` e lo scenario S30): né il conduttore di campagna né `run_session` lo usano; lo scenario
 S30 prova il giro registro → istantanea → registro identico e posizione ripristinata su forze ricostruite (capitolo 8 §8.12).

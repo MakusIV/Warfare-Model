@@ -1794,10 +1794,10 @@ all'ultimo punto dei movimenti degli asset (`waypoint_times(movement)[-1]`, atte
 max_duration_s` quando `max_duration_s` è dichiarato e positivo, altrimenti `None`. È la stessa funzione che `run_session` usa per il warning
 E4 (§6.1).
 
-## 6.26 Prontezza degli asset e processi fra sessioni: `Logic/Readiness.py` (F8c, `87aa7dea`; dati F8-R `dc53af99`)
+## 6.26 Prontezza degli asset e processi fra sessioni: `Logic/Readiness.py` (F8c, `87aa7dea`; dati F8-R `dc53af99`; difetto 26 corretto in `be8559d7`)
 
 **Il problema.** Un aereo atterrato deve essere riarmato e rifornito, un mezzo danneggiato riparato, un reparto riorganizzato: a campagna
-iniziata, un asset non è impiegabile in qualunque sessione. `Logic/Readiness.py` (343 righe) tiene il tempo in cui un asset torna pronto
+iniziata, un asset non è impiegabile in qualunque sessione. `Logic/Readiness.py` (356 righe) tiene il tempo in cui un asset torna pronto
 come **registro immutabile** (`CampaignLedger.readiness`, capitolo 2 §2.10) invece che come attributo dell'asset (decisione 19: nessuno stato
 nuovo negli asset, la stessa scelta della F4c per gli aerei a terra; nessuna modifica alle sei classi d'asset). Funzioni **pure**, salvo
 `apply_campaign_processes` (muta gli asset, come `apply_engagement_result`); **nessun RNG**; iterazioni sempre in ordine di id. Il
@@ -1811,22 +1811,28 @@ nel capitolo 7 §7.13.
 
 | Funzione | Righe | Cosa fa |
 |---|---|---|
-| `asset_domain(asset)` | `:49-58` | `'air'` (`validate_class(asset, 'Aircraft')`), `'sea'` (`'Ship'`), altrimenti `'ground'` (veicoli e strutture): la stessa partizione di `Mission_Adapter.continuous_posture` |
-| `turnaround_class(asset)` | `:69-94` | classe aerea per il turnaround: `asset.asset_type` (valore dell'enum `Air_Asset_Type`, o il membro) se è una chiave di `AIR_TURNAROUND_S`; altrimenti la prima categoria di `Aircraft_Data` per `asset.model`; altrimenti `None` (e `None` per i non aerei). L'import di `Aircraft_Data` è locale (cicli) |
-| `turnaround_s(asset)` | `:97-115` | `(secondi, provenienza)`: aereo = `AIR_TURNAROUND_S[classe]` (`'class:<classe>'`) o `AIR_TURNAROUND_DEFAULT_S` (`'default'`, con un warning); terra = `GROUND_TURNAROUND_S` (`'ground'`); mare = `SEA_TURNAROUND_S` (`'sea'`) |
-| `repair_s(asset)` | `:118-135` | tempo di riparazione dal danno attuale: `None` se distrutto o salute non leggibile; `0.0` se salute ≥ 100; altrimenti `REPAIR_TIME_FULL_S[dominio] × (100 − salute) / 100` — **lineare** nel danno, **a gradino** (la salute torna a 100 solo alla fine) |
-| `readiness_after_session(ledger, order, outcome, assets)` | `:168-249` | la nuova mappa di prontezza dopo la sessione (regola sotto) |
-| `record_session(ledger, order, outcome, assets)` | `:252-259` | `ledger.with_session(SessionRecord(order.session_id, order.t_start, outcome.t_end))` più `.with_readiness(readiness_after_session(...))`; `outcome.t_end` `None` → `order.t_end` |
-| `apply_campaign_processes(ledger, assets, t)` | `:284-321` | i processi di campagna conclusi entro `t`: per ogni record con `ready_at ≤ t + eps` (ordine di id): asset assente → record tolto con warning; distrutto → record tolto; `record.repair` → `asset.health = 100`; `record.rearm` → `_rearm_and_refuel`; record tolto. Restituisce il registro con i soli record non conclusi. **Idempotente** |
-| `_rearm_and_refuel(asset)` | `:262-281` | aereo con `assigned_loadout`: lo riassegna a sé stesso (il setter ricarica scorta **e** carburante del loadout, `Asset/Aircraft.py:176-214`); aereo senza loadout: niente («non modellato»); veicolo/nave: `load_stores_from_registry()` e `load_fuel_from_registry()` se esistono. **Senza consumare le scorte del blocco** |
-| `ready_assets(ledger, assets, t)` | `:324-334` | id (ordinati) degli asset non distrutti e pronti a `t` (`ledger.is_ready`): ciò che il pianificatore può impiegare (D6.a) |
+| `asset_domain(asset)` | `:53-62` | `'air'` (`validate_class(asset, 'Aircraft')`), `'sea'` (`'Ship'`), altrimenti `'ground'` (veicoli e strutture): la stessa partizione di `Mission_Adapter.continuous_posture` |
+| `turnaround_class(asset)` | `:73-98` | classe aerea per il turnaround: `asset.asset_type` (valore dell'enum `Air_Asset_Type`, o il membro) se è una chiave di `AIR_TURNAROUND_S`; altrimenti la prima categoria di `Aircraft_Data` per `asset.model`; altrimenti `None` (e `None` per i non aerei). L'import di `Aircraft_Data` è locale (cicli) |
+| `turnaround_s(asset)` | `:101-119` | `(secondi, provenienza)`: aereo = `AIR_TURNAROUND_S[classe]` (`'class:<classe>'`) o `AIR_TURNAROUND_DEFAULT_S` (`'default'`, con un warning); terra = `GROUND_TURNAROUND_S` (`'ground'`); mare = `SEA_TURNAROUND_S` (`'sea'`) |
+| `repair_s(asset)` | `:122-139` | tempo di riparazione dal danno attuale: `None` se distrutto o salute non leggibile; `0.0` se salute ≥ 100; altrimenti `REPAIR_TIME_FULL_S[dominio] × (100 − salute) / 100` — **lineare** nel danno, **a gradino** (la salute torna a 100 solo alla fine) |
+| `readiness_after_session(ledger, order, outcome, assets)` | `:172-259` | la nuova mappa di prontezza dopo la sessione (regola sotto): parte dai record degli asset **non** passati (`:182-184`, riportati tali e quali), poi aggiunge quelli calcolati per gli asset passati (`:195`) |
+| `record_session(ledger, order, outcome, assets)` | `:262-270` | `ledger.with_session(SessionRecord(order.session_id, order.t_start, outcome.t_end))` più `.with_readiness(readiness_after_session(...))`; `outcome.t_end` `None` → `order.t_end` |
+| `apply_campaign_processes(ledger, assets, t)` | `:295-335` | i processi di campagna conclusi entro `t`: per ogni record con `ready_at ≤ t + eps` (ordine di id): asset assente (`assets.get(asset_id)` è `None`) → record **conservato**, con un `logger.debug` (`:316-321`); distrutto → record tolto; `record.repair` → `asset.health = 100`; `record.rearm` → `_rearm_and_refuel`; record tolto. Restituisce il registro con i record non conclusi **e** quelli conclusi di asset assenti. **Idempotente** |
+| `_rearm_and_refuel(asset)` | `:273-292` | aereo con `assigned_loadout`: lo riassegna a sé stesso (il setter ricarica scorta **e** carburante del loadout, `Asset/Aircraft.py:176-214`); aereo senza loadout: niente («non modellato»); veicolo/nave: `load_stores_from_registry()` e `load_fuel_from_registry()` se esistono. **Senza consumare le scorte del blocco** |
+| `ready_assets(ledger, assets, t)` | `:338-348` | id (ordinati) degli asset non distrutti e pronti a `t` (`ledger.is_ready`): ciò che il pianificatore può impiegare (D6.a) |
 
-**La regola di `readiness_after_session`** (decisioni 19-21; per ogni `asset_id` in `sorted(assets)`). Definizioni: `end_nominal` = `order.t_end`
+**La regola di `readiness_after_session`** (decisioni 19-21). **Passo 0, asset non passati alla sessione** (difetto 26, corretto in `be8559d7`): la mappa parte
+dai record del registro il cui `asset_id` **non** è in `assets` (`Logic/Readiness.py:182-184`), riportati tali e quali; il ciclo seguente scrive solo chiavi di `assets`, quindi non li tocca.
+Prima della correzione la mappa partiva vuota e `record_session` la consegnava a `with_readiness`, che **sostituisce** l'intera mappa (`Command/Campaign_Types.py:341-345`): il record di un asset
+assente dalle forze di quella sessione andava perso, l'asset risultava subito impiegabile (`is_ready` dà «pronto» se non c'è un record) e la sua riparazione ripartiva da capo alla sessione successiva
+(regola 2). La correzione sta nell'origine e **`with_readiness` resta una sostituzione**, perché `apply_campaign_processes` ha bisogno proprio di questo (deve poter togliere i record conclusi).
+**Nessun interruttore**: è la correzione di un contratto già scritto (docstring e Proposta F8 §4.4), non una regola nuova del motore; il test della correzione e lo scenario S30-ABSENT (capitolo 8 §8.12)
+la provano. Per gli asset **passati** valgono le sei regole che seguono (per ogni `asset_id` in `sorted(assets)`). Definizioni: `end_nominal` = `order.t_end`
 (o `outcome.t_end` per un ordine aperto); `previous` = il record già nel registro; `in_mission` = l'asset è in una missione dell'ordine;
 `consumed` = compare con valore > 0 in `outcome.ammunition_consumed()`, `interceptions_consumed()` o `fuel_consumed()`; `last_damage` =
 l'istante del suo ultimo `DamageEvent` come bersaglio (`None` se nessuno).
 
-1. **Asset distrutto**: nessun record (mai pronto; il validatore lo rifiuta con `ASSET_DESTROYED`).
+1. **Asset distrutto** (e passato alla sessione): nessun record, **anche se ne aveva uno** (mai pronto; il validatore lo rifiuta con `ASSET_DESTROYED`). Un asset distrutto *non passato* conserva invece il suo record (passo 0): il motore non lo vede.
 2. **Nulla di nuovo nella sessione** (`not in_mission and not consumed and last_damage is None`): un `previous` resta **com'è** (un processo in
    corso non riparte); senza `previous`, se `repair_s > 0` (un danno **anteriore al registro**) nasce un record di sola riparazione con
    `since = end_nominal` e `ready_at = end_nominal + riparazione`; altrimenti nessun record.
@@ -1838,7 +1844,7 @@ l'istante del suo ultimo `DamageEvent` come bersaglio (`None` se nessuno).
    `ready_at = max(ready_at, previous.ready_at)` (un processo precedente più lungo prevale).
 6. Record `ReadyRecord(asset_id, ready_at, since, turnaround, repair)`.
 
-*Diagramma D53 — la regola di `readiness_after_session` per un asset (F8c).*
+*Diagramma D53 — la regola di `readiness_after_session` per un asset passato alla sessione (F8c; i record degli asset non passati sono riportati prima, passo 0, difetto 26).*
 
 ```mermaid
 flowchart TD
@@ -1863,33 +1869,40 @@ precedente, e il registro dice solo *quando* sarebbe pronto. Il validatore, che 
 asset il cui turnaround finisce *durante* una sessione resta quindi non pronto per quella sessione, e viene rifornito all'inizio della
 successiva. Il processo corre comunque dentro il tempo: un aereo atterrato è a terra (e bersaglio) nel resto della sessione (§6.15).
 
+**Un asset assente dalla sessione** (scelta 3b del difetto 26). Se il processo di un asset *non passato* alla sessione si conclude mentre l'asset è assente, `apply_campaign_processes`
+**non applica nulla e non toglie il record** (`:316-321`, `logger.debug` al posto del warning di prima): il record concluso resta nel registro e il processo (salute a 100, riarmo e
+rifornimento) si applica alla **prima sessione in cui l'asset torna** in `assets`. Prima della correzione il record veniva tolto con un warning senza applicare niente: l'asset tornava danneggiato
+e non rifornito, e alla fine di quella sessione la regola 2 apriva un record di riparazione *nuovo* (la riparazione ricominciava). Lo stato di un asset assente (salute, carburante) resta
+**quello vecchio** finché l'asset non torna, anche se il registro lo dà già pronto: coerente con «i processi si applicano agli asset presenti». Il record concluso di un asset assente non
+impedisce nulla al validatore, che controlla la prontezza solo degli asset delle missioni dell'ordine (`Session_Validator.py:140-160`, `ledger.is_ready(asset_id, order.t_start)`).
+
 **Limiti dichiarati** (capitolo 9 §9.1): un solo tempo per classe e per dominio, uguale per chi ha volato 10 minuti e per chi ne ha volati
 120, o per un reparto che si è solo spostato; il turnaround corre da `movement_ends`, ma un aereo atterrato e **poi colpito sul parcheggio** somma
 riparazione e turnaround dall'ultimo danno; **nessuna logistica** (riarmo, rifornimento e riparazione non consumano le scorte del blocco né
 dipendono dalle risorse della base: `Resource_Manager` non è collegato); la riparazione è a gradino e lineare nel danno; un aereo `off_scene`
-torna «alla base» senza sapere quale (§6.27). **Divergenza trovata** (capitolo 9 §9.6, voce 26): il docstring di `readiness_after_session` (`:170-172`)
-e la Proposta dicono che i record degli asset non presenti in `assets` «restano nel registro», ma il codice costruisce la nuova mappa
-**solo** dagli asset passati e `record_session` usa `with_readiness`, che **sostituisce** l'intera mappa: i record degli asset assenti
-**sono persi**. Non ha effetto in S30 (le stesse forze in ogni sessione) e nessun test lo copre.
+torna «alla base» senza sapere quale (§6.27). Due limiti nuovi dopo la correzione del difetto 26 (voce 26 del capitolo 9 §9.6, ora **CHIUSA**): un id che non ricompare più lascia il suo record nel registro **per sempre** (innocuo per
+il validatore e per `ready_assets`, che guardano solo gli asset passati; non esiste una funzione di «asset ritirato»); e **non ci sono chiamanti di produzione** di `run_campaign_session`,
+quindi la correzione si vede solo negli scenari (S30-ABSENT) e nei test: passerà a servire quando un conduttore di campagna darà alle sessioni sottoinsiemi diversi di forze. La
+correzione dipende inoltre dall'identità degli id di dominio fra sessioni: se un asset cambia id, il suo record resta orfano.
 
 ## 6.27 Il conduttore di campagna e la posizione persistente: `Logic/Session_Campaign.py` (F8c, `6d3497bc`)
 
-**Il conduttore minimo, non il `Theater_Session_Manager`.** Modulo nuovo (153 righe), il minimo che serve per provare prontezza e posizione
+**Il conduttore minimo, non il `Theater_Session_Manager`.** Modulo nuovo (154 righe), il minimo che serve per provare prontezza e posizione
 persistente (scenario S30, capitolo 8 §8.12). Non decide *quali* missioni dare né quando: esegue **una sessione** nel ciclo di campagna. Il
 modulo è del core e **non sa nulla del simulatore**: un adapter DCS sostituirebbe il solo passo (3) sotto.
 
 `run_campaign_session(ledger, order, forces_a, forces_b, fire_control, *, apply_positions=True, **run_kwargs) -> (SessionOutcome, CampaignLedger)`
-(`Logic/Session_Campaign.py:109-153`). I cinque passi, nell'ordine del codice:
+(`Logic/Session_Campaign.py:109-154`). I cinque passi, nell'ordine del codice:
 
-1. `Readiness.apply_campaign_processes(ledger, assets, order.t_start)` (`:139`): i processi (riparazione, riarmo, rifornimento) conclusi entro
-   l'inizio della sessione sono applicati agli asset e tolti dal registro;
-2. `Session_Validator.check_session(order, forces_a, forces_b, ledger=ledger, horizon=run_kwargs.get('horizon'))` (`:142-143`): solleva
+1. `Readiness.apply_campaign_processes(ledger, assets, order.t_start)` (`:140`): i processi (riparazione, riarmo, rifornimento) conclusi entro
+   l'inizio della sessione sono applicati agli asset e tolti dal registro (quelli di asset *assenti* dalle forze restano nel registro fino al loro ritorno, §6.26);
+2. `Session_Validator.check_session(order, forces_a, forces_b, ledger=ledger, horizon=run_kwargs.get('horizon'))` (`:143-144`): solleva
    `SessionValidationError` **prima** di `run_session`, che non viene chiamata;
-3. `SS.run_session(order, forces_a, forces_b, fire_control, **run_kwargs)` (`:146`), chiamata **come attributo del modulo** (`from ...Logic
+3. `SS.run_session(order, forces_a, forces_b, fire_control, **run_kwargs)` (`:147`), chiamata **come attributo del modulo** (`from ...Logic
    import Session_Simulator as SS`), mai importata per nome: `Scenario_Baseline` la intercetta così (`Scenario_Baseline.py:20-26`) e la
    fotografia registra le esecuzioni di S30;
-4. con `apply_positions` (default `True`) `apply_final_positions(outcome, forces_a, forces_b)` (`:149-150`);
-5. `Readiness.record_session(ledger, order, outcome, assets)` (`:153`): registra la sessione e la nuova prontezza.
+4. con `apply_positions` (default `True`) `apply_final_positions(outcome, forces_a, forces_b)` (`:150-151`);
+5. `Readiness.record_session(ledger, order, outcome, assets)` (`:154`): registra la sessione e la nuova prontezza.
 
 Il passo 1 modifica gli asset anche se il passo 2 rifiuta poi l'ordine (i processi sono già applicati), ma riapplicarli è **idempotente**, e il
 registro del chiamante, immutabile, non cambia. `**run_kwargs` va a `run_session` (`horizon`, `reaction_profile_for`, ...). Chiamanti di

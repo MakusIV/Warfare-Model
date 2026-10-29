@@ -9,7 +9,10 @@
 > è calcolato da nessuno» (ora `operation_outcome`), «nessun produttore chiama i validatori del carburante» (ora il validatore di sessione, che a sua volta ha solo test e S30
 > come chiamanti), «la posizione non persiste fra sessioni» (ora persiste, ma solo attraverso il conduttore di campagna; per chi chiama `run_session` direttamente resta
 > vero), «il rifornimento fra sessioni non esiste» (ora `Readiness`, senza logistica), «F6-B3 aperto» (chiuso senza cambi, I1); **sono nuovi** quelli della sezione «Limiti della
-> campagna (F8)» più sotto. *Il resto di questa intestazione descrive lo stato a `dcedc541`, conservato per riferimento:*
+> campagna (F8)» più sotto. **Aggiornamento 2026-10-29 (difetto 26, codice `be8559d7`, docstring `f009eb43`, fotografia `643fff87`)**: `readiness_after_session` riporta i record di prontezza
+> degli asset non passati alla sessione e `apply_campaign_processes` conserva il record concluso di un asset assente applicandolo al suo ritorno (nessun interruttore); scenario nuovo
+> **S30-ABSENT** (3 esecuzioni); suite **4710 test, OK (skipped=7)**, fotografia **989 esecuzioni** (986 identiche + 3 nuove); le **voci 24, 25, 26 e 27 di §9.6 sono ora CHIUSE**
+> (v. «Aggiornamento 2026-10-29» più sotto). *Il resto di questa intestazione descrive lo stato a `dcedc541`, conservato per riferimento:*
 >
 > **Stato a `dcedc541` (2026-10-20).** Il manuale descriveva il motore a quel commit, cioè dopo le fasi
 > F0-F7 del piano di implementazione della Missione (`Analysis/Document/Piano_Implementazione_Missione.md`) e i passi
@@ -522,11 +525,15 @@ sono limiti dell'esecutore ma di chi *conduce* la campagna. Dichiarati nei docst
   piano separato che richiede una tabella di conversione (STIMA), la regola del blocco che serve un asset, il comportamento a scorte esaurite e il momento in cui il ciclo gira.
 - **Processi applicati all'inizio della sessione successiva, non alla `ready_at`**: fino ad allora l'asset conserva in memoria lo stato della sessione precedente (capitolo 6 §6.26). Un asset il cui
   turnaround finisce *dentro* una sessione resta non pronto per quella sessione.
+- **Asset assenti dalla sessione (difetto 26, corretto in `be8559d7`; capitolo 6 §6.26)**: i record di prontezza degli asset non passati a una sessione restano nel registro, e il record
+  *concluso* di un asset assente si applica alla prima sessione in cui l'asset torna. Limiti rimasti: lo stato dell'asset assente (salute, carburante) resta quello vecchio finché non torna,
+  anche se il registro lo dà già pronto; un id che non ricompare più lascia il suo record nel registro per sempre (nessuna funzione di «asset ritirato»); la correzione dipende dall'identità
+  degli id fra sessioni; e, come tutto il ciclo di campagna, **si vede solo negli scenari** (nessun chiamante di produzione).
 - **Riparazione a gradino e lineare nel danno**: salute riportata a 100 solo alla fine, nessuna riparazione progressiva e nessuna regola per impiegare un asset parzialmente riparato.
 - **Aereo `off_scene`** (uscito di scena senza atterrare su una base vera): `apply_final_positions` **non** ne cambia la posizione («rientrato a una base fuori scena», la posizione resta quella di partenza); la
   base vera è del modulo mappe/C2. Un aereo **ancora in volo** a fine sessione (possibile solo senza validatore) ha la posizione applicata con un warning: nessun movimento fuori sessione (D4.d).
 - **Il registro è un dizionario di dominio senza proprietario**: `CampaignLedger` non è dentro `CampaignState` né dentro gli asset; chi conduce la campagna lo salva con `add_ledger` e lo ricarica con
-  `CampaignLedger.from_dict`. Il docstring della classe `CampaignState` non cita la chiave `ledger` (voce 27 di §9.6).
+  `CampaignLedger.from_dict`. Il docstring della classe `CampaignState` descrive ora anche la chiave `ledger` e i metodi `add_ledger`/`get_ledger` (voce 27 di §9.6, chiusa).
 - **Le Operazioni valgono per sessione**: `operation_outcome` aggrega gli esiti di *una* sessione; le Operazioni «permanenti» su più sessioni (D4.e) sono del C2, fuori piano.
 - **Sessioni disgiunte per la fine effettiva**: la sessione successiva parte non prima della fine **effettiva** della precedente (`SessionOutcome.t_end`, salve in volo comprese), non della nominale (decisione 25).
 - **Sessione aperta e durata**: il validatore rifiuta la sessione aperta e quella più lunga di 4 h; `run_session` chiamata direttamente le accetta ancora. Un chiamante che salta il validatore
@@ -717,6 +724,15 @@ non cambia se non per lo stato `IN_PROGRESS` (un solo interruttore nuovo, `F8_IN
 (982 identiche a ogni passo, 986 con S30). La suite è a **4701 test, OK (skipped=7)** e il confronto con la fotografia dà **986 identiche** (numeri dichiarati dalla sessione principale al commit `dc53af99`,
 **non rieseguiti** per questo aggiornamento; capitolo 8 §8.7, §8.12).
 
+**Aggiornamento 2026-10-29: difetto 26** (`Proposta_Difetto26_Readiness_Ledger.md`, scelte dell'utente D26-1 = A, D26-2 = nessun interruttore, D26-3 = 3b, D26-4 = registrare S30-ABSENT, D26-5 =
+stesso branch con commit separato, D26-6 = `des-developer`; rapporto `Rapporti/Rapporto_difetto26_des-developer.md`). Commit: `be8559d7` (correzione in `Logic/Readiness.py`, test, scenario S30-ABSENT
+registrato in `Scenario_Baseline.UNITS`), `f009eb43` (pulizia dei docstring P1-P10, solo testo), `643fff87` (fotografia installata a 989 esecuzioni, rapporto). Il codice toccato è
+`Logic/Readiness.py` (343 → 357 righe, `grep -c ''`), `Logic/Session_Campaign.py` (153 → 154, solo docstring), `Context/Campaign_State.py` (760 → 764, solo docstring) e `Test/Scenario_Baseline.py`
+(932 → 935); `run_session` non cambia. **Nessuna esecuzione preesistente cambia**: 986 identiche + 3 nuove (`S30-ABSENT/S30-ABSENT-1..3`). La suite è a **4710 test, OK (skipped=7)** (4701 → 4710:
+Test_Readiness 32 → 36, Test_Session_Campaign 9 → 10, Test_Session_Scenarios_S30 10 → 14; contati sul codice). I numeri di suite e confronto sono quelli del rapporto dell'esecutore, verificati dalla
+sessione principale con `tools/ai/verifica.sh` (`Ran 4710 tests`, `compared 989 runs`, `UNCHANGED (986)`), e **non sono stati rieseguiti** per questo aggiornamento; il numero delle esecuzioni della
+fotografia è invece contato sul file (989, `errors` vuoto). Capitolo 6 §6.26, capitolo 8 §8.7 e §8.12.
+
 **Aggiornamento 2026-09-26/27**: quattro estensioni ulteriori, tutte sui moduli satellite che
 alimentano il motore dall'esterno, non sul motore in sé: (1) le finestre di rilascio di 29 bombe
 su 32 (commit `4ddbb089`, dato di registro, prerequisito delle altre); (2) il cannone di bordo come
@@ -774,6 +790,7 @@ aggiornamento; la **F8d** (logistica) non è una fase del Piano originale e **no
 | F8b | esito per la campagna: `IN_PROGRESS` (`F8_IN_PROGRESS`), `OperationOutcome`, `final_positions`, `movement_ends` | **fatta**, verificata il 2026-10-22 (982 identiche, suite 4640) (`33698fb4`) | cap. 2 §2.3-2.6, cap. 6 §6.11, §6.24 |
 | F8c | prontezza (`Readiness`), conduttore di campagna (`Session_Campaign`), posizione persistente e registro in `Campaign_State`, scenario S30 | **fatta**, verificata il 2026-10-23 (982 identiche + 4 nuove, suite 4699; fotografia 986 dopo l'approvazione dell'utente) (`87aa7dea`, `6d3497bc`, `398ae3ef`; chiusura `3fb25089`) | cap. 6 §6.26-6.27, cap. 7 §7.13, cap. 8 §8.12 |
 | F8-R | ricerca dei tempi di turnaround e riparazione e loro applicazione (sette valori) | **fatta e applicata** il 2026-10-23 (`dc53af99`; suite 4701 e 986 identiche dichiarate, non rieseguite qui); **una sola fonte verificata sulla pagina originale; mare = stima senza fonte numerica** | cap. 7 §7.13 |
+| Difetto 26 (fuori fase) | record di prontezza degli asset assenti dalla sessione (`readiness_after_session`, `apply_campaign_processes`), scenario S30-ABSENT | **corretto** il 2026-10-29 (`be8559d7`; docstring `f009eb43`; suite 4710, fotografia 989) | cap. 6 §6.26, cap. 8 §8.12 |
 | F8d | logistica: riarmo, rifornimento e riparazione dipendenti dalle risorse della base | **non fatta, per decisione dell'utente** (limite dichiarato) | §9.1 |
 | F9 | documentazione | **questo aggiornamento** (F7a, F7b e F8: tolto il «TOT comune» dai capitoli 2 e 9 — v. §9.6 voce 15 —, documentate F5/F6/F7/F8); sintesi/proposta da allineare | — |
 
@@ -800,16 +817,16 @@ flowchart LR
     F8 -.->|"non fatta"| F8D["F8d logistica<br/>(limite dichiarato)"]
 ```
 
-## 9.6 Incoerenze trovate fra documenti di progetto e codice a `fa5fbf1e`
+## 9.6 Incoerenze trovate fra documenti di progetto e codice a `fa5fbf1e` (stato delle voci aggiornato al 2026-10-29)
 
 Il codice prevale; qui sono **riportate, non corrette**. Letti: `Piano_Implementazione_Missione.md`,
 `F4_Differenze_Scenari.md`, `Proposta_F8_Sessione_Campagna.md`, `Ricerca_Turnaround_Riparazione.md`, `Rapporti/Rapporto_F8a_oc-developer.md` … `Rapporto_F8c3_oc-developer.md`,
-`Proposta_F7_Bersagli_Filtro_Armi.md`, `Proposta_Pulizia_Incongruenze_Doc.md`,
+`Proposta_F7_Bersagli_Filtro_Armi.md`, `Proposta_Difetto26_Readiness_Ledger.md`, `Rapporti/Rapporto_difetto26_des-developer.md`, `Proposta_Pulizia_Incongruenze_Doc.md`,
 `Rapporti/Rapporto_pulizia-doc_oc-developer.md`, `Proposta_G4_Ri_scheduling.md`, `Proposta_Struttura_Missione_Decisioni.md`,
 `Proposta_Regole_Allocazione_SAM.md`, `Proposta_Soglia_Rottura_Stocastica.md`, `Proposta_Uso_Classi_Settori_RWR.md`,
 `Proposta_Intercettazione_Reazione.md` e i docstring dei moduli. Le voci 1-10 sono quelle del manuale a `533cd1f5`, le
 voci 11-14 quelle aggiunte a `84a47670`, le voci 15-21 quelle aggiunte a `a784a9e7`, le voci 22-23 quelle aggiunte a `dcedc541`: tutte **ricontrollate una per una sul
-codice e sui documenti a `fa5fbf1e`**; le voci **24-27 sono nuove di questo aggiornamento** (F8). Le voci **7, 11 e 23 sono ora CHIUSE** (rispettivamente dalla F8b e dagli aggiornamenti del Piano
+codice e sui documenti a `fa5fbf1e`**; le voci **24-27 erano nuove dell'aggiornamento F8 e sono ora tutte CHIUSE** (aggiornamento del 2026-10-29: correzione del difetto 26 e pulizia dei testi, v. ciascuna voce). Le voci **7, 11 e 23 sono ora CHIUSE** (rispettivamente dalla F8b e dagli aggiornamenti del Piano
 del 2026-10-22/23). **Le voci 14-18 erano già CHIUSE** a `dcedc541`: le aveva
 chiuse la pulizia documentale `d1686b28` (piano `Proposta_Pulizia_Incongruenze_Doc.md`, eseguita da `oc-developer`, rapporto
 `Rapporti/Rapporto_pulizia-doc_oc-developer.md`: 8 correzioni testuali in 3 file di codice — commenti e docstring — e 3 documenti;
@@ -817,8 +834,8 @@ suite 4490 OK e fotografia a 970 identica, secondo il rapporto), e il riscontro 
 **11, 12, 19 e 21** sono state riverificate sul codice e sui documenti attuali; il loro stato reale è riportato sotto e **non è
 stato corretto** nulla.
 
-**Riepilogo dello stato a `fa5fbf1e`**: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 16, 17, 18, 20, 23; APERTE 5, 6, 9, 10, 19, 21, 22, 24, 25, 26, 27;
-CHIUSA parzialmente 8. (A `dcedc541`: CHIUSE 1, 2, 3, 4, 12, 13, 14, 15, 16, 17, 18, 20; APERTE 5, 6, 7, 9, 10, 11, 19, 21, 22, 23.)
+**Riepilogo dello stato al 2026-10-29** (codice `be8559d7`, docstring `f009eb43`): CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 16, 17, 18, 20, 23, **24, 25, 26, 27**; APERTE 5, 6, 9, 10, 19, 21, 22;
+CHIUSA parzialmente 8. (A `fa5fbf1e`: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 16, 17, 18, 20, 23; APERTE 5, 6, 9, 10, 19, 21, 22, 24, 25, 26, 27; CHIUSA parzialmente 8. A `dcedc541`: CHIUSE 1, 2, 3, 4, 12, 13, 14, 15, 16, 17, 18, 20; APERTE 5, 6, 7, 9, 10, 11, 19, 21, 22, 23.)
 
 **Voci della stesura a `533cd1f5`: stato a `fa5fbf1e`**
 
@@ -871,7 +888,7 @@ CHIUSA parzialmente 8. (A `dcedc541`: CHIUSE 1, 2, 3, 4, 12, 13, 14, 15, 16, 17,
     restavano a `dcedc541` sono state colmate dagli aggiornamenti del Piano (`ea75a9f5`, «allineamento al lavoro fatto», e quelli del 2026-10-22/23): l'**intestazione** (riga 3) cita ora
     F0-F4c, F5-A/B/C, F6-A, F6-B1, F6-B2, F6-B2bis, G1-G5, F7a, F7b e F8a-F8c; la colonna «Commit» ha i commit reali (F5-A `e723e82a`, F5-B `90f2d4de`, F5-C `4da618b1`, F6-A `00b6b531`,
     F6-B1 `15ac3d3d`, F6-B2 `6b1b7225`, F6-B2bis `96942ca7`, G1 `c1c0f576`, G2 `e1d08121`/`e5465b31`, ..., F7a `9f87a3ad`, F7b `dcedc541`, F8a `c1182d8a`, F8b `33698fb4`, F8c `87aa7dea`/`6d3497bc`/`398ae3ef`) e
-    le righe F6-B2bis e G1 dicono «FATTA». Residuo minore, ora nella voce 24: le righe F6-B3 e F8-R hanno la colonna «Commit» vuota e l'intestazione dice ancora «F8-R in attesa di approvazione».
+    le righe F6-B2bis e G1 dicono «FATTA». Residuo minore (già della voce 24, chiusa il 2026-10-29): le righe F6-B3 e F8-R hanno la colonna «Commit» vuota (l'intestazione non dice più «F8-R in attesa di approvazione»).
 12. **Piano: elenco dei «punti aperti rilevati dall'aggiornamento del manuale»** — **CHIUSA** (riverificata). L'ultima riga dice ora
     «ruoli e criteri di fine: i ruoli restano validati ma non letti da `Logic`; bersaglio e regole (ROE, armi designate) sono letti
     dalla F7a e le azioni `Fire_At_Point` dalla F7b (F5-F6 per i criteri di fine); `Operation` è letta dalla F4b+ (`coordination_domains`)»,
@@ -945,24 +962,33 @@ CHIUSA parzialmente 8. (A `dcedc541`: CHIUSE 1, 2, 3, 4, 12, 13, 14, 15, 16, 17,
     l'intestazione «... (2026-10-20) F7b, in attesa di approvazione». Il Piano attuale (riverificato a `fa5fbf1e`) riporta F7b «FATTA, verificata e approvata 2026-10-20» (riga 303) e l'intestazione non cita più
     un'attesa di approvazione per la F7b: il Piano è stato aggiornato.
 
-**Voci nuove di questo aggiornamento (a `fa5fbf1e`, fase F8)**
+**Voci nuove dell'aggiornamento a `fa5fbf1e` (fase F8), tutte chiuse il 2026-10-29**
 
-24. **Piano: F8-R «in attesa di approvazione» e riga F9 che la elenca come da fare** — **APERTA, minore**. L'intestazione del Piano (riga 3) dice «da fare F9; F8-R in attesa di approvazione» e la riga F9
-    (riga 309) elenca ancora «F8-R = ricerca dei tempi di turnaround e riparazione per sostituire le STIME (serve una sessione Claude col web)»; ma la riga F8-R (riga 308) dice «FATTA e APPLICATA 2026-10-23
-    (D1-D5 approvate dall'utente)», la Ricerca (§8) registra le decisioni e il codice (`Context/Context.py:1013-1038`) ha i valori applicati. Anche `Proposta_F8_Sessione_Campagna.md` (intestazione) dice «F8-R rinviata»
-    (è un contratto di fase, datato prima dell'esecuzione). Il manuale segue il codice e la riga 308.
-25. **Costanti di tempo: testi che le dicono ancora «STIME da sostituire con la ricerca F8-R»** — **APERTA, minore**. Dopo il commit `dc53af99` i valori sono in parte ricavati da una ricerca (una sola fonte
-    verificata sulla pagina originale), in parte ancora stime di progetto, e il turnaround navale (48 h) è una stima informata senza fonte numerica (capitolo 7 §7.13). Restano testi non aggiornati: il docstring di
-    `Logic/Readiness.py` (`:12-14`: «STIME DI PROGETTO ... da sostituire con la ricerca F8-R (commit di soli dati)»), quello di `Test_Session_Scenarios_S30.py` (`:4-7`: «STIME di progetto ... sostituite dalla ricerca F8-R», ambiguo),
-    la deviazione 25 del Piano («tabelle STIMATE, da sostituire con la ricerca F8-R»; «Limiti: costanti di tempo STIMATE»), `F4_Differenze_Scenari.md` sezione F8 («tutte le tabelle ... sono STIME DI PROGETTO») e
-    la tabella dei valori di `Proposta_F8_Sessione_Campagna.md` §4.4 (7 200, 9 000, 14 400, 43 200, ... : i valori *prima* della ricerca). I commenti del codice dei valori (`Context.py:1013-1038`) sono invece esatti.
-26. **`readiness_after_session`: i record degli asset non passati non «restano»** — **APERTA**. Il docstring (`Logic/Readiness.py:170-172`: «I record degli asset non presenti in `assets` restano nel registro (non sono qui)») e la
-    Proposta §4.4 («I record degli asset non presenti in `assets` restano») descrivono una conservazione che il codice **non fa**: la nuova mappa è costruita iterando solo `sorted(assets)` (`:185`) e restituita (`:249`);
-    `record_session` (`:252-259`) la passa a `CampaignLedger.with_readiness`, che **sostituisce** l'intera mappa (`Command/Campaign_Types.py:341-345`), quindi il record di un asset assente dalle forze di quella sessione
-    **è perso**. In S30 le forze sono le stesse in ogni sessione, e `Test_Readiness` non ha un test su questo caso (`test_absent_asset_dropped_with_warning` riguarda `apply_campaign_processes`): non emerge. Rilevante se una campagna
-    passa a sessioni diverse sottoinsiemi diversi di forze. Ricavato per lettura del codice, **non** verificato eseguendolo.
-27. **`CampaignState`: docstring della classe senza `ledger`** — **APERTA, minore**. Il docstring (`Context/Campaign_State.py:18-128`) descrive la struttura interna e le API senza la chiave `ledger`, senza `add_ledger`/`get_ledger` e con
-    `restore(mission_id, regions)` privo di `restore_position`; li documentano invece i docstring dei metodi (`:241-259`, `:345-347`).
+24. **Piano: F8-R «in attesa di approvazione» e riga F9 che la elenca come da fare** — **CHIUSA** (riverificata il 2026-10-29). L'intestazione del Piano (riga 3) dice ora «(2026-10-27) F8-R applicata e F9 ...; da fare solo F8d»
+    e la riga F9 (riga 309) non elenca più la F8-R come da fare (cita anzi le voci 24-27 e la correzione del difetto 26); la riga F8-R (riga 308) dice «FATTA e APPLICATA 2026-10-23». `Proposta_F8_Sessione_Campagna.md` ha in testa (riga 3) una
+    nota datata 2026-10-29 («F8-R fatta e applicata il 2026-10-23 (`dc53af99`): i valori in vigore ... sono in `Context.py:1013-1038`») e sopra la tabella di §4.4 la dicitura «valori prima della ricerca F8-R»; il corpo del contratto non è
+    riscritto (la riga 7 dice ancora «F8-R rinviata»: è la storia del 2026-10-22, sotto la nota). **Residuo minore, non di contenuto**: la colonna «Commit» delle righe F6-B3 e F8-R del Piano è ancora vuota.
+25. **Costanti di tempo: testi che le dicono ancora «STIME da sostituire con la ricerca F8-R»** — **CHIUSA** (riverificata il 2026-10-29). Dopo il commit `dc53af99` i valori sono in parte ricavati da una ricerca (una sola fonte
+    verificata sulla pagina originale), in parte ancora stime di progetto, e il turnaround navale (48 h) è una stima informata senza fonte numerica (capitolo 7 §7.13). I testi segnalati sono stati aggiornati: il docstring di
+    `Logic/Readiness.py` (`:12-17`: «I tempi ... sono in `Context/Context` ... valori della ricerca F8-R ... dove la ricerca non ha trovato una fonte il valore resta una STIMA DI PROGETTO»), quello di `Test_Session_Scenarios_S30.py`
+    (`:4-7`: «i tempi di turnaround/riparazione di `Context/Context` (ricerca F8-R, in parte STIME DI PROGETTO dichiarate nei commenti)»), quelli di `Test_Readiness.py` (`:4-6`) e di `Test_Context.TestReadinessTables` (`:1443-1444`) (commit
+    `f009eb43`, punti P1-P6), la deviazione 25 del Piano («tabelle con i valori della ricerca F8-R, applicati in `dc53af99`, in parte ancora STIME»; «Limiti: costanti di tempo da ricerca F8-R, in parte STIME»), `F4_Differenze_Scenari.md`
+    sezione F8 («Dal `dc53af99` ... i valori vengono dalla ricerca ... e in parte restano stime dichiarate») e la nota datata in testa a `Proposta_F8_Sessione_Campagna.md` per la tabella di §4.4 (i valori *prima* della ricerca: 7 200, 9 000, 14 400, 43 200, ...,
+    restano nel testo come contratto della F8c). I commenti del codice dei valori (`Context.py:1013-1038`) sono esatti. Il commento di `Readiness.py` sul modello lineare («lineare, STIMA») resta, perché è una stima indipendente dalla ricerca.
+26. **`readiness_after_session`: i record degli asset non passati non «restavano»** — **CHIUSA** (corretta in `be8559d7`, 2026-10-29). Il difetto era quello descritto dal manuale a `fa5fbf1e`: il docstring («I record degli asset non presenti in `assets`
+    restano nel registro») e la Proposta §4.4 promettevano una conservazione che il codice non faceva, perché la nuova mappa era costruita iterando solo `sorted(assets)` e `record_session` la passava a `CampaignLedger.with_readiness`, che **sostituisce** l'intera
+    mappa (`Command/Campaign_Types.py:341-345`): il record di un asset assente dalle forze di quella sessione andava perso, l'asset tornava impiegabile prima del tempo e la sua riparazione ricominciava. La Proposta del difetto 26 lo ha
+    misurato con una sonda (non a mano) e ha trovato un difetto **collegato** che il manuale non segnalava: `apply_campaign_processes` toglieva con un warning, senza applicare niente, il record *concluso* di un asset assente. **Correzione**:
+    (A) `readiness_after_session` parte ora dai record degli asset non passati (`Logic/Readiness.py:182-184`) e il ciclo sugli asset passati scrive solo le loro chiavi (`:195`); un asset *passato* e distrutto perde invece il suo record (regola 1,
+    guardia testata); `with_readiness` resta una sostituzione, perché `apply_campaign_processes` ne ha bisogno. (3b) `apply_campaign_processes` conserva il record concluso di un asset assente, con un `logger.debug` al posto del warning (`:316-321`), e lo
+    applica alla prima sessione in cui l'asset torna. **Nessun interruttore** (scelta dell'utente D26-2: è la correzione di un contratto già scritto, non una regola nuova). Coperta da dieci test, nuovi o riscritti: 5 in `Test_Readiness`
+    (`test_absent_asset_record_is_kept`, `test_destroyed_present_asset_previous_record_removed` e `test_record_session_keeps_absent_asset_record` in `TestReadinessAfterSession`; `test_absent_asset_record_kept` — il vecchio
+    `test_absent_asset_dropped_with_warning` riscritto — e `test_absent_concluded_record_applied_when_asset_returns` in `TestApplyCampaignProcesses`), 1 in `Test_Session_Campaign` (`test_absent_force_keeps_readiness_record`) e 4 in
+    `Test_Session_Scenarios_S30.TestS30AbsentForce`; sul codice vecchio ne falliscono nove (la guardia sull'asset distrutto passa, come previsto dal rapporto); lo scenario
+    **S30-ABSENT** (3 esecuzioni, fotografia 989) fissa il comportamento (capitolo 8 §8.12). Limiti rimasti: nessun chiamante di produzione, record di id che non ricompaiono più mai rimossi, stato dell'asset assente invariato finché non torna
+    (capitolo 6 §6.26).
+27. **`CampaignState`: docstring della classe senza `ledger`** — **CHIUSA** (commit `f009eb43`, punti P7-P10, solo docstring). Il docstring della classe (`Context/Campaign_State.py:18-132`) cita ora la chiave `"ledger": dict` (facoltativa), `add_ledger(mission_id, ledger)`,
+    `get_ledger(mission_id) → Optional[Dict]` e `restore(mission_id, regions, restore_position=False)` con la nota sulla posizione (F8); i metodi (`:245-263`, `:337`) erano già documentati.
 
 **Divergenze fra `Proposta_F8_Sessione_Campagna.md` e il codice della F8** (non sono errori: scelte o semplificazioni dichiarate nei rapporti o verificate qui): `validate_session` ha 4 passi nel codice (finestra, disgiunzione, blocchi, per
 missione con le lettere a–f) invece dei 6 numerati dalla Proposta, con la stessa sostanza e lo stesso ordine delle violazioni; `Readiness` usa una tolleranza locale `_TIME_EPS = 1e-9` (`:46`) invece di importare

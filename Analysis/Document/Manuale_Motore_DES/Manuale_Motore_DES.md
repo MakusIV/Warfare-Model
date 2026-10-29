@@ -12,12 +12,20 @@ giocatore: il core non distingue i due casi, v. capitolo 1).
 > bingo e rientro; F7 = regole d'ingaggio di missione e fuoco su posizione; **F8 = sessione e campagna**: validatore di sessione, esito per la campagna con lo stato di missione «in corso» e le
 > posizioni finali, prontezza degli asset, conduttore di campagna, posizione persistente, scenario S30), i passi **G1-G5** del modello di bingo, la chiusura del **F6-B3** (S24-GLIDE lasciato
 > con `bingo=False`, solo docstring) e i dati **F8-R** dei tempi di turnaround e riparazione. La **F9** (documentazione) è questo aggiornamento. **Non sono fatte** la logistica (F8d, per decisione
-> dell'utente) né un chiamante di produzione del ciclo di campagna. **Suite di test: 4701 OK (7 skipped); confronto con la fotografia: 986 esecuzioni IDENTICHE; fotografia di non regressione: 986
+> dell'utente) né un chiamante di produzione del ciclo di campagna. **A `fa5fbf1e` — suite di test: 4701 OK (7 skipped); confronto con la fotografia: 986 esecuzioni IDENTICHE; fotografia di non regressione: 986
 > esecuzioni** (contate sul file `Test/baseline/scenario_baseline.json`). **I numeri di suite e confronto sono quelli dichiarati dalla verifica della sessione principale al commit `dc53af99` (messaggio
 > del commit e Piano §5, riga F8-R) e NON sono stati rieseguiti per questo aggiornamento.** Righe dei moduli (`grep -c ''`): `Command/Session_Types.py` 712, `Command/Mission_Types.py` 1387,
 > `Context/Context.py` 2252, `Context/Campaign_State.py` 760, `Logic/Mission_Adapter.py` 2000, `Logic/Session_Simulator.py` 3163, `Test/Scenario_Baseline.py` 932; moduli nuovi
 > `Command/Campaign_Types.py` 406, `Logic/Session_Validator.py` 269, `Logic/Session_Campaign.py` 153, `Logic/Readiness.py` 343.
 > *(Stato precedente: `dcedc541`, 2026-10-20, suite 4555 e 982 esecuzioni; prima ancora `a784a9e7`, 2026-10-18, suite 4385 e 918 esecuzioni.)*
+>
+> **Aggiornamento 2026-10-29 — correzione del difetto 26** (codice `be8559d7`, docstring `f009eb43`, fotografia `643fff87`; il manuale è stato riverificato sul codice del branch `analysis/dce-dcs-persistence`).
+> `Logic/Readiness.readiness_after_session` riporta ora i record di prontezza degli asset non passati alla sessione; `apply_campaign_processes` conserva il record concluso di un asset assente e lo applica al suo ritorno
+> (scelta 3b, `logger.debug` al posto del warning); **nessun interruttore**; scenario nuovo **S30-ABSENT** (`TestS30AbsentForce`, 3 esecuzioni, 4 test). **Suite di test: 4710 OK (7 skipped); confronto con la fotografia: 989 esecuzioni
+> (986 IDENTICHE + 3 nuove); fotografia di non regressione: 989 esecuzioni** (contate sul file). I numeri di suite e confronto sono quelli del rapporto dell'esecutore (`Rapporti/Rapporto_difetto26_des-developer.md`),
+> verificati dalla sessione principale con `tools/ai/verifica.sh`, e **non sono stati rieseguiti** per questo aggiornamento. Cambiano il capitolo 6 §6.26-6.27 (regola, `apply_campaign_processes`, righe), il capitolo 7 (righe di
+> `Campaign_State`, docstring), il capitolo 8 (§8.4, §8.7, §8.12, nuovo diagramma D56) e il capitolo 9 (limiti; **voci 24, 25, 26 e 27 di §9.6 ora CHIUSE**). I tempi di turnaround e riparazione sono quelli della ricerca F8-R (`dc53af99`),
+> in parte ancora STIME DI PROGETTO dichiarate nei commenti di `Context`. Righe dei moduli toccati (`grep -c ''`): `Logic/Readiness.py` 357, `Logic/Session_Campaign.py` 154, `Context/Campaign_State.py` 764, `Test/Scenario_Baseline.py` 935.
 
 **Aggiornamento 2026-10-20 → 2026-10-23 (da `dcedc541` a `fa5fbf1e`, fase F8: F8a, F8b, F8c e dati F8-R)**, in ordine di capitolo. I commit di codice sono
 `c1182d8a` (F8a, unione; `e593bc9a` il commit di completamento), `33698fb4` (F8b, unione di `b19ab151`), `87aa7dea` (F8c blocco 1), `6d3497bc` (F8c blocco 2), `398ae3ef` (F8c blocco 3), `3fb25089` (chiusura della F8c:
@@ -38,7 +46,8 @@ OpenCode e non toccano `Code/` (verificato con `git log dcedc541..HEAD -- Code`)
    un interruttore nuovo (15 nel modulo).
 6. **Supporto trasversale** (capitolo 7, nuova **§7.13**): le tabelle dei tempi di turnaround e riparazione in `Context/Context.py` con provenienza e livello di verifica di ogni valore (una sola fonte verificata; turnaround navale = stima senza fonte
    numerica) e `Campaign_State` (`restore_position`, `add_ledger`/`get_ledger`).
-7. **Validazione** (capitolo 8 §8.3-8.4, §8.7, nuova **§8.12**): scenario **S30-CAMPAIGN** (4 esecuzioni, 10 test), fotografia a **986** esecuzioni con la cronologia da 982, i test aggiunti (146 netti, 4555 → 4701).
+7. **Validazione** (capitolo 8 §8.3-8.4, §8.7, nuova **§8.12**): scenario **S30-CAMPAIGN** (4 esecuzioni, 10 test), fotografia a **986** esecuzioni con la cronologia da 982, i test aggiunti (146 netti, 4555 → 4701); dal 2026-10-29 anche **S30-ABSENT**
+   (3 esecuzioni, 4 test), fotografia a **989**, suite **4710** (+9 netti per il difetto 26).
 8. **Limiti** (capitolo 9): superati «missioni fuori finestra tagliate in silenzio», «missione sul posto `FAILED`», «esito d'Operazione non calcolato», «nessun produttore dei validatori», «posizione non persistente», «rifornimento assente», «F6-B3 aperto»; nuova sezione
    **«Limiti della campagna (F8)»**; stato del piano (§9.5) con F8a-F8c e F8-R fatte, F8d non fatta, F6-B3 chiuso; incoerenze (§9.6): **voci 7, 11 e 23 chiuse, voci 24-27 nuove**; verificato che nel manuale non resta nessuna affermazione su un «TOT comune» d'Operazione (voce 15).
 
@@ -240,7 +249,7 @@ parametro `grounded`.
 - Dove il manuale e la wiki di progetto (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/`)
   divergono, prevale il codice; le divergenze trovate sono raccolte nel capitolo 9 (§9.2 per la wiki,
   §9.6 per i documenti di progetto della Missione e delle regole SAM, con lo stato di ciascuna voce).
-- I diagrammi hanno un numero progressivo `D1`-`D55` (elenco in fondo); le didascalie sono nel capitolo
+- I diagrammi hanno un numero progressivo `D1`-`D56` (elenco in fondo); le didascalie sono nel capitolo
   che li contiene.
 
 ## Indice dei capitoli
@@ -302,13 +311,13 @@ parametro `grounded`.
 8. [Validazione](09_Validazione.md) — determinismo, test di agnosticismo come test di
    contratto (esteso alle porte della Missione), la batteria di scenari S1-S30 (§8.4), la
    migrazione alle missioni e la regola A negli scenari, lo strumento di non regressione
-   `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 986 esecuzioni
+   `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 989 esecuzioni
    (§8.7), i test aggiunti (§8.8), gli scenari della fase F4 (§8.9), gli scenari S22-S27 e i test delle fasi F5, F6 e
-   G1-G5 (§8.10), gli scenari S28-S29 e i test della fase F7 (§8.11), **lo scenario S30-CAMPAIGN e i test della fase F8 (§8.12)**.
+   G1-G5 (§8.10), gli scenari S28-S29 e i test della fase F7 (§8.11), **gli scenari S30-CAMPAIGN e S30-ABSENT e i test della fase F8 (§8.12)**.
 9. [Limiti noti, punti di estensione e divergenze codice/wiki](10_Limiti_Estensioni_Divergenze.md) —
    limiti nuovi e superati (compresi quelli della fase F4, delle fasi F5, F6, G1-G5, della fase F7, con le costanti STIMATE
    del fuoco su posizione, e **della campagna, F8**, con i tempi non tarati e l'assenza di logistica), stato del piano della Missione F0-F9 e dei passi G1-G5 (§9.5, F8a-F8c e F8-R fatte,
-   F8d non fatta, F6-B3 chiuso), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce: voci 7, 11 e 23 chiuse, **voci 24-27 nuove**).
+   F8d non fatta, F6-B3 chiuso), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce: voci 7, 11 e 23 chiuse, **voci 24-27 nate con la F8 e chiuse il 2026-10-29**).
 
 ## Elenco dei diagrammi
 
@@ -369,6 +378,7 @@ parametro `grounded`.
 | D53 | La regola di `readiness_after_session` per un asset | `flowchart TD` | 6 |
 | D54 | Un passo del ciclo di campagna (`run_campaign_session`) | `sequenceDiagram` | 6 |
 | D55 | La sequenza di S30-CAMPAIGN e i punti in cui gli asset tornano pronti | `flowchart LR` | 8 |
+| D56 | La sequenza di S30-ABSENT e dove sta il record di ciascun asset (difetto 26) | `flowchart LR` | 8 |
 
 I diagrammi D30-D36 sono quelli della fase F4 (a `84a47670`). **Aggiornati a `a784a9e7`**: D1 (il carburante è dell'orchestratore,
 non del risolutore), D2 (`postures`), D3 (`GroundedSchedule`), D4 (`ActivityCriteria`, `ActivityEnd`, `activity_ends`), D8 e D9
@@ -385,3 +395,5 @@ raccolti in D47; D5 resta quello dell'ingaggio senza regole di bersaglio, il tes
 **Aggiornati a `fa5fbf1e`** (fase F8): D1 (blocco «Ciclo di campagna»: `Session_Campaign`, `Session_Validator`, `Readiness`, `Campaign_Types`, `Campaign_State`), D2 (`operation_outcomes`,
 `final_positions`, `movement_ends`, `OperationOutcome`), D8 e D9 (esito per la campagna e warning E4 in `run_session`), D17 (`MissionStatus.IN_PROGRESS`, `OperationStatus`, `OperationOutcome`),
 D19 (ramo `IN_PROGRESS`), D29 (F8a-F8c e F8-R fatte, F6-B3 chiuso, F8d non fatta). Sono **nuovi** D51-D55. Gli altri diagrammi sono invariati.
+
+**Aggiornamento 2026-10-29** (difetto 26): nuovo D56 (S30-ABSENT); la didascalia di D53 precisa che la regola vale per gli asset passati alla sessione (i record degli asset non passati sono riportati prima, §6.26). Gli altri diagrammi sono invariati.

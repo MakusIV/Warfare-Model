@@ -135,7 +135,7 @@ quando rientra e quanto consuma. Il modulo è organizzato in sezioni: eventi e c
 - **Mai eccezioni per dati mancanti**: carburante non modellato o asset senza id → `None` (o "nessun controllo") più
   un log.
 - Il rifornimento **non** c'è: nessuna funzione **di questo modulo** aumenta il carburante. Dalla F8c lo fa il ciclo di campagna, **fuori** da
-  `Fuel_Model` e da `run_session`: `Logic/Readiness._rearm_and_refuel` (`:262-281`), chiamata da `apply_campaign_processes` quando un
+  `Fuel_Model` e da `run_session`: `Logic/Readiness._rearm_and_refuel` (`:273-292`), chiamata da `apply_campaign_processes` quando un
   record di turnaround è concluso, riassegna `assigned_loadout` all'aereo (il setter ricarica scorta **e** carburante del loadout:
   `Asset/Aircraft.py:176-214`) o richiama `load_stores_from_registry`/`load_fuel_from_registry` per veicoli e navi, **senza consumare
   le scorte del blocco** (la logistica è un limite dichiarato, capitolo 9 §9.1). Un aereo senza loadout assegnato non è rifornito

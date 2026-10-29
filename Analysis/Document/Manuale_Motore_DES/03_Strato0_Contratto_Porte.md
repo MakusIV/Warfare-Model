@@ -756,7 +756,7 @@ ripetuta qui per non importare `Contact_Scheduler.TIME_EPS`.
 Metodi di `CampaignLedger`: `last_end` (fine dell'ultima sessione, `None` se nessuna, `:309`); `ready_at(asset_id)` (`:314`, `None` =
 nessun processo in corso); `is_ready(asset_id, t)` (`:319`: nessun record **o** `ready_at ≤ t + eps`); `with_session(record)` (`:324`,
 aggiunge in coda; **`ValueError` se si sovrappone** all'ultima, la contigua è ammessa); `with_readiness(mappa)` (`:341`, **sostituisce
-l'intera mappa**, non la fonde: v. capitolo 9 §9.6 voce 26); `to_dict()` (`:347`, solo tipi JSON) e `from_dict(dati)` (`:374`, inversa
+l'intera mappa**, non la fonde: è voluto, perché `apply_campaign_processes` deve poter togliere i record conclusi; chi la chiama con i record da conservare li deve includere, come fa `readiness_after_session` dal difetto 26, capitolo 6 §6.26 e capitolo 9 §9.6 voce 26, chiusa); `to_dict()` (`:347`, solo tipi JSON) e `from_dict(dati)` (`:374`, inversa
 esatta; le chiavi mancanti ricevono i default). Non esistono setter: ogni cambiamento è un registro nuovo, e il determinismo è per
 costruzione (nessuno stato nascosto, nessun RNG).
 
