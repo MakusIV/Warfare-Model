@@ -203,6 +203,11 @@ per il motivo 3.
 > La sessione principale scrive qui le scelte (data, D26-1...D26-6) prima della delega. Il piano in §4 e' scritto per le opzioni
 > raccomandate. Le parti che dipendono da D26-3 e D26-4 sono marcate **[se 3b]**, **[se 3a]** e **[se D26-4 = registrare]**.
 
+**Scelte dell'utente (2026-10-29)**: D26-1 = A; D26-2 = nessun interruttore; D26-3 = 3b (conservare); D26-4 = registrare
+S30-ABSENT (la fotografia 989 la installa la sessione principale); D26-5 = stesso branch, commit separato; D26-6 = **`des-developer`**
+(Sonnet high) invece di `oc-developer`. Branch: `ai/cc-difetto26`. `des-developer` non committa: i commit li fa la sessione
+principale (commit 1 = §4.1-§4.5 con i test; commit 2 = §6.1; commit 3 = rapporto).
+
 ---
 
 ## 4. Piano di intervento (opzioni raccomandate)
