@@ -10,7 +10,7 @@ Integrare nel manuale DES diagrammi (UML e simili) a livelli progressivi: classi
 ## Scala dei livelli
 L0 contesto, L1 architettura (grafo reale degli import), L2 moduli (classi/API + tabella completa), L3 interazione (sequenze), L4 algoritmo (i D1-D56 esistenti, intatti). Il pilota ha assegnato i livelli per TIPO di mermaid (grossolano): da riclassificare a mano D8 (->L3), D20 (L2/L3), D18 (tassonomia), e mettere in "Piano e validazione" (fuori scala) D29, D55, D56.
 
-## Stato (commit locali, NON pushati)
+## Stato (pushato su origin a 79bab4e2 il 2026-10-29)
 - `9d4f208c` pilota: `Manuale_Motore_DES/11_Atlante_Diagrammi.md` (capitolo 10, D57-D66) + `_strumenti/inventario.py` (ast, sola lettura: `--dipendenze`, `--chiamate`, `--controlla`; poi `--tabella` e `--copertura`, commit successivo).
 - **Parte A interrotta** (limite d'uso 87%/5h): `11a_Atlante_Risolutore.md` NON committato, 899 righe, 14 diagrammi: `Contact_Scheduler` (D67-D70) e `Fire_Control` (D71-D75) completi con tabelle; `Engagement_Resolver` (D76-D80) a meta' (tabella completa e rapporto finale mancanti). Da verificare e completare o rifare; numeri D riservati: A = D67-D89.
 - **Da fare in sequenza (una alla volta, mai in parallelo: richiesta dell'utente per il consumo)**: A (completare), B = `11b_Atlante_Missione_Carburante.md` (Mission_Types, Fuel_Model, Area_Fire; D90-D109), C = `11c_Atlante_Porte_Campagna.md` (Session_Types, Campaign_Types, Readiness, Session_Validator, Session_Campaign, Damage_Model, Session_Rng + "Mappa dei dati"; D110-D129). Prompt degli agenti: vedi sessione 2026-10-29 (des-manual-writer, modello = pilota). Dopo ciascuna: verifica a campione, `--copertura`, commit locale.
@@ -23,4 +23,4 @@ L0 contesto, L1 architettura (grafo reale degli import), L2 moduli (classi/API +
 - Consumo: un agente di pilota ~280k token; A da sola e' il blocco piu' grande (222 simboli).
 
 ## Altri sospesi della sessione 2026-10-29
-Push di 11 commit bloccato dal classificatore dei permessi (l'utente lo fa con `! git push origin analysis/dce-dcs-persistence` o aggiungendo una regola); ricerche D-4b/D-4c fatte e committate (`2b6a2c3a`), Proposta unica con decisioni da scrivere dopo il controllo delle fonti deboli; vedi [[project-session-2026-10-29-difetto26-summary]].
+Push fatto dall utente con `! git push` (il classificatore dei permessi blocca il push dell agente); ricerche D-4b/D-4c fatte e committate (`2b6a2c3a`), Proposta unica con decisioni da scrivere dopo il controllo delle fonti deboli; vedi [[project-session-2026-10-29-difetto26-summary]].

@@ -4,7 +4,7 @@ Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-1
 
 ## Start here
 - [Atlante dei diagrammi del manuale DES — pilota fatto (D57-D66), parte A interrotta, B e C da fare IN SEQUENZA](project_atlante_diagrammi_manuale_des.md) — `11a_Atlante_Risolutore.md` parziale non committato; ripartire da li; regola: mai agenti di scrittura in parallelo (consumo)
-- [Sessione 2026-10-29 ProArt — difetto 26 CORRETTO (des-developer), suite 4710, fotografia 989; manuale e P11-P14 fatti; 11 commit locali NON pushati](project_session_2026_10_29_difetto26_summary.md) — push bloccato dal classificatore (l'utente lo fa con `! git push`); Proposta D-4b/D-4c da scrivere; `confronto.log` non ha righe NEW/CHANGED
+- [Sessione 2026-10-29 ProArt — difetto 26 CORRETTO (des-developer), suite 4710, fotografia 989; manuale e P11-P14 fatti; pushato a 79bab4e2](project_session_2026_10_29_difetto26_summary.md) — Proposta D-4b/D-4c da scrivere; `confronto.log` non ha righe NEW/CHANGED
 - [Sessione 2026-10-29 osboxes — CHIUSA, pushato: Proposta difetto 26 scritta](project_session_2026_10_29_summary.md) — superata: le decisioni D26-1..6 sono prese e il difetto e' corretto (vedi riga sopra)
 - [Sessione 2026-10-27 ProArt — CHIUSA, pushato: F9 fatta (manuale DES a fa5fbf1e)](project_session_2026_10_27_summary.md) — difetto aperto: readiness_after_session perde i record degli asset assenti; elenco attivita' nel file; prossimo: piano del difetto 26 (des-planner)
 - [Sessione 2026-10-23 ProArt — F8c completa, fotografia 986, suite 4701; routing fornitori per costo in ai-multimodel](project_session_2026_10_23_summary.md) — F8-R applicata (dc53af99); prossimo: F9, F8d, provare su osboxes
