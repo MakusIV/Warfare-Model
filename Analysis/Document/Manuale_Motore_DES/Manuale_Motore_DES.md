@@ -249,8 +249,8 @@ parametro `grounded`.
 - Dove il manuale e la wiki di progetto (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/`)
   divergono, prevale il codice; le divergenze trovate sono raccolte nel capitolo 9 (§9.2 per la wiki,
   §9.6 per i documenti di progetto della Missione e delle regole SAM, con lo stato di ciascuna voce).
-- I diagrammi hanno un numero progressivo `D1`-`D56` (elenco in fondo); le didascalie sono nel capitolo
-  che li contiene.
+- I diagrammi hanno un numero progressivo `D1`-`D66` (elenco in fondo): D1-D56 nei capitoli 1-8, D57-D66 nel capitolo 10 (atlante); le didascalie sono nel capitolo
+  che li contiene. Il capitolo 10 assegna ogni diagramma a un livello di dettaglio (L0-L4).
 
 ## Indice dei capitoli
 
@@ -318,6 +318,9 @@ parametro `grounded`.
    limiti nuovi e superati (compresi quelli della fase F4, delle fasi F5, F6, G1-G5, della fase F7, con le costanti STIMATE
    del fuoco su posizione, e **della campagna, F8**, con i tempi non tarati e l'assenza di logistica), stato del piano della Missione F0-F9 e dei passi G1-G5 (§9.5, F8a-F8c e F8-R fatte,
    F8d non fatta, F6-B3 chiuso), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce: voci 7, 11 e 23 chiuse, **voci 24-27 nate con la F8 e chiuse il 2026-10-29**).
+10. [Atlante dei diagrammi (pilota)](11_Atlante_Diagrammi.md) — la scala dei livelli L0-L4 (contesto, architettura, moduli, interazione, algoritmo), la tabella-atlante di tutti i diagrammi
+    e lo stato di copertura per modulo; i diagrammi nuovi **D57-D66**: contesto del core (D57), grafo reale degli import in tre parti (D58-D60), `Session_Simulator` e `Mission_Adapter` (tipi, gruppi di funzioni e
+    tabelle complete con `:riga`, D61-D63), la sequenza di chiamate di `run_session` in tre parti (D64-D66). Verificato a `f009eb43`.
 
 ## Elenco dei diagrammi
 
@@ -379,6 +382,16 @@ parametro `grounded`.
 | D54 | Un passo del ciclo di campagna (`run_campaign_session`) | `sequenceDiagram` | 6 |
 | D55 | La sequenza di S30-CAMPAIGN e i punti in cui gli asset tornano pronti | `flowchart LR` | 8 |
 | D56 | La sequenza di S30-ABSENT e dove sta il record di ciascun asset (difetto 26) | `flowchart LR` | 8 |
+| D57 | Il core DES nel suo contesto (livello L0) | `flowchart LR` | 10 |
+| D58 | Import reali: porte, scheduler, risolutore, stato (livello L1) | `flowchart TD` | 10 |
+| D59 | Import reali: orchestratore, adapter di missione, fuoco su posizione (livello L1) | `flowchart TD` | 10 |
+| D60 | Import reali: il ciclo di campagna (livello L1) | `flowchart TD` | 10 |
+| D61 | `Session_Simulator`: tipi interni, voce di coda e tipi di evento (livello L2) | `classDiagram` | 10 |
+| D62 | `Session_Simulator`: le funzioni per ruolo (livello L2) | `flowchart TD` | 10 |
+| D63 | `Mission_Adapter`: i gruppi di funzioni e le loro dipendenze (livello L2) | `flowchart TD` | 10 |
+| D64 | `run_session` 1/3: preparazione e validazione (livello L3) | `sequenceDiagram` | 10 |
+| D65 | `run_session` 2/3: contatti, episodi, risolutore, stato e ri-pianificazione (livello L3) | `sequenceDiagram` | 10 |
+| D66 | `run_session` 3/3: passo finale del carburante, esiti e `assemble_session_outcome` (livello L3) | `sequenceDiagram` | 10 |
 
 I diagrammi D30-D36 sono quelli della fase F4 (a `84a47670`). **Aggiornati a `a784a9e7`**: D1 (il carburante è dell'orchestratore,
 non del risolutore), D2 (`postures`), D3 (`GroundedSchedule`), D4 (`ActivityCriteria`, `ActivityEnd`, `activity_ends`), D8 e D9
@@ -397,3 +410,5 @@ raccolti in D47; D5 resta quello dell'ingaggio senza regole di bersaglio, il tes
 D19 (ramo `IN_PROGRESS`), D29 (F8a-F8c e F8-R fatte, F6-B3 chiuso, F8d non fatta). Sono **nuovi** D51-D55. Gli altri diagrammi sono invariati.
 
 **Aggiornamento 2026-10-29** (difetto 26): nuovo D56 (S30-ABSENT); la didascalia di D53 precisa che la regola vale per gli asset passati alla sessione (i record degli asset non passati sono riportati prima, §6.26). Gli altri diagrammi sono invariati.
+
+**Aggiornamento 2026-10-29** (atlante dei diagrammi, pilota): nuovo capitolo 10 (`11_Atlante_Diagrammi.md`) con i diagrammi **D57-D66**, la scala dei livelli L0-L4 e la tabella-atlante che assegna un livello anche a D1-D56. Nessun capitolo preesistente è stato modificato; D1-D56 sono invariati. Il livello di ciascun diagramma non è una colonna di questo elenco (richiederebbe di riscrivere le 56 righe esistenti): è nel capitolo 10 §10.2.
