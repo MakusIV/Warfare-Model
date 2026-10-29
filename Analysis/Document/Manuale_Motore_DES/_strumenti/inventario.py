@@ -8,6 +8,8 @@ Uso, dalla root del repo (interprete della macchina, es. `.direnv/python-3.12/bi
     python3 -I ... inventario.py --dipendenze          # grafo degli import fra i moduli del core
     python3 -I ... inventario.py --chiamate Logic/Session_Simulator run_session
     python3 -I ... inventario.py --controlla file.md   # identificatori dei blocchi mermaid non trovati nel core
+    python3 -I ... inventario.py --tabella Logic/Readiness   # tabella markdown di classi/metodi/funzioni con :riga
+    python3 -I ... inventario.py --copertura file.md Logic/Readiness   # simboli del modulo mai citati in file.md
 
 Non importa i moduli del progetto: legge solo i sorgenti. Non scrive nulla.
 """
@@ -150,6 +152,39 @@ def controlla(file_md):
     return segnalati
 
 
+def tabella(modulo):
+    """Tabella markdown (tipo, nome, firma, riga) di classi, metodi e funzioni di primo livello."""
+    classi, funzioni = inventario(modulo)
+    righe = [f'| Tipo | Simbolo | Firma | Riga ({modulo}.py) |', '|---|---|---|---|']
+    for c in classi:
+        basi = f'({", ".join(c["basi"])})' if c['basi'] else ''
+        righe.append(f'| classe | `{c["nome"]}` | `{c["nome"]}{basi}`; campi: {", ".join(c["campi"]) or "-"} | `:{c["riga"]}` |')
+        for firma, riga in c['metodi']:
+            righe.append(f'| metodo | `{c["nome"]}.{firma.split("(")[0]}` | `{firma}` | `:{riga}` |')
+    for firma, riga in funzioni:
+        righe.append(f'| funzione | `{firma.split("(")[0]}` | `{firma}` | `:{riga}` |')
+    return '\n'.join(righe)
+
+
+def copertura(file_md, modulo):
+    """Classi, metodi e funzioni del modulo il cui nome non compare mai nel file (parola intera)."""
+    testo = Path(file_md).read_text(encoding='utf-8')
+    classi, funzioni = inventario(modulo)
+    mancanti = []
+    for c in classi:
+        if not re.search(r'\b' + re.escape(c['nome']) + r'\b', testo):
+            mancanti.append(('classe', c['nome']))
+        for firma, _ in c['metodi']:
+            nome = firma.split('(')[0]
+            if not nome.startswith('__') and not re.search(r'\b' + re.escape(nome) + r'\b', testo):
+                mancanti.append(('metodo', f'{c["nome"]}.{nome}'))
+    for firma, _ in funzioni:
+        nome = firma.split('(')[0]
+        if not re.search(r'\b' + re.escape(nome) + r'\b', testo):
+            mancanti.append(('funzione', nome))
+    return mancanti
+
+
 def _stampa_modulo(modulo):
     classi, funzioni = inventario(modulo)
     print(f'# {modulo}.py')
@@ -176,6 +211,11 @@ def main(argv):
         print(f'{argv[1]}.{argv[2]}  :{riga}')
         for nome, r in ordine:
             print(f'   :{r}  {nome}')
+    elif argv[0] == '--tabella' and len(argv) == 2:
+        print(tabella(argv[1]))
+    elif argv[0] == '--copertura' and len(argv) == 3:
+        for tipo, nome in copertura(argv[1], argv[2]):
+            print(f'{tipo}\t{nome}')
     elif argv[0] == '--controlla' and len(argv) == 2:
         for riga, tok in controlla(argv[1]):
             print(f'{argv[1]}:{riga}  {tok}')

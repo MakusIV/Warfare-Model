@@ -120,12 +120,16 @@ non è chiamato da nessun modulo del motore; `Session_Validator` importa `Sessio
 loro importa il validatore. La freccia tratteggiata `CST` → `CT` non è un import: `Campaign_State` salva e restituisce il registro come dizionario (`to_dict`/`from_dict`), senza importare
 `Command`. La freccia da `ORCH` a `ST` rappresenta l'uscita
 (`assemble_session_outcome`, che produce il `SessionOutcome`), non una dipendenza a tempo di
-import. La freccia tratteggiata da `MA` a `ER` non è un import: `Mission_Adapter` produce le viste di
+import. La freccia tratteggiata da `MA` a `ER` rappresenta il **flusso dei dati**, non l'import: `Mission_Adapter` produce le viste di
 missione (`MissionForce`), la mappa dei domini di coordinamento (`coordination_of`), l'insieme degli aerei
 a terra (`grounded`) e, dalla F7a, le regole di bersaglio (`TargetRules`) che l'orchestratore passa a
-`resolve_engagement` (capitolo 6 §6.12-6.14, §6.22); il risolutore non importa `Mission_Adapter` né `Fire_Control`
-(è `Fire_Control` che importa il risolutore, per `ShotSpec`). Le frecce tratteggiate `FC` → `ER` e `MA` → `FC` sono
-iniezione di dati o di callable, non import del risolutore. `Area_Fire` (F7b) è usato dal solo orchestratore: importa
+`resolve_engagement` (capitolo 6 §6.12-6.14, §6.22). Gli **import** esistono comunque, per i tipi e le costanti:
+`Mission_Adapter` importa `Engagement_Resolver` e `Fire_Control` (`Logic/Mission_Adapter.py:332-333`; usa `ER.TargetRules`,
+`ER.ROE_*` e `FC.WeaponPolicy`). Il risolutore invece non importa `Mission_Adapter` né `Fire_Control`
+(è `Fire_Control` che importa il risolutore, per `ShotSpec`). Le frecce tratteggiate `FC` → `ER` e `MA` → `FC` indicano
+iniezione di dati o di callable verso il risolutore, non la direzione dell'import (v. il grafo reale degli import
+nei diagrammi D58-D60 del capitolo 10, correzione del 2026-10-29: D1 mescola frecce di flusso dei dati, per esempio
+`CS` → `ER`, `MT` → `ST` e `ST` → `ORCH`, e frecce di import). `Area_Fire` (F7b) è usato dal solo orchestratore: importa
 `Fire_Control` (per l'arma), `Damage_Model` (per il colpo), `Mission_Adapter` (per gli istanti d'arrivo) e il tipo
 `EngagementResult` del risolutore, ma **non** chiama `resolve_engagement`.
 
