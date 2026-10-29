@@ -2604,7 +2604,7 @@ dove l'aveva lasciato la 1 (posizione ripresa). Sessione 3: `mbt0` rifornito e d
 registro. 10 test (l'esecutore ne ha scritti 8; la sessione principale ha aggiunto `test_aircraft_land_on_base` e `test_session1_readiness_records`, che verificano
 i `ready_at` di F-16C, `mbt0` e `mbt1` sulle costanti e sul registro).
 
-**Costanti stimate**: tutte le tabelle di turnaround e riparazione in `Context/Context.py` sono STIME DI PROGETTO (ordini di grandezza), non dati tarati.
+**Costanti stimate**: tutte le tabelle di turnaround e riparazione in `Context/Context.py` sono STIME DI PROGETTO (ordini di grandezza), non dati tarati. Dal `dc53af99` (F8-R, 2026-10-23) i valori vengono dalla ricerca (`Ricerca_Turnaround_Riparazione.md`) e in parte restano stime dichiarate nei commenti di `Context`.
 
 **Test intermittente preesistente** (non legato alla F8): `Test_Tactical_Evaluation.testCalcFightResult` usa `calcFightResult` con il `random` globale e una
 tolleranza `delta=3` superata nello 0,68% delle estrazioni (136 su 20 000); corretto il 2026-10-23 con un seme fisso e ripristino dello stato globale.

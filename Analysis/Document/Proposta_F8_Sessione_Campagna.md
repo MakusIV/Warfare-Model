@@ -1,5 +1,7 @@
 # Proposta F8: sessione e campagna (validatore di sessione, prontezza, posizione persistente, esito d'Operazione)
 
+**Nota 2026-10-29**: F8-R fatta e applicata il 2026-10-23 (`dc53af99`): i valori in vigore dei tempi di turnaround e riparazione sono in `Context.py:1013-1038` e non quelli della tabella di §4.4, che resta il contratto della F8c. Il difetto 26 (record di prontezza degli asset assenti, §4.4) e' stato corretto in `be8559d7` (`Proposta_Difetto26_Readiness_Ledger.md`); con la scelta 3b, a §4.4 "asset assente -> record tolto con un warning" vale oggi "il record resta e il processo si applica al ritorno".
+
 **Stato**: DECISO dall'utente il 2026-10-21 (decisioni 17-27, tutte come raccomandate, v. riquadro in §3); piano eseguibile.
 Nessun codice modificato. **Esecutori assegnati dall'utente il 2026-10-22** (§4.0): F8a, F8b, F8c a `oc-developer`
 (DeepSeek V4 Pro), sulla VM osboxes; F8-R rinviata. **Decisioni 22 e 25 riconfermate** dall'utente il 2026-10-22.
@@ -701,6 +703,8 @@ aggiorna `Context` (§4.4) e i commenti passano da "STIMA DI PROGETTO" a "ricerc
 ### 4.4 F8c: prontezza, ciclo di campagna, posizione persistente
 
 #### `Context/Context.py`: tabelle (D6.b: "un tempo per classe in `Context`")
+
+*(Tabella del contratto F8c, valori prima della ricerca F8-R: v. la nota in testa al documento.)*
 
 Dopo `AIR_MILITARY_CRAFT_ASSET` (`:1001`), con un commento che dichiara: "F8 (D6.b-d): tempi [s]. STIME DI PROGETTO
 (ordini di grandezza), NON dati tarati: da sostituire con la ricerca F8-R."
