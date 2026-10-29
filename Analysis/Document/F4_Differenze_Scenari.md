@@ -2609,3 +2609,18 @@ i `ready_at` di F-16C, `mbt0` e `mbt1` sulle costanti e sul registro).
 **Test intermittente preesistente** (non legato alla F8): `Test_Tactical_Evaluation.testCalcFightResult` usa `calcFightResult` con il `random` globale e una
 tolleranza `delta=3` superata nello 0,68% delle estrazioni (136 su 20 000); corretto il 2026-10-23 con un seme fisso e ripristino dello stato globale.
 
+## Difetto 26 — record di prontezza degli asset assenti (2026-10-29)
+
+Proposta `Proposta_Difetto26_Readiness_Ledger.md`; eseguita da `des-developer` (Sonnet high) in due fasi sul branch `ai/cc-difetto26` e verificata dalla sessione principale.
+`run_session` non cambia. `readiness_after_session` riporta i record degli asset non passati alla sessione (prima li perdeva: l'asset assente tornava impiegabile e la riparazione
+ripartiva da capo); con la scelta 3b `apply_campaign_processes` conserva anche il record concluso di un asset assente e lo applica al suo ritorno. Nessun interruttore.
+
+| Passo | Commit | Suite | Confronto con la fotografia |
+|---|---|---|---|
+| correzione, test, S30-ABSENT in `Scenario_Baseline` | `be8559d7` | 4710 OK (7 skipped) | 989 esecuzioni: 986 identiche, 0 cambiate, 3 nuove |
+| pulizia docstring P1-P10 (solo testo) | `f009eb43` | (stessa suite) | (stesso confronto) |
+| fotografia a 989 installata, rapporto | `643fff87` | | |
+
+**S30-ABSENT** (3 esecuzioni nuove, nessun contatto, nessuna estrazione RNG): sessione 1 con `Blue-Mech` (turnaround di `mbt0`, riparazione di `mbt1`); sessione 2 senza
+`Blue-Mech`: il record di `mbt1` resta identico e `mbt1` resta non impiegabile (`ASSET_NOT_READY`); il record concluso di `mbt0` resta e il rifornimento arriva al ritorno;
+sessione 3 con `Blue-Mech` da `max(last_end, ready_at('mbt1'))`: `mbt1` riparato e fuori dal registro. Prima della correzione i 9 test nuovi attesi falliscono (verificato).
