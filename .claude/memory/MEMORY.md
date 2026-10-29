@@ -3,7 +3,8 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
-- [Sessione 2026-10-29 osboxes — CHIUSA, pushato: Proposta difetto 26 scritta, in attesa di decisioni D26-1..6](project_session_2026_10_29_summary.md) — nessun codice toccato; prossimo: leggere la Proposta, decidere, delegare a oc-developer su ai/oc-difetto26 (dal ProArt)
+- [Sessione 2026-10-29 ProArt — difetto 26 CORRETTO (des-developer), suite 4710, fotografia 989; merge locale, NON pushato](project_session_2026_10_29_difetto26_summary.md) — restano P11-P14, nota Proposta F8, manuale; push su richiesta; `confronto.log` non ha righe NEW/CHANGED
+- [Sessione 2026-10-29 osboxes — CHIUSA, pushato: Proposta difetto 26 scritta](project_session_2026_10_29_summary.md) — superata: le decisioni D26-1..6 sono prese e il difetto e' corretto (vedi riga sopra)
 - [Sessione 2026-10-27 ProArt — CHIUSA, pushato: F9 fatta (manuale DES a fa5fbf1e)](project_session_2026_10_27_summary.md) — difetto aperto: readiness_after_session perde i record degli asset assenti; elenco attivita' nel file; prossimo: piano del difetto 26 (des-planner)
 - [Sessione 2026-10-23 ProArt — F8c completa, fotografia 986, suite 4701; routing fornitori per costo in ai-multimodel](project_session_2026_10_23_summary.md) — F8-R applicata (dc53af99); prossimo: F9, F8d, provare su osboxes
 - [Sessione 2026-10-22 osboxes — CHIUSA, pushato: F8a e F8b fatte (suite 4640, fotografia 982), costi OpenRouter, fornitori fissati](project_session_2026_10_22_summary.md) — prossimo F8c in 3 blocchi sul ProArt (comandi in project_f8c_comandi_blocchi)
