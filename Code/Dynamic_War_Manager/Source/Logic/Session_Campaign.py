@@ -112,7 +112,8 @@ def run_campaign_session(ledger: CampaignLedger, order: SessionOrder, forces_a: 
                          **run_kwargs) -> Tuple[SessionOutcome, CampaignLedger]:
     """Una sessione nel ciclo di campagna (F8).
 
-    Passi: (1) `Readiness.apply_campaign_processes(ledger, assets, order.t_start)`;
+    Passi: (1) `Readiness.apply_campaign_processes(ledger, assets, order.t_start)` (i processi
+    conclusi di asset assenti restano nel registro fino al loro ritorno);
     (2) `Session_Validator.check_session(order, forces_a, forces_b, ledger=ledger,
     horizon=run_kwargs.get('horizon'))` (solleva `SessionValidationError`: i processi del
     punto 1 sono gia' applicati agli asset, e riapplicarli e' idempotente);

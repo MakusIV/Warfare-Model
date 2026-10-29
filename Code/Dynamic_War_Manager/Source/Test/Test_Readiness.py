@@ -282,6 +282,32 @@ class TestReadinessAfterSession(_Base):
         ledger = R.record_session(CampaignLedger(), order, _outcome(t_end=5000.0), self.assets)
         self.assertEqual(ledger.last_end, 5000.0)
 
+    def test_absent_asset_record_is_kept(self):
+        """Il record di un asset non passato alla sessione resta nella mappa (difetto 26)."""
+        prev = ReadyRecord('ghost', 9000.0, 1000.0, 8000.0, 0.0)
+        ledger = CampaignLedger(readiness={'ghost': prev})
+        ready = R.readiness_after_session(ledger, _order(asset_ids=('ac0',)),
+                                          _outcome(movement_ends={'ac0': 3000.0}), self.assets)
+        self.assertIn('ghost', ready)
+        self.assertEqual(ready['ghost'], prev)
+        self.assertIn('ac0', ready)
+
+    def test_destroyed_present_asset_previous_record_removed(self):
+        """Guardia contro un'unione ingenua: un asset distrutto e passato perde il record anche
+        se ne aveva uno (regola 1)."""
+        self.v0.health = 0
+        ledger = CampaignLedger(readiness={'v0': ReadyRecord('v0', 9000.0, 1000.0, 8000.0, 0.0)})
+        ready = R.readiness_after_session(ledger, _order(), _outcome(), self.assets)
+        self.assertNotIn('v0', ready)
+
+    def test_record_session_keeps_absent_asset_record(self):
+        prev = ReadyRecord('ghost', 9000.0, 1000.0, 8000.0, 0.0)
+        ledger = CampaignLedger(readiness={'ghost': prev})
+        new = R.record_session(ledger, _order(), _outcome(), self.assets)
+        self.assertIn('ghost', new.readiness)
+        self.assertEqual(new.readiness['ghost'], prev)
+        self.assertEqual(new.last_end, 3600.0)
+
 
 class TestApplyCampaignProcesses(_Base):
     def setUp(self):
@@ -318,11 +344,23 @@ class TestApplyCampaignProcesses(_Base):
         new = R.apply_campaign_processes(ledger, self.assets, 1000.0)
         self.assertEqual(new.ready_at('v0'), 5000.0)
 
-    def test_absent_asset_dropped_with_warning(self):
-        ledger = CampaignLedger(readiness={'ghost': ReadyRecord('ghost', 1000.0, 0.0, 1000.0, 0.0)})
-        new = R.apply_campaign_processes(ledger, self.assets, 1000.0)
-        self.assertIsNone(new.ready_at('ghost'))
-        self.assertTrue(self._readiness_logger.warning.called)
+    def test_absent_asset_record_kept(self):
+        """Un asset assente conserva il record concluso, senza warning (difetto 26)."""
+        record = ReadyRecord('ghost', 1000.0, 0.0, 1000.0, 0.0)
+        new = R.apply_campaign_processes(CampaignLedger(readiness={'ghost': record}),
+                                         self.assets, 1000.0)
+        self.assertEqual(new.readiness['ghost'], record)
+        self._readiness_logger.warning.assert_not_called()
+
+    def test_absent_concluded_record_applied_when_asset_returns(self):
+        self.v0.health = 60
+        ledger = CampaignLedger(readiness={'v0': ReadyRecord('v0', 1000.0, 0.0, 0.0, 1000.0)})
+        kept = R.apply_campaign_processes(ledger, {'ac0': self.ac0}, 2000.0)
+        self.assertEqual(self.v0.health, 60)
+        self.assertIn('v0', kept.readiness)
+        done = R.apply_campaign_processes(kept, self.assets, 3000.0)
+        self.assertEqual(self.v0.health, 100)
+        self.assertIsNone(done.ready_at('v0'))
 
     def test_destroyed_asset_record_dropped(self):
         self.v0.health = 0

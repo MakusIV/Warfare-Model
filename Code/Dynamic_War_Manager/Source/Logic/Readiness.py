@@ -17,6 +17,7 @@ PROGETTO, dichiarate tali nel codice, da sostituire con la ricerca F8-R (commit 
 Per ogni asset, dall'istante piu' tardo fra il rientro (`movement_ends`/`end_time`) e
 l'ultimo danno subito: `ready_at = since + turnaround + repair`. Un processo precedente piu'
 lungo prevale; un asset senza novita' nella sessione non riparte il suo processo.
+I record degli asset non passati alla sessione restano nel registro com'erano (difetto 26).
 """
 from __future__ import annotations
 
@@ -169,9 +170,15 @@ def readiness_after_session(ledger: CampaignLedger, order: SessionOrder, outcome
                             assets: Mapping[str, object]) -> Dict[str, ReadyRecord]:
     """La nuova mappa di prontezza dopo la sessione (regola nel docstring del modulo).
 
-    I record degli asset non presenti in `assets` restano nel registro (non sono qui).
+    I record degli asset NON presenti in `assets` (forze non passate a questa sessione) sono
+    riportati tali e quali; per gli asset presenti decide solo la regola (un asset distrutto
+    perde il suo record anche se ne aveva uno).
     """
-    readiness: Dict[str, ReadyRecord] = {}
+    # I record degli asset non passati (forze assenti da questa sessione) restano com'erano:
+    # il ciclo qui sotto scrive solo chiavi di `assets` (difetto 26).
+    readiness: Dict[str, ReadyRecord] = {asset_id: record
+                                         for asset_id, record in ledger.readiness.items()
+                                         if asset_id not in assets}
 
     end_nominal = order.t_end if order.t_end is not None else outcome.t_end
     mission_assets = _mission_assets(order)
@@ -252,7 +259,8 @@ def readiness_after_session(ledger: CampaignLedger, order: SessionOrder, outcome
 def record_session(ledger: CampaignLedger, order: SessionOrder, outcome: SessionOutcome,
                    assets: Mapping[str, object]) -> CampaignLedger:
     """Registro con la sessione conclusa e la nuova prontezza: `with_session(...)` e
-    `with_readiness(readiness_after_session(...))`. `outcome.t_end` None -> `order.t_end`."""
+    `with_readiness(readiness_after_session(...))`. `outcome.t_end` None -> `order.t_end`.
+    La prontezza degli asset non passati resta quella del registro."""
     t_end = outcome.t_end if outcome.t_end is not None else order.t_end
     return (ledger
             .with_session(SessionRecord(order.session_id, order.t_start, t_end))
@@ -285,11 +293,13 @@ def apply_campaign_processes(ledger: CampaignLedger, assets: Mapping[str, object
                              t: float) -> CampaignLedger:
     """Processi di campagna fra sessioni (D4.d) conclusi entro `t`.
 
-    Per ogni record con `ready_at <= t + eps`, in ordine di id: asset assente -> record tolto
-    con un warning; asset distrutto -> record tolto; `record.repair` -> `asset.health = 100`;
-    `record.rearm` -> riarmo e rifornimento (`_rearm_and_refuel`); record tolto. Restituisce
-    il registro con i soli record non conclusi. IDEMPOTENTE (riapplicarlo con lo stesso
-    registro e lo stesso `t` lascia gli asset nello stesso stato)."""
+    Per ogni record con `ready_at <= t + eps`, in ordine di id: asset assente -> record
+    CONSERVATO, applicato quando l'asset torna (difetto 26); asset distrutto -> record tolto;
+    `record.repair` -> `asset.health = 100`; `record.rearm` -> riarmo e rifornimento
+    (`_rearm_and_refuel`); record tolto. Restituisce il registro con i record non conclusi e
+    quelli conclusi di asset assenti. Lo stato di un asset assente (salute, carburante) resta
+    quello vecchio finche' l'asset non torna. IDEMPOTENTE (riapplicarlo con lo stesso registro
+    e lo stesso `t` lascia gli asset nello stesso stato)."""
     remaining = dict(ledger.readiness)
 
     for asset_id in sorted(remaining):
@@ -301,9 +311,10 @@ def apply_campaign_processes(ledger: CampaignLedger, assets: Mapping[str, object
         asset = assets.get(asset_id)
 
         if asset is None:
-            logger.warning(f"apply_campaign_processes: asset {asset_id!r} is absent; "
-                           f"dropping its readiness record")
-            del remaining[asset_id]
+            # Asset non passato (forza assente da questa sessione): il record resta e il processo
+            # sara' applicato alla prima sessione in cui l'asset tornera' (difetto 26).
+            logger.debug(f"apply_campaign_processes: asset {asset_id!r} is absent; keeping its "
+                         f"concluded readiness record until it returns")
             continue
 
         if getattr(asset, 'is_destroyed', lambda: False)():

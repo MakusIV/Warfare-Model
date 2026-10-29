@@ -163,6 +163,20 @@ class TestRunCampaignSession(_Base):
         self.assertEqual(new_ledger.sessions[0].session_id, 'S')
         self.assertEqual(new_ledger.last_end, 3600.0)
 
+    def test_absent_force_keeps_readiness_record(self):
+        """Il record di un asset di una forza non passata alla sessione resta nel registro (difetto 26)."""
+        record = ReadyRecord('ghost', 10000.0, 0.0, 10000.0, 0.0)
+        order = SessionOrder('S', t_start=0.0, t_end=3600.0, missions=())
+        fake_outcome = SessionOutcome(session_id='S', t_start=0.0, t_end=3600.0)
+
+        with patch.object(SS, 'run_session', return_value=fake_outcome):
+            _, new_ledger = SC.run_campaign_session(
+                CampaignLedger(readiness={'ghost': record}), order, [self.block], [],
+                lambda shooter, target: None)
+
+        self.assertIn('ghost', new_ledger.readiness)
+        self.assertEqual(new_ledger.readiness['ghost'], record)
+
 
 if __name__ == '__main__':
     unittest.main()

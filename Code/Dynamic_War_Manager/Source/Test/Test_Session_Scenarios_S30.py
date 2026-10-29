@@ -43,9 +43,22 @@ Sequenza (gli istanti sono calcolati dalle costanti e dal registro, mai scritti 
   4. `S30-CAMPAIGN-4` a `t4 = max(ledger.last_end, ledger.ready_at('mbt1'))`: `mbt1` riparato
      (salute 100), assente dal registro, impiegabile.
 
+## S30-ABSENT (`TestS30AbsentForce`, difetto 26)
+
+Stesse forze di S30-CAMPAIGN, una sola missione (`mbt0` verso (10 km, -20 km)), tre sessioni:
+  1. `S30-ABSENT-1` in `[0, 7200]` con `Blue-Mech`: turnaround di `mbt0`, riparazione di `mbt1`.
+  2. `S30-ABSENT-2` SENZA `Blue-Mech`, da `max(last_end, ready_at('mbt0'))`: il record di `mbt1`
+     resta identico; `mbt1` resta non impiegabile (`ASSET_NOT_READY`) alla fine della sessione.
+     [3b] il record concluso di `mbt0` resta e il rifornimento arriva al ritorno.
+  3. `S30-ABSENT-3` di nuovo con `Blue-Mech`, da `max(last_end, ready_at('mbt1'))`: `mbt1` riparato
+     (salute 100) e fuori dal registro.
+Nessun contatto e nessuna estrazione RNG.
+
 `Scenario_Baseline.UNITS`: in coda `('S30-CAMPAIGN', 'Test_Session_Scenarios_S30',
 'TestS30CampaignSequence', None, _single_or_index)`. Quattro esecuzioni nuove
 (`S30-CAMPAIGN/S30-CAMPAIGN-1..4`); la fotografia NON e' installata dall'esecutore.
+Poi `('S30-ABSENT', 'Test_Session_Scenarios_S30', 'TestS30AbsentForce', None, _single_or_index)`:
+tre esecuzioni nuove (`S30-ABSENT/S30-ABSENT-1..3`).
 """
 
 import unittest
@@ -90,6 +103,7 @@ MBT1 = f'{MECH}/mbt1'
 DEPOT_ID = f'{BASE}/depot0'
 
 S1, S2, S3, S4 = 'S30-CAMPAIGN-1', 'S30-CAMPAIGN-2', 'S30-CAMPAIGN-3', 'S30-CAMPAIGN-4'
+A1, A2, A3 = 'S30-ABSENT-1', 'S30-ABSENT-2', 'S30-ABSENT-3'
 
 # Posizioni e quote [m] dello scenario (dichiarate, v. docstring).
 BASE_ORIGIN = (0.0, 0.0)
@@ -138,6 +152,15 @@ def _movement_mission(mech, dest_x: float) -> Mission:
     target = Target(kind=TargetKind.POINT, position=Point3D(dest_x, MECH_Y, 0.0))
     mission, = F.missions_for(mech, [(dest_x, MECH_Y)], mission_type='Movement', target=target,
                               only=[MBT0])
+    return mission
+
+
+def _mbt1_movement_mission(mech, dest_x: float) -> Mission:
+    """Missione 'Movement' (POSITIONING) del solo `mbt1` verso (dest_x, MECH_Y) (offset di formazione di
+    `routes_for`): serve solo a provare che l'ordine e' rifiutato (`ASSET_NOT_READY`)."""
+    target = Target(kind=TargetKind.POINT, position=Point3D(dest_x, MECH_Y, 0.0))
+    mission, = F.missions_for(mech, [(dest_x, MECH_Y)], mission_type='Movement', target=target,
+                              only=[MBT1])
     return mission
 
 
@@ -417,6 +440,106 @@ class TestS30CampaignSequence(F.LoggerSilencer, unittest.TestCase):
         self.cs_after_1.restore(S1, [region], restore_position=True)
 
         self._assert_point(self, mech.assets[MBT0].position, (FIRST_DEST_X, MECH_Y, 0.0))
+
+
+class TestS30AbsentForce(F.LoggerSilencer, unittest.TestCase):
+    """S30-ABSENT: una forza assente da una sessione conserva i propri record di prontezza (difetto 26)."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.rules = SessionRules()
+        cls.base, cls.wing, cls.mech, cls.red = _build_forces()
+        with_mech = [cls.base, cls.wing, cls.mech]
+        without_mech = [cls.base, cls.wing]
+        cls.forces_b = [cls.red]
+        cls.fire_control = F.make_fire_control()
+        all_forces = with_mech + cls.forces_b
+
+        cls.outcomes, cls.ledgers, cls.checkpoints = {}, {}, {}
+        ledger = CampaignLedger()
+
+        # Sessione 1: Blue-Mech presente; mbt0 in missione (turnaround), mbt1 gia' danneggiato (riparazione).
+        t1_start, t1_end = cls.rules.window(0.0)
+        order1 = SessionOrder(A1, t_start=t1_start, t_end=t1_end,
+                              missions=(_movement_mission(cls.mech, FIRST_DEST_X),))
+        outcome1, ledger = Session_Campaign.run_campaign_session(
+            ledger, order1, with_mech, cls.forces_b, cls.fire_control)
+        cls.outcomes[A1], cls.ledgers[A1] = outcome1, ledger
+        cls.checkpoints[A1] = _snapshot_of(all_forces)
+
+        # Sessione 2: Blue-Mech ASSENTE, dalla fine del turnaround di mbt0 (processo concluso
+        # mentre la forza e' assente); la riparazione di mbt1 e' ancora in corso.
+        cls.t2 = max(ledger.last_end, ledger.ready_at(MBT0))
+        t2_start, t2_end = cls.rules.window(cls.t2)
+        order2 = SessionOrder(A2, t_start=t2_start, t_end=t2_end, missions=())
+        outcome2, ledger = Session_Campaign.run_campaign_session(
+            ledger, order2, without_mech, cls.forces_b, cls.fire_control)
+        cls.outcomes[A2], cls.ledgers[A2] = outcome2, ledger
+        cls.checkpoints[A2] = _snapshot_of(all_forces)
+
+        # Sessione 3: Blue-Mech di nuovo presente, alla fine prevista della riparazione di mbt1
+        # (senza il suo record, prima della correzione, si ripiega sulla fine della sessione 2).
+        ready_mbt1 = ledger.ready_at(MBT1)
+        cls.t3 = ledger.last_end if ready_mbt1 is None else max(ledger.last_end, ready_mbt1)
+        t3_start, t3_end = cls.rules.window(cls.t3)
+        order3 = SessionOrder(A3, t_start=t3_start, t_end=t3_end, missions=())
+        outcome3, ledger = Session_Campaign.run_campaign_session(
+            ledger, order3, with_mech, cls.forces_b, cls.fire_control)
+        cls.outcomes[A3], cls.ledgers[A3] = outcome3, ledger
+        cls.checkpoints[A3] = _snapshot_of(all_forces)
+
+    # ── Test ──────────────────────────────────────────────────────────────────
+
+    def test_absent_force_keeps_pending_record(self):
+        """Il record di riparazione di `mbt1` attraversa la sessione 2 (forza assente) identico:
+        non e' perso, ne' ripartito, ne' esteso."""
+        self.assertNotIn(MBT1, self.outcomes[A2].postures)
+        self.assertIn(MBT1, self.ledgers[A2].readiness)
+        self.assertEqual(self.ledgers[A2].readiness[MBT1], self.ledgers[A1].readiness[MBT1])
+
+    def test_absent_asset_still_not_ready(self):
+        """Alla fine della sessione 2 `mbt1` e' ancora in riparazione: un ordine con una sua
+        missione e' RIFIUTATO (`ASSET_NOT_READY`)."""
+        self.assertGreater(self.ledgers[A1].ready_at(MBT1), self.ledgers[A2].last_end,
+                           "precondizione: mbt1 e' ancora in riparazione alla fine della sessione 2 "
+                           "con i tempi di Context; se non lo fosse va rivista la sequenza di S30-ABSENT")
+
+        base, wing, mech, red = _build_forces()
+        order = SessionOrder('S30-ABSENT-NOT-READY', t_start=self.ledgers[A2].last_end,
+                             t_end=self.ledgers[A2].last_end + self.rules.default_duration_s,
+                             missions=(_mbt1_movement_mission(mech, FIRST_DEST_X),))
+
+        with self.assertRaises(SessionValidationError) as raised:
+            Session_Campaign.run_campaign_session(self.ledgers[A2], order, [base, wing, mech], [red],
+                                                  F.make_fire_control())
+
+        not_ready = [v for v in raised.exception.violations
+                     if v.code is ViolationCode.ASSET_NOT_READY and v.asset_id == MBT1]
+        self.assertTrue(not_ready, str(raised.exception))
+
+    def test_repair_continues_across_absence(self):
+        """La sessione 3 parte alla fine della riparazione registrata nella sessione 1 (non
+        ripartita), e `mbt1` ne esce riparato e fuori dal registro."""
+        self.assertAlmostEqual(self.t3, self.ledgers[A1].ready_at(MBT1), delta=1e-6)
+        self.assertEqual(self.checkpoints[A1][MBT1]['health'], 60)
+        self.assertEqual(self.checkpoints[A2][MBT1]['health'], 60)
+        self.assertEqual(self.checkpoints[A3][MBT1]['health'], 100)
+        self.assertNotIn(MBT1, self.ledgers[A3].readiness)
+
+    def test_concluded_process_of_absent_asset(self):
+        """Il turnaround di `mbt0` finisce mentre la forza e' assente: il record resta (non e'
+        applicato) e il rifornimento arriva al ritorno, nella sessione 3."""
+        self.assertLessEqual(self.ledgers[A1].ready_at(MBT0), self.t2 + 1e-9,
+                             "precondizione: il turnaround di mbt0 finisce mentre la forza e' assente")
+        consumed_1 = self.outcomes[A1].fuel_consumed().get(MBT0, 0.0)
+        self.assertGreater(consumed_1, 0.0, "premessa: mbt0 consuma carburante guidando")
+
+        self.assertEqual(self.ledgers[A2].readiness[MBT0], self.ledgers[A1].readiness[MBT0])
+        self.assertAlmostEqual(self.checkpoints[A2][MBT0]['fuel'], FUEL_FULL - consumed_1, delta=1e-9)
+        self.assertAlmostEqual(self.checkpoints[A3][MBT0]['fuel'], FUEL_FULL, delta=1e-9)
+        self.assertNotIn(MBT0, self.ledgers[A3].readiness)
 
 
 if __name__ == '__main__':
