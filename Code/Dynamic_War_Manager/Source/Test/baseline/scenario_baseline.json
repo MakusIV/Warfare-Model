@@ -651577,6 +651577,358 @@
     "t_start": 0.0
    }
   },
+  "S30-ABSENT/S30-ABSENT-1": {
+   "actual_etas": {
+    "Blue-Mech:Movement": [
+     0.0,
+     654.545455
+    ]
+   },
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Mech/mbt0": {
+     "ammunition": 42,
+     "destroyed": false,
+     "fuel": 0.976526,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "M256-120mm": 42
+     }
+    },
+    "Blue-Mech/mbt1": {
+     "ammunition": 42,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 60,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "M256-120mm": 42
+     }
+    },
+    "Blue-Wing/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Wing/f1": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Depot/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Base",
+     "Blue-Wing",
+     "Blue-Mech"
+    ],
+    "forces_b": [
+     "Red-Depot"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Mech/mbt0"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 1,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {
+    "Blue-Mech/mbt0": [
+     {
+      "amount": 0.023474,
+      "distance": 10000.0,
+      "distance_covered": 10000.0,
+      "exhausted": false,
+      "fuel_after": 0.976526,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 654.545455
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Mech/mbt0": "Defense",
+    "Blue-Mech/mbt1": "Defense",
+    "Blue-Wing/f0": "parking_cold",
+    "Blue-Wing/f1": "parking_cold",
+    "Red-Depot/depot0": "Defense"
+   },
+   "session": {
+    "order_t_end": 7200.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S30-ABSENT-1",
+    "t_end": 7200.0,
+    "t_start": 0.0
+   }
+  },
+  "S30-ABSENT/S30-ABSENT-2": {
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Wing/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Wing/f1": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Depot/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Base",
+     "Blue-Wing"
+    ],
+    "forces_b": [
+     "Red-Depot"
+    ],
+    "parameters": {}
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 0,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {},
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Wing/f0": "parking_cold",
+    "Blue-Wing/f1": "parking_cold",
+    "Red-Depot/depot0": "Defense"
+   },
+   "session": {
+    "order_t_end": 29454.545455,
+    "order_t_start": 22254.545455,
+    "salvo_window": 0.0,
+    "session_id": "S30-ABSENT-2",
+    "t_end": 29454.545455,
+    "t_start": 22254.545455
+   }
+  },
+  "S30-ABSENT/S30-ABSENT-3": {
+   "ammunition_consumed": {},
+   "ammunition_events": [],
+   "assets": {
+    "Blue-Base/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    },
+    "Blue-Mech/mbt0": {
+     "ammunition": 42,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "M256-120mm": 42
+     }
+    },
+    "Blue-Mech/mbt1": {
+     "ammunition": 42,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "M256-120mm": 42
+     }
+    },
+    "Blue-Wing/f0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Wing/f1": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Depot/depot0": {
+     "ammunition": null,
+     "destroyed": false,
+     "fuel": null,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": null
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Base",
+     "Blue-Wing",
+     "Blue-Mech"
+    ],
+    "forces_b": [
+     "Red-Depot"
+    ],
+    "parameters": {}
+   },
+   "counts": {
+    "damage_events": 0,
+    "destroyed_events": 0,
+    "engagements": 0,
+    "fuel_events": 0,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 0,
+    "salvos": 0
+   },
+   "damage_events": [],
+   "engagements": [],
+   "force_outcomes": {},
+   "fuel": {},
+   "interception_events": [],
+   "interceptions": {},
+   "postures": {
+    "Blue-Base/depot0": "Defense",
+    "Blue-Mech/mbt0": "Defense",
+    "Blue-Mech/mbt1": "Defense",
+    "Blue-Wing/f0": "parking_cold",
+    "Blue-Wing/f1": "parking_cold",
+    "Red-Depot/depot0": "Defense"
+   },
+   "session": {
+    "order_t_end": 48960.0,
+    "order_t_start": 41760.0,
+    "salvo_window": 0.0,
+    "session_id": "S30-ABSENT-3",
+    "t_end": 48960.0,
+    "t_start": 41760.0
+   }
+  },
   "S30-CAMPAIGN/S30-CAMPAIGN-1": {
    "actual_etas": {
     "Blue-Mech:Movement": [
