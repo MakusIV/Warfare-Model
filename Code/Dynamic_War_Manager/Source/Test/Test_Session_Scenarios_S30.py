@@ -2,8 +2,8 @@
 
 Prosegue `Test_Session_Scenarios.py` (S1-S9) e gli S10-S29 con la stessa disciplina: si verifica
 un comportamento QUALITATIVO o STRUTTURALE, mai un numero calibrato. Le uniche novita' numeriche
-sono le STIME di progetto della tabella di turnaround/riparazione (`Context/Context`, §4.4,
-sostituite dalla ricerca F8-R) e le posizioni dello scenario dichiarate qui sotto; il test calcola
+sono i tempi di turnaround/riparazione di `Context/Context` (ricerca F8-R, in parte STIME DI
+PROGETTO dichiarate nei commenti) e le posizioni dello scenario dichiarate qui sotto; il test calcola
 gli istanti dalle costanti e dal registro, mai scrivendoli a mano.
 
 ## S30-CAMPAIGN (`TestS30CampaignSequence`)
@@ -311,11 +311,11 @@ class TestS30CampaignSequence(F.LoggerSilencer, unittest.TestCase):
 
     def test_not_ready_asset_is_rejected(self):
         """Un asset in turnaround/riparazione non e' impiegabile: l'ordine e' rifiutato con
-        `ASSET_NOT_READY` (precondizione: `ready_at('mbt0') > t2` con le stime di §4.4)."""
+        `ASSET_NOT_READY` (precondizione: `ready_at('mbt0') > t2` con i tempi di `Context`)."""
         t2 = self.ledgers[S1].last_end
         self.assertGreater(self.ledgers[S1].ready_at(MBT0), t2,
-                           "precondizione del piano: con le stime di §4.4 mbt0 non e' pronto a t2; "
-                           "se la ricerca F8-R la rendesse falsa va allungata la rotta della sessione 1")
+                           "precondizione del piano: con i tempi di `Context` mbt0 non e' pronto a t2; "
+                           "se un cambio dei tempi la rendesse falsa va allungata la rotta della sessione 1")
 
         base, wing, mech, red = _build_forces()
         order = SessionOrder('S30-NOT-READY', t_start=t2, t_end=t2 + self.rules.default_duration_s,

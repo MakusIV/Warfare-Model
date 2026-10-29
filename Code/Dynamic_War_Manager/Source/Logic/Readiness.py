@@ -10,8 +10,11 @@ Nessuna scrittura in `Campaign_State` ne' applicazione di posizioni: quelle sono
 conduttore di campagna (`Logic/Session_Campaign`).
 
 ## Tempi
-I tempi di turnaround e riparazione sono in `Context/Context` (tabella §4.4): STIME DI
-PROGETTO, dichiarate tali nel codice, da sostituire con la ricerca F8-R (commit di soli dati).
+I tempi di turnaround e riparazione sono in `Context/Context` (`AIR_TURNAROUND_S`,
+`GROUND_TURNAROUND_S`, `SEA_TURNAROUND_S`, `REPAIR_TIME_FULL_S`): valori della ricerca F8-R del
+2026-10-23 (`Analysis/Document/Ricerca_Turnaround_Riparazione.md`), ordini di grandezza e non dati
+tarati; dove la ricerca non ha trovato una fonte il valore resta una STIMA DI PROGETTO, come dice
+il commento in `Context`.
 
 ## Regola di `readiness_after_session` (decisioni 19-21)
 Per ogni asset, dall'istante piu' tardo fra il rientro (`movement_ends`/`end_time`) e

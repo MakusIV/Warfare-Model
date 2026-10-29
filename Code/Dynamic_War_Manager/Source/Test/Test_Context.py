@@ -1440,7 +1440,8 @@ class TestMissionTypes(unittest.TestCase):
 
 
 class TestReadinessTables(unittest.TestCase):
-    """Tabelle di prontezza della F8 (D6.b-d): STIME di progetto in `Context` (§4.4)."""
+    """Tabelle di prontezza della F8 (D6.b-d) in `Context`: valori della ricerca F8-R, in parte
+    STIME di progetto (v. commenti)."""
 
     def test_every_air_asset_type_has_a_turnaround(self):
         """Ogni `Air_Asset_Type` ha una voce in `AIR_TURNAROUND_S`."""

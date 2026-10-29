@@ -2,8 +2,8 @@
 
 Asset REALI dei registri (`Scenario_Fixtures`), `Command` tipi costruiti a mano per gli
 `SessionOutcome`/`SessionOrder`. Gli attesi di turnaround/riparazione sono ricalcolati dalle
-costanti STIMATE dichiarate in `Context` (mai valori copiati a mano): il test verifica la
-regola, non i numeri.
+costanti di `Context` (ricerca F8-R, in parte STIME dichiarate; mai valori copiati a mano): il
+test verifica la regola, non i numeri.
 """
 import unittest
 from unittest.mock import MagicMock, patch

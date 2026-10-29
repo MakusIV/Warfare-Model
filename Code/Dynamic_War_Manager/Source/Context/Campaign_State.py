@@ -97,7 +97,8 @@ class CampaignState:
                             }
                         }
                     }
-                }
+                },
+                "ledger": dict   # optional: CampaignLedger.to_dict() (add_ledger, F8)
             }
         }
 
@@ -106,6 +107,7 @@ class CampaignState:
     add_campaign_snapshot(mission_id, date, time, regions)  — atomic, full campaign
     add_region_snapshot(mission_id, date, time, region)     — one region at a time
     add_block_snapshot(mission_id, date, time, region_name, block, priority)  — one block
+    add_ledger(mission_id, ledger)  — campaign ledger dict (CampaignLedger.to_dict(), F8)
 
     Read API
     --------
@@ -116,10 +118,12 @@ class CampaignState:
     get_block_history(region_name, block_id)            → List[(mid, date, time, snap)]
     get_field_trend(region_name, block_id, field)       → List[(mid, date, time, value)]
     get_asset_history(region_name, block_id, asset_id)  → List[(mid, date, time, snap)]
+    get_ledger(mission_id)                              → Optional[Dict]
 
     Restore API
     -----------
-    restore(mission_id, regions)   — applies snapshot to live Region / Block / Asset objects
+    restore(mission_id, regions, restore_position=False)   — applies snapshot to live Region / Block / Asset objects
+        (position only with restore_position=True, F8)
 
     Persistence
     -----------
