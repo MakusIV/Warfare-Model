@@ -19,6 +19,8 @@ giocatore: il core non distingue i due casi, v. capitolo 1).
 > `Command/Campaign_Types.py` 406, `Logic/Session_Validator.py` 269, `Logic/Session_Campaign.py` 153, `Logic/Readiness.py` 343.
 > *(Stato precedente: `dcedc541`, 2026-10-20, suite 4555 e 982 esecuzioni; prima ancora `a784a9e7`, 2026-10-18, suite 4385 e 918 esecuzioni.)*
 >
+> **Aggiornamento 2026-10-30 — atlante dei diagrammi, parti A-C** (commit `42ffb851`, `4fe1225f`, `255f5bc4`; solo documentazione, il codice resta quello di `f009eb43`): capitolo 10 esteso con i diagrammi D67-D129 e le tabelle complete dei simboli di tutti i moduli del core; nessuna suite o confronto rieseguiti.
+>
 > **Aggiornamento 2026-10-29 — correzione del difetto 26** (codice `be8559d7`, docstring `f009eb43`, fotografia `643fff87`; il manuale è stato riverificato sul codice del branch `analysis/dce-dcs-persistence`).
 > `Logic/Readiness.readiness_after_session` riporta ora i record di prontezza degli asset non passati alla sessione; `apply_campaign_processes` conserva il record concluso di un asset assente e lo applica al suo ritorno
 > (scelta 3b, `logger.debug` al posto del warning); **nessun interruttore**; scenario nuovo **S30-ABSENT** (`TestS30AbsentForce`, 3 esecuzioni, 4 test). **Suite di test: 4710 OK (7 skipped); confronto con la fotografia: 989 esecuzioni
@@ -249,7 +251,7 @@ parametro `grounded`.
 - Dove il manuale e la wiki di progetto (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/`)
   divergono, prevale il codice; le divergenze trovate sono raccolte nel capitolo 9 (§9.2 per la wiki,
   §9.6 per i documenti di progetto della Missione e delle regole SAM, con lo stato di ciascuna voce).
-- I diagrammi hanno un numero progressivo `D1`-`D66` (elenco in fondo): D1-D56 nei capitoli 1-8, D57-D66 nel capitolo 10 (atlante); le didascalie sono nel capitolo
+- I diagrammi hanno un numero progressivo `D1`-`D129` (elenco in fondo; D88 e D89 non sono usati): D1-D56 nei capitoli 1-8, D57-D129 nel capitolo 10 (atlante, parti 10, 10A, 10B, 10C); le didascalie sono nel capitolo
   che li contiene. Il capitolo 10 assegna ogni diagramma a un livello di dettaglio (L0-L4).
 
 ## Indice dei capitoli
@@ -318,9 +320,14 @@ parametro `grounded`.
    limiti nuovi e superati (compresi quelli della fase F4, delle fasi F5, F6, G1-G5, della fase F7, con le costanti STIMATE
    del fuoco su posizione, e **della campagna, F8**, con i tempi non tarati e l'assenza di logistica), stato del piano della Missione F0-F9 e dei passi G1-G5 (§9.5, F8a-F8c e F8-R fatte,
    F8d non fatta, F6-B3 chiuso), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce: voci 7, 11 e 23 chiuse, **voci 24-27 nate con la F8 e chiuse il 2026-10-29**).
-10. [Atlante dei diagrammi (pilota)](11_Atlante_Diagrammi.md) — la scala dei livelli L0-L4 (contesto, architettura, moduli, interazione, algoritmo), la tabella-atlante di tutti i diagrammi
+10. [Atlante dei diagrammi](11_Atlante_Diagrammi.md) — la scala dei livelli L0-L4 (contesto, architettura, moduli, interazione, algoritmo), la tabella-atlante di tutti i diagrammi
     e lo stato di copertura per modulo; i diagrammi nuovi **D57-D66**: contesto del core (D57), grafo reale degli import in tre parti (D58-D60), `Session_Simulator` e `Mission_Adapter` (tipi, gruppi di funzioni e
     tabelle complete con `:riga`, D61-D63), la sequenza di chiamate di `run_session` in tre parti (D64-D66). Verificato a `f009eb43`.
+    Estensione a tutto il core in tre parti, ciascuna con la tabella completa dei simboli (`:riga`) di ogni modulo: **parte A**
+    [`11a_Atlante_Risolutore.md`](11a_Atlante_Risolutore.md) (`Contact_Scheduler`, `Fire_Control`, `Engagement_Resolver`, D67-D87), **parte B**
+    [`11b_Atlante_Missione_Carburante.md`](11b_Atlante_Missione_Carburante.md) (`Mission_Types`, `Fuel_Model`, `Area_Fire`, D90-D109), **parte C**
+    [`11c_Atlante_Porte_Campagna.md`](11c_Atlante_Porte_Campagna.md) (`Session_Types`, `Campaign_Types`, `Session_Validator`, `Session_Campaign`, `Readiness`,
+    `Damage_Model`, `Session_Rng` e la mappa dei dati, D110-D129). Ogni parte ha una sezione «Limiti e domande» con le cose non ovvie trovate nel codice.
 
 ## Elenco dei diagrammi
 
@@ -392,6 +399,67 @@ parametro `grounded`.
 | D64 | `run_session` 1/3: preparazione e validazione (livello L3) | `sequenceDiagram` | 10 |
 | D65 | `run_session` 2/3: contatti, episodi, risolutore, stato e ri-pianificazione (livello L3) | `sequenceDiagram` | 10 |
 | D66 | `run_session` 3/3: passo finale del carburante, esiti e `assemble_session_outcome` (livello L3) | `sequenceDiagram` | 10 |
+| D67 | Tipi dello scheduler con tutti i membri (`Leg`, `ThreatWindow`, `CPA`, `ContactWindow`, `GroundedSchedule`) (livello L2) | `classDiagram` | 10 |
+| D68 | Le funzioni dello scheduler per ruolo e le dipendenze fra i gruppi (livello L2) | `flowchart TD` | 10 |
+| D69 | `schedule_contacts`: dalla potatura per blocco alle finestre di coppia (livello L3) | `sequenceDiagram` | 10 |
+| D70 | `contact_windows`: portate, intervalli, CPA e finestre (livello L3) | `sequenceDiagram` | 10 |
+| D71 | Tipi della fire control (`_Weapon`, `WeaponPolicy`, `AreaWeapon`) e `ShotSpec` (livello L2) | `classDiagram` | 10 |
+| D72 | Le funzioni della fire control per ruolo e le dipendenze (livello L2) | `flowchart TD` | 10 |
+| D73 | La fire control dai registri: dalla coppia (tiratore, bersaglio) alla tupla di `ShotSpec` (livello L3) | `sequenceDiagram` | 10 |
+| D74 | L'involucro `restrict_by_policy`: dalla politica d'armi alla chiamata nel risolutore (livello L3) | `sequenceDiagram` | 10 |
+| D75 | L'arma per il fuoco su posizione: `area_fire_weapon` e `area_fire_pk` (livello L3) | `sequenceDiagram` | 10 |
+| D76 | I tipi interni della run (`_Shadow`, `_Candidate`, `_ForceState`, `_PendingGroup`, `_EngagementRun`) (livello L2) | `classDiagram` | 10 |
+| D77 | Le funzioni di modulo e i tipi per ruolo (livello L2) | `flowchart TD` | 10 |
+| D78 | Le fabbriche del fattore di rilevamento `detection_factor` (livello L2) | `flowchart TD` | 10 |
+| D79 | I metodi di `_EngagementRun` per ruolo 1/2: costruzione, rilevamento, scelta del tiro (livello L2) | `flowchart TD` | 10 |
+| D80 | I metodi di `_EngagementRun` per ruolo 2/2: risoluzione, intercettazione, disingaggio, regole F7a (livello L2) | `flowchart TD` | 10 |
+| D81 | `resolve_engagement`: validazione, costruzione della run e ciclo principale (livello L3) | `sequenceDiagram` | 10 |
+| D82 | `_detect_direction`: una estrazione di rilevamento (livello L3) | `sequenceDiagram` | 10 |
+| D83 | `_schedule_next`: l'ordine delle chiamate della scelta del tiro (livello L3) | `sequenceDiagram` | 10 |
+| D84 | `_on_launch`: dal lancio alla salva in volo (livello L3) | `sequenceDiagram` | 10 |
+| D85 | `_on_resolve`: intercettazione, danno per colpo e dottrina (livello L3) | `sequenceDiagram` | 10 |
+| D86 | `apply_engagement_result`: danni e consumi sugli asset reali (livello L3) | `sequenceDiagram` | 10 |
+| D87 | Che cosa il core importa da `Engagement_Resolver`, e chi (livello L2) | `flowchart LR` | 10 |
+| D90 | Le tredici enumerazioni della Missione con tutti i membri (livello L2) | `classDiagram` | 10 |
+| D91 | Gli elementi della Missione con tutti i membri (`Target`, `StartCondition`, `MissionAction`, `MissionWaypoint`, `MissionAsset`) (livello L2) | `classDiagram` | 10 |
+| D92 | La Missione e l'Operazione con tutti i membri (`Mission`, `MissionRules`, `EndCriteria`, `Operation`) (livello L2) | `classDiagram` | 10 |
+| D93 | Gli esiti con tutti i membri (`AssetMissionOutcome`, `MissionOutcome`, `OperationOutcome`) (livello L2) | `classDiagram` | 10 |
+| D94 | Le funzioni di `Mission_Types` per ruolo e le dipendenze fra i gruppi (livello L2) | `flowchart TD` | 10 |
+| D95 | `Mission.__post_init__`: l'ordine delle validazioni alla costruzione (livello L3) | `sequenceDiagram` | 10 |
+| D96 | Dalla costruzione della Missione alla porta di sessione: `SessionOrder`, `_check_missions`, `validate_session` (livello L3) | `sequenceDiagram` | 10 |
+| D97 | Dagli esiti per asset all'esito di sessione: `_mission_outcome`, `operation_outcome`, `assemble_session_outcome` (livello L3) | `sequenceDiagram` | 10 |
+| D98 | I tipi di `Fuel_Model` con tutti i membri, compresi `_Step` e `_Segment` (livello L2) | `classDiagram` | 10 |
+| D99 | Le funzioni di `Fuel_Model` per ruolo e le dipendenze fra i gruppi (livello L2) | `flowchart TD` | 10 |
+| D100 | Il consumo di un tratto: `build_leg_fuel_event`, `build_fuel_event`, `apply_fuel_event` (livello L3) | `sequenceDiagram` | 10 |
+| D101 | Esaurimento e residuo analitico: `fuel_exhaustion` e `fuel_at` (livello L3) | `sequenceDiagram` | 10 |
+| D102 | La riserva di disimpegno e il consumo in ingaggio: `build_engagement_fuel_event` (livello L3) | `sequenceDiagram` | 10 |
+| D103 | Il punto di bingo: `bingo_point` nelle regole F6-B2bis e F6-B2 (livello L3) | `sequenceDiagram` | 10 |
+| D104 | L'albero di decisione al bingo: l'ordine delle chiamate di `bingo_decision` (livello L3) | `sequenceDiagram` | 10 |
+| D105 | Che cosa il core importa da `Fuel_Model`, e chi (livello L2) | `flowchart LR` | 10 |
+| D106 | `FireOrder` e `_Hit` con tutti i membri e i tipi esterni (livello L2) | `classDiagram` | 10 |
+| D107 | Le funzioni di `Area_Fire` per ruolo e le dipendenze (livello L2) | `flowchart TD` | 10 |
+| D108 | Gli ordini di fuoco: `fire_orders`, `plan_shot` senza scorta, `impact_time` (livello L3) | `sequenceDiagram` | 10 |
+| D109 | `resolve_area_fire`: ordine delle chiamate e delle estrazioni (livello L3) | `sequenceDiagram` | 10 |
+| D110 | `SessionOrder` con tutti i membri e i tipi da cui dipende (livello L2) | `classDiagram` | 10 |
+| D111 | `SessionOutcome` con tutti i membri e i tipi degli eventi che contiene (livello L2) | `classDiagram` | 10 |
+| D112 | Le funzioni di `Session_Types` per ruolo e le chiamate fra i gruppi (livello L2) | `flowchart TD` | 10 |
+| D113 | `assemble_session_outcome`: controlli, raggruppamento, costruzione e `SessionOutcome.__post_init__` (livello L3) | `sequenceDiagram` | 10 |
+| D114 | `ViolationCode`, `SessionRules`, `SessionViolation` e `SessionValidationError` con tutti i membri (livello L2) | `classDiagram` | 10 |
+| D115 | `SessionRecord`, `ReadyRecord` e `CampaignLedger` con tutti i membri (livello L2) | `classDiagram` | 10 |
+| D116 | La vita del registro: costruzione, `with_session`, `with_readiness` e andata e ritorno su `Campaign_State` (livello L3) | `sequenceDiagram` | 10 |
+| D117 | `check_session` e `validate_session`: l'ordine delle chiamate verso registro, simulatore e adapter (livello L3) | `sequenceDiagram` | 10 |
+| D118 | `apply_final_positions`: dalle posizioni dell'esito alla posizione degli asset (livello L3) | `sequenceDiagram` | 10 |
+| D119 | Le funzioni di `Readiness` per ruolo, le dipendenze e il solo chiamante (livello L2) | `flowchart TD` | 10 |
+| D120 | `record_session` e `readiness_after_session`: dal registro vecchio al registro nuovo (livello L3) | `sequenceDiagram` | 10 |
+| D121 | Il difetto 26: il record di un asset assente attraverso `apply_campaign_processes` e `readiness_after_session` (livello L3) | `sequenceDiagram` | 10 |
+| D122 | `DamageEvent`, le funzioni e le costanti di `Damage_Model` e i tipi che lo usano (livello L2) | `classDiagram` | 10 |
+| D123 | `build_damage_event`: controlli, esito e delta di salute dentro il modulo (livello L3) | `sequenceDiagram` | 10 |
+| D124 | Il percorso di un `DamageEvent`: dove nasce, dove è applicato, chi lo legge (frecce = dati) (livello L2) | `flowchart LR` | 10 |
+| D125 | Dalla chiave all'istanza: `SessionOrder.rng`, `session_rng`, `session_seed` (livello L3) | `sequenceDiagram` | 10 |
+| D126 | Chi apre quale stream: le chiavi di `engage` e `fire_area` e i consumatori (frecce = stream) (livello L2) | `flowchart LR` | 10 |
+| D127 | Mappa dei dati: il percorso in una sessione, dagli argomenti di `run_session` al `SessionOutcome` (frecce = dati) (livello L1) | `flowchart LR` | 10 |
+| D128 | Mappa dei dati: le versioni del `CampaignLedger` e i dati in un passo di `run_campaign_session` (frecce = dati) (livello L2) | `flowchart LR` | 10 |
+| D129 | Mappa dei dati: i campi del `SessionOutcome`, chi li produce e chi li legge (frecce = dati) (livello L2) | `flowchart LR` | 10 |
 
 I diagrammi D30-D36 sono quelli della fase F4 (a `84a47670`). **Aggiornati a `a784a9e7`**: D1 (il carburante è dell'orchestratore,
 non del risolutore), D2 (`postures`), D3 (`GroundedSchedule`), D4 (`ActivityCriteria`, `ActivityEnd`, `activity_ends`), D8 e D9
@@ -412,3 +480,5 @@ D19 (ramo `IN_PROGRESS`), D29 (F8a-F8c e F8-R fatte, F6-B3 chiuso, F8d non fatta
 **Aggiornamento 2026-10-29** (difetto 26): nuovo D56 (S30-ABSENT); la didascalia di D53 precisa che la regola vale per gli asset passati alla sessione (i record degli asset non passati sono riportati prima, §6.26). Gli altri diagrammi sono invariati.
 
 **Aggiornamento 2026-10-29** (atlante dei diagrammi, pilota): nuovo capitolo 10 (`11_Atlante_Diagrammi.md`) con i diagrammi **D57-D66**, la scala dei livelli L0-L4 e la tabella-atlante che assegna un livello anche a D1-D56. Nessun capitolo preesistente è stato modificato; D1-D56 sono invariati. Il livello di ciascun diagramma non è una colonna di questo elenco (richiederebbe di riscrivere le 56 righe esistenti): è nel capitolo 10 §10.2.
+
+**Aggiornamento 2026-10-30** (atlante dei diagrammi, parti A-C): i file `11a_Atlante_Risolutore.md`, `11b_Atlante_Missione_Carburante.md` e `11c_Atlante_Porte_Campagna.md` aggiungono i diagrammi **D67-D87**, **D90-D109** e **D110-D129** (D88 e D89 non sono usati), con la tabella completa dei simboli di tutti i moduli del core. Verificati a `f009eb43`; nessun sorgente cambia. Il livello di ciascun diagramma è nella colonna «(livello Lx)» del titolo e nella tabella-atlante del capitolo 10 §10.2. In sequenze preesistenti (D50 nel capitolo 6, una del capitolo 10) e in due della parte A l'id di partecipante `AS` (parola chiave di Mermaid, possibile errore di resa) e' stato rinominato `AST`: nessun altro contenuto di D1-D66 cambia.

@@ -234,14 +234,14 @@ sequenceDiagram
     participant PW as _pair_windows
     participant CW as contact_windows
     participant MD as mutual_detection_ranges
-    participant AS as asset A e asset B
+    participant AST as asset A e asset B
     participant RI as range_intervals
     participant CL as clamp_legs
     participant CP as closest_point_of_approach
     PW->>CW: contact_windows(asset_a, legs_a, asset_b, legs_b, range_type, grounded_a, grounded_b)
     opt range_a o range_b non imposti dal chiamante
         CW->>MD: mutual_detection_ranges(asset_a, asset_b, range_type, grounded_a, grounded_b)
-        MD->>AS: detection_range(mode, range_type) di A sul dominio di B e di B sul dominio di A
+        MD->>AST: detection_range(mode, range_type) di A sul dominio di B e di B sul dominio di A
         MD-->>CW: range_a e range_b, None se non dichiarate o osservatore a terra
     end
     CW->>RI: range_intervals(legs_a, legs_b, portata maggiore)
@@ -1224,7 +1224,7 @@ sequenceDiagram
     participant DID as _domain_id
     participant DM as Damage_Model
     participant CW as _call_with_weapon
-    participant AS as asset reale
+    participant AST as asset reale
     SS->>AER: apply_engagement_result(result, *forze)
     AER->>AER: TypeError se result non e un EngagementResult
     loop per ogni forza e per ogni asset della forza
@@ -1244,14 +1244,14 @@ sequenceDiagram
         alt asset non trovato
             AER->>AER: warning con ruolo shooter o interceptor, missing_assets aumenta di uno
         else evento di munizioni (tipo 0)
-            AER->>AS: getattr(asset, consume_ammunition)
+            AER->>AST: getattr(asset, consume_ammunition)
             AER->>CW: _call_with_weapon(consume, event.rounds, event.weapon)
-            CW->>AS: consume(amount) se weapon e None, altrimenti consume(amount, weapon=weapon)
+            CW->>AST: consume(amount) se weapon e None, altrimenti consume(amount, weapon=weapon)
             AER->>AER: ammunition_events aumenta di uno
         else evento di intercettazione (tipo 1)
-            AER->>AS: getattr(asset, consume_interceptor_stock)
+            AER->>AST: getattr(asset, consume_interceptor_stock)
             AER->>CW: _call_with_weapon(consume, event.interceptions, event.weapon)
-            CW->>AS: consume(amount) se weapon e None, altrimenti consume(amount, weapon=weapon)
+            CW->>AST: consume(amount) se weapon e None, altrimenti consume(amount, weapon=weapon)
             AER->>AER: interception_events aumenta di uno
         end
     end

@@ -1666,7 +1666,7 @@ sequenceDiagram
     participant RS as run_session
     participant AF as Area_Fire
     participant ER as Engagement_Resolver
-    participant AS as asset reali
+    participant AST as asset reali
 
     RS->>AF: fire_orders + plan_shot (senza scorta) per ogni asset di missione
     AF-->>RS: ordini, ordinati per istante d'impatto stimato
@@ -1674,12 +1674,12 @@ sequenceDiagram
         RS->>AF: fire_due(inizio episodio): impatti strettamente anteriori
         AF->>AF: resolve_area_fire (rng missione, event_id area_fire)
         AF-->>RS: EngagementResult senza forze
-        RS->>AS: apply_engagement_result (scorta del tiratore, salute dei colpiti)
+        RS->>AST: apply_engagement_result (scorta del tiratore, salute dei colpiti)
         RS->>ER: engage: resolve_engagement dell'episodio
         ER-->>RS: EngagementResult, applicato subito
     end
     RS->>AF: fire_due(): gli ordini rimasti
-    Note over RS,AS: con G4_EPISODES spento gli ordini stanno nello stesso heapq degli ingaggi (AREA_FIRE_EVENT)
+    Note over RS,AST: con G4_EPISODES spento gli ordini stanno nello stesso heapq degli ingaggi (AREA_FIRE_EVENT)
 ```
 
 **Limiti dichiarati** (capitolo 9 §9.1): dispersione uniforme e letalità a soglia con costanti STIMATE; **niente fuoco amico**, niente
