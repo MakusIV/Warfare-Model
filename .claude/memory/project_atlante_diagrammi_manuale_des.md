@@ -2,8 +2,12 @@
 name: project-atlante-diagrammi-manuale-des
 description: "Atlante dei diagrammi del manuale DES a livelli L0-L4: pilota fatto (D57-D66), estensione a tutto il core in tre attivita' consecutive A->B->C, A interrotta per limite d'uso; come riprendere"
 metadata:
+  node_type: memory
   type: project
+  originSessionId: 0468db0e-19b3-43df-a060-d82baa1e794b
+  modified: 2026-10-30T10:30:28.548Z
 ---
+
 ## Richiesta dell'utente (2026-10-29)
 Integrare nel manuale DES diagrammi (UML e simili) a livelli progressivi: classi, strutture dati, metodi, chiamate, interazione fra moduli. Scelte confermate: Mermaid soltanto (niente Java/PlantUML/Node su ProArt: **nessun renderer, la sintassi la verifica l'utente in Obsidian**), perimetro = TUTTO il core DES, classDiagram selettivi + tabella completa con `:riga`, atlante come capitolo nuovo (nessuna colonna "Livello" nell'Elenco: riscriverebbe 56 righe), pilota gradito (densita' D58-D60 e D64-D66 accettabile), correzione della nota di D1 (fatta, `02_Scopo_e_Motivazioni.md`).
 
@@ -12,8 +16,9 @@ L0 contesto, L1 architettura (grafo reale degli import), L2 moduli (classi/API +
 
 ## Stato (pushato su origin a 79bab4e2 il 2026-10-29)
 - `9d4f208c` pilota: `Manuale_Motore_DES/11_Atlante_Diagrammi.md` (capitolo 10, D57-D66) + `_strumenti/inventario.py` (ast, sola lettura: `--dipendenze`, `--chiamate`, `--controlla`; poi `--tabella` e `--copertura`, commit successivo).
-- **Parte A interrotta** (limite d'uso 87%/5h): `11a_Atlante_Risolutore.md` NON committato, 899 righe, 14 diagrammi: `Contact_Scheduler` (D67-D70) e `Fire_Control` (D71-D75) completi con tabelle; `Engagement_Resolver` (D76-D80) a meta' (tabella completa e rapporto finale mancanti). Da verificare e completare o rifare; numeri D riservati: A = D67-D89.
-- **Da fare in sequenza (una alla volta, mai in parallelo: richiesta dell'utente per il consumo)**: A (completare), B = `11b_Atlante_Missione_Carburante.md` (Mission_Types, Fuel_Model, Area_Fire; D90-D109), C = `11c_Atlante_Porte_Campagna.md` (Session_Types, Campaign_Types, Readiness, Session_Validator, Session_Campaign, Damage_Model, Session_Rng + "Mappa dei dati"; D110-D129). Prompt degli agenti: vedi sessione 2026-10-29 (des-manual-writer, modello = pilota). Dopo ciascuna: verifica a campione, `--copertura`, commit locale.
+- **Parte A COMPLETA e committata (42ffb851, locale, 2026-10-30)**: `11a_Atlante_Risolutore.md`, 1442 righe, D67-D87 (D88-D89 non usati), copertura 0 mancanti sui 3 moduli. Completata con des-manual-writer (~225k token per la seconda meta'). Spunti da indagare (sezione «Limiti e domande» del file): metodi `ammunition_consumed*`/`interceptions_consumed` duplicati fra `EngagementResult` e `SessionOutcome` (nel core solo i secondi); `apply_engagement_result` incrementa `ammunition_events`/`interception_events` anche se l'asset non ha il metodo di consumo; `_domain_id` replicato in 3 moduli.
+- **Parte B in corso (lanciata 2026-10-30)**: `11b_Atlante_Missione_Carburante.md`, D90-D109; l'agente salva dopo ogni modulo (lezione di A). Se la sessione e' interrotta, controllare il file parziale.
+- **Da fare in sequenza (una alla volta, mai in parallelo: richiesta dell'utente per il consumo)**: B = `11b_Atlante_Missione_Carburante.md` (Mission_Types, Fuel_Model, Area_Fire; D90-D109), C = `11c_Atlante_Porte_Campagna.md` (Session_Types, Campaign_Types, Readiness, Session_Validator, Session_Campaign, Damage_Model, Session_Rng + "Mappa dei dati"; D110-D129). Prompt degli agenti: vedi sessione 2026-10-29 (des-manual-writer, modello = pilota). Dopo ciascuna: verifica a campione, `--copertura`, commit locale.
 - Integrazione finale (dopo A-C): righe D67+ nell'Elenco e nell'Indice di `Manuale_Motore_DES.md`, tabella-atlante del capitolo 10 (§10.2) con la riclassificazione, aggiornamento "Aggiornato al commit".
 
 ## Cose non ovvie
