@@ -1406,3 +1406,20 @@ Le colonne «Tipo», «Simbolo», «Firma» e «Riga» sono l'uscita di `inventa
 | scelta del tiro | funzione | `impact_time` | `impact_time(order, weapon)` | `:216` | Istante d'impatto: `t_fire + time_of_flight`. | `resolve_area_fire`; `SS:run_session` |
 | risoluzione | funzione | `resolve_area_fire` | `resolve_area_fire(order, shooter, enemies, positions_at, rng, provenance, inactive_from, grounded_at)` | `:231` | Risolve un ordine di fuoco: `EngagementResult` senza forze, oppure None se non c'è tiro. Non muta gli asset. | `SS:fire_area` (funzione locale di `run_session`) |
 | risoluzione | funzione | `_asset_id` | `_asset_id(asset)` | `:318` | Id di dominio (`id`, poi `name`): stesso criterio di `Engagement_Resolver._domain_id`. | `resolve_area_fire` |
+
+## 10B.5 Limiti e domande
+
+Le voci sono state trovate scrivendo la parte; l'esito è quello della valutazione del 2026-10-30.
+
+- **Campi della Missione validati e mai letti.** `MissionWaypoint.altitude_reference`, `Mission.activation_event`, `MissionRules.alarm_state`, `threat_reaction`, `emcon`, `formation`, `Mission.priority`, `MissionAction.priority`: nessun codice sotto `Source/` fuori da `Mission_Types` e dai test li legge (verificato con `grep` per `emcon`, `threat_reaction`, `alarm_state`, `activation_event`, `altitude_reference`: 0 occorrenze; per gli altri tre vale il rapporto dell'agente). Il solo campo di `MissionRules` letto è `roe` (`Logic/Mission_Adapter.py:1983`). *Esito: lasciati; sono dati d'ingresso in attesa del chiamante (C2).*
+- **Motivi di aborto e di fine mai prodotti.** `AbortReason.THREAT`, `AbortReason.SUPPORT_MISSING`, `AssetEndReason.THREAT`, `AssetEndReason.MISSION_ABORTED`: nessun costruttore in `Logic/` li produce. *Esito: lasciati.*
+- **`EndCriteria.target_destroyed` con bersaglio POINT o AREA.** Il costruttore rifiuta il criterio solo con NONE e ZONE (`Mission_Types.py:1004`); la sessione lo ignora con un warning (`Session_Simulator.py:1743`). *Esito (decisione dell'utente): solo documentare, con un commento nel codice (`191b7d37`); il rifiuto nel costruttore si valuterà con un chiamante di produzione.*
+- **`Fuel_Model._base_options` non usava `asset_id`.** *Esito: parametro tolto in `191b7d37`.*
+- **`EPISODE_GAP = FM.DISENGAGE_TIME`** (`Session_Simulator.py:914`): cambiare la durata del disimpegno cambia anche come la sessione raggruppa gli ingaggi. *Esito: già dichiarato dal commento della costante; nessuna azione.*
+- **`bingo_point` restituisce `None` per due motivi** («nessun bingo» e «controllo non possibile»). *Esito: il docstring lo dice ora (`191b7d37`); per distinguerli si usa `return_margin`.*
+- **`fuel_exhaustion` restituisce `None`** se anche un solo tratto ha fabbisogno `None`.
+- **Consumo per ingaggio (G3) e riserva di disimpegno (G1)** sono la stessa quantità per costruzione; la regola futura sulla durata dell'emergenza è dichiarata non implementata (`Fuel_Model.py:1121-1127`, righe di `f009eb43`).
+- **`resolve_area_fire`:** il ramo `shots < 1` (`Area_Fire.py:269`) non è raggiungibile, perché `area_fire_weapon` esclude le armi con scorta insufficiente (dal rapporto dell'agente; ho letto solo il ramo, non `area_fire_weapon`).
+- **Stime dichiarate dal codice e riportate come tali, non ricalibrate:** in `Fuel_Model` `GLIDE_RATIO`, `BINGO_RESERVE`, `BINGO_RETURN_FACTOR`, `DISENGAGE_TIME`, `ALTERNATE_BASE_MAX_OFFSET` e l'unità kg/h del consumo `emergency`; in `Area_Fire` le tre costanti `AREA_FIRE_*`; in `Mission_Types` `EMCON_STATES`, `THREAT_REACTIONS`, `FORMATIONS`.
+
+**Righe dopo `191b7d37`.** I `:riga` di questa parte sono quelli di `f009eb43`. Il commit `191b7d37` (solo docstring, commenti, un import e un parametro inutilizzati) sposta in avanti di 3-4 righe i simboli che stanno dopo il punto toccato in `Fuel_Model.py` (da `:933`), `Engagement_Resolver.py` (da `:3807`), `Damage_Model.py` (da `:162`) e `Mission_Types.py` (da `:1004`); in `Session_Validator.py` le righe non cambiano.
