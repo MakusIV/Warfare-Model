@@ -3804,9 +3804,12 @@ def apply_engagement_result(result: EngagementResult, *forces) -> Dict[str, int]
     stato ombra. Un asset stub senza il parametro `weapon` riceve la chiamata storica.
 
     Returns:
-        {'damage_events': applicati, 'ammunition_events': applicati,
-        'interception_events': applicati, 'missing_assets': non trovati} — un asset non
-        trovato e' registrato e saltato, non e' un errore.
+        {'damage_events': applicati, 'ammunition_events': elaborati,
+        'interception_events': elaborati, 'missing_assets': non trovati} — i due contatori
+        dei consumi contano gli eventi elaborati: il consumo avviene solo se l'asset ha il
+        metodo (`consume_ammunition` / `consume_interceptor_stock`) chiamabile, altrimenti
+        l'evento e' contato lo stesso senza effetto. Un asset non trovato e' registrato e
+        saltato, non e' un errore.
     """
     if not isinstance(result, EngagementResult):
         raise TypeError(f"result must be an EngagementResult, got {type(result).__name__}")

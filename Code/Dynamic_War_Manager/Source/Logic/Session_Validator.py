@@ -10,7 +10,7 @@ Import di `Logic/Session_Simulator`, `Logic/Mission_Adapter`, `Logic/Contact_Sch
 """
 from __future__ import annotations
 
-from typing import Iterable, Mapping, Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 from Code.Dynamic_War_Manager.Source.Command.Campaign_Types import (
     CampaignLedger,
@@ -19,7 +19,7 @@ from Code.Dynamic_War_Manager.Source.Command.Campaign_Types import (
     SessionViolation,
     ViolationCode,
 )
-from Code.Dynamic_War_Manager.Source.Command.Mission_Types import Mission, check_mission_assets
+from Code.Dynamic_War_Manager.Source.Command.Mission_Types import check_mission_assets
 from Code.Dynamic_War_Manager.Source.Command.Session_Types import SessionOrder
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
 from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA

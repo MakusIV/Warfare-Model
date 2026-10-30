@@ -930,7 +930,10 @@ def bingo_point(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], res
 
     Returns:
         Il `BingoPoint`, oppure None se non c'e' bingo (`return_margin` >= 0, a meno del rumore
-        `_FUEL_EPS`) o se il controllo non e' possibile (v. `return_margin`).
+        `_FUEL_EPS`) o se il controllo non e' possibile (v. `return_margin`; anche asset senza id di
+        dominio). Il None e' lo stesso nei due casi: dal solo valore il chiamante non distingue
+        «nessun bingo» da «dati mancanti» (per distinguerli: `return_margin`, che dei dati mancanti da' None
+        e del bingo un margine negativo).
     """
     bases = tuple(bases)
     asset_id = _domain_id(asset)
@@ -1447,7 +1450,7 @@ def _alternate_option(segments: Sequence[_Segment], point, travelled: float, bas
     return best
 
 
-def _base_options(asset_id: str, legs: Sequence, index: int, fraction: float, point, bases, rule: 'ReturnRule',
+def _base_options(legs: Sequence, index: int, fraction: float, point, bases, rule: 'ReturnRule',
                   transfer: bool, max_offset: float):
     """Candidate di rientro (G2) come `(lunghezza, priorita', x, y, azione, via, punti)`: la base di partenza
     (ritroso; anello: anche il resto della rotta, solo per il combattimento) e, per il combattimento, le basi
@@ -1547,7 +1550,7 @@ def bingo_decision(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], 
     def reachable(length: float) -> bool:
         return rate * length <= fuel + _FUEL_EPS
 
-    options = [option for option in _base_options(asset_id, legs, index, fraction, point, bases, rule, transfer,
+    options = [option for option in _base_options(legs, index, fraction, point, bases, rule, transfer,
                                                   max_offset) if reachable(option[0])]
 
     if options:

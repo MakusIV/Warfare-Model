@@ -159,7 +159,10 @@ def resolve_hit(accuracy: float, destroy_capacity: float, draw: float) -> str:
     che rende la sessione riproducibile. L'ordine delle soglie e' parte del contratto.
 
     Args:
-        draw: numero in [0, 1).
+        draw: numero in [0, 1). Il controllo `_check_probability` accetta anche 1.0 (intervallo
+            chiuso) e `draw = 1.0` darebbe MISS anche con accuracy = 1.0: il contratto
+            semiaperto e' garantito dal chiamante (`random.Random.random()` non restituisce
+            1.0; il risolutore ripete il controllo in `_draw`).
 
     Returns:
         Uno di HIT_OUTCOMES.

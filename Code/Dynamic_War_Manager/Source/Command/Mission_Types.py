@@ -1001,6 +1001,10 @@ class Mission:
         if not isinstance(self.end_criteria, EndCriteria):
             raise TypeError(f"end_criteria must be EndCriteria, got {type(self.end_criteria).__name__}")
 
+        # Il costruttore rifiuta il criterio solo con bersaglio NONE o ZONE; con POINT e AREA lo accetta e la
+        # sessione lo ignora con un warning (Session_Simulator, «not representable (no asset to destroy),
+        # ignored»). Decisione del 2026-10-30: solo documentare; il rifiuto nel costruttore si valutera' quando
+        # ci sara' un chiamante di produzione.
         if self.end_criteria.target_destroyed and self.target.kind in (TargetKind.NONE, TargetKind.ZONE):
             raise ValueError(f"end_criteria.target_destroyed needs a destroyable target, "
                              f"not {self.target.kind.name}")
