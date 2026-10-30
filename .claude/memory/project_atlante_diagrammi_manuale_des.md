@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 0468db0e-19b3-43df-a060-d82baa1e794b
-  modified: 2026-10-30T10:30:28.548Z
+  modified: 2026-10-30T13:12:27.237Z
 ---
 
 ## Richiesta dell'utente (2026-10-29)
@@ -17,7 +17,9 @@ L0 contesto, L1 architettura (grafo reale degli import), L2 moduli (classi/API +
 ## Stato (pushato su origin a 79bab4e2 il 2026-10-29)
 - `9d4f208c` pilota: `Manuale_Motore_DES/11_Atlante_Diagrammi.md` (capitolo 10, D57-D66) + `_strumenti/inventario.py` (ast, sola lettura: `--dipendenze`, `--chiamate`, `--controlla`; poi `--tabella` e `--copertura`, commit successivo).
 - **Parte A COMPLETA e committata (42ffb851, locale, 2026-10-30)**: `11a_Atlante_Risolutore.md`, 1442 righe, D67-D87 (D88-D89 non usati), copertura 0 mancanti sui 3 moduli. Completata con des-manual-writer (~225k token per la seconda meta'). Spunti da indagare (sezione «Limiti e domande» del file): metodi `ammunition_consumed*`/`interceptions_consumed` duplicati fra `EngagementResult` e `SessionOutcome` (nel core solo i secondi); `apply_engagement_result` incrementa `ammunition_events`/`interception_events` anche se l'asset non ha il metodo di consumo; `_domain_id` replicato in 3 moduli.
-- **Parte B in corso (lanciata 2026-10-30)**: `11b_Atlante_Missione_Carburante.md`, D90-D109; l'agente salva dopo ogni modulo (lezione di A). Se la sessione e' interrotta, controllare il file parziale.
+- **Parte B COMPLETA (4fe1225f)**: `11b_Atlante_Missione_Carburante.md`, 1408 righe, D90-D109. Spunti: campi di Mission_Types validati e mai letti (emcon, threat_reaction, alarm_state, activation_event, altitude_reference, formation, priority); AbortReason.THREAT/SUPPORT_MISSING e AssetEndReason.THREAT/MISSION_ABORTED mai prodotti; `EPISODE_GAP = DISENGAGE_TIME`; `_base_options` non usa `asset_id`.
+- **Parte C COMPLETA (255f5bc4)**: `11c_Atlante_Porte_Campagna.md`, 1205 righe, D110-D129. Spunti in §10C.10: rami morti del validatore (`no readiness record`), provenienza del turnaround persa in `ReadyRecord`, `SessionOutcome.__post_init__` normalizza meno di `SessionOrder`, `_domain_id`/`_TIME_EPS` replicati.
+- **Integrazione FATTA (2026-10-30, commit locale, non pushato)**: Elenco e Indice di `Manuale_Motore_DES.md` (127 righe D), §10.2bis in `11_Atlante_Diagrammi.md`, `AS`->`AST` come id di partecipante nei Mermaid (parola chiave). Nessun renderer: sintassi da controllare in Obsidian. Resta: push (lo fa l'utente), eventuale indagine sugli spunti sopra.
 - **Da fare in sequenza (una alla volta, mai in parallelo: richiesta dell'utente per il consumo)**: B = `11b_Atlante_Missione_Carburante.md` (Mission_Types, Fuel_Model, Area_Fire; D90-D109), C = `11c_Atlante_Porte_Campagna.md` (Session_Types, Campaign_Types, Readiness, Session_Validator, Session_Campaign, Damage_Model, Session_Rng + "Mappa dei dati"; D110-D129). Prompt degli agenti: vedi sessione 2026-10-29 (des-manual-writer, modello = pilota). Dopo ciascuna: verifica a campione, `--copertura`, commit locale.
 - Integrazione finale (dopo A-C): righe D67+ nell'Elenco e nell'Indice di `Manuale_Motore_DES.md`, tabella-atlante del capitolo 10 (§10.2) con la riclassificazione, aggiornamento "Aggiornato al commit".
 
