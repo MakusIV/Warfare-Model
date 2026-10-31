@@ -44,6 +44,13 @@ permission:
     "sudo*": deny
     "apt*": deny
     "apt-get*": deny
+    "*git push*": deny
+    "*git branch -d*": deny
+    "*git branch -D*": deny
+    "*git branch -m*": deny
+    "*git branch -M*": deny
+    "*git branch --delete*": deny
+    "*git branch --move*": deny
   webfetch: deny
   websearch: deny
 ---

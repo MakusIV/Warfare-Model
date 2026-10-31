@@ -36,7 +36,6 @@ permission:
     "wc*": allow
     "bash tools/ai/verifica.sh*": allow
     "*python3 -m unittest*": allow
-    "*python3 -c*": allow
     "git add*": deny
     "git commit*": deny
     "git push*": deny
@@ -54,6 +53,13 @@ permission:
     "sudo*": deny
     "apt*": deny
     "apt-get*": deny
+    "*git push*": deny
+    "*git branch -d*": deny
+    "*git branch -D*": deny
+    "*git branch -m*": deny
+    "*git branch -M*": deny
+    "*git branch --delete*": deny
+    "*git branch --move*": deny
   webfetch: deny
   websearch: deny
 ---
@@ -65,8 +71,8 @@ nella sessione principale di Claude.
 
 Regole:
 - NON modificare codice, test o altri documenti: scrivi solo `Analysis/Document/Proposta_<Tema>.md` (o
-  aggiorna quello indicato nel compito). Bash solo per leggere, cercare ed eseguire codice e test
-  esistenti in sola lettura (sonde, conteggi). Niente commit.
+  aggiorna quello indicato nel compito). Bash solo per leggere, cercare ed eseguire i test
+  esistenti in sola lettura (`python3 -m unittest`; `python3 -c` non e' consentito); i conteggi con `grep`/`rg`/`wc`. Niente commit.
 - Le decisioni di design restano all'utente: presenta le alternative con pro e contro e una
   raccomandazione motivata; elenca esplicitamente le decisioni aperte.
 - Mai spacciare valori inventati per dati tarati: ogni costante stimata e' dichiarata come stima.

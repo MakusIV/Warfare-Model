@@ -14,7 +14,12 @@ permission:
     "git diff*": allow
     "git log*": allow
     "git show*": allow
-    "git branch*": allow
+    "git branch --show-current": allow
+    "git branch --list": allow
+    "git branch -a": allow
+    "git branch -r": allow
+    "git branch -v": allow
+    "git branch -vv": allow
     "grep*": allow
     "rg*": allow
     "ls*": allow
@@ -34,6 +39,13 @@ permission:
     "sudo*": deny
     "apt*": deny
     "apt-get*": deny
+    "*git push*": deny
+    "*git branch -d*": deny
+    "*git branch -D*": deny
+    "*git branch -m*": deny
+    "*git branch -M*": deny
+    "*git branch --delete*": deny
+    "*git branch --move*": deny
   webfetch: deny
   websearch: deny
 ---

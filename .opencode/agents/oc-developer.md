@@ -22,7 +22,8 @@ permission:
     "*": deny
     "bash tools/ai/verifica.sh*": allow
     "*python3 -m unittest*": allow
-    "*python3 -c*": allow
+    '*python3 -c "import py_compile; py_compile.compile(*doraise=True)"*': allow
+    "*python3 -c 'import py_compile; py_compile.compile(*doraise=True)'*": allow
     "git status*": allow
     "git diff*": allow
     "git log*": allow
@@ -54,6 +55,13 @@ permission:
     "sudo*": deny
     "apt*": deny
     "apt-get*": deny
+    "*git push*": deny
+    "*git branch -d*": deny
+    "*git branch -D*": deny
+    "*git branch -m*": deny
+    "*git branch -M*": deny
+    "*git branch --delete*": deny
+    "*git branch --move*": deny
   webfetch: deny
   websearch: deny
 ---

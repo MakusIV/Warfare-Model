@@ -36,7 +36,6 @@ permission:
     "wc*": allow
     "bash tools/ai/verifica.sh*": allow
     "*python3 -m unittest*": allow
-    "*python3 -c*": allow
     "git add*": deny
     "git commit*": deny
     "git push*": deny
@@ -54,6 +53,13 @@ permission:
     "sudo*": deny
     "apt*": deny
     "apt-get*": deny
+    "*git push*": deny
+    "*git branch -d*": deny
+    "*git branch -D*": deny
+    "*git branch -m*": deny
+    "*git branch -M*": deny
+    "*git branch --delete*": deny
+    "*git branch --move*": deny
   webfetch: deny
   websearch: deny
 ---
@@ -69,7 +75,7 @@ spiegazione) e, se c'e', il branch e il piano di riferimento. Procedi cosi':
    sintomo nel confronto con la fotografia, o per escludere effetti su altri moduli prima di concludere.
    Se non riesci a riprodurre, dillo e fermati li'.
 2. **Isola**: restringi al modulo, alla funzione e al commit (`git log`, `git diff`, sonde con
-   `python3 -c`). Ricorda il determinismo: una differenza nel confronto puo' venire dall'ordine delle
+   test mirati `python3 -m unittest`; `python3 -c` non e' consentito). Ricorda il determinismo: una differenza nel confronto puo' venire dall'ordine delle
    estrazioni dell'RNG di sessione.
 3. **Causa**: `file:riga`, meccanismo, e la prova che la conferma (output, valore, commit).
 4. **Correzione proposta**: la minima che risolve, descritta o come diff nel rapporto, NON applicata;
