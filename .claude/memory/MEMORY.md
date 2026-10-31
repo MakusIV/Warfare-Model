@@ -3,7 +3,7 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
-- [Atlante dei diagrammi del manuale DES — COMPLETO (D57-D129, parti A-C + integrazione), limiti valutati, pulizia 191b7d37; 8 commit locali NON pushati (2026-10-31)](project_atlante_diagrammi_manuale_des.md) — resta: push su richiesta dell'utente; spunti rimandati nel file; prossimo: P11-P14 del difetto 26 o Proposta D-4b/D-4c
+- [Atlante dei diagrammi del manuale DES — COMPLETO (D57-D129, parti A-C + integrazione), limiti valutati, pulizia 191b7d37; pushato a 166d459e il 2026-10-31](project_atlante_diagrammi_manuale_des.md) — spunti rimandati nel file; prossimo: P11-P14 del difetto 26 o Proposta D-4b/D-4c
 - [Permessi degli agenti des-*/oc-* e push — irrigiditi il 2026-10-31](reference_permessi_agenti_push.md) — python3 -c e git branch chiusi, rete su push/cancellazione branch; controllo con `opencode debug agent <nome>`; push solo su richiesta
 - [Sessione 2026-10-29 ProArt — difetto 26 CORRETTO (des-developer), suite 4710, fotografia 989; manuale e P11-P14 fatti; pushato a 79bab4e2](project_session_2026_10_29_difetto26_summary.md) — Proposta D-4b/D-4c da scrivere; `confronto.log` non ha righe NEW/CHANGED
 - [Sessione 2026-10-29 osboxes — CHIUSA, pushato: Proposta difetto 26 scritta](project_session_2026_10_29_summary.md) — superata: le decisioni D26-1..6 sono prese e il difetto e' corretto (vedi riga sopra)
