@@ -6,13 +6,13 @@ architettura con il grafo reale degli import, i moduli grandi `Logic/Session_Sim
 
 ## 10.1 La scala dei livelli e come leggerla
 
-| Livello | Domanda a cui risponde | Tipo di diagramma | Che cosa contiene |
-|---|---|---|---|
-| **L0 Contesto** | Dove sta il DES rispetto alla campagna, ai registri (Asset, Block, Region) e al simulatore? | `flowchart` | Il core come scatola, chi lo chiama, che cosa muta, che cosa importa dai registri |
-| **L1 Architettura** | Quali moduli, in quali strati, con quali dipendenze? | `flowchart` | I moduli del core e i **soli** import reali fra loro |
-| **L2 Moduli** | Quali tipi e quale API pubblica ha un modulo? | `classDiagram` selettivo + tabella completa | Tipi con i campi, funzioni e metodi raggruppati per ruolo, con `:riga` |
-| **L3 Interazione** | Chi chiama chi, in che ordine, in un flusso completo? | `sequenceDiagram` | Messaggi = funzioni reali, nell'ordine del codice |
-| **L4 Algoritmo** | Come funziona una regola? | `flowchart`, `stateDiagram` | I diagrammi D1-D56 dei capitoli 1-8 (non toccati) |
+| Livello             | Domanda a cui risponde                                                                      | Tipo di diagramma                           | Che cosa contiene                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
+| **L0 Contesto**     | Dove sta il DES rispetto alla campagna, ai registri (Asset, Block, Region) e al simulatore? | `flowchart`                                 | Il core come scatola, chi lo chiama, che cosa muta, che cosa importa dai registri |
+| **L1 Architettura** | Quali moduli, in quali strati, con quali dipendenze?                                        | `flowchart`                                 | I moduli del core e i **soli** import reali fra loro                              |
+| **L2 Moduli**       | Quali tipi e quale API pubblica ha un modulo?                                               | `classDiagram` selettivo + tabella completa | Tipi con i campi, funzioni e metodi raggruppati per ruolo, con `:riga`            |
+| **L3 Interazione**  | Chi chiama chi, in che ordine, in un flusso completo?                                       | `sequenceDiagram`                           | Messaggi = funzioni reali, nell'ordine del codice                                 |
+| **L4 Algoritmo**    | Come funziona una regola?                                                                   | `flowchart`, `stateDiagram`                 | I diagrammi D1-D56 dei capitoli 1-8 (non toccati)                                 |
 
 **Come leggerla.** Si scende di un livello alla volta: L0 dice che il core esiste e che cosa lo circonda; L1 lo apre in moduli; L2 apre un modulo in tipi e
 funzioni; L3 mostra le funzioni che si chiamano in un flusso; L4 spiega la regola dentro una funzione. Un diagramma di livello Lx rimanda sempre al
@@ -40,61 +40,61 @@ le eccezioni sono segnate (D1 → L1; D8 → L3; D29, D55, D56 fuori scala; `sta
 
 ### L0 — Contesto
 
-| Dnn | Diagramma | Tipo | Capitolo |
-|---|---|---|---|
+| Dnn         | Diagramma                                                                             | Tipo           | Capitolo |
+| ----------- | ------------------------------------------------------------------------------------- | -------------- | -------- |
 | D57 (nuovo) | Il core DES nel suo contesto: chiamanti, forze e registri, dati importati, simulatore | `flowchart LR` | 10 §10.3 |
 
 ### L1 — Architettura
 
-| Dnn | Diagramma | Tipo | Capitolo |
-|---|---|---|---|
-| D1 | Moduli e dipendenze dei quattro strati (flusso concettuale, con il blocco «Ciclo di campagna») | `flowchart TD` | [1](02_Scopo_e_Motivazioni.md) |
-| D58 (nuovo) | Import reali: porte, scheduler, risolutore, stato | `flowchart TD` | 10 §10.4 |
-| D59 (nuovo) | Import reali: orchestratore, adapter di missione, fuoco su posizione | `flowchart TD` | 10 §10.4 |
-| D60 (nuovo) | Import reali: il ciclo di campagna (F8) | `flowchart TD` | 10 §10.4 |
+| Dnn         | Diagramma                                                                                      | Tipo           | Capitolo                       |
+| ----------- | ---------------------------------------------------------------------------------------------- | -------------- | ------------------------------ |
+| D1          | Moduli e dipendenze dei quattro strati (flusso concettuale, con il blocco «Ciclo di campagna») | `flowchart TD` | [1](02_Scopo_e_Motivazioni.md) |
+| D58 (nuovo) | Import reali: porte, scheduler, risolutore, stato                                              | `flowchart TD` | 10 §10.4                       |
+| D59 (nuovo) | Import reali: orchestratore, adapter di missione, fuoco su posizione                           | `flowchart TD` | 10 §10.4                       |
+| D60 (nuovo) | Import reali: il ciclo di campagna (F8)                                                        | `flowchart TD` | 10 §10.4                       |
 
 ### L2 — Moduli (tipi e API)
 
-| Dnn | Diagramma | Tipo | Capitolo |
-|---|---|---|---|
-| D2 | Tipi di dominio — porte di sessione (`SessionOrder`/`SessionOutcome`) | `classDiagram` | [2](03_Strato0_Contratto_Porte.md) |
-| D3 | Tipi di dominio — geometria dei contatti (`Contact_Scheduler`) | `classDiagram` | [3](04_Strato1_Scheduler_Contatti.md) |
-| D4 | Tipi di dominio — ingaggio (`Engagement_Resolver`) | `classDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md) |
-| D14 | Volumi di rilevamento e intercettazione: tipi e modalità del pianificatore di rotta | `classDiagram` | [7](08_Supporto_Trasversale.md) |
-| D16 | Modello dei tipi della Missione (`Mission`, `MissionAsset`, `MissionWaypoint`, ...) | `classDiagram` | [2](03_Strato0_Contratto_Porte.md) |
-| D17 | Esiti della Missione (`MissionOutcome`, `AssetMissionOutcome`) | `classDiagram` | [2](03_Strato0_Contratto_Porte.md) |
-| D28 | `Air_Defense_Efficacy`: profili, dati RWR, funzioni | `classDiagram` | [7](08_Supporto_Trasversale.md) |
-| D30 | La vista di missione `MissionForce` e ciò che il risolutore ne legge | `classDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
-| D39 | Tipi di `Fuel_Model` | `classDiagram` | [5](06_Strato3_Applicazione_Stato.md) |
-| D47 | I tipi nuovi della F7 (`TargetRules`, `WeaponPolicy`, `AreaWeapon`) e chi li consuma | `classDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md) |
-| D51 | I tipi di `Command/Campaign_Types.py` | `classDiagram` | [2](03_Strato0_Contratto_Porte.md) |
-| D61 (nuovo) | `Session_Simulator`: tipi interni, voce di coda e tipi di evento | `classDiagram` | 10 §10.5 |
-| D62 (nuovo) | `Session_Simulator`: le funzioni per ruolo | `flowchart TD` | 10 §10.5 |
-| D63 (nuovo) | `Mission_Adapter`: i gruppi di funzioni e le loro dipendenze | `flowchart TD` | 10 §10.5 |
+| Dnn         | Diagramma                                                                            | Tipo           | Capitolo                                   |
+| ----------- | ------------------------------------------------------------------------------------ | -------------- | ------------------------------------------ |
+| D2          | Tipi di dominio — porte di sessione (`SessionOrder`/`SessionOutcome`)                | `classDiagram` | [2](03_Strato0_Contratto_Porte.md)         |
+| D3          | Tipi di dominio — geometria dei contatti (`Contact_Scheduler`)                       | `classDiagram` | [3](04_Strato1_Scheduler_Contatti.md)      |
+| D4          | Tipi di dominio — ingaggio (`Engagement_Resolver`)                                   | `classDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md)     |
+| D14         | Volumi di rilevamento e intercettazione: tipi e modalità del pianificatore di rotta  | `classDiagram` | [7](08_Supporto_Trasversale.md)            |
+| D16         | Modello dei tipi della Missione (`Mission`, `MissionAsset`, `MissionWaypoint`, ...)  | `classDiagram` | [2](03_Strato0_Contratto_Porte.md)         |
+| D17         | Esiti della Missione (`MissionOutcome`, `AssetMissionOutcome`)                       | `classDiagram` | [2](03_Strato0_Contratto_Porte.md)         |
+| D28         | `Air_Defense_Efficacy`: profili, dati RWR, funzioni                                  | `classDiagram` | [7](08_Supporto_Trasversale.md)            |
+| D30         | La vista di missione `MissionForce` e ciò che il risolutore ne legge                 | `classDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
+| D39         | Tipi di `Fuel_Model`                                                                 | `classDiagram` | [5](06_Strato3_Applicazione_Stato.md)      |
+| D47         | I tipi nuovi della F7 (`TargetRules`, `WeaponPolicy`, `AreaWeapon`) e chi li consuma | `classDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md)     |
+| D51         | I tipi di `Command/Campaign_Types.py`                                                | `classDiagram` | [2](03_Strato0_Contratto_Porte.md)         |
+| D61 (nuovo) | `Session_Simulator`: tipi interni, voce di coda e tipi di evento                     | `classDiagram` | 10 §10.5                                   |
+| D62 (nuovo) | `Session_Simulator`: le funzioni per ruolo                                           | `flowchart TD` | 10 §10.5                                   |
+| D63 (nuovo) | `Mission_Adapter`: i gruppi di funzioni e le loro dipendenze                         | `flowchart TD` | 10 §10.5                                   |
 
 ### L3 — Interazione (sequenze di chiamata)
 
-| Dnn | Diagramma | Tipo | Capitolo |
-|---|---|---|---|
-| D5 | Sequenza della coda eventi dentro un ingaggio | `sequenceDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md) |
-| D8 | Flusso dati di `run_session` (eccezione: è un `flowchart`, ma è il flusso dati dell'intera funzione, non una regola) | `flowchart TD` | [6](07_Orchestratore_Session_Simulator.md) |
-| D9 | Coda eventi di sessione (schema) | `sequenceDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
-| D11 | Controllo di portata: rimando `not_before` di un candidato | `sequenceDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md) |
-| D25 | Priorità ai lanciatori: prelazione L3 | `sequenceDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md) |
-| D40 | Ciclo episodio → ri-pianificazione → ri-scheduling → contabilità del carburante | `sequenceDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
-| D45 | `return_fire`: attesa di un ostile e risveglio `_WAKE` | `sequenceDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md) |
-| D50 | Il fuoco su posizione nella coda di sessione | `sequenceDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
-| D54 | Un passo del ciclo di campagna (`run_campaign_session`) | `sequenceDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
-| D64 (nuovo) | `run_session` 1/3: preparazione e validazione | `sequenceDiagram` | 10 §10.6 |
-| D65 (nuovo) | `run_session` 2/3: contatti, episodi, risolutore, stato e ri-pianificazione | `sequenceDiagram` | 10 §10.6 |
-| D66 (nuovo) | `run_session` 3/3: passo finale del carburante, esiti e `assemble_session_outcome` | `sequenceDiagram` | 10 §10.6 |
+| Dnn         | Diagramma                                                                                                            | Tipo              | Capitolo                                   |
+| ----------- | -------------------------------------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------ |
+| D5          | Sequenza della coda eventi dentro un ingaggio                                                                        | `sequenceDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md)     |
+| D8          | Flusso dati di `run_session` (eccezione: è un `flowchart`, ma è il flusso dati dell'intera funzione, non una regola) | `flowchart TD`    | [6](07_Orchestratore_Session_Simulator.md) |
+| D9          | Coda eventi di sessione (schema)                                                                                     | `sequenceDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
+| D11         | Controllo di portata: rimando `not_before` di un candidato                                                           | `sequenceDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md)     |
+| D25         | Priorità ai lanciatori: prelazione L3                                                                                | `sequenceDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md)     |
+| D40         | Ciclo episodio → ri-pianificazione → ri-scheduling → contabilità del carburante                                      | `sequenceDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
+| D45         | `return_fire`: attesa di un ostile e risveglio `_WAKE`                                                               | `sequenceDiagram` | [4](05_Strato2_Risolutore_Ingaggio.md)     |
+| D50         | Il fuoco su posizione nella coda di sessione                                                                         | `sequenceDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
+| D54         | Un passo del ciclo di campagna (`run_campaign_session`)                                                              | `sequenceDiagram` | [6](07_Orchestratore_Session_Simulator.md) |
+| D64 (nuovo) | `run_session` 1/3: preparazione e validazione                                                                        | `sequenceDiagram` | 10 §10.6                                   |
+| D65 (nuovo) | `run_session` 2/3: contatti, episodi, risolutore, stato e ri-pianificazione                                          | `sequenceDiagram` | 10 §10.6                                   |
+| D66 (nuovo) | `run_session` 3/3: passo finale del carburante, esiti e `assemble_session_outcome`                                   | `sequenceDiagram` | 10 §10.6                                   |
 
 ### L4 — Algoritmo (diagrammi esistenti, non toccati)
 
-| Tipo | Diagrammi (capitolo) |
-|---|---|
+| Tipo                  | Diagrammi (capitolo)                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `flowchart` di regola | D10, D12, D13, D22, D23, D24, D26, D27, D32, D33, D34, D37, D43, D46 ([4](05_Strato2_Risolutore_Ingaggio.md)); D38 ([5](06_Strato3_Applicazione_Stato.md)); D19, D20, D21, D31, D35, D36, D42, D48, D49, D52, D53 ([6](07_Orchestratore_Session_Simulator.md)); D15 ([7](08_Supporto_Trasversale.md), pianificatore d'attacco: **satellite**, fuori dal perimetro del core); D18 ([2](03_Strato0_Contratto_Porte.md), i due assi postura/tipo di missione: è un diagramma di concetto) |
-| `stateDiagram-v2` | D6 ([4](05_Strato2_Risolutore_Ingaggio.md)); D7 ([5](06_Strato3_Applicazione_Stato.md)); D41 ([6](07_Orchestratore_Session_Simulator.md)); D44 ([4](05_Strato2_Risolutore_Ingaggio.md)) |
+| `stateDiagram-v2`     | D6 ([4](05_Strato2_Risolutore_Ingaggio.md)); D7 ([5](06_Strato3_Applicazione_Stato.md)); D41 ([6](07_Orchestratore_Session_Simulator.md)); D44 ([4](05_Strato2_Risolutore_Ingaggio.md))                                                                                                                                                                                                                                                                                                |
 
 **Fuori scala** (non descrivono il motore): D29 (fasi del piano F0-F9, [9](10_Limiti_Estensioni_Divergenze.md)), D55 e D56 (sequenze degli scenari S30, [8](09_Validazione.md)).
 Conteggio: L1 1 esistente, L2 11, L3 9 (8 sequenze più D8), L4 32 (28 flowchart, 4 stati), fuori scala 3: **56**, tutti i D1-D56.
@@ -105,23 +105,23 @@ Conteggio: L1 1 esistente, L2 11, L3 9 (8 sequenze più D8), L4 32 (28 flowchart
 Nessun modulo ha oggi un diagramma L2 con la tabella completa se non i due del pilota.
 **Aggiornamento 2026-10-30:** la tabella qui sotto e' lo stato **del pilota**. Con le parti A, B e C (§10.2bis) ogni modulo del core ha ora il diagramma L2 con la tabella completa dei simboli e almeno una sequenza L3, compresi `Session_Rng` (D125-D126) e `Damage_Model` (D122-D124).
 
-| Modulo | L1 | L2 | L3 | L4 |
-|---|---|---|---|---|
-| `Command/Session_Types` | coperto (D58) | parziale (D2) | parziale (D66, ultima chiamata) | — |
-| `Command/Mission_Types` | coperto (D58) | parziale (D16, D17) | — | — |
-| `Command/Campaign_Types` | coperto (D60) | parziale (D51) | — | — |
-| `Utility/Session_Rng` | coperto (D58) | da fare (2 funzioni, v. cap. 7 §7.1) | — | — |
-| `Logic/Contact_Scheduler` | coperto (D58) | parziale (D3) | da fare | D34 |
-| `Logic/Engagement_Resolver` | coperto (D58) | parziale (D4, D47) | parziale (D5, D25, D45) | D22-D24, D26, D27, D32, D33, D37, D43, D44, D6 |
-| `Logic/Fire_Control` | coperto (D58) | parziale (D47) | parziale (D11) | D10, D46 |
-| `Logic/Area_Fire` | coperto (D59) | parziale (D47) | parziale (D50) | D49 |
-| `Logic/Damage_Model` | coperto (D58) | da fare | da fare | D7 |
-| `Logic/Fuel_Model` | coperto (D58) | parziale (D39) | parziale (D40) | D38 |
-| `Logic/Mission_Adapter` | coperto (D59) | **coperto** (D63, più D30 per `MissionForce`) | parziale (D64) | D20, D21, D35, D36 |
-| `Logic/Session_Simulator` | coperto (D59) | **coperto** (D61, D62) | **coperto** (D64-D66; anche D9, D40, D50) | D19, D31, D42, D48, D41 |
-| `Logic/Session_Validator` | coperto (D60) | da fare | parziale (D54) | D52 |
-| `Logic/Readiness` | coperto (D60) | da fare | parziale (D54) | D53 |
-| `Logic/Session_Campaign` | coperto (D60) | da fare (3 funzioni, v. cap. 6 §6.27) | **coperto** (D54) | — |
+| Modulo                      | L1            | L2                                            | L3                                        | L4                                             |
+| --------------------------- | ------------- | --------------------------------------------- | ----------------------------------------- | ---------------------------------------------- |
+| `Command/Session_Types`     | coperto (D58) | parziale (D2)                                 | parziale (D66, ultima chiamata)           | —                                              |
+| `Command/Mission_Types`     | coperto (D58) | parziale (D16, D17)                           | —                                         | —                                              |
+| `Command/Campaign_Types`    | coperto (D60) | parziale (D51)                                | —                                         | —                                              |
+| `Utility/Session_Rng`       | coperto (D58) | da fare (2 funzioni, v. cap. 7 §7.1)          | —                                         | —                                              |
+| `Logic/Contact_Scheduler`   | coperto (D58) | parziale (D3)                                 | da fare                                   | D34                                            |
+| `Logic/Engagement_Resolver` | coperto (D58) | parziale (D4, D47)                            | parziale (D5, D25, D45)                   | D22-D24, D26, D27, D32, D33, D37, D43, D44, D6 |
+| `Logic/Fire_Control`        | coperto (D58) | parziale (D47)                                | parziale (D11)                            | D10, D46                                       |
+| `Logic/Area_Fire`           | coperto (D59) | parziale (D47)                                | parziale (D50)                            | D49                                            |
+| `Logic/Damage_Model`        | coperto (D58) | da fare                                       | da fare                                   | D7                                             |
+| `Logic/Fuel_Model`          | coperto (D58) | parziale (D39)                                | parziale (D40)                            | D38                                            |
+| `Logic/Mission_Adapter`     | coperto (D59) | **coperto** (D63, più D30 per `MissionForce`) | parziale (D64)                            | D20, D21, D35, D36                             |
+| `Logic/Session_Simulator`   | coperto (D59) | **coperto** (D61, D62)                        | **coperto** (D64-D66; anche D9, D40, D50) | D19, D31, D42, D48, D41                        |
+| `Logic/Session_Validator`   | coperto (D60) | da fare                                       | parziale (D54)                            | D52                                            |
+| `Logic/Readiness`           | coperto (D60) | da fare                                       | parziale (D54)                            | D53                                            |
+| `Logic/Session_Campaign`    | coperto (D60) | da fare (3 funzioni, v. cap. 6 §6.27)         | **coperto** (D54)                         | —                                              |
 
 ## 10.2bis Estensione dell'atlante: parti A, B e C
 
@@ -129,8 +129,8 @@ Il pilota copriva due moduli. Le tre parti seguenti estendono i livelli L2 e L3 
 
 ### L1 — Architettura (parti A-C)
 
-| Dnn | Diagramma | Tipo | Modulo | Capitolo |
-|---|---|---|---|---|
+| Dnn  | Diagramma                                                                                                         | Tipo           | Modulo      | Capitolo                               |
+| ---- | ----------------------------------------------------------------------------------------------------------------- | -------------- | ----------- | -------------------------------------- |
 | D127 | Mappa dei dati: il percorso in una sessione, dagli argomenti di `run_session` al `SessionOutcome` (frecce = dati) | `flowchart LR` | trasversale | [10C.9](11c_Atlante_Porte_Campagna.md) |
 
 ### L2 — Moduli (tipi e API) (parti A-C)
