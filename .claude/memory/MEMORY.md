@@ -3,7 +3,8 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
-- [Sensori D-4b/D-4c: decisioni 2026-11-04, blocco A fatto (37816355, suite 4727, fotografia 1009), blocco B (EWR) da eseguire con oc-developer](project_sensori_d4b_d4c.md) — non pushato; dubbio sulla reliability 45/4
+- [Sensori D-4b/D-4c: blocchi A (37816355) e B (cbc75634) FATTI e verificati, suite 4742, fotografia 1009](project_sensori_d4b_d4c.md) — non pushato; restano manuale DES, F4, Piano; CSV OpenRouter da controllare
+- [OpenCode: niente upgrade alla 2.x finche' e' beta (decisione 2026-11-04)](feedback_opencode_no_upgrade_beta.md) — si resta sulla 1.19.5
 - [Atlante dei diagrammi del manuale DES — COMPLETO (D57-D129, parti A-C + integrazione), limiti valutati, pulizia 191b7d37; pushato a 166d459e il 2026-10-31](project_atlante_diagrammi_manuale_des.md) — spunti rimandati nel file; prossimo: P11-P14 del difetto 26 o Proposta D-4b/D-4c
 - [Permessi degli agenti des-*/oc-* e push — irrigiditi il 2026-10-31](reference_permessi_agenti_push.md) — python3 -c e git branch chiusi, rete su push/cancellazione branch; controllo con `opencode debug agent <nome>`; push solo su richiesta
 - [Sessione 2026-10-29 ProArt — difetto 26 CORRETTO (des-developer), suite 4710, fotografia 989; manuale e P11-P14 fatti; pushato a 79bab4e2](project_session_2026_10_29_difetto26_summary.md) — Proposta D-4b/D-4c da scrivere; `confronto.log` non ha righe NEW/CHANGED
