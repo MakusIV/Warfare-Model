@@ -62,7 +62,7 @@ class Vehicle_Data:
 
     _registry = {}
     
-    def __init__(self, constructor: str, made: str, model: str, category: str, physical_characteristics: Dict, start_service: str, end_service: str, cost: int, range: int, roles: str, engine: Dict, weapons: Dict, radar: Dict, TVD: Dict, communication: Dict, hydraulic: Dict, protections: Dict, speed_data: Dict, users: Optional[List[str]] = None):
+    def __init__(self, constructor: str, made: str, model: str, category: str, physical_characteristics: Dict, start_service: str, end_service: str, cost: int, range: int, roles: str, engine: Dict, weapons: Dict, radar: Dict, TVD: Dict, communication: Dict, hydraulic: Dict, protections: Dict, speed_data: Dict, users: Optional[List[str]] = None, visual: Optional[Dict] = None):
         _PC_KEYS = {'length', 'width', 'height', 'weight'}
         if not isinstance(physical_characteristics, dict) or not _PC_KEYS.issubset(physical_characteristics):
             raise ValueError(
@@ -91,6 +91,9 @@ class Vehicle_Data:
         self.weapons = weapons #{'model': quantity}
         self.radar = radar
         self.TVD = TVD
+        # Sensore visivo dell'equipaggio (D-4c): stessa forma di `radar`/`TVD`, nessuna `reliability`; NON entra
+        # negli score (`_TVD_eval`, `_radar_eval`, `_reliability_eval`, `_combat_eval`). None per quasi tutti i modelli.
+        self.visual = visual
         self.communication = communication
         self.hydraulic = hydraulic
         self.protections = protections
@@ -3696,6 +3699,20 @@ ZSU_57_2_data = {
     },
     'radar': False,
     'TVD': False,
+    # D-4c (Proposta_Dati_Sensori_EWR_Visivo.md, Ricerca_Sensore_Visivo_ZSU57_M163_2026_10_29.md): nessun radar ne'
+    # mirino strumentale di scoperta [FONTE, conf. alta]; scoperta SOLO a vista dell'equipaggio (torretta aperta).
+    #   acquisition_range 6: STIMA (conf. bassa) -- Howell (DC-3) in scala alle dimensioni di un caccia, intervallo 3-8 km;
+    #   tracking_range 5.5: FONTE (Wikipedia, portata obliqua massima del mirino automatico; pagina con tag di accuratezza), conf. media;
+    #   engagement_range 4: FONTE (museo finlandese, valka.cz), conf. media; multi_target_capacity 1: un solo mirino (dedotto).
+    # Solo cielo sereno e giorno nelle fonti: notte/meteo NON modellati per sensore (limite noto).
+    'visual': {
+        'model': 'Crew visual observation + analog reflex sight',
+        'capabilities': {
+            'air': (True, {'tracking_range': 5.5, 'acquisition_range': 6, 'engagement_range': 4, 'multi_target_capacity': 1}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+    },
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.25, 'communication_range': 70},
@@ -3804,6 +3821,19 @@ M163_VADS_data = {
     },
     'radar': False,
     'TVD': False,
+    # D-4c: l'AN/VPS-2 e' un radar di sola distanza (range-only) [FONTE, conf. alta]: non scopre, quindi NON e' `radar`.
+    # Scoperta a vista del puntatore (torretta aperta).
+    #   acquisition_range 6: STIMA (conf. bassa), come la ZSU-57-2;
+    #   tracking_range 5: FONTE (portata del VPS-2 contro 1 m2, AFV Database + weaponsystems.net), conf. media -- 7 km di
+    #   War Thunder scartato; engagement_range 1.2: FONTE (HEI-T-SD M246, Wikipedia), conf. media; multi_target_capacity 1.
+    'visual': {
+        'model': 'Crew visual observation + M61 lead-computing sight (AN/VPS-2 range-only radar for ranging)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 5, 'acquisition_range': 6, 'engagement_range': 1.2, 'multi_target_capacity': 1}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+    },
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 110},

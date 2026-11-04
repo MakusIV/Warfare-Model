@@ -74,11 +74,22 @@ SPEED_PROFILE_KEYS = ("nominal", "max", "off_road", "reference_altitude")
 # Casi normali (non errori) da attraversare senza sollevare:
 #   * `radar`/`TVD` == False o None  -> il mezzo non ha quel sensore (es. un carro);
 #   * `TVD` assente come attributo   -> Ship_Data non descrive sensori ottici;
+#   * `visual` (scoperta a occhio dell'equipaggio, D-4c): solo Vehicle_Data; assente (o None)
+#     negli altri registri e negli altri record, caso normale;
 #   * capabilities[mode][0] == False -> sensore presente ma cieco su quella dimensione;
 #   * capabilities[mode][1] == {}    -> capacita' dichiarata senza dati (Ship_Data 'ground').
 DETECTION_MODES = tuple(ACTION_TASKS.keys())          # ('ground', 'air', 'sea')
-DETECTION_SENSORS = ("radar", "TVD")
+VISUAL_SENSOR = "visual"
+DETECTION_SENSORS = ("radar", "TVD", VISUAL_SENSOR)
 DETECTION_RANGE_TYPES = ("acquisition_range", "tracking_range", "engagement_range")
+
+# D-4c, sensore visivo di ripiego (Proposta_Dati_Sensori_EWR_Visivo.md), interruttore dedicato:
+#   * `D4C_VISUAL_SENSOR` (ATTIVO): il sensore `visual` dei registri (scoperta a occhio dell'equipaggio, per i mezzi
+#     senza radar ne' TVD di scoperta: ZSU-57-2, M163-VADS) entra in detection_range come terzo sensore, composto col
+#     massimo come radar e TVD; lo leggono quindi DES (finestre di contatto) e pianificatore (DetectionThreat).
+#     Spento: detection_range ignora `visual` (None se chiesto esplicitamente), come prima della D-4c. Nessuno
+#     scenario precedente usa i due modelli, quindi con l'interruttore acceso nessuna sessione precedente cambia.
+D4C_VISUAL_SENSOR = True
 
 # Il rilevamento e' l'acquisizione: il tracking e l'ingaggio sono stadi successivi e piu'
 # corti. Lo scheduler dei contatti (Fase 3) chiede "quando questo osservatore vede il
@@ -1567,12 +1578,14 @@ class Mobile(Asset) :
 
         Params:
             mode:       dimensione del bersaglio, in DETECTION_MODES ('ground'/'air'/'sea').
-            sensor:     None (default) = il migliore fra radar e TVD; oppure 'radar'/'TVD'
-                        per isolare un solo sensore.
+            sensor:     None (default) = il migliore fra radar, TVD e visual; oppure
+                        'radar'/'TVD'/'visual' per isolare un solo sensore. 'visual' e' ignorato
+                        (None) se l'interruttore D4C_VISUAL_SENSOR e' spento.
             range_type: 'acquisition_range' (default), 'tracking_range' o 'engagement_range'.
 
-        Composizione radar+TVD: il default e' il MASSIMO dei due, non la somma e non il
-        radar da solo. Motivo: la domanda dello scheduler e' "a che distanza questo
+        Composizione radar+TVD+visual: il default e' il MASSIMO dei tre, non la somma e non il
+        radar da solo (il visivo, D-4c, e' un sensore di ripiego: lo hanno solo i mezzi senza
+        radar ne' TVD di scoperta, e si esclude con D4C_VISUAL_SENSOR). Motivo: la domanda dello scheduler e' "a che distanza questo
         osservatore vede per la prima volta il bersaglio", e la risposta e' il sensore che
         arriva piu' lontano fra quelli funzionanti; i due sensori non si sommano perche'
         guardano lo stesso bersaglio. Restano separabili con `sensor` proprio perche' le
@@ -1621,6 +1634,10 @@ class Mobile(Asset) :
             return None
 
         sensors = (sensor,) if sensor is not None else DETECTION_SENSORS
+
+        # D4C_VISUAL_SENSOR e' letto a ogni chiamata (globale di modulo), cosi' i test lo sostituiscono.
+        if not D4C_VISUAL_SENSOR:
+            sensors = tuple(s for s in sensors if s != VISUAL_SENSOR)
 
         ranges_km = [value for value in (self._sensor_range_km(data_record, s, mode, range_type)
                                          for s in sensors)

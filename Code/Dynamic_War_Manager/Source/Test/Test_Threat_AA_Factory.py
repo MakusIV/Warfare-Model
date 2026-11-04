@@ -23,10 +23,12 @@ Strategia di setup
 
 import logging
 import math
+import sys
 import unittest
+from unittest.mock import patch
 from sympy import Point3D
 
-from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
+from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile, DETECTION_SENSORS
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data
 from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
@@ -43,6 +45,7 @@ from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import (
     radar_horizon_range,
     sensor_antenna_height,
     EARTH_RADIUS_M,
+    EFFECTIVE_EARTH_RADIUS_FACTOR,
     SENSOR_HEIGHT_VEHICLE_M,
     SENSOR_HEIGHT_EWR_M,
     SENSOR_HEIGHT_SHIP_M,
@@ -433,12 +436,34 @@ class TestBuildDetectionThreat(unittest.TestCase):
         self.assertEqual(threat.sensor, 'TVD')
         self.assertAlmostEqual(float(threat.cylinder.radius), 8_000.0)
 
-    def test_systems_without_sensor_data_give_none(self):
-        """ZSU-57-2 e M163-VADS non hanno sensori nei registri: rilevamento non modellato (D-4)."""
+    def test_visual_fallback_systems_detect_by_sight(self):
+        """ZSU-57-2 e M163-VADS (D-4c): nessun radar ne' TVD, scoperta a vista a 6 km (STIMA); a 1000 m e
+        a 30 m l'orizzonte (k = 1, antenna 5 m) non limita."""
         for model in ('ZSU-57-2', 'M163-VADS'):
-            asset = _AssetStub(model=model, category=gat.AAA.value)
-            self.assertIsNone(build_detection_threat(asset, 1000.0), msg=model)
-            self.assertIsNotNone(build_threat_aa(asset), msg=model)  # l'intercettazione resta
+            for altitude in (1000.0, 30.0):
+                asset = _AssetStub(model=model, category=gat.AAA.value)
+                threat = build_detection_threat(asset, altitude)
+                msg = f"{model} @ {altitude}"
+                self.assertIsNotNone(threat, msg=msg)
+                self.assertEqual(threat.sensor, 'visual', msg=msg)
+                self.assertAlmostEqual(float(threat.cylinder.radius), 6_000.0, msg=msg)
+                self.assertAlmostEqual(threat.acquisition_range, 6_000.0, msg=msg)
+                self.assertIsNotNone(build_threat_aa(asset), msg=msg)
+
+    def test_visual_fallback_switch_off_gives_none(self):
+        """Con D4C_VISUAL_SENSOR spento torna il comportamento precedente: nessun volume di rilevamento;
+        l'intercettazione resta."""
+        with patch.object(sys.modules[Mobile.__module__], 'D4C_VISUAL_SENSOR', False):
+            for model in ('ZSU-57-2', 'M163-VADS'):
+                asset = _AssetStub(model=model, category=gat.AAA.value)
+                self.assertIsNone(build_detection_threat(asset, 1000.0), msg=model)
+                self.assertIsNotNone(build_threat_aa(asset), msg=model)
+
+    def test_sensor_tables_are_consistent(self):
+        """Il ciclo di build_detection_threat e' letterale (Mobile non si importa a livello di modulo): la
+        tabella dei fattori di raggio terrestre deve coprire gli stessi sensori di Mobile.DETECTION_SENSORS."""
+        self.assertEqual(set(EFFECTIVE_EARTH_RADIUS_FACTOR), set(DETECTION_SENSORS))
+        self.assertEqual(EFFECTIVE_EARTH_RADIUS_FACTOR['visual'], 1.0)
 
     def test_none_guards(self):
         self.assertIsNone(build_detection_threat(_AssetStub(model='T-90M', category=gat.TANK.value), 1000.0))

@@ -21,6 +21,7 @@ Note sul modulo sotto test:
   - get_vehicle_scores(model, scores): restituisce i punteggi di un veicolo.
 """
 
+import copy
 import os
 import sys
 import unittest
@@ -90,6 +91,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import (
     Vehicle_Data,
     AMMO_LOAD_REFERENCE,
     AA_CANNONS_ALLOWED_CATEGORIES,
+    MTLB_data,
     CATEGORY,
     VEHICLE,
     SCORES,
@@ -1636,6 +1638,65 @@ class TestGetVehicleScores(unittest.TestCase):
         score_dict = result["combat score"]
         self.assertIn("global_score", score_dict)
         self.assertIn("category_score", score_dict)
+
+
+class TestVisualSensorRecords(unittest.TestCase):
+    """D-4c: il sensore visivo `visual` dell'equipaggio (ZSU-57-2, M163-VADS).
+
+    Campo del registro con la stessa forma di `radar`/`TVD`, presente solo nei due record;
+    NON entra negli score (Proposta_Dati_Sensori_EWR_Visivo.md, A.1).
+    """
+
+    # modello -> (tracking_range, engagement_range) in km; acquisition_range 6 per entrambi (STIMA)
+    _VISUAL_MODELS = {"ZSU-57-2": (5.5, 4), "M163-VADS": (5, 1.2)}
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_zsu_and_vads_have_the_visual_sensor(self):
+        for model, (tracking, engagement) in self._VISUAL_MODELS.items():
+            with self.subTest(model=model):
+                obj = Vehicle_Data._registry[model]
+                self.assertIs(obj.radar, False)
+                self.assertIs(obj.TVD, False)
+                caps = obj.visual["capabilities"]
+                self.assertEqual(set(caps), {"air", "ground", "sea"})
+                self.assertEqual(
+                    caps["air"],
+                    (True, {"tracking_range": tracking, "acquisition_range": 6,
+                            "engagement_range": engagement, "multi_target_capacity": 1}))
+
+                for mode in ("ground", "sea"):
+                    self.assertFalse(caps[mode][0], msg=mode)
+
+    def test_other_records_have_no_visual_sensor(self):
+        for model, obj in Vehicle_Data._registry.items():
+            if model in self._VISUAL_MODELS:
+                continue
+            with self.subTest(model=model):
+                self.assertIsNone(obj.visual)
+
+    def test_visual_does_not_enter_the_scores(self):
+        for model in self._VISUAL_MODELS:
+            with self.subTest(model=model):
+                obj = Vehicle_Data._registry[model]
+                self.assertEqual(obj._TVD_eval(), 0.0)
+                self.assertEqual(obj._radar_eval(), 0.0)
+
+    def test_constructor_defaults_visual_to_none(self):
+        data = copy.deepcopy(MTLB_data)
+        data["model"] = "test-visual-default"
+        data.pop("visual", None)
+
+        try:
+            obj = Vehicle_Data(**data)
+            self.assertIsNone(obj.visual)
+        finally:
+            Vehicle_Data._registry.pop("test-visual-default", None)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

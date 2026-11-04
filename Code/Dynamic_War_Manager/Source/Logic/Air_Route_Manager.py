@@ -292,8 +292,8 @@ class DetectionThreat(AirThreat):
     di quota per aggirarlo (v. _handle_threat_avoidance).
 
     Params:
-        sensor:             sensore che definisce il raggio: 'radar' | 'TVD' ('visual' previsto per
-                            i sensori visivi di ripiego, non ancora nei dati: decisione D-4(c)).
+        sensor:             sensore che definisce il raggio: 'radar' | 'TVD' | 'visual' (visivo di
+                            ripiego dell'equipaggio, D-4c: ZSU-57-2 e M163-VADS).
         acquisition_range:  portata nominale di scoperta [m], prima dell'orizzonte: e' la R della
                             legge di Pd del DES (Engagement_Resolver.detection_probability).
         reference_altitude: quota [m] alla quale e' stato calcolato il raggio del cilindro.
@@ -638,11 +638,13 @@ def build_threat_aa(asset) -> Optional[ThreatAA]:
 # progetto]. Per i sensori ottici/IR (TVD) si usa k = 1, la sola linea di vista geometrica
 # (3,57 km/sqrt(m)): STIMA DICHIARATA, la refrazione ottica reale e' minore di quella radio;
 # con le portate TVD dei registri (8-12 km) l'orizzonte conta solo per bersagli radenti.
+# visual (sensore visivo di ripiego, D-4c): linea di vista geometrica come il TVD, k = 1, STIMA DICHIARATA;
+# con 6 km l'orizzonte non limita mai (antenna di default 5 m, bersaglio a 30 m: 27,5 km).
 #
 # Il terreno (mascheramento) NON e' modellato: il core non ha un modello del terreno. La
 # quota del bersaglio e' misurata rispetto alla quota del sito.
 EARTH_RADIUS_M = 6_371_000.0
-EFFECTIVE_EARTH_RADIUS_FACTOR = {'radar': 4.0 / 3.0, 'TVD': 1.0}
+EFFECTIVE_EARTH_RADIUS_FACTOR = {'radar': 4.0 / 3.0, 'TVD': 1.0, 'visual': 1.0}
 
 # ALTEZZA D'ANTENNA/SENSORE [m] sopra il sito. STIME DI PROGETTO DICHIARATE (decisione D-4(a),
 # 2026-09-26), per classe di piattaforma, in attesa di un dato di registro: un record puo'
@@ -737,8 +739,8 @@ def build_detection_threat(asset, route_altitude: float) -> Optional[DetectionTh
 
     Returns:
         DetectionThreat, oppure None se l'asset non ha posizione o nessun `acquisition_range`
-        aria utilizzabile — es. ZSU-57-2 e M163-VADS, senza sensori nei registri: rilevamento
-        non modellato, nessun vincolo (decisione D-4: i dati mancanti restano da ricercare).
+        aria utilizzabile — es. un carro senza sensori aria, o i mezzi a vista (ZSU-57-2, M163-VADS)
+        con `Mobile.D4C_VISUAL_SENSOR` spento: rilevamento non modellato, nessun vincolo.
         Non solleva mai per dati mancanti.
     """
     position = getattr(asset, '_position', None)
@@ -751,7 +753,9 @@ def build_detection_threat(asset, route_altitude: float) -> Optional[DetectionTh
     target_height = max(0.0, float(route_altitude) - site_z)
     best = None  # (raggio effettivo, sensore, portata nominale)
 
-    for sensor in ('radar', 'TVD'):
+    # Stessa sequenza di Mobile.DETECTION_SENSORS (letterale: Mobile non si importa a livello di modulo, ciclo
+    # d'import noto); la coerenza e' verificata da un test. A parita' di raggio vince il primo sensore.
+    for sensor in ('radar', 'TVD', 'visual'):
         nominal = asset.detection_range('air', sensor=sensor)
 
         if nominal is None:

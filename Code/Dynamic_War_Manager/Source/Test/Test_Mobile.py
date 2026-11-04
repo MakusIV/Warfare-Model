@@ -26,6 +26,8 @@ from sympy import Point3D
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import (                    # noqa
     Mobile, default_speed_profile, SPEED_REGIME_KEYS, SPEED_PROFILE_KEYS,
     DETECTION_MODES, DETECTION_SENSORS, DETECTION_RANGE_TYPES)
+# Modulo che contiene davvero Mobile (le globali lette da detection_range, es. l'interruttore D4C_VISUAL_SENSOR)
+Mobile_module = sys.modules[Mobile.__module__]
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data          # noqa
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS  # noqa (real data)
 # Cylinder is intentionally NOT imported here: Mobile.py uses a different
@@ -1130,9 +1132,10 @@ def _sensor(air=None, ground=None, sea=None, model='sensor'):
 
 class _SensorRecord:
     """Record di registry con i soli campi sensore letti da detection_range()."""
-    def __init__(self, radar=False, TVD=False):
+    def __init__(self, radar=False, TVD=False, visual=None):
         self.radar = radar
         self.TVD = TVD
+        self.visual = visual
 
 
 class TestDetectionRangeArgumentDomain(unittest.TestCase):
@@ -1164,6 +1167,59 @@ class TestDetectionRangeArgumentDomain(unittest.TestCase):
     def test_valid_modes_are_the_registry_modes(self):
         """DETECTION_MODES viene da ACTION_TASKS: e' la stessa lista dei registry."""
         self.assertEqual(set(DETECTION_MODES), {'air', 'ground', 'sea'})
+
+
+class TestDetectionRangeVisualSensor(unittest.TestCase):
+    """D-4c: `visual` e' il terzo sensore di detection_range, dietro l'interruttore D4C_VISUAL_SENSOR."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+
+    @staticmethod
+    def _visual():
+        return _sensor(air=(True, {'acquisition_range': 6}), model='Crew visual observation')
+
+    def test_visual_is_the_third_detection_sensor(self):
+        self.assertEqual(DETECTION_SENSORS, ('radar', 'TVD', 'visual'))
+
+    def test_visual_only_asset(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(visual=self._visual())
+        asset = _MobileStub(model='v')
+
+        self.assertEqual(asset.detection_range('air'), 6000.0)
+        self.assertIsNone(asset.detection_range('ground'))
+
+    def test_visual_composed_with_max(self):
+        _FakeVehicleData._registry['r5'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 5})), visual=self._visual())
+        _FakeVehicleData._registry['r20'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 20})), visual=self._visual())
+
+        self.assertEqual(_MobileStub(model='r5').detection_range('air'), 6000.0)
+        self.assertEqual(_MobileStub(model='r20').detection_range('air'), 20000.0)
+
+    def test_visual_isolated_by_sensor(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(visual=self._visual())
+        asset = _MobileStub(model='v')
+
+        self.assertEqual(asset.detection_range('air', sensor='visual'), 6000.0)
+        self.assertIsNone(asset.detection_range('air', sensor='TVD'))
+
+    def test_switch_off_ignores_visual(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(visual=self._visual())
+        _FakeVehicleData._registry['r5'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 5})), visual=self._visual())
+
+        with patch.object(Mobile_module, 'D4C_VISUAL_SENSOR', False):
+            self.assertIsNone(_MobileStub(model='v').detection_range('air'))
+            self.assertIsNone(_MobileStub(model='v').detection_range('air', sensor='visual'))
+            self.assertEqual(_MobileStub(model='r5').detection_range('air'), 5000.0)
 
 
 class TestDetectionRangeNoneGuards(unittest.TestCase):
