@@ -2,6 +2,10 @@
 
 Modulo: `Logic/Contact_Scheduler.py`.
 
+> **Aggiornamento 2026-11-04 (codice `37816355` D-4c e `cbc75634` D-4b; manuale riverificato a `b171f6a5`).** `Logic/Contact_Scheduler.py` **non cambia** (nessuna riga toccata: i riferimenti `:riga` a questo file restano validi);
+> cambia la **fonte** delle portate che `mutual_detection_ranges` chiede ai due asset: `Mobile.detection_range` compone ora **tre** sensori (`radar`, `TVD`, `visual`) e il terzo sta dietro un interruttore, v. §3.5 («Composizione dei sensori»). Nessuna
+> logica dello scheduler è nuova; cambiano i dati e il punto di lettura nel registro.
+>
 > **Verificato a `fa5fbf1e` (2026-10-23): il modulo è invariato da `dcedc541`** (`Logic/Contact_Scheduler.py` non compare in `git diff dcedc541..HEAD -- Code`; la
 > fase F8 non lo tocca: `position_on_legs` è usata dalla porta di uscita per le `final_positions`, capitolo 6 §6.24). Cambiano solo i riferimenti ai moduli che cambiano
 > (`Session_Simulator`), ricalcolati su `fa5fbf1e`; quelli a questo file restano validi.
@@ -128,8 +132,37 @@ chiamante, sono ricavate da `mutual_detection_ranges` (`:972-1020`), che interro
 'ground'/'air'/'sea' a seconda della classe del bersaglio (`DETECTION_MODE_BY_CLASS`,
 `:104-109`) — perché lo stesso radar ha portate diverse contro un carro e contro un aereo.
 `range_type` di default `DEFAULT_DETECTION_RANGE_TYPE = 'acquisition_range'`
-(`Asset/Mobile.py:85`); con `'engagement_range'` la stessa funzione risponde a "quando sono a
+(`Asset/Mobile.py:97`); con `'engagement_range'` la stessa funzione risponde a "quando sono a
 tiro" invece che "quando si vedono" (`:1039-1041`).
+
+**Composizione dei sensori (D-4c, 2026-11-04).** `Mobile.detection_range(mode, sensor=None, range_type=...)` (`Asset/Mobile.py:1570`) è il **punto unico**
+da cui lo scheduler, il risolutore (`_air_detection_range`, `Logic/Engagement_Resolver.py:3052`), la potatura per blocco (`Military.detection_range`,
+`Block/Military.py:773-803`, usata da `block_reach`, `Logic/Contact_Scheduler.py:1226`) e il pianificatore di rotta (capitolo 7 §7.8) leggono la portata di un
+asset. Dal 2026-11-04 i sensori riconosciuti sono tre, `DETECTION_SENSORS = ("radar", "TVD", VISUAL_SENSOR)` con `VISUAL_SENSOR = "visual"` (`Asset/Mobile.py:82-83`):
+
+- **Senza `sensor`** (il caso dello scheduler) la portata è il **massimo** fra quelle dei tre sensori che hanno un valore utilizzabile sul modo e sul tipo di portata
+  richiesti (`Asset/Mobile.py:1636-1653`, in metri): non la somma, perché guardano lo stesso bersaglio. Un sensore assente (`False`/`None`/attributo mancante), cieco su quel
+  modo o con valore nullo dà «nessun raggio» e non solleva nulla (`_sensor_range_km`, `:1533-1568`); se nessun sensore dà un raggio, il risultato è `None`.
+- **Con `sensor='visual'`** si isola il solo sensore visivo. `ValueError` solo per argomenti fuori dominio (`:1614-1618`).
+- **Il campo `visual` esiste solo nei record di `Vehicle_Data`** (argomento `visual: Optional[Dict] = None`, `Asset/Vehicle_Data.py:71`, assegnato a `self.visual`, `:102`) ed
+  è valorizzato per due modelli, `ZSU-57-2` e `M163-VADS` (`Asset/Vehicle_Data.py:3722`, `:3843`): nei registri delle navi e degli aerei, e negli altri veicoli, `getattr(record, 'visual', None)` è `None`
+  e `_sensor_range_km` lo scarta (è il caso normale, descritto nel commento di `Asset/Mobile.py:62-81`). Il sensore ha la **stessa forma** di `radar`/`TVD` (`capabilities[modo] = (bool, {...})`), non ha `reliability`
+  e **non entra negli score del registro** (`_TVD_eval`, `_radar_eval`, `_reliability_eval`, `_combat_eval` non lo leggono: commento di `Vehicle_Data.py:100-102`).
+- **Interruttore `Mobile.D4C_VISUAL_SENSOR`** (default **`True`**, `Asset/Mobile.py:92`). È una variabile di modulo **letta a ogni chiamata** di `detection_range` (`:1638-1640`): con l'interruttore
+  spento il sensore `visual` è tolto dall'elenco e `detection_range(..., sensor='visual')` dà `None`, cioè si ritorna al comportamento precedente (ZSU-57-2 e M163-VADS senza portata propria). Essendo letto
+  a ogni chiamata, lo si sostituisce nei test con `patch.object(<modulo di Mobile>, 'D4C_VISUAL_SENSOR', False)`; copiarlo in una variabile locale al caricamento lo renderebbe inefficace.
+- **Che cosa c'è nel dato** (`acquisition_range` aria, km): **6 per entrambi i modelli, una STIMA a confidenza bassa** (Howell/DC-3 riportato alle dimensioni di un caccia, intervallo plausibile 3-8 km), dichiarata come tale
+  nei commenti dei record (`Asset/Vehicle_Data.py:3716-3721`, `:3838-3842`); `tracking_range` 5,5 (ZSU) e 5 (M163), `engagement_range` 4 (ZSU) e 1,2 (M163) sono dati di fonte a confidenza media, `multi_target_capacity` 1 dedotto.
+  Solo il modo `air` è dichiarato (`ground` e `sea` hanno `False` e portate 0). **Notte e meteo non sono modellati per sensore**: il visivo subisce l'unico fattore notturno 0,7 come ogni altro sensore
+  (capitolo 7 §7.4; limite in capitolo 9). Il DES non applica **nessun orizzonte** alla portata (lo applica solo il pianificatore di rotta, capitolo 7 §7.8).
+
+*Effetto nel DES.* Prima della D-4c ZSU-57-2 e M163-VADS non avevano portata propria: `mutual_detection_ranges` dava `None` per loro come osservatori e `_detect_direction` usciva **prima** dell'estrazione
+(`Logic/Engagement_Resolver.py:1988-1989`), quindi non scoprivano né ingaggiavano mai un aereo. Ora vedono a 6 km e, quando rilevano, per loro nasce un candidato al tiro (`:2021-2026`); il tiro resta limitato dalla quota e dalla portata
+dell'**arma** (`S-68-57mm`: portata diretta 4000 m, quota massima 4000 m AGL; `M61-Vulcan-20mm`: 1200 m e 1000 m AGL; `Asset/Ground_Weapon_Data.py:2254-2300`), perché il rilevamento non estende l'intercettazione. Lo verifica
+lo scenario **S31-VISUAL** (capitolo 8 §8.13). I 6 km sono una stima: la probabilità di rilevamento segue comunque la legge di Pd del risolutore con `R` = 6 km (`detection_probability`, `Logic/Engagement_Resolver.py:1041`).
+**Determinismo.** Per questi due modelli `_detect_direction` ora **supera** il controllo `own_range is None` e arriva all'estrazione `self._draw()` (`:2001`): lo stream dell'RNG di sessione guadagna un'estrazione per finestra con un aereo in cui l'osservatore è uno dei due
+mezzi. Lo stream cambia **solo nelle sessioni che contengono ZSU-57-2 o M163-VADS** (nessuna di quelle della fotografia preesistente: 989 identiche, capitolo 8 §8.7); `_air_detection_range` (`:3052`) restituisce ora 6000 m per i due mezzi ma serve solo agli intercettori
+(task `Anti_Missile`), che ZSU-57-2 e M163-VADS non sono secondo i task dei loro cannoni (`Asset/Ground_Weapon_Data.py:2254-2300`: `Anti_Air` e `Infantry_Support`; la deduzione sul ruolo di intercettore è della Proposta §A.4, non riverificata riga per riga).
 
 **Aereo a terra (F4c).** `mutual_detection_ranges(asset_a, asset_b, range_type, *, grounded_a=False,
 grounded_b=False)` (`:972-1020`) e `contact_windows(..., *, grounded_a=False, grounded_b=False)` (`:1023-1100`)

@@ -1,5 +1,10 @@
 # Capitolo 9 — Limiti noti, punti di estensione, divergenze codice/wiki
 
+> **Aggiornamento 2026-11-04 (sensori: D-4c `37816355` e D-4b `cbc75634`; manuale riverificato a `b171f6a5`).** La decisione **D-4 (b) e (c) non è più «sospesa»**: ZSU-57-2 e M163-VADS hanno un sensore visivo di ripiego (interruttore `Mobile.D4C_VISUAL_SENSOR`, default acceso) e
+> il registro ha otto radar EWR (capitolo 3 §3.5, capitolo 7 §7.8 e §7.12, capitolo 8 §8.13). Suite **4742 test, OK (skipped=7)**, fotografia **1009 esecuzioni** (989 identiche + 20 nuove, S31-VISUAL), numeri dei rapporti degli esecutori, **non rieseguiti**. Cambiano in questo capitolo: §9.1 (il
+> punto «Dati di rilevamento mancanti» è ora superato; nuova sezione **«Limiti dei sensori EWR e visivo (D-4b/D-4c)»**; «La Pd non distingue radar da ottico» con il caso del visivo), §9.3 (due righe), §9.4 (riepilogo) e §9.6 (**voci 28-29 nuove**). Il resto del capitolo descrive ancora lo stato a `fa5fbf1e`
+> e al 2026-10-29, **non ricontrollato** su questo punto.
+>
 > **Stato descritto: commit `fa5fbf1e` (2026-10-23; ultimo commit che tocca `Code/`: `dc53af99`).** Il manuale descrive il motore a quel commit, cioè
 > dopo le fasi **F0-F8** del piano di implementazione della Missione (la **F8**, sessione e campagna — validatore di sessione, stato di missione
 > «in corso» e posizioni nell'esito, prontezza degli asset, conduttore di campagna, posizione persistente, scenario S30 — più i dati F8-R dei tempi di
@@ -196,6 +201,8 @@ l'informazione "quale sensore" (`Logic/Engagement_Resolver.py:461-473`, `:1105-1
 subire la stessa degradazione notturna di un sensore ottico, ma oggi la subisce comunque, con un
 compromesso pesato verso il radar. La discriminazione per tipo di sensore richiede che la
 finestra di contatto porti anche il sensore che l'ha prodotta — un cambiamento nello strato 1.
+**Dal 2026-11-04 il limite pesa di più per il visivo**: ZSU-57-2 e M163-VADS hanno **solo** il sensore `visual` (capitolo 3 §3.5) e di notte la loro portata di 6 km subisce il fattore unico 0,7, pesato verso il radar, mentre le fonti del dato dicono «tiro notturno
+impraticabile» (ZSU) e «solo tempo sereno» (entrambi): il visivo di notte è sovrastimato (v. «Limiti dei sensori EWR e visivo», più sotto).
 
 ### Altri limiti dichiarati, minori
 
@@ -567,16 +574,49 @@ qui perché dichiarati esplicitamente nel codice come punti aperti:
   (DES, §4.20) sia `plan_attack_profile` (pianificazione, §7.9) portano un tiratore fuori
   inviluppo al bordo ammesso più vicino invece di rifiutare il tiro — scelta dichiarata, identica
   al comportamento noto dell'IA di DCS ("will choose closest altitude"), non un errore silenzioso.
-- **Dati di rilevamento mancanti per alcuni asset** (decisione D-4, sospesa): ZSU-57-2 e M163-VADS
+- ~~**Dati di rilevamento mancanti per alcuni asset** (decisione D-4, sospesa): ZSU-57-2 e M163-VADS
   non hanno sensori nei registri, quindi `build_detection_threat` restituisce sempre `None` per
-  loro (nessun volume di rilevamento, non un errore); i dati EWR dedicati e il sensore visivo di
-  ripiego (D-4b/c) restano da ricercare separatamente.
+  loro; i dati EWR dedicati e il sensore visivo di ripiego (D-4b/c) restano da ricercare separatamente.~~
+  **FATTA il 2026-11-04** (D-4c `37816355` per il visivo, D-4b `cbc75634` per gli EWR, con i limiti dichiarati nella sezione «Limiti dei sensori EWR e visivo (D-4b/D-4c)» più sotto): `build_detection_threat` restituisce un volume
+  di 6 km per ZSU-57-2 e M163-VADS e uno per ciascuno degli otto EWR; `None` resta per i mezzi senza sensori aria, e per i due a vista con l'interruttore `D4C_VISUAL_SENSOR` spento.
 - **Reti di sensori/cueing EWR→SAM (D-7) fuori perimetro**: ogni sito calcola il proprio
   rilevamento in isolamento; un EWR che passa una traccia a un SAM lontano non è modellato.
 - **Attraversamento a corda limitata del solo rilevamento (D-5, opzione 2) non implementato**:
   richiederebbe un dato di tempo di permanenza del sensore e un cambio della legge di Pd del
   risolutore, non fatto in questo lavoro.
 - ~~**KGBU-2AO/2PTAB/96r senza dati di rilascio**~~ (RISOLTO 2026-09-28, v. §9.1).
+
+### Limiti dei sensori EWR e visivo (D-4b/D-4c, 2026-11-04, commit `cbc75634` e `37816355`)
+
+Dichiarati dalla Proposta (`Proposta_Dati_Sensori_EWR_Visivo.md` §5) e nei commenti dei record; qui verificati sul codice dove si può, e segnati come **non verificati** dove dipendono da fonti esterne. Il capitolo 7 §7.12 dà i dati, il capitolo 3 §3.5 la lettura.
+
+- **Il DES non ha orizzonte radar.** `acquisition_range` è insieme la `R` della legge di Pd del DES (`detection_probability`, `Logic/Engagement_Resolver.py:1041`) e il raggio nominale del cilindro del pianificatore, che lo taglia con l'orizzonte
+  (capitolo 7 §7.8). Nel DES **nulla** taglia la portata con la quota: nessuna occorrenza di un orizzonte radar in `Contact_Scheduler`, `Engagement_Resolver` e `Session_Simulator` (ricerca fatta per questo aggiornamento; il commento `Engagement_Resolver.py:1598-1607` dice che oggi c'è «solo la SFERA»).
+  **Un EWR vede quindi a piena `acquisition_range` anche un aereo radente**: nel pianificatore, con antenna a 20 m, un P-18 a 500 m ha un orizzonte di circa 110,6 km (calcolo dalla formula di §7.8) contro i 60 km del suo `acquisition_profile` a 500 m (**circa 1,8 volte**), nel DES la sovrastima è più grande perché non c'è alcun taglio.
+  Ogni record ha **un solo** `acquisition_range`, quello di fonte per la quota e il bersaglio dichiarati nel suo commento (decisione 7, opzione (a): un `R` alla quota di crociera dove la fonte lo dà, altrimenti il massimo non qualificato).
+- **La curva portata-quota resta una Proposta a parte** (opzione (c) della Proposta §2.4: leggerla nel DES e nel pianificatore cambierebbe la legge del motore). Il dato di fonte è **conservato ma non letto da nessun codice**: `acquisition_profile`, presente solo in **quattro** record su otto
+  (SCR-270, P-18, 1L13, 55Zh6); Freya, P-12, P-37 e AN/TPS-43 hanno solo un massimo non qualificato.
+- **Notte e meteo non distinguono il sensore**: il fattore di degradazione è unico (`NIGHT_DETECTION_FACTOR = 0.7`, `Logic/Engagement_Resolver.py:472`) e la finestra di contatto non porta il sensore. Il **visivo di notte resta al fattore unico 0,7**: per la ZSU-57-2 le fonti dicono «tiro notturno impraticabile» e per entrambi i mezzi
+  «solo tempo sereno» (`Ricerca_Sensore_Visivo_ZSU57_M163_2026_10_29.md`, **non rilette alla fonte primaria**), quindi la portata visiva è con ogni probabilità sovrastimata di notte e con meteo avverso. Una correzione per sensore resta da proporre (richiede che la finestra di contatto porti il sensore, v. «La Pd non distingue radar da ottico»).
+- **Valori stimati o deboli che entrano nel codice** (tutti dichiarati come tali nei commenti dei record; nessuno è un dato tarato):
+  - visivo `acquisition_range` **6 km** per ZSU-57-2 e M163-VADS: **STIMA, confidenza bassa** (Howell/DC-3 in scala, intervallo plausibile 3-8 km); nessuna fonte dà la portata di scoperta dei due mezzi;
+  - `EFFECTIVE_EARTH_RADIUS_FACTOR['visual'] = 1.0` (linea di vista geometrica): **STIMA dichiarata**, irrilevante finché la portata resta 6 km (l'orizzonte non limita mai);
+  - **55Zh6** 400 km: fonte di seconda mano, quota 20 000 m, confidenza **media-bassa**, possibile confusione con il Nebo-U; **AN/TPS-43** 440 km: massimo non qualificato, confidenza **bassa-media**;
+  - **Freya** 120 km (contraddizione 120/160/200 fra le fonti); **1L13** 250 km («non inferiore a», in contraddizione con la stampa, anno di servizio 1984 contro ~1990); **SCR-270** 160 km riferito a **un bombardiere** (sovrastima contro un caccia); P-12 200 km e P-37 280 km senza bersaglio né quota qualificati;
+  - `reliability` `{'mtbf': 45, 'mttr': 4}` **generica del registro, uguale per tutti gli otto radar** (decisione 12 dell'utente): non è un dato di fonte (i valori di fonte, MTBF 140 h del P-18 e MTBCF >250 h del 55Zh6, sono solo nei commenti);
+  - **tutti i campi non-sensore** degli EWR (dimensioni, costo, autonomia, velocità, comunicazioni), prodotti da `_ewr_support_fields`: stime di schema; **altezza d'antenna 20 m** per sette EWR su otto (costante `SENSOR_HEIGHT_EWR_M`, stima), solo lo SCR-270 ha 16,8 m (dedotti da 55 ft);
+  - `multi_target_capacity` 0 degli EWR **significa «non trovato», non «nessun bersaglio»** (fa eccezione il P-18 con 10).
+- **ZSU-57-2: «tiro efficace solo a veicolo fermo»** (fonte di confidenza bassa-media): **non modellato**. **Radar WWII a lettura manuale** (Chain Home, Freya, SCR-270): nessuna latenza di tracciamento, l'EWR è «istantaneo» come ogni sensore del DES.
+- **Gli RWR non identificano gli EWR**: un EWR emette (`emits_radar` vero) ma `sam_category` è `None` (i suoi `roles` non contengono `LORAD`/`MERAD`/`SHORAD`/`AAA` e non ha armi SAM) e resta fuori da `default_rwr_catalogue` (`Context/Air_Defense_Efficacy.py:523-552`, `:697-698`); il flag `ewr` di
+  `Aircraft_Rwr_Data` resta senza effetto (capitolo 7 §7.10).
+- **Niente cueing EWR→SAM (D-7)**: un EWR **rileva** e, secondo la Proposta (§1.3, sonda E-4), alimenta la percezione condivisa del dominio, ma nessun tiratore usa la sua traccia; non abilita nessun SAM. È coerente con il limite «cueing» del dominio di coordinamento (capitolo 4 §4.28-4.29; §9.1 «Limiti introdotti dalla fase F4»).
+- **Rilevamento ≠ intercettazione**: né il sensore visivo né gli EWR creano volumi d'intercettazione. La variante `vads_high` di S31-VISUAL lo verifica nel DES: il M163 vede a 6 km un aereo a 3000 m, ma il suo cannone arriva a 1000 m di quota e non spara (capitolo 8 §8.13).
+- **Combat score**: `visual` non entra in nessuno score del registro (scelta deliberata, per non spostare la normalizzazione globale), quindi il combat score di ZSU-57-2 e M163-VADS **non riflette la capacità di vedere**. La categoria EWR è **esclusa** dalla popolazione globale del combat score (G2, senza interruttore) e il risultato globale è saturato in [0, 1];
+  si **spostano** invece gli score globali `radar`, `weapon`, `reliability` e `availability` dei record preesistenti (per esempio il P-18 diventa il nuovo massimo radar), che secondo la Proposta (§1.4) **nessun codice consuma** (ricerca della Proposta, non rifatta): un consumatore futuro dovrà tenerne conto o estendere G2.
+- **Siti fissi (blocco C della Proposta) non fatti**: Chain Home, AMES Type 7/80, AN/FPS-20, AN/FPS-117, P-14, Wassermann, Mammut. Prima va deciso il modello dell'installazione fissa (un `Vehicle` a velocità 0, con il vincolo di schema `range > 0` da conciliare, oppure una `Structure` dotata di sensore: oggi
+  `Asset/Structure.py` **non ha** `detection_range`, verificato). Il nucleo delle otto unità è mobile o semimobile. Decisione 14 dell'utente: rimandati.
+- **Inventari di campagna EWR vuoti** (decisione 17): gli otto modelli esistono nel registro ma nessun inventario di `Initial_Context`/`Actual_Context` li schiera (**non ricontrollato** nei file).
+- **Nessun EWR in nessuno scenario della fotografia**: la fotografia non ha un'unità EWR (lo scenario EWR con SAM e cueing appartiene alla D-7): l'unico riscontro nel DES è il test `test_ewr_in_a_session_detects_and_never_fires`, che asserisce solo l'assenza di tiri (capitolo 8 §8.13).
 
 ## 9.2 Divergenze fra il codice e la wiki di progetto
 
@@ -631,7 +671,7 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 | Selezione arma dai registri | **Fatta** (`Logic/Fire_Control.make_registry_fire_control`, capitolo 4 §4.16), con ordine di preferenza Pk/costo dal 2026-09-26, cannone di bordo candidato dal 2026-09-26 (§4.16bis) e gittata/tempo di caduta reali per le bombe dal 2026-09-27 (§4.20); resta da fare: modulare la Pk con la posizione nell'inviluppo di tiro (distanza, aspetto), (i dati di rilascio delle KGBU, ora KMGU-2*, sono stati aggiunti il 2026-09-28, D4 chiusa). |
 | Scorta per modello d'arma | **Fatta** (`Asset/Weapon_Stores.py`, decisione A1/A3, capitolo 4 §4.19, capitolo 7 §7.6), cannone di bordo incluso dal 2026-09-26 (decisione A2); resta da fare: far precedere il controllo di portata alla scelta per scorta (v. §9.1). Il filtro missione/bersaglio (decisione A4) è **fatto dalla F7a** (riga «Filtro armi e bersagli espliciti»). |
 | Fog-of-war reale | **Fatto** (`region_recon_detection_factor`/`recon_detection_factor_fn`, capitolo 4 §4.18, composto con il meteo tramite `combine_detection_factors`); resta da fare: un criterio di "non visto" più stringente (es. `position is None` nel report) per una nebbia meno "debole" (v. §9.1), e la correzione del bug di `Region.get_blocks_by_criteria(category='Military')` (`Context/Region.py:291-301`, v. §9.1) che la sessione di lavoro ha trovato ma non corretto. |
-| Volumi di rilevamento e intercettazione nel pianificatore di rotta | **Fatto** (`Logic/Air_Route_Manager.py`, `ThreatAA`/`DetectionThreat`, `ThreatMode.AVOID_DETECTION`, capitolo 7 §7.8); resta da fare: dati EWR/sensore visivo per ZSU-57-2/M163 (D-4b/c), reti di sensori/cueing EWR→SAM (D-7), attraversamento a corda limitata del solo rilevamento (D-5 opzione 2), cambio di quota per aggirare un volume di rilevamento (ricostruzione alla nuova quota, proposta §3.6 Attività D). |
+| Volumi di rilevamento e intercettazione nel pianificatore di rotta | **Fatto** (`Logic/Air_Route_Manager.py`, `ThreatAA`/`DetectionThreat`, `ThreatMode.AVOID_DETECTION`, capitolo 7 §7.8); **dati EWR (otto radar mobili/semimobili, D-4b) e sensore visivo per ZSU-57-2/M163 (D-4c) fatti il 2026-11-04**, con i limiti di §9.1 «Limiti dei sensori EWR e visivo»; resta da fare: siti fissi EWR (blocco C), curva portata-quota dei radar (Proposta a parte), reti di sensori/cueing EWR→SAM (D-7), attraversamento a corda limitata del solo rilevamento (D-5 opzione 2), cambio di quota per aggirare un volume di rilevamento (ricostruzione alla nuova quota, proposta §3.6 Attività D). |
 | Pianificatore d'attacco (quota e profilo di sgancio) | **Fatto** (`Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`, capitolo 7 §7.9, alimenta il DES via §4.20); resta da fare: collegare `MissionAsset.attack_profile` (campo già presente, capitolo 2 §2.6) al motore — dalla F7a ne è letta **solo l'arma** (`AttackProfile.weapon` è l'arma designata implicita, `MissionAsset.designated_weapons`), non la quota né il profilo di sgancio —, missili aria-superficie (fuori scope dichiarato), geometria di picchiata/cabrata nel tratto d'esposizione (v. §9.1). |
 | Missione come unità d'ingaggio | **Fatta** (F4b, `a4d8acf0`): vista di forza per missione `Mission_Adapter.MissionForce` (`:1649-1746`) passata a `resolve_engagement`, che accetta "qualunque oggetto con `assets`, `side`, `name`" (docstring `:3641-3645`); il `mission_id` entra nell'RNG attraverso l'`event_id` dell'ingaggio (`Logic/Session_Simulator.py:2766`); la verifica su `morale_for`, `enemy_estimate_for`, soglia di rottura e `committed` è fatta (capitolo 4 §4.27). Dalla F5-F6 il motore legge anche attese, TOT, criteri di fine e il bersaglio dei criteri (capitolo 6 §6.16, §6.18); **dalla F7a** legge anche bersaglio, ROE e armi designate, mediante `Mission_Adapter` (capitolo 6 §6.22), e dalla F7b le azioni `Fire_At_Point`; resta da fare: usare i ruoli degli asset e le regole diverse dalla ROE (allerta, EMCON, reazione alla minaccia, formazione). |
 | Dominio di coordinamento: cueing e latenza | **Fatto** il dominio (fuoco, percezione, difesa di salva: F4b+/F4b++, capitolo 4 §4.28-4.29). Resta da fare: il **cueing** del tiro (un sensore che assegna un bersaglio a un tiratore: EWR→SAM, AWACS→caccia, scorta→strike) e una **latenza/perdita** della condivisione, entrambi con la Fase 0 C2; i candidati di tiro per osservatore (`candidates`) sono il punto d'aggancio. |
@@ -644,7 +684,7 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 | Settori RWR, `ewr`, `confidence` | Consumo nel modulo rotte/evasione e in un futuro SEAD (`Asset/Aircraft_Rwr_Data.py`, capitolo 7 §7.10). |
 | Legame C2 fra unità di difesa | Fase 0 della gerarchia C2: tracce condivise per R-INT (§4.26), assegnazione più rapida per L3 (§4.24). |
 | Re-scheduling dopo disingaggio | **Fatto per gli aerei dal G4b**, a livello di sessione (`Session_Simulator.replan`/`reschedule`, capitolo 6 §6.20): rientro forzato, bingo e esaurimento dopo un episodio con ricalcolo dei contatti (`schedule_contacts(only_assets=)`). Resta da fare: forze terrestri e navali (oggi passive sulla rotta), cambio di rotta *durante* un episodio, condizioni su eventi (`ON_EVENT`); il risolutore resta a stato ombra e non muta rotte. |
-| Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:195-230`, `Logic/Engagement_Resolver.py:1105-1152`). |
+| Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:195-230`, `Logic/Engagement_Resolver.py:1105-1152`). Dal 2026-11-04 serve anche a non sovrastimare il sensore **visivo** di ZSU-57-2 e M163-VADS di notte (§9.1 «Limiti dei sensori EWR e visivo»). |
 | Assegnazione ottima arma-bersaglio | Sostituire la regola greedy round-robin di `_schedule_next` (`Logic/Engagement_Resolver.py:2230-2419`) con un algoritmo di weapon-target assignment, mantenendo l'invariante del payload congelato (R4 prima parte). |
 | Movimento fisico persistente fra sessioni | **Fatto** (F8b/F8c): `run_session` calcola `SessionOutcome.final_positions` (capitolo 6 §6.24) e `Session_Campaign.apply_final_positions` le applica agli asset (§6.27); `CampaignState.restore(..., restore_position=True)` le ripristina da un'istantanea (capitolo 7 §7.13). `run_session` **non** muta la posizione, per costruzione. Resta da fare: la base di destinazione vera di un aereo `off_scene` (modulo mappe/C2) e un chiamante di produzione del conduttore. |
 | Rifornimento (munizioni/carburante) | **Fatto, senza logistica** (F8c): passo separato che precede una nuova `SessionOrder`, `Logic/Readiness.apply_campaign_processes` → `_rearm_and_refuel` (riassegna il loadout agli aerei, `load_stores_from_registry`/`load_fuel_from_registry` per veicoli e navi; capitolo 6 §6.26). Resta da fare la **logistica (F8d)**: consumo delle scorte del blocco e dipendenza dalle risorse della base (`Resource_Manager`, blocchi `Production`/`Transport`/`Storage`), con tabella di conversione (STIMA) e comportamento a scorte esaurite. |
@@ -748,7 +788,7 @@ I seguiti possibili restano quelli di §9.3: i limiti "minori ma non corretti" g
 (filtro missione/bersaglio assente — decisione A4, **fatto dalla F7a**; scelta per scorta che precede
 il controllo di portata; modulazione della Pk con la posizione nell'inviluppo; un criterio di "non
 visto" più stringente; geometria di picchiata/cabrata isolata dalla balistica nel pianificatore
-d'attacco; dati EWR/sensore visivo mancanti per alcuni asset AD; reti di sensori/cueing EWR→SAM;
+d'attacco; ~~dati EWR/sensore visivo mancanti per alcuni asset AD~~ (fatti il 2026-11-04, restano siti fissi EWR e curva portata-quota); reti di sensori/cueing EWR→SAM;
 `route_threat_windows` ancora senza consumatori di produzione), e il resto della lista già presente
 (assegnazione ottima arma-bersaglio, Pd per tipo di sensore; ~~movimento persistente fra sessioni, rifornimento~~, fatti dalla F8 senza logistica, v. §9.3 e la
 logistica F8d ancora da fare).
@@ -834,6 +874,7 @@ suite 4490 OK e fotografia a 970 identica, secondo il rapporto), e il riscontro 
 **11, 12, 19 e 21** sono state riverificate sul codice e sui documenti attuali; il loro stato reale è riportato sotto e **non è
 stato corretto** nulla.
 
+**Aggiunta del 2026-11-04**: due voci nuove, **28 e 29, entrambe APERTE (minori)**; le altre voci non sono state ricontrollate in questo aggiornamento (il codice toccato è `Mobile`, `Vehicle_Data` e `Air_Route_Manager`, che, per quanto si è letto, nessuna delle voci 1-27 riguarda: **non verificato voce per voce**).
 **Riepilogo dello stato al 2026-10-29** (codice `be8559d7`, docstring `f009eb43`): CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 16, 17, 18, 20, 23, **24, 25, 26, 27**; APERTE 5, 6, 9, 10, 19, 21, 22;
 CHIUSA parzialmente 8. (A `fa5fbf1e`: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 16, 17, 18, 20, 23; APERTE 5, 6, 9, 10, 19, 21, 22, 24, 25, 26, 27; CHIUSA parzialmente 8. A `dcedc541`: CHIUSE 1, 2, 3, 4, 12, 13, 14, 15, 16, 17, 18, 20; APERTE 5, 6, 7, 9, 10, 11, 19, 21, 22, 23.)
 
@@ -989,6 +1030,15 @@ CHIUSA parzialmente 8. (A `fa5fbf1e`: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 
     (capitolo 6 §6.26).
 27. **`CampaignState`: docstring della classe senza `ledger`** — **CHIUSA** (commit `f009eb43`, punti P7-P10, solo docstring). Il docstring della classe (`Context/Campaign_State.py:18-132`) cita ora la chiave `"ledger": dict` (facoltativa), `add_ledger(mission_id, ledger)`,
     `get_ledger(mission_id) → Optional[Dict]` e `restore(mission_id, regions, restore_position=False)` con la nota sulla posizione (F8); i metodi (`:245-263`, `:337`) erano già documentati.
+
+**Voci nuove dell'aggiornamento del 2026-11-04 (sensori D-4b/D-4c, codice `37816355` e `cbc75634`)** — riportate, **non corrette** (il codice non è stato toccato)
+
+28. **Commenti di `Logic/Air_Route_Manager.py` sulle altezze d'antenna e sui sensori** — **APERTA, minore** (solo commenti e docstring). Il commento sulle altezze d'antenna (`:650-654`) dice che la chiave opzionale `antenna_height` non è presente in nessun record («nessun record la contiene oggi») e che
+    non c'è nessun record EWR («nessun record EWR oggi»): dal 2026-11-04 il registro ha otto EWR e lo **SCR-270 dichiara** `antenna_height` 16,8 (`Asset/Vehicle_Data.py:4655`, letta da `sensor_antenna_height`, `:701`). Il commento di testa della fabbrica (`:620-632`) e il docstring di `sensor_antenna_height` (`:702`) citano solo
+    `radar`/`TVD`, mentre la funzione tratta anche `visual`. Il comportamento del codice è corretto: sono i testi a essere rimasti indietro.
+29. **Documenti di progetto non aggiornati dopo la D-4b/D-4c** — **APERTA, minore** (verificata cercando `D-4c` e `S31` nei documenti). `F4_Differenze_Scenari.md` non ha la sezione sulla D-4c (20 esecuzioni nuove S31-VISUAL, le altre identiche) né la nota sul blocco B (nessuna differenza); `Piano_Implementazione_Missione.md` non cita
+    gli EWR presenti nei registri accanto ai riferimenti agli EWR (`:318`, `:458`: il cueing resta fuori perimetro); `Proposta_Volumi_Rilevamento_Intercettazione.md` §9 (decisione D-4, `:630`) non risulta avere la nota di stato (cercata solo per parola chiave, non riletta per intero). La Proposta dei sensori li elenca (§4, «Documenti da aggiornare dopo») come da fare da altri. Il manuale è
+    aggiornato in questo punto.
 
 **Divergenze fra `Proposta_F8_Sessione_Campagna.md` e il codice della F8** (non sono errori: scelte o semplificazioni dichiarate nei rapporti o verificate qui): `validate_session` ha 4 passi nel codice (finestra, disgiunzione, blocchi, per
 missione con le lettere a–f) invece dei 6 numerati dalla Proposta, con la stessa sostanza e lo stesso ordine delle violazioni; `Readiness` usa una tolleranza locale `_TIME_EPS = 1e-9` (`:46`) invece di importare

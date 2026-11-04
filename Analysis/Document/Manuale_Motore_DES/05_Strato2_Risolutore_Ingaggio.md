@@ -1185,7 +1185,7 @@ contatore; un BMP-2 con 4 missili Konkurs poteva lanciarne 252.
 
 ### Stato primario e viste
 
-`Mobile._stores: Optional[Dict[str, int]]` = `{modello_arma: quantità}` (`Asset/Mobile.py:346`)
+`Mobile._stores: Optional[Dict[str, int]]` = `{modello_arma: quantità}` (`Asset/Mobile.py:357`)
 è ora lo stato primario; `ammunition`/`interceptor_stock` sono **viste calcolate** su di esso,
 tramite funzioni **pure** condivise fra l'asset reale e lo stato ombra del risolutore
 (`Asset/Weapon_Stores.py`, 298 righe, senza stato né import di dominio né uso di `random`):
@@ -1197,7 +1197,7 @@ Per un'arma richiesta `weapon`, la contabilità distingue **quattro forme della 
 
 1. `stores is None` → **pool anonimo** (`anonymous`): il comportamento precedente al 2026-09-26,
    usabile da qualunque arma — la forma degli stub di test e di chi imposta `Mobile.ammunition =
-   n` a mano (`Mobile.py:759-783`).
+   n` a mano (`Mobile.py:770-794`).
 2. `weapon` presente in `stores` → **la sua voce**, e solo quella.
 3. `weapon` in `unmodelled` → **arma reale senza dato di scorta** (`Mobile.UNIT_COUNTED_WEAPON_TYPES`:
    mitragliatrici, CIWS — il registro dà il numero di armi installate, non i colpi): nessun
@@ -1219,10 +1219,10 @@ valore di ritorno).
 ### Intercettori: stessa voce dell'arma offensiva, regola F
 
 `interceptor_weapons = {modello: è_cannone}` elenca le armi **intercettrici** dell'asset
-(`Mobile.interceptor_weapons_from_registry`, `Asset/Mobile.py:1047-1117`): le armi AD di
+(`Mobile.interceptor_weapons_from_registry`, `Asset/Mobile.py:1058-1128`): le armi AD di
 `Mobile.air_defense_volume` (v. capitolo 7 §7.5) **ristrette dal 2026-09-28 a quelle che
 dichiarano il task `Anti_Missile`** (regola D, §4.24) ed estese ai CIWS navali, trattati come
-cannoni AD con scorta `impianti × rounds_per_mount` (`_mount_rounds`, `Asset/Mobile.py:204-216`).
+cannoni AD con scorta `impianti × rounds_per_mount` (`_mount_rounds`, `Asset/Mobile.py:215-227`).
 Con `stores` presente e `interceptor_weapons`
 non vuoto, la scorta di intercettori è (`interceptor_stock`, `Weapon_Stores.py:228-234`):
 
@@ -1246,7 +1246,7 @@ come prima del 2026-09-26.
 `plan_interceptions`/`apply_interception_plan` (`Weapon_Stores.py:252-293`) calcolano e applicano
 la ripartizione per arma di un numero di intercettazioni **senza mutare** `stores` nel primo
 passo (per lo stato ombra, v. sotto) e mutandolo nel secondo (per l'asset reale, v. `Mobile.
-consume_interceptor_stock`, `Mobile.py:1012-1045`).
+consume_interceptor_stock`, `Mobile.py:1023-1056`).
 
 ### Come lo consuma il risolutore: `_first_with_stock` e `_on_launch`
 
@@ -1631,7 +1631,7 @@ per missili, bombe plananti e droni). Un Strela-10 o uno Shilka restano armi ant
   6 armi terrestri (9M331 del Tor, 9M38 del Buk, 5V55R dell'S-300PS, 9M311 e 2A38M del Tunguska,
   Oerlikon-KDA-35mm del Gepard) e già presente su 12 armi navali (9 SAM e i 3 CIWS: Phalanx, AK-630,
   Type-730); Osa e Stinger restano esclusi (D-AM1, proposta §4).
-- Codice: `Mobile.INTERCEPTOR_TASK = 'Anti_Missile'` (`Asset/Mobile.py:196`),
+- Codice: `Mobile.INTERCEPTOR_TASK = 'Anti_Missile'` (`Asset/Mobile.py:207`),
   `interceptor_weapons_from_registry` (`:1047-1117`, filtro: dati di quota, task `Anti_Air` **e**
   `Anti_Missile`) e `interceptor_capability()` (`:1119-1131`: `True`/`False`, o `None` se il registro
   non descrive armi del modello); `Military.salvo_interceptors` (`Block/Military.py:652-715`) include

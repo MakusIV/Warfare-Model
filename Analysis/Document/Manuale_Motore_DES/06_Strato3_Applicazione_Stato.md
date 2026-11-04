@@ -116,7 +116,7 @@ con un log invece di sollevare un'eccezione (`:244-246`).
 ## 5.2 `Logic/Fuel_Model.py` — il carburante: dall'evento per distanza al modello di bingo (F6-A, F6-B2, G1-G5)
 
 Stessa separazione calcolo/applicazione di `Damage_Model` (`Logic/Fuel_Model.py:1-16`). Il contatore vive
-sull'asset (`Mobile.fuel`, **frazione del carico pieno** in [0, 1], `FUEL_FULL = 1.0`, `Asset/Mobile.py:233-257`;
+sull'asset (`Mobile.fuel`, **frazione del carico pieno** in [0, 1], `FUEL_FULL = 1.0`, `Asset/Mobile.py:244-268`;
 `None` = carburante non modellato, nessun vincolo — v. capitolo 7, §7.6); questo modulo produce gli atomi che entrano
 nel `SessionOutcome` e **tutte le funzioni di calcolo** che l'orchestratore usa per decidere dove un aereo si ferma,
 quando rientra e quanto consuma. Il modulo è organizzato in sezioni: eventi e consumo (§5.2.1-5.2.3), planata
@@ -126,7 +126,7 @@ quando rientra e quanto consuma. Il modulo è organizzato in sezioni: eventi e c
 
 (`:17-49`)
 
-- Consumo **deterministico**, proporzionale alla distanza (`Mobile.fuel_for_distance`, `Asset/Mobile.py:1311`):
+- Consumo **deterministico**, proporzionale alla distanza (`Mobile.fuel_for_distance`, `Asset/Mobile.py:1322`):
   **nessuna estrazione casuale**, nessun RNG richiesto, in nessuna funzione del modulo.
 - L'evento è **già limitato** al carburante disponibile: se la tratta richiede più di quanto c'è, `amount` è il
   residuo, `distance_covered < distance` e `exhausted` è `True`.

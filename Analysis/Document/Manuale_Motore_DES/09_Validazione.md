@@ -7,7 +7,7 @@ Test_Session_Scenarios_S10_S18.py` (S10-S18), `Test/Test_Session_Scenarios_S19.p
 `Test/Test_Session_Scenarios_S19_Air_Defence.py` (S19, S19AD), `Test/Test_Session_Scenarios_S20.py` (S20) e
 `Test/Test_Session_Scenarios_S21.py` (S21, S21R), `Test/Test_Session_Scenarios_S22.py` ... `_S27.py` (S22-S27, §8.10),
 `Test/Test_Session_Scenarios_S28.py` e `_S29.py` (S28, S29, §8.11), `Test/Test_Session_Scenarios_S30.py` (S30, §8.12),
-più lo strumento di non regressione `Test/Scenario_Baseline.py` (§8.7). Suite finale della Fase 7: **3371 test, OK
+`Test/Test_Session_Scenarios_S31.py` (S31, §8.13; dal 2026-11-04), più `Test/Test_EWR_Data.py` (radar EWR, §8.13), più lo strumento di non regressione `Test/Scenario_Baseline.py` (§8.7). Suite finale della Fase 7: **3371 test, OK
 (skipped=5)** (wiki `decisions/virtual-session-engine-des`, sezione Fase 7). **Suite a `fa5fbf1e` (codice identico a quello di `dc53af99`): 4701 test, OK
 (skipped=7)**, e **confronto con la fotografia: 986 esecuzioni IDENTICHE**: erano i numeri della verifica fatta dalla sessione principale al commit `dc53af99`
 (messaggio del commit e Piano §5, riga F8-R), **riportati qui come dichiarati e NON rieseguiti** per questo aggiornamento; la fotografia di non regressione era
@@ -17,6 +17,13 @@ di **986 esecuzioni** a quel commit (§8.7, §8.12; ora 989, v. sotto; il file h
 I numeri di suite e confronto sono quelli del rapporto `Rapporti/Rapporto_difetto26_des-developer.md` (`Ran 4710 tests in 549.779s`, `OK (skipped=7)`; `compared 989 runs`, `UNCHANGED (986)`), ottenuti dalla
 sessione principale con `tools/ai/verifica.sh`, e **non sono stati rieseguiti** per questo aggiornamento (v. §8.12).
 *(Suite a `fa5fbf1e`: 4701 test, 986 esecuzioni; a `dcedc541`: 4555 test, OK (skipped=7) e fotografia a 982 esecuzioni, `F4_Differenze_Scenari.md` sezione F7b; a `a784a9e7`: 4385 test, 918 esecuzioni.)*
+
+**Aggiornamento 2026-11-04 (sensori: D-4c `37816355` e D-4b `cbc75634`; manuale riverificato a `b171f6a5`): suite 4742 test, OK (skipped=7); confronto con la fotografia: 1009 esecuzioni, IDENTICHE le 989 preesistenti, 0 cambiate,
+20 nuove (`S31-VISUAL`) installate in `37816355`; il blocco B non aggiunge né cambia nessuna esecuzione; fotografia di non regressione: 1009 esecuzioni** (contate sul file `Test/baseline/scenario_baseline.json`: `errors` vuoto, 1009 chiavi in `runs`, di cui
+20 `S31-VISUAL/...`). I numeri di suite e confronto sono quelli dei rapporti degli esecutori (`Rapporti/Rapporto_sensori_A_des-developer.md`: `Ran 4727 tests`, `OK (skipped=7)`, `UNCHANGED (989)` + 20 nuove; `Rapporti/Rapporto_sensori_B_oc-developer.md`:
+`Ran 4742 tests`, `OK (skipped=7)`, `compared 1009 runs: IDENTICAL`) e l'ultima riga di `.ai-run/confronto.log` (`compared 1009 runs: IDENTICAL (474.2 s)`), **riportati come dichiarati e NON rieseguiti** per questo aggiornamento. Il blocco A porta
+4710 → 4727 (+17 netti), il blocco B 4727 → 4742 (+15). Moduli di test nuovi `Test_Session_Scenarios_S31.py` e `Test_EWR_Data.py`; modificati `Test_Mobile.py`, `Test_Vehicle_Data.py`, `Test_Threat_AA_Factory.py` e `Scenario_Baseline.py` (v. §8.13).
+*(Suite a `be8559d7`: 4710 test, 989 esecuzioni.)*
 
 **Aggiornamento rispetto alla stesura iniziale**: le estensioni successive alla Fase 7 (selezione
 arma dai registri, nebbia di guerra, scorta per modello d'arma, cannone di bordo, finestre di
@@ -201,7 +208,7 @@ dello stato, non gli esiti, e passano.
 Quando l'adapter DCS esisterà, questo stesso test diventerà eseguibile alla lettera; fino ad
 allora è il suo equivalente verificabile (`Test/Test_Session_Validation.py:44-47`).
 
-## 8.4 La batteria di scenari S1-S30
+## 8.4 La batteria di scenari S1-S31
 
 Origine: S1-S5 adattano le composizioni di forza dei documenti Lanchester ingeriti (**senza i
 loro numeri**: solo composizione e domanda, v. wiki
@@ -247,6 +254,7 @@ prossimità `Urban`, scala gerarchica, rete `Transport` multi-nodo).
 | **S29** | `TestS29AreaFire` | Fuoco su posizione (F7b, capitolo 6 §6.23): un'artiglieria spara sulla posizione stimata dove i blu erano. 12 esecuzioni (§8.11). |
 | **S30** | `TestS30CampaignSequence` | Ciclo di campagna (F8c, capitolo 6 §6.24-6.27): quattro sessioni disgiunte condotte da `run_campaign_session`, senza contatti: posizione ripresa, asset non pronto escluso dal validatore, riparazione in corso e poi conclusa, riarmo e rifornimento a fine turnaround. 4 esecuzioni (§8.12). |
 | **S30-ABSENT** | `TestS30AbsentForce` | Una forza **assente** da una sessione conserva i propri record di prontezza (difetto 26, capitolo 6 §6.26): stesse forze di S30-CAMPAIGN, tre sessioni, la 2 senza `Blue-Mech`; nello stesso file `Test_Session_Scenarios_S30.py`. 3 esecuzioni (§8.12). |
+| **S31-VISUAL** | `TestS31VisualSensor` (più `TestS31VisualSensorRanges`, unitaria e fuori dalla fotografia) | Sensore visivo di ripiego di ZSU-57-2 e M163-VADS (D-4c, capitolo 3 §3.5, capitolo 7 §7.12): una difesa aerea a vista, quattro A-10C, cinque varianti (`zsu`, `zsu_off`, `vads_low`, `vads_low_off`, `vads_high`) con l'interruttore `D4C_VISUAL_SENSOR` acceso o spento. 20 esecuzioni (§8.13). |
 
 Tutti gli scenari condividono la stessa regola: si prende la composizione delle forze e la
 domanda che pongono, mai coefficienti o esiti numerici precalcolati — per S6-S19 la domanda è
@@ -298,17 +306,17 @@ sottoclasse di `Asset` (confrontava il nome classe esatto invece di usare `isins
 
 Dalla fase F3 la porta di sessione cambia e servono **numeri** per dimostrare che, a parità di input, il motore
 produce la stessa storia (`Piano_Implementazione_Missione.md`, §0 punto 2 e Fase 0). `Scenario_Baseline.py`
-(935 righe al 2026-10-29, 932 a `fa5fbf1e`, 929 a `dcedc541`, 901 a `a784a9e7`, 693 a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
+(944 righe al 2026-11-04, 935 al 2026-10-29, 932 a `fa5fbf1e`, 929 a `dcedc541`, 901 a `a784a9e7`, 693 a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
 `Test_`) esegue gli scenari di sessione esistenti, riassume ogni `SessionOutcome` in una forma deterministica e la
 salva su JSON, oppure la confronta con una fotografia salvata.
 
-**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:252-379`) elenca le "unità" dei
+**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:258-388`) elenca le "unità" dei
 test: per le classi di scenario (S1-S21, S19AD, S21R, validazione) esegue il loro `setUpClass`, che costruisce le
 forze con `Scenario_Fixtures` e lancia tutte le repliche e varianti usate dai test; per
 `Test_Session_Simulator` (nessun `setUpClass`) un elenco scelto di **metodi** di test (`ORC-*`). Le unità S21 e
-S21R sono messe **in coda** alla tabella (nomi stabili: non spostano le chiavi delle altre); così **S30-CAMPAIGN**, aggiunta dalla F8c (`:373-375`, `_single_or_index`: una chiave per sessione, nessuna variante), e, dopo di lei, **S30-ABSENT** del difetto 26 come ultima voce
-(`:376-378`, `TestS30AbsentForce`, stessa funzione di etichetta). Durante
-l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:584-595`) che chiama
+S21R sono messe **in coda** alla tabella (nomi stabili: non spostano le chiavi delle altre); così **S30-CAMPAIGN**, aggiunta dalla F8c (`:379-381`, `_single_or_index`: una chiave per sessione, nessuna variante), dopo di lei **S30-ABSENT** del difetto 26
+(`:382-384`, `TestS30AbsentForce`, stessa funzione di etichetta) e, come **ultima voce dal 2026-11-04**, **S31-VISUAL** della D-4c (`:385-387`, `TestS31VisualSensor`, `_by_occurrence('zsu', 'zsu_off', 'vads_low', 'vads_low_off', 'vads_high')`: le cinque varianti, nomi stabili). Durante
+l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:593-604`) che chiama
 l'originale e poi riassume l'esito **e** lo stato reale degli asset (letto subito dopo la chiamata: in S11 e
 nella mini-campagna la sessione successiva muta di nuovo le stesse istanze). Le asserzioni dei test non sono
 eseguite per le classi di scenario; per i metodi un'asserzione fallita è segnalata su stderr ma non impedisce la
@@ -319,7 +327,7 @@ stesso `session_id` nell'unità, tradotto in un nome leggibile dalla tabella (es
 S1; `default`/`press_on`/`resistant` per S5; `split`/`single` per S20; `parked`/`control` per S21). Se un
 `setUpClass` cambia l'ordine delle varianti, le chiavi cambiano: va aggiornata la tabella.
 
-**Cosa registra** (`summarize_run`, `:480-579`): intervallo della sessione, forze dei due lati e parametri di
+**Cosa registra** (`summarize_run`, `:489-588`): intervallo della sessione, forze dei due lati e parametri di
 chiamata riconoscibili, esiti di forza per ingaggio (con tempi, perdite, erosione, shock, soglia e, dalla F4b,
 il `block_id` quando c'è), stato finale per asset (salute, operativo, distrutto, munizioni, scorta per arma,
 intercettori, carburante), munizioni consumate per asset e per arma, intercettazioni per asset e per arma,
@@ -327,13 +335,13 @@ eventi di carburante, conteggi (salve, intercettazioni, danni, distruzioni) e le
 **Dalla F4b la voce `force_outcomes` è chiavata per blocco** (gli esiti delle sue forze d'ingaggio, nell'ordine
 degli ingaggi, `block_id or force_id`): con una missione per blocco ha la stessa forma di prima, e il confronto con
 le fotografie precedenti resta possibile. I float sono arrotondati a 6 decimali
-(`ROUND_DIGITS`, `:206`; `-0.0` normalizzato, `norm`, `:400-424`), le chiavi ordinate: **due catture dello stesso
-codice sono identiche byte per byte**. `FORMAT_VERSION = 1` (`:205`).
+(`ROUND_DIGITS`, `:212`; `-0.0` normalizzato, `norm`, `:409-433`), le chiavi ordinate: **due catture dello stesso
+codice sono identiche byte per byte**. `FORMAT_VERSION = 1` (`:211`).
 
 **Parametri di chiamata dopo la F3**: `run_session` non ha più `routes`; perché la fotografia della Fase 0 resti
 confrontabile, la voce `call.parameters.routes` è **ricostruita dalle missioni** (`Mission_Adapter.mission_routes`,
-`_call_parameters`, `:453-477`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
-`:719-727`).
+`_call_parameters`, `:462-486`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
+`:728-736`).
 
 **Uso** (dalla radice del repository, con l'interprete della macchina):
 
@@ -346,14 +354,14 @@ python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline \
 ```
 
 `--only <regex>` limita il confronto a unità o chiavi; `--compare a.json --against b.json` confronta due file
-già catturati senza eseguire nulla. `compare` (`:759-807`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
+già catturati senza eseguire nulla. `compare` (`:768-816`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
 20 righe di differenza per esecuzione). **`--summary` (dalla F4a)** sostituisce l'elenco grezzo con un riepilogo
-leggibile per esecuzione (`summarize_differences`, `:851-879`, che usa `run_digest`, `:810-848`): per ogni
+leggibile per esecuzione (`summarize_differences`, `:860-888`, che usa `run_digest`, `:819-857`): per ogni
 esecuzione che differisce, le sole grandezze cambiate come `vecchio -> nuovo` — esito per forza (e, per i blocchi
 con più forze d'ingaggio, l'esito di ciascuna: `<mission_id>.mission_outcome`), asset distrutti, colpi,
 intercettazioni, carburante e fine del movimento, istante del primo colpo e del primo danno — poi l'elenco delle
 esecuzioni invariate. Non cambia il formato della fotografia; si può usare solo con `--compare`. Codice d'uscita
-(`main`, `:882-931`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
+(`main`, `:891-940`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
 
 **Dalla F7b** l'evento di fuoco su posizione compare in `engagements` come un ingaggio **con zero forze** (`counts.engagements` lo conta; nessuna voce nuova nel riassunto), come in `SessionOutcome.engagement_outcomes`.
 
@@ -367,8 +375,8 @@ missione, i motivi di fine per asset e `crew_recovered` sono nell'esito di missi
 verificano nei test, S25-S27, e con catture estese fuori dal repository). Il G3 aggiunge solo eventi `FuelEvent` con
 `regime` `'engagement'` nella voce `fuel`; il G4a una voce in `engagements` per episodio.
 
-**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (**989 esecuzioni** al 2026-10-29, contate sul
-file; chiavi `errors`/`meta`/`runs`, `errors` vuoto; 986 a `fa5fbf1e`, 982 a `dcedc541`, 918 a `a784a9e7`, 370 a `84a47670`). Ne è stata fatta la cattura iniziale su una copia
+**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (**1009 esecuzioni** al 2026-11-04, contate sul
+file; chiavi `errors`/`meta`/`runs`, `errors` vuoto; 989 al 2026-10-29, 986 a `fa5fbf1e`, 982 a `dcedc541`, 918 a `a784a9e7`, 370 a `84a47670`). Ne è stata fatta la cattura iniziale su una copia
 isolata di `18a772d6` (292 esecuzioni, identica in due catture separate); è stata **rigenerata più volte**, sempre dopo un
 confronto spiegato e con due catture consecutive identiche (determinismo). La storia, dal documento delle differenze
 `Analysis/Document/F4_Differenze_Scenari.md` (le righe da F5-A in poi sono nuove di questo aggiornamento; le esecuzioni
@@ -402,6 +410,8 @@ sono quelle della fotografia **installata** nel commit indicato, come risulta da
 | F8c, prontezza, conduttore, S30 | `87aa7dea`, `6d3497bc`, `398ae3ef`; fotografia installata in `3fb25089` | 986 (+4: S30) | di 982: **982 identiche**, 0 cambiate, 4 nuove (`S30-CAMPAIGN/S30-CAMPAIGN-1..4`); installata dalla sessione principale dopo l'approvazione dell'utente. I blocchi 1 e 2 non hanno richiesto il confronto (nessun cambio di motore) |
 | F8-R, dati dei tempi | `dc53af99` | 986 | **986 identiche** (dichiarato dal messaggio del commit e dal Piano §5; **non rieseguito** per questo aggiornamento): i sette valori cambiati non entrano negli istanti di S30, che dipendono da `GROUND_TURNAROUND_S` e dalla riparazione, rimasti invariati |
 | Difetto 26, S30-ABSENT | `be8559d7` (codice); fotografia installata in `643fff87` | 989 (+3: S30-ABSENT) | di 986: **986 identiche**, 0 cambiate, 3 nuove (`S30-ABSENT/S30-ABSENT-1..3`), come atteso dalla Proposta (S30-CAMPAIGN identico: la correzione non cambia i registri né lo stato degli asset di una sequenza con le stesse forze in ogni sessione); `compared 989 runs`, `UNCHANGED (986)` dichiarati dal rapporto, **non rieseguiti** per questo aggiornamento; le 3 nuove sono state verificate confrontando le chiavi della cattura con la fotografia (`.ai-run/confronto.log` riporta solo il riepilogo). Installata dalla sessione principale |
+| D-4c, sensore visivo, S31-VISUAL | `37816355` | 1009 (+20: S31-VISUAL) | di 989: **989 identiche**, 0 cambiate, 20 nuove (`S31-VISUAL/S31-VISUAL-0..3/{zsu, zsu_off, vads_low, vads_low_off, vads_high}`); nessuno scenario preesistente usa ZSU-57-2 o M163-VADS, quindi l'interruttore `D4C_VISUAL_SENSOR` acceso non cambia nulla (`Rapporti/Rapporto_sensori_A_des-developer.md` §6: `UNCHANGED (989)`, `compared 1009 runs: 20 difference lines` = le 20 nuove; confronto con codice di uscita 1 per le nuove, atteso) ; fotografia installata nello stesso commit |
+| D-4b, radar EWR (blocco B) | `cbc75634` | 1009 | **1009 identiche**, 0 cambiate, 0 nuove (`compared 1009 runs: IDENTICAL`, `Rapporti/Rapporto_sensori_B_oc-developer.md` §6 e `.ai-run/confronto.log`): nessuno scenario istanzia un EWR e il combat score globale dei record preesistenti non cambia (G2); **non rieseguito** per questo aggiornamento |
 
 **Il processo di non regressione, come applicato dalla F4** (ogni passo dichiara la propria differenza prima di
 essere committato): (1) la fotografia *prima* del passo viene ricontrollata **identica** al codice di partenza;
@@ -861,3 +871,50 @@ I conteggi dei moduli nuovi e modificati dalla F8 (la somma usa i valori a `fa5f
 estrazioni (136 su 20 000), da cui un fallimento intermittente **preesistente e non legato alla F8** (`F4_Differenze_Scenari.md`, sezione F8). **Controllo di copertura**: `Test_Session_Validator` non ha un test dedicato per `MISSION_SPEED` né
 per il caso positivo di `MISSION_START_INVALID` (verificato cercando i codici nel modulo; sono citati solo `assertNotIn` per la missione sul posto); `check_mission_speed` ha comunque i propri test in `Test_Mission_Adapter`. **La sorte dei record di prontezza di un asset non
 passato a `readiness_after_session`** — che fino al difetto 26 nessun test copriva (capitolo 9 §9.6 voce 26, ora chiusa) — è coperta dai test di cui sopra e da S30-ABSENT.
+
+## 8.13 Scenari e verifiche dei sensori (D-4c e D-4b, 2026-11-04)
+
+Le misure vengono dai rapporti `Rapporti/Rapporto_sensori_A_des-developer.md` e `Rapporto_sensori_B_oc-developer.md` e dal confronto `.ai-run/confronto.log`; **suite e confronto non sono stati rieseguiti** per questo aggiornamento (numeri in
+testa al capitolo). Come per ogni scenario, i test asseriscono proprietà **qualitative o strutturali**, mai un numero di calibrazione. Il piano è `Analysis/Document/Proposta_Dati_Sensori_EWR_Visivo.md` (§4, blocchi A e B).
+
+### S31-VISUAL (`TestS31VisualSensor`, 20 esecuzioni, 5 test) e `TestS31VisualSensorRanges` (1 test)
+
+Il modulo è `Test/Test_Session_Scenarios_S31.py`. Prosegue S19AD (§8.6) con la stessa geometria: una linea Red di 3 `BMP-2` con sensore dichiarato di test, in (0, 0), una difesa aerea in (1000, −300) (`DEFENCE_POSITION`, `:55`; asset `Red-Line/ad0`,
+`DEFENCE`, `:54`), **4 A-10C** `Maverick/Gun CAS` da (−40 km, 0), rotta di sorvolo, bersaglio ristretto ai 3 BMP-2 (ROE `only_designated`), soglie `BOTH_HOLD`. **Cinque varianti, quattro semi** (`S31-VISUAL-0..3`, `SEEDS`, `:44`), con lo stesso `session_id` per le cinque varianti
+di un seme (la fotografia numera le esecuzioni per occorrenza del `session_id`); la tabella `VARIANT_SPEC` (`:46-52`) dà modello della difesa, quota degli A-10C e stato dell'interruttore:
+
+| Variante | Difesa | Quota A-10C | `D4C_VISUAL_SENSOR` | Che cosa verifica |
+|---|---|---|---|---|
+| `zsu` | `ZSU-57-2` | 3000 m | acceso | la ZSU vede a 6 km e spara (solo `S-68-57mm`: quota massima 4000 m) |
+| `zsu_off` | `ZSU-57-2` | 3000 m | **spento** | premessa: il comportamento precedente, **nessun colpo** |
+| `vads_low` | `M163-VADS` | 500 m | acceso | il Vulcan (quota fino a 1000 m) spara (solo `M61-Vulcan-20mm`) |
+| `vads_low_off` | `M163-VADS` | 500 m | **spento** | nessun colpo |
+| `vads_high` | `M163-VADS` | 3000 m | acceso | il sensore vede a 6 km, ma l'arma arriva a 1000 m di quota: **nessun colpo** — rilevare non è intercettare |
+
+L'interruttore è sostituito con `patch.object(<modulo di Mobile>, 'D4C_VISUAL_SENSOR', ...)` attorno alla costruzione delle forze **e** alla sessione (`run_variant`, `:69-82`): è il modulo che contiene davvero `Mobile`, ricavato con `sys.modules[Mobile.__module__]` (`:41`), perché
+`detection_range` legge l'interruttore a ogni chiamata (capitolo 3 §3.5). I cinque test (`TestS31VisualSensor`, `:109`): `test_mavericks_are_launched` (premessa non vacua: in ogni variante gli A-10C lanciano Maverick), `test_without_the_visual_sensor_the_aaa_never_fires`,
+`test_zsu_with_the_visual_sensor_fires`, `test_vads_with_the_visual_sensor_fires_at_low_altitude`, `test_vads_sees_but_cannot_reach_aircraft_at_3000_m`. `TestS31VisualSensorRanges` (`:93`, **fuori dalla fotografia**, nessuna sessione) controlla che
+`Contact_Scheduler.mutual_detection_ranges(zsu, a10)[0]` valga 6000 m con l'interruttore acceso e `None` spento. Un valore di colpi sparati o di perdite Blue **non** è asserito (la sonda dell'esecutore dà colpi della difesa di 150 per `zsu` e circa 650-700 per `vads_low`, **non** riprodotti in
+nessun test: sono solo un ordine di grandezza della sonda, non un dato). La fotografia registra l'unità come `S31-VISUAL` in coda alla tabella `UNITS` (§8.7).
+
+### Test aggiunti dal blocco A (D-4c: +17 netti, 4710 → 4727)
+
+| Modulo di test | Cosa copre | Test |
+|---|---|---|
+| `Test_Mobile.py`, `TestDetectionRangeVisualSensor` (`:1172`) | il visivo è il **terzo** sensore (`DETECTION_SENSORS == ('radar', 'TVD', 'visual')`); un asset solo visivo ha 6000 m in `air` e `None` in `ground`; composizione col **massimo** (radar 5 km → 6000 m, radar 20 km → 20 000 m); `sensor='visual'` lo isola; con l'interruttore spento `detection_range` e `detection_range(..., sensor='visual')` dànno `None` e il radar resta | 5 |
+| `Test_Vehicle_Data.py`, `TestVisualSensorRecords` (`:1643`) | ZSU-57-2 e M163-VADS: `radar` e `TVD` `False`, `visual['capabilities']['air'] == (True, {tracking, 6, engagement, 1})`, `ground`/`sea` falsi; **nessun altro record** ha `visual` (è `None`); `_TVD_eval` e `_radar_eval` dei due restano 0,0 (non entra negli score); il costruttore usa `visual=None` di default | 4 |
+| `Test_Threat_AA_Factory.py`, `TestBuildDetectionThreat` (`:439`, `:453`, `:462`) | `test_visual_fallback_systems_detect_by_sight` (volume di 6 km, sensore `'visual'`, a 1000 m e a 30 m: l'orizzonte non limita) e `..._switch_off_gives_none` (spento: nessun volume di rilevamento, l'intercettazione resta) **sostituiscono** `test_systems_without_sensor_data_give_none`; `test_sensor_tables_are_consistent` (la tabella `EFFECTIVE_EARTH_RADIUS_FACTOR` copre gli stessi sensori di `DETECTION_SENSORS`) | 3 (−1 sostituito: +2 netti) |
+| `Test_Session_Scenarios_S31.py` (nuovo) | S31-VISUAL (5) e `TestS31VisualSensorRanges` (1), v. sopra | 6 |
+
+Il totale 5 + 4 + 2 + 6 = **17** coincide con 4727 − 4710 (conteggio dei metodi `test_` letto nei file; la suite non è stata rieseguita).
+
+### Test aggiunti dal blocco B (D-4b: +15, 4727 → 4742): `Test/Test_EWR_Data.py` (nuovo)
+
+| Classe | Cosa copre | Test |
+|---|---|---|
+| `TestEWRRecords` (`:61`) | gli otto modelli sono registrati con `category` e `roles` `'EWR'`; il radar è di sola scoperta aria (`air[0]` vero, `ground`/`sea` falsi, `tracking_range` ed `engagement_range` 0); le `acquisition_range` attese per modello; `multi_target_capacity` (P-18 = 10, gli altri 0); nessuna arma, `TVD` `False`, nessun `visual`; **`reliability` = la stima generica dichiarata `{'mtbf': 45, 'mttr': 4}`** per tutti e otto; coerenza degli `acquisition_profile` (quote e portate strettamente crescenti, portata alla quota di riferimento uguale ad `acquisition_range`); `antenna_height` solo per lo SCR-270 (16,8) | 8 |
+| `TestEWRDoNotShiftTheCombatScores` (`:139`) | la popolazione globale del combat score **esclude** gli EWR (un EWR estremo di prova non sposta il valore di T-90M); i valori globali degli otto EWR sono in [0, 1]; il valore globale dei modelli non-EWR coincide con `_normalize` sui soli non-EWR | 3 |
+| `TestEWRAsAssets` (`:182`) | un EWR asset ha `isEWR` vero e combat power di terra 0; dà un volume di rilevamento (P-18: 180 km a 10 000 m, sotto l'orizzonte a 500 m) senza minacce d'intercettazione; emette (`emits_radar`) ma ha `sam_category` e profilo AD `None` ed è **fuori dal catalogo RWR**; in una sessione DES (un P-18 contro un A-10C a 3000 m, `Maverick/Gun CAS`, 1800 s) la sessione gira senza errori e **nessun `AmmunitionEvent` ha l'EWR come asset** (il test **non** asserisce che l'EWR rilevi l'aereo: la rilevazione in sessione è documentata dalla sonda E-4 della Proposta §1.3, non da un'asserzione) | 4 |
+
+La somma 8 + 3 + 4 = 15 coincide con 4742 − 4727. **Nessuna unità nuova nella fotografia per il blocco B**: lo scenario EWR con SAM e cueing appartiene alla D-7 (fuori perimetro, capitolo 9). **Non coperto da test** (letto nel codice, non verificato da un'asserzione):
+l'uso di `acquisition_profile` nel motore (nessun codice lo legge: i test ne verificano solo la coerenza interna), la rilevazione di un EWR in sessione e la sorte degli inventari di campagna EWR (vuoti secondo la Proposta, decisione 17).

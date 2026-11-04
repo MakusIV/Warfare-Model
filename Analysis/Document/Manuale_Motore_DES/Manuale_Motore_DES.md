@@ -5,7 +5,16 @@ discreti (DES, *discrete event simulation*) che risolve le **sessioni virtuali**
 cioè i turni sintetici eseguiti senza un giocatore DCS (e, per costruzione, anche quelli con un
 giocatore: il core non distingue i due casi, v. capitolo 1).
 
-> **Aggiornato al commit `fa5fbf1e`** (2026-10-23, "Memoria: F8-R applicata (dc53af99), prossimi passi F9, F8d, prova su osboxes"), branch
+> **Aggiornato al commit `b171f6a5`** (2026-11-04, `git rev-parse --short HEAD` al momento dell'aggiornamento; le modifiche del manuale di questo aggiornamento sono nel working tree, non ancora committate), branch `analysis/dce-dcs-persistence`.
+> L'ultimo commit che tocca `Code/` è `cbc75634` (D-4b, 2026-11-04). **Aggiornamento 2026-11-04 — sensori D-4c (`37816355`) e D-4b (`cbc75634`)**: *dati e un interruttore, nessuna regola nuova del DES.* **D-4c**: sensore visivo di ripiego (`visual`) di ZSU-57-2 e M163-VADS,
+> terzo sensore di `Mobile.detection_range` dietro `Mobile.D4C_VISUAL_SENSOR` (default acceso; `acquisition_range` aria **6 km = STIMA, confidenza bassa**); prima i due mezzi non scoprivano né ingaggiavano mai un aereo nel DES, ora sì, entro la portata dell'arma; scenario nuovo **S31-VISUAL**
+> (20 esecuzioni, 5 test + 1 unitario). **D-4b**: otto radar EWR nel registro `Vehicle_Data` (SCR-270, FuMG-80 Freya, P-12, P-18, P-37, 1L13, 55Zh6, AN/TPS-43), sensore di sola scoperta aria con un solo `acquisition_range`, `acquisition_profile` conservato ma **non letto da nessun codice**,
+> `reliability` generica 45/4 = STIMA; la categoria EWR è esclusa dalla popolazione **globale** del combat score (G2). **Suite: 4742 test, OK (7 skipped); confronto con la fotografia: 1009 esecuzioni (989 preesistenti identiche, 20 nuove S31-VISUAL); fotografia di non regressione: 1009 esecuzioni**
+> (contate sul file). **Numeri dei rapporti degli esecutori (`Rapporti/Rapporto_sensori_A_des-developer.md`, `Rapporto_sensori_B_oc-developer.md`) e di `.ai-run/confronto.log`, NON rieseguiti per questo aggiornamento.** Cambiano: capitolo 3 §3.5 (composizione dei sensori), capitolo 7 (§7.4, §7.8, §7.12, righe di
+> `Air_Route_Manager` e `Mobile`), capitolo 8 (§8.4, §8.7, nuova **§8.13**) e capitolo 9 (nuova sezione di limiti nel §9.1, §9.3, §9.4, **voci 28-29 di §9.6**); righe esplicite a `Mobile.py` ricalcolate nei capitoli 3-5 e nell'atlante `11b`; nell'atlante nota datata (capitolo 10). **Nessun diagramma toccato o aggiunto**: l'Elenco resta D1-D129.
+> Il resto del testo descrive ancora lo stato a `fa5fbf1e` e agli aggiornamenti successivi, come indicato nelle note di ciascun capitolo.
+>
+> **Stato di base del testo: commit `fa5fbf1e`** (2026-10-23, "Memoria: F8-R applicata (dc53af99), prossimi passi F9, F8d, prova su osboxes"), branch
 > `analysis/dce-dcs-persistence`. `fa5fbf1e` è un commit di sola memoria: **l'ultimo commit che tocca `Code/` è `dc53af99`** (F8-R, 2026-10-23), quindi il codice descritto è quello di
 > `dc53af99`. Il manuale descrive **lo stato di `fa5fbf1e`**, cioè dopo le fasi F0-F8 del piano di implementazione della Missione (F4 = regola A, missione come unità d'ingaggio, dominio di
 > coordinamento, difesa di salva per dominio, postura continua; F5 = presenza, `grounded` nel tempo, attese, TOT per missione; F6 = carburante per tratto, criteri di fine, stato di missione,
@@ -271,7 +280,7 @@ parametro `grounded`.
 3. [Lo strato 1: lo scheduler dei contatti](04_Strato1_Scheduler_Contatti.md) —
    `Logic/Contact_Scheduler.py`: rotta↔cilindro, CPA/TCPA, potatura gerarchica,
    `ContactWindow`; dal 2026-10-11 il parametro `grounded` per gli aerei a terra (§3.5-3.6); **dal 2026-10-12/17**
-   `GroundedSchedule` (§3.7), `legs` e `only_assets` (§3.6), `trim_contact_window` (§3.8).
+   `GroundedSchedule` (§3.7), `legs` e `only_assets` (§3.6), `trim_contact_window` (§3.8); **dal 2026-11-04** la composizione dei tre sensori (`radar`, `TVD`, `visual`) in `Mobile.detection_range` e l'interruttore `D4C_VISUAL_SENSOR` (§3.5).
 4. [Lo strato 2: il risolutore d'ingaggio](05_Strato2_Risolutore_Ingaggio.md) —
    `Logic/Engagement_Resolver.py`: rilevamento, latenze di reazione, salva di Hughes,
    saturazione, disingaggio, ingaggi a N forze; `Logic/Fire_Control.py` (selezione dell'arma dai
@@ -305,21 +314,21 @@ parametro `grounded`.
    (`fire_control`, con l'estensione facoltativa `target_grounded`) e della soglia di rottura (`morale_for`,
    `enemy_estimate_for`, `fire_doctrine`, `rwr_catalogue`); `Doctrine` con parametri della soglia e dottrina di
    tiro (§7.2); `Asset/Aircraft_Rwr_Data.py` (§7.10), `Context/Air_Defense_Efficacy.py` (§7.11), dati di registro
-   aggiunti (§7.12, compresa la correzione dei loadout A-10C); la `fire_control` avvolta dalla politica d'armi e `target_rules`
+   aggiunti (§7.12, compresa la correzione dei loadout A-10C e, **dal 2026-11-04**, il sensore visivo di ZSU-57-2/M163-VADS e gli otto radar EWR); la `fire_control` avvolta dalla politica d'armi e `target_rules`
    come ingresso ricavato dalle missioni (§7.7); il pianificatore di rotta aerea con volumi di rilevamento e
    intercettazione distinti (§7.8, `Logic/Air_Route_Manager.py`) e il pianificatore d'attacco
    a monte del motore (§7.9, `Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`); **nuova §7.13 (F8)**: i tempi di turnaround e riparazione in `Context/Context.py`
    con la provenienza e il livello di verifica di ogni valore, e `Context/Campaign_State.py` (`restore_position`, `add_ledger`/`get_ledger`).
 8. [Validazione](09_Validazione.md) — determinismo, test di agnosticismo come test di
-   contratto (esteso alle porte della Missione), la batteria di scenari S1-S30 (§8.4), la
+   contratto (esteso alle porte della Missione), la batteria di scenari S1-S31 (§8.4), la
    migrazione alle missioni e la regola A negli scenari, lo strumento di non regressione
-   `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 989 esecuzioni
+   `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 1009 esecuzioni
    (§8.7), i test aggiunti (§8.8), gli scenari della fase F4 (§8.9), gli scenari S22-S27 e i test delle fasi F5, F6 e
-   G1-G5 (§8.10), gli scenari S28-S29 e i test della fase F7 (§8.11), **gli scenari S30-CAMPAIGN e S30-ABSENT e i test della fase F8 (§8.12)**.
+   G1-G5 (§8.10), gli scenari S28-S29 e i test della fase F7 (§8.11), gli scenari S30-CAMPAIGN e S30-ABSENT e i test della fase F8 (§8.12); **lo scenario S31-VISUAL e i test dei sensori D-4c e D-4b (§8.13)**.
 9. [Limiti noti, punti di estensione e divergenze codice/wiki](10_Limiti_Estensioni_Divergenze.md) —
    limiti nuovi e superati (compresi quelli della fase F4, delle fasi F5, F6, G1-G5, della fase F7, con le costanti STIMATE
    del fuoco su posizione, e **della campagna, F8**, con i tempi non tarati e l'assenza di logistica), stato del piano della Missione F0-F9 e dei passi G1-G5 (§9.5, F8a-F8c e F8-R fatte,
-   F8d non fatta, F6-B3 chiuso), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce: voci 7, 11 e 23 chiuse, **voci 24-27 nate con la F8 e chiuse il 2026-10-29**).
+   F8d non fatta, F6-B3 chiuso), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce: voci 7, 11 e 23 chiuse, voci 24-27 nate con la F8 e chiuse il 2026-10-29, **voci 28-29 nuove e aperte, 2026-11-04**); **dal 2026-11-04** la sezione dei limiti dei sensori EWR e visivo (§9.1).
 10. [Atlante dei diagrammi](11_Atlante_Diagrammi.md) — la scala dei livelli L0-L4 (contesto, architettura, moduli, interazione, algoritmo), la tabella-atlante di tutti i diagrammi
     e lo stato di copertura per modulo; i diagrammi nuovi **D57-D66**: contesto del core (D57), grafo reale degli import in tre parti (D58-D60), `Session_Simulator` e `Mission_Adapter` (tipi, gruppi di funzioni e
     tabelle complete con `:riga`, D61-D63), la sequenza di chiamate di `run_session` in tre parti (D64-D66). Verificato a `f009eb43`.
@@ -482,3 +491,6 @@ D19 (ramo `IN_PROGRESS`), D29 (F8a-F8c e F8-R fatte, F6-B3 chiuso, F8d non fatta
 **Aggiornamento 2026-10-29** (atlante dei diagrammi, pilota): nuovo capitolo 10 (`11_Atlante_Diagrammi.md`) con i diagrammi **D57-D66**, la scala dei livelli L0-L4 e la tabella-atlante che assegna un livello anche a D1-D56. Nessun capitolo preesistente è stato modificato; D1-D56 sono invariati. Il livello di ciascun diagramma non è una colonna di questo elenco (richiederebbe di riscrivere le 56 righe esistenti): è nel capitolo 10 §10.2.
 
 **Aggiornamento 2026-10-30** (atlante dei diagrammi, parti A-C): i file `11a_Atlante_Risolutore.md`, `11b_Atlante_Missione_Carburante.md` e `11c_Atlante_Porte_Campagna.md` aggiungono i diagrammi **D67-D87**, **D90-D109** e **D110-D129** (D88 e D89 non sono usati), con la tabella completa dei simboli di tutti i moduli del core. Verificati a `f009eb43`; nessun sorgente cambia. Il livello di ciascun diagramma è nella colonna «(livello Lx)» del titolo e nella tabella-atlante del capitolo 10 §10.2. In sequenze preesistenti (D50 nel capitolo 6, una del capitolo 10) e in due della parte A l'id di partecipante `AS` (parola chiave di Mermaid, possibile errore di resa) e' stato rinominato `AST`: nessun altro contenuto di D1-D66 cambia.
+
+**Aggiornamento 2026-11-04** (sensori D-4c e D-4b): **nessun diagramma nuovo o modificato**; l'Elenco resta D1-D129 (D88 e D89 non usati). I punti in cui il manuale mostra i sensori (D14, tipi `DetectionThreat`/`ThreatMode`; la sequenza D70 dell'atlante, che mostra `mutual_detection_ranges` chiamare `detection_range(mode, range_type)`) restano validi: `DetectionThreat.sensor` esiste già e
+`detection_range(mode, range_type)` è chiamata con la stessa firma. **Non è stato controllato alcun diagramma con un renderer** (non ce n'è uno in questo ambiente): non essendo stata toccata alcuna sintassi Mermaid, non c'è nulla da controllare in Obsidian per questo aggiornamento.

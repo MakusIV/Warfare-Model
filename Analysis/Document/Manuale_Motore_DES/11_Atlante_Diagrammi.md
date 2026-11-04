@@ -32,6 +32,12 @@ livello sotto nel testo, e la tabella-atlante (§10.2) è l'indice di tutti.
 mostra **un solo file**, `Test/baseline/scenario_baseline.json` (+352 righe, la fotografia a 989 esecuzioni, commit `643fff87`): nessun sorgente cambia. Le righe
 dei moduli (`grep -c ''`) sono quelle della tabella di §10.4. Non sono stati eseguiti test per questo capitolo: nessun codice è stato toccato.
 
+**Nota 2026-11-04 (dopo `cbc75634`).** La frase «un solo file» sopra descrive lo stato al 2026-10-30. Da allora `git diff 191b7d37 HEAD -- Code/` mostra, oltre ai test e alla fotografia (ora 1009 esecuzioni), **tre sorgenti** non appartenenti al core: `Asset/Mobile.py`, `Asset/Vehicle_Data.py` e `Logic/Air_Route_Manager.py` (D-4c `37816355` e D-4b `cbc75634`, capitolo 3 §3.5 e capitolo 7 §7.12).
+**Nessun modulo del core** dell'atlante è cambiato: le tabelle di §10.4 (righe dei moduli) e i `:riga` dei diagrammi D57-D129 restano validi, salvo i tre riferimenti a `Air_Route_Manager.py:1095` di `11a_Atlante_Risolutore.md` (ora `:1099`) e quello a `Asset/Mobile.py:1211` di `11b_Atlante_Missione_Carburante.md` (ora `:1222`), aggiornati. Il riferimento a `Mobile.DEFAULT_DETECTION_RANGE_TYPE`
+(riga 224 di questo file, **senza numero di riga di `Mobile.py`**) resta corretto. **Controlli con `_strumenti/inventario.py`** (rieseguiti il 2026-11-04): `--controlla` su `11`, `11a`, `11b`, `11c`, `08` e `04` dà lo stesso elenco di identificatori non trovati nel core (nomi di moduli non-core, parole chiave Mermaid e simili: è l'elenco rumoroso
+già noto, v. «Limiti e domande» di questo capitolo) **prima e dopo** questo aggiornamento (confronto riga per riga, ignorando i numeri di riga: nessuna differenza) e `--copertura` su `Contact_Scheduler`, `Engagement_Resolver`, `Fuel_Model` e `Readiness` non segnala simboli non citati, né prima né dopo. **Limite**: lo strumento **non controlla i `:riga`** (solo gli identificatori dei blocchi Mermaid), quindi la validità dei riferimenti di riga
+dell'atlante non è stata verificata dallo strumento ma con il confronto `git diff 191b7d37 HEAD` per modulo (v. sopra). Nessun diagramma è stato modificato.
+
 ## 10.2 Tabella-atlante
 
 I link portano al capitolo che contiene il diagramma; il titolo di ogni D1-D56 è quello dell'«Elenco dei diagrammi» di `Manuale_Motore_DES.md`.

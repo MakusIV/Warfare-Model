@@ -916,7 +916,7 @@ sequenceDiagram
 
 Righe: `build_leg_fuel_event` `:380`; `_leg_equivalent` `:392` (definita `:346`: ramo di movimento `:350-351`, ramo fermo `:353-358`, `cruise_speed` `:330`); `is_stationary` e `_leg_duration` `:393-394`; uscita senza distanza `:396-399`;
 `build_fuel_event` `:401` (definita `:235`: controlli di `provenance` e `time` `:248-252`, `_domain_id` `:254`, lettura di `fuel` e `fuel_for_distance` `:260-267`, `amount` `:274`, `distance_covered` `:280-283`, `FuelEvent` `:285`); `replace` `:406-412`;
-`apply_fuel_event` `:291` (`consume_fuel` `:308`, `Asset/Mobile.py:1211`). Dettagli che il codice rende importanti: `build_leg_fuel_event` usa come istante dell'evento **la fine del tratto** (`time=float(leg.t_end)`, `:401`); `duration_covered` è `duration × fraction` con `fraction = distance_covered / distance` (`:406`),
+`apply_fuel_event` `:291` (`consume_fuel` `:308`, `Asset/Mobile.py:1222`). Dettagli che il codice rende importanti: `build_leg_fuel_event` usa come istante dell'evento **la fine del tratto** (`time=float(leg.t_end)`, `:401`); `duration_covered` è `duration × fraction` con `fraction = distance_covered / distance` (`:406`),
 cioè il consumo è **uniforme lungo il tratto**. Nel chiamante, `Session_Simulator._build_leg_fuel` ritenta con la crociera se `build_leg_fuel_event` torna `None` per un regime non modellato e il tratto non è fermo (`Logic/Session_Simulator.py:1383-1388`);
 il ciclo che applica gli eventi in ordine di coda è nel passo finale del carburante, **D66** (`Logic/Session_Simulator.py:3037` per ogni tratto, `:3066` per l'evento unico a fine movimento). `apply_fuel_event` non è idempotente (docstring `:291-297`): «applicarlo due volte consuma due volte».
 
@@ -1423,3 +1423,6 @@ Le voci sono state trovate scrivendo la parte; l'esito è quello della valutazio
 - **Stime dichiarate dal codice e riportate come tali, non ricalibrate:** in `Fuel_Model` `GLIDE_RATIO`, `BINGO_RESERVE`, `BINGO_RETURN_FACTOR`, `DISENGAGE_TIME`, `ALTERNATE_BASE_MAX_OFFSET` e l'unità kg/h del consumo `emergency`; in `Area_Fire` le tre costanti `AREA_FIRE_*`; in `Mission_Types` `EMCON_STATES`, `THREAT_REACTIONS`, `FORMATIONS`.
 
 **Righe dopo `191b7d37`.** I `:riga` di questa parte sono quelli di `f009eb43`. Il commit `191b7d37` (solo docstring, commenti, un import e un parametro inutilizzati) sposta in avanti di 3-4 righe i simboli che stanno dopo il punto toccato in `Fuel_Model.py` (da `:933`), `Engagement_Resolver.py` (da `:3807`), `Damage_Model.py` (da `:162`) e `Mission_Types.py` (da `:1004`); in `Session_Validator.py` le righe non cambiano.
+
+**Nota 2026-11-04 (dopo `cbc75634`).** I commit `37816355` (D-4c) e `cbc75634` (D-4b) non toccano nessun modulo del core descritto in questa parte (`Mission_Types`, `Fuel_Model`, `Area_Fire`): i loro `:riga` restano validi. Toccano `Asset/Mobile.py` (+11 righe dopo la riga 98): l'unico riferimento a quel file in questa parte, `consume_fuel` (`Asset/Mobile.py`, riga 919 del testo), è
+stato aggiornato da `:1211` a `:1222`. **Non ricontrollato**: i `:riga` di simboli di `Mobile` citati senza percorso (per esempio `Mobile.FUEL_EPS`, `Mobile.FUEL_REGIMES`, citati per nome).

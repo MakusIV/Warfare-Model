@@ -3,7 +3,7 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
-- [Sensori D-4b/D-4c: blocchi A (37816355) e B (cbc75634) FATTI e verificati, suite 4742, fotografia 1009](project_sensori_d4b_d4c.md) — non pushato; restano manuale DES, F4, Piano; CSV OpenRouter da controllare
+- [Sensori D-4b/D-4c: blocchi A (37816355) e B (cbc75634) FATTI e verificati, suite 4742, fotografia 1009](project_sensori_d4b_d4c.md) — non pushato; costo B 0,678 $ (StreamLake); restano manuale DES (agente al lavoro), F4, Piano
 - [OpenCode: niente upgrade alla 2.x finche' e' beta (decisione 2026-11-04)](feedback_opencode_no_upgrade_beta.md) — si resta sulla 1.19.5
 - [Atlante dei diagrammi del manuale DES — COMPLETO (D57-D129, parti A-C + integrazione), limiti valutati, pulizia 191b7d37; pushato a 166d459e il 2026-10-31](project_atlante_diagrammi_manuale_des.md) — spunti rimandati nel file; prossimo: P11-P14 del difetto 26 o Proposta D-4b/D-4c
 - [Permessi degli agenti des-*/oc-* e push — irrigiditi il 2026-10-31](reference_permessi_agenti_push.md) — python3 -c e git branch chiusi, rete su push/cancellazione branch; controllo con `opencode debug agent <nome>`; push solo su richiesta
