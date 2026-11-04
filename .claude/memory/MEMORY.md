@@ -3,9 +3,10 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
-- [Sensori D-4b/D-4c: blocchi A (37816355) e B (cbc75634) FATTI e verificati, suite 4742, fotografia 1009](project_sensori_d4b_d4c.md) — non pushato; costo B 0,678 $ (StreamLake); restano manuale DES (agente al lavoro), F4, Piano
+- [Sessione 2026-11-04 ProArt — CHIUSA, pushata: D-4b/D-4c fatte (blocchi A e B), manuale DES aggiornato, suite 4742, fotografia 1009](project_session_2026_11_04_summary.md) — prossime attivita' elencate nel file: F4, Piano, nota Proposta volumi, commenti obsoleti in Air_Route_Manager, blocco C
+- [Sensori D-4b/D-4c: dettaglio decisioni, blocchi A (37816355) e B (cbc75634), costi](project_sensori_d4b_d4c.md) — costo B 0,678 $ (StreamLake)
 - [OpenCode: niente upgrade alla 2.x finche' e' beta (decisione 2026-11-04)](feedback_opencode_no_upgrade_beta.md) — si resta sulla 1.19.5
-- [Atlante dei diagrammi del manuale DES — COMPLETO (D57-D129, parti A-C + integrazione), limiti valutati, pulizia 191b7d37; pushato a 166d459e il 2026-10-31](project_atlante_diagrammi_manuale_des.md) — spunti rimandati nel file; prossimo: P11-P14 del difetto 26 o Proposta D-4b/D-4c
+- [Atlante dei diagrammi del manuale DES — COMPLETO (D57-D129, parti A-C + integrazione), limiti valutati, pulizia 191b7d37; pushato a 166d459e il 2026-10-31](project_atlante_diagrammi_manuale_des.md) — spunti rimandati nel file (D-4b/D-4c ora fatte: vedi riga 2026-11-04)
 - [Permessi degli agenti des-*/oc-* e push — irrigiditi il 2026-10-31](reference_permessi_agenti_push.md) — python3 -c e git branch chiusi, rete su push/cancellazione branch; controllo con `opencode debug agent <nome>`; push solo su richiesta
 - [Sessione 2026-10-29 ProArt — difetto 26 CORRETTO (des-developer), suite 4710, fotografia 989; manuale e P11-P14 fatti; pushato a 79bab4e2](project_session_2026_10_29_difetto26_summary.md) — Proposta D-4b/D-4c da scrivere; `confronto.log` non ha righe NEW/CHANGED
 - [Sessione 2026-10-29 osboxes — CHIUSA, pushato: Proposta difetto 26 scritta](project_session_2026_10_29_summary.md) — superata: le decisioni D26-1..6 sono prese e il difetto e' corretto (vedi riga sopra)

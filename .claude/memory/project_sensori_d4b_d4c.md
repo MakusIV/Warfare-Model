@@ -8,7 +8,7 @@ metadata:
   modified: 2026-11-04T19:15:17.880Z
 ---
 
-## Stato (2026-11-04, branch `analysis/dce-dcs-persistence`, locale, NON pushato)
+## Stato (2026-11-04, branch `analysis/dce-dcs-persistence`, pushato a fine sessione; prossime attivita' in [[project-session-2026-11-04-summary]])
 - Proposta `Analysis/Document/Proposta_Dati_Sensori_EWR_Visivo.md` (cb980bf8), scritta da des-planner. 17 decisioni dell'utente prese una per una (§3.1): tutte come raccomandato **tranne la 12** (reliability radar EWR = stima generica 45/4, non omessa).
 - **Blocco A (D-4c) FATTO** da des-developer, commit `37816355` (merge fast-forward, branch `ai/cc-sensori-a` cancellato): campo `visual` nel registro, `Mobile.D4C_VISUAL_SENSOR` default True, scenario S31-VISUAL. Verificato dalla sessione principale: suite `Ran 4727`, OK skipped=7; confronto 989 identiche, 0 cambiate, 20 nuove S31-VISUAL; fotografia installata a 1009.
 - **Blocco B (D-4b, 8 EWR) FATTO** da oc-developer (modello effettivo `deepseek/deepseek-v4-pro-0813`), commit `cbc75634` (merge fast-forward, branch `ai/oc-sensori-b` cancellato): 8 record EWR, G2 (EWR fuori dal combat score globale, con saturazione in [0,1]), `Test_EWR_Data`. Verificato dalla sessione principale: suite `Ran 4742`, OK skipped=7; confronto 1009 identiche, 0 cambiate, 0 nuove (il dubbio sulla reliability 45/4 e' chiuso: nessun effetto). Costo reale 0,678 $ dal CSV Activity (fornitore StreamLake per tutte le 126 richieste, cache 97,3%), uguale alla TUI; la somma dei `cost` di `oc export` (2,03 $) e' un conteggio errato, non usarla. Registrato in `Costi_Deleghe.md`.
