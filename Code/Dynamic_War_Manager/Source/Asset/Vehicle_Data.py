@@ -57,6 +57,12 @@ AA_CANNONS_ALLOWED_CATEGORIES = {
     Ground_Vehicle_Asset_Type.SAM_BIG.value,
 }
 
+# Categorie escluse dalla popolazione GLOBALE del combat score (Proposta_Dati_Sensori_EWR_Visivo.md, decisione 9, G2):
+# un EWR non combatte (combat power 0 per definizione, Context.py ASSENZA INTENZIONALE DI SAM/AAA/EWR) e il suo
+# combat score, senza armi ne' corazza, e' il piu' basso del registro: incluso, abbasserebbe il minimo e
+# riscalerebbe la combat power di ogni Vehicle. Senza record EWR la popolazione e' quella di prima.
+GLOBAL_COMBAT_SCORE_EXCLUDED_CATEGORIES = frozenset({Ground_Vehicle_Asset_Type.EWR.value})
+
 @dataclass
 class Vehicle_Data:
 
@@ -953,18 +959,26 @@ class Vehicle_Data:
     def get_normalized_combat_score(self, category: Optional[str] = None):
         """returns combat score normalized from 0 (min score) 1 (max score)
 
+        Nel caso globale (`category` non passato) la popolazione ESCLUDE le categorie in
+        `GLOBAL_COMBAT_SCORE_EXCLUDED_CATEGORIES` (decisione 9, G2) e il risultato si satura in
+        [0, 1]: un EWR, normalizzato su una popolazione che non lo contiene, resta nell'intervallo
+        richiesto dal test `test_vehicle_score_values_are_floats_in_range`.
+
         Returns:
             float: normalized combat score score
         """
-        if not category:
+        global_scope = not category
+        if global_scope:
             category = CATEGORY
         elif not isinstance(category, str) or not category in CATEGORY:
             raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
-        
-        
-        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
+
+        vehicles = [ac for ac in Vehicle_Data._registry.values()
+                    if ac.category in category
+                    and not (global_scope and ac.category in GLOBAL_COMBAT_SCORE_EXCLUDED_CATEGORIES)]
         scores = [ac._combat_eval() for ac in vehicles]
-        return self._normalize(self._combat_eval(), scores)
+        value = self._normalize(self._combat_eval(), scores)
+        return min(1.0, max(0.0, value)) if global_scope else value
 
     def get_normalized_communication_score(self, category: Optional[str] = None):
         """Returns communication score normalized from 0 (min score) to 1 (max score)
@@ -4562,6 +4576,253 @@ S300PS_data = {
 }
 
 
+def _ewr_support_fields(mobility: str) -> Dict:
+    """Campi NON sensore dei record EWR (D-4b): TUTTI STIME DI SCHEMA DICHIARATE, nessuna fonte.
+
+    Servono a soddisfare lo schema di Vehicle_Data (dimensioni intere positive, costo e autonomia > 0, velocita').
+    `mobility`: 'mobile' (radar su autocarro) | 'semi_mobile' (rimorchi, messa in opera di ore).
+    Restituisce dizionari NUOVI a ogni chiamata (nessuna struttura condivisa fra record).
+
+    Il `communication` porta una `reliability` {'mtbf': 45, 'mttr': 3} [S], come i "generic comm model"
+    del registro. Con la decisione 12 il radar ha una `reliability` propria 45/4, quindi questa non
+    serve piu' a evitare la lista vuota di `_reliability_eval`: resta per coerenza di schema.
+    """
+    if mobility not in ('mobile', 'semi_mobile'):
+        raise ValueError(f"mobility must be 'mobile' or 'semi_mobile', got {mobility!r}.")
+
+    if mobility == 'mobile':
+        physical = {'length': 9, 'width': 3, 'height': 4, 'weight': 14}
+        cost = 2.0
+        range_km = 500
+        speeds = {'sustained': 50, 'max': 70, 'off_road': 30}
+    else:
+        physical = {'length': 12, 'width': 3, 'height': 6, 'weight': 25}
+        cost = 4.0
+        range_km = 300
+        speeds = {'sustained': 30, 'max': 40, 'off_road': 15}
+
+    return {
+        'physical_characteristics': physical,
+        'cost': cost,          # M$ [S], non consumato dal motore (il costo dell'asset viene dal Context)
+        'range': range_km,     # km di autonomia [S]
+        'engine': None,        # il motore non e' il soggetto del record; l'autonomia si legge da `range`
+        'weapons': {},         # nessun armamento
+        'TVD': False,
+        'communication': {
+            'model': 'generic comm model',
+            'capabilities': {'navigation_accuracy': 0.3, 'communication_range': 100},
+            'reliability': {'mtbf': 45, 'mttr': 3},
+        },
+        'protections': {'active': None, 'armor': {}, 'reactive': {}},  # nessuna corazza (mezzo non protetto)
+        'hydraulic': False,    # non modellato
+        'speed_data': {
+            'sustained': {'metric': 'metric', 'speed': speeds['sustained'], 'consume': 0.4},
+            'max': {'metric': 'metric', 'speed': speeds['max'], 'consume': 0.55},
+            'off_road': {'metric': 'metric', 'speed': speeds['off_road'], 'consume': 0.7},
+        },
+    }
+
+
+# Nuovi EWR (D-4b) — nucleo di 8 radar mobili o semimobili
+# (Proposta_Dati_Sensori_EWR_Visivo.md, decisioni 6-17).
+# Forma del radar uguale per tutti: sensore di SOLA scoperta aria (tracking/engagement 0), senza
+# armi, `reliability` generica del registro {'mtbf': 45, 'mttr': 4} [S] (decisione 12, scelta
+# dell'utente: DIFFERENTE dalla raccomandazione di ometterla). I nomi DCS ("1L13 EWR", "55G6 EWR")
+# restano commenti informativi e NON diventano chiavi del registro.
+
+SCR270_data = {
+    **_ewr_support_fields('mobile'),
+    'constructor': 'non trovato',
+    'model': 'SCR-270',
+    'made': 'USA',
+    'users': ['USA'],
+    'start_service': 1940,
+    'end_service': 1945,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'SCR-270',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 160, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 160: FONTE (tabella SCR-270-D, Wikipedia), singolo bombardiere a 20 000 ft (6 100 m), conf. media-alta;
+        # bersaglio piu' grande di un caccia: sovrastima contro un caccia.
+        # antenna_height 16.8: DEDOTTO (antenna alzata a 55 ft).
+        # Profilo: quote convertite da ft (D).
+        'antenna_height': 16.8,
+        'acquisition_profile': ((305, 32), (1524, 80), (6096, 160), (7620, 180)),
+    },
+}
+
+FuMG80_Freya_data = {
+    **_ewr_support_fields('semi_mobile'),
+    'constructor': 'non trovato',
+    'model': 'FuMG-80-Freya',
+    'made': 'Germany',
+    'users': ['Germany', 'Romania'],
+    'start_service': 1938,
+    'end_service': 1945,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'FuMG 80 Freya',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 120, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 120: FONTE (infobox Wikipedia), bombardieri, quota non qualificata, conf. media;
+        # CONTRADDIZIONE 120/160/200 km fra le fonti.
+    },
+}
+
+P12_Yenisei_data = {
+    **_ewr_support_fields('mobile'),
+    'constructor': 'non trovato',
+    'model': 'P-12-Yenisei',
+    'made': 'USSR',
+    'users': ['USSR', 'Egypt', 'Vietnam', 'Iraq', 'Syria', 'East Germany', 'Czechoslovakia', 'Serbia'],
+    'start_service': 1956,
+    'end_service': None,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'P-12 Yenisei (Spoon Rest A)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 200, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 200: FONTE (Wikipedia en/ru), quota max 25 km, bersaglio non qualificato, conf. media;
+        # altre fonti 250-360 km (360 = portata strumentale).
+    },
+}
+
+P18_Terek_data = {
+    **_ewr_support_fields('mobile'),
+    'constructor': 'non trovato',
+    'model': 'P-18-Terek',
+    'made': 'USSR',
+    'users': ['USSR', 'East Germany', 'Poland', 'Syria', 'India', 'Vietnam', 'Finland'],
+    'start_service': 1970,
+    'end_service': None,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'P-18 Terek (Spoon Rest D)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 180, 'engagement_range': 0, 'multi_target_capacity': 10}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 180: FONTE (Wikipedia ru) contro MiG-21 a 10 000 m, conf. media-alta. multi_target 10: FONTE, conf. media.
+        # MTBF 140 h di fonte (conf. media-bassa, contraddizione 140/800 h), MTTR non trovato: nel campo `reliability`
+        # va la STIMA generica 45/4 (decisione 12), il 140 h resta solo nel commento.
+        'acquisition_profile': ((500, 60), (10000, 180), (20000, 260)),
+    },
+}
+
+P37_Mech_data = {
+    **_ewr_support_fields('semi_mobile'),
+    'constructor': 'non trovato',
+    'model': 'P-37-Mech',
+    'made': 'USSR',
+    'users': ['USSR', 'Czechoslovakia'],
+    'start_service': 1961,
+    'end_service': None,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'P-37 Mech (Bar Lock)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 280, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 280: FONTE (Wikipedia ru) contro caccia, quota non indicata, conf. media (bombardiere 350, missile da crociera 235).
+    },
+}
+
+Nebo_SV_1L13_data = {
+    **_ewr_support_fields('mobile'),
+    'constructor': 'non trovato',
+    'model': '1L13-Nebo-SV',
+    'made': 'USSR',
+    'users': ['USSR', 'Russia'],
+    'start_service': 1984,
+    'end_service': None,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': '1L13 Nebo-SV (Box Spring)',  # unita' DCS "1L13 EWR" (commento informativo, non chiave)
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 250, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 250: FONTE (APA, 'non inferiore a') contro caccia a 10 000 m, conf. media; CONTRADDIZIONE con la stampa
+        # (60 km a 500 m, 350 km a 27 km). Servizio 1984: Wikipedia en (P-18 sostituito nel 1984); radartutorial ~1990.
+        'acquisition_profile': ((500, 50), (10000, 250), (27000, 330)),
+    },
+}
+
+Nebo_55Zh6_data = {
+    **_ewr_support_fields('semi_mobile'),
+    'constructor': 'non trovato',
+    'model': '55Zh6-Nebo',
+    'made': 'USSR',
+    'users': ['USSR', 'Russia'],
+    'start_service': 1986,
+    'end_service': None,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': '55Zh6 Nebo (Tall Rack)',  # unita' DCS "55G6 EWR" (commento informativo, non chiave)
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 400, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 400: FONTE di seconda mano (Defense Express via armedconflicts) contro caccia di 4a gen. a 20 000 m (non 10 000),
+        # conf. media-bassa; possibile attribuzione al Nebo-U. MTBCF >250 h (radartutorial, conf. media-bassa) solo nel
+        # commento; nel campo `reliability` la STIMA generica 45/4 (decisione 12).
+        'acquisition_profile': ((500, 65), (20000, 400)),
+    },
+}
+
+AN_TPS43_data = {
+    **_ewr_support_fields('mobile'),
+    'constructor': 'non trovato',
+    'model': 'AN-TPS-43',
+    'made': 'USA',
+    'users': ['USA', 'Argentina', 'Bangladesh', 'Spain'],
+    'start_service': 1968,
+    'end_service': None,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'AN/TPS-43',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 440, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 440: FONTE (Wikipedia, massimo 240 nmi), bersaglio non qualificato, conf. bassa-media;
+        # i profili per quota CMANO (gioco) NON sono usati.
+    },
+}
+
+
 # SETUP DICTIONARY VALUE 
 SCORES = ('combat score', 'radar score', 'radar score air', 'radar score ground', 'speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 VEHICLE = {}
@@ -4642,6 +4903,16 @@ Vehicle_Data(**M6_Linebacker_data)
 Vehicle_Data(**K2K12_Kub_data)
 Vehicle_Data(**K9K37_Buk_data)
 Vehicle_Data(**S300PS_data)
+
+# Nuovi EWR (D-4b)
+Vehicle_Data(**SCR270_data)
+Vehicle_Data(**FuMG80_Freya_data)
+Vehicle_Data(**P12_Yenisei_data)
+Vehicle_Data(**P18_Terek_data)
+Vehicle_Data(**P37_Mech_data)
+Vehicle_Data(**Nebo_SV_1L13_data)
+Vehicle_Data(**Nebo_55Zh6_data)
+Vehicle_Data(**AN_TPS43_data)
 
 
 # Load scores in dict
