@@ -631,6 +631,12 @@ In ordine di blocco:
    - (a) altezza d'antenna: default per classe dichiarati ora, dato di registro poi?
    - (b) record EWR (e WWII) con ricerca dati dedicata?
    - (c) sensore visivo di ripiego per ZSU-57-2 e M163?
+
+   > **Stato (2026-11-05)**: (b) e (c) FATTE con `Proposta_Dati_Sensori_EWR_Visivo.md`. (c): campo `visual`
+   > (commit `37816355`, scenario S31-VISUAL). (b): nucleo di 8 radar EWR mobili o semimobili (commit
+   > `cbc75634`); restano da fare i siti fissi (blocco C, serve prima il modello di un'installazione fissa) e
+   > la curva portata-quota (opzione (c) della ricerca). Il cueing EWR -> SAM resta fuori perimetro (D-7).
+   > Suite 4742, fotografia 1009; v. `F4_Differenze_Scenari.md`, "D-4c e D-4b".
 5. **D-5 "Non rilevato" a corda limitata**: si accetta che `AVOID_DETECTION` sia aggiramento puro più la
    metrica Pd? Oppure si introduce `dwell_time_s` per sensore **e** una Pd dipendente dalla permanenza nel
    DES? La seconda cambia la legge del risolutore.

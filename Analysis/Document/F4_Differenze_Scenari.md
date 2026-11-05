@@ -2624,3 +2624,60 @@ ripartiva da capo); con la scelta 3b `apply_campaign_processes` conserva anche i
 **S30-ABSENT** (3 esecuzioni nuove, nessun contatto, nessuna estrazione RNG): sessione 1 con `Blue-Mech` (turnaround di `mbt0`, riparazione di `mbt1`); sessione 2 senza
 `Blue-Mech`: il record di `mbt1` resta identico e `mbt1` resta non impiegabile (`ASSET_NOT_READY`); il record concluso di `mbt0` resta e il rifornimento arriva al ritorno;
 sessione 3 con `Blue-Mech` da `max(last_end, ready_at('mbt1'))`: `mbt1` riparato e fuori dal registro. Prima della correzione i 9 test nuovi attesi falliscono (verificato).
+
+## D-4c e D-4b — sensore visivo di ripiego e radar EWR (2026-11-04)
+
+Proposta `Proposta_Dati_Sensori_EWR_Visivo.md`. Il blocco A (D-4c) e' stato eseguito da `des-developer` (Sonnet high), il blocco B (D-4b) da `oc-developer`
+(DeepSeek V4 Pro 0813) e verificato dalla sessione principale. Rapporti: `Rapporti/Rapporto_sensori_A_des-developer.md`, `Rapporti/Rapporto_sensori_B_oc-developer.md`.
+
+| Passo | Commit | Suite | Confronto con la fotografia |
+|---|---|---|---|
+| A: D-4c, campo `visual`, `Mobile.D4C_VISUAL_SENSOR`, S31-VISUAL | `37816355` | 4727 OK (7 skipped) | 1009 esecuzioni: 989 identiche, 0 cambiate, 20 nuove; fotografia a 1009 installata |
+| B: D-4b, 8 record EWR, G2 (EWR fuori dal combat score globale), `Test_EWR_Data` | `cbc75634` | 4742 OK (7 skipped) | 1009 identiche, 0 cambiate, 0 nuove |
+
+### Il cambio (blocco A)
+ZSU-57-2 e M163-VADS hanno `radar` e `TVD` False: prima della D-4c `Mobile.detection_range` era `None` e il DES non li faceva mai sparare a un aereo
+(`_detect_direction` esce prima dell'estrazione se l'osservatore non ha portata). Ora il campo `visual` del registro (scoperta a occhio dell'equipaggio,
+`acquisition_range` aria 6 km) entra in `detection_range` come terzo sensore (`DETECTION_SENSORS = ("radar", "TVD", "visual")`), dietro l'interruttore
+`Mobile.D4C_VISUAL_SENSOR` (default True; spento = comportamento precedente). Il pianificatore di rotta ne costruisce il volume di rilevamento con
+`EFFECTIVE_EARTH_RADIUS_FACTOR['visual'] = 1.0`. Il sensore visivo aggiunge solo rilevamento: nessun volume d'intercettazione si allarga.
+
+### Differenze della fotografia
+- **Blocco A**: nessuno scenario esistente contiene ZSU-57-2 o M163-VADS, quindi le 989 esecuzioni precedenti sono identiche. 20 nuove, tutte
+  `S31-VISUAL/S31-VISUAL-<0..3>/<zsu|zsu_off|vads_low|vads_low_off|vads_high>`.
+- **Blocco B**: nessuna differenza (1009 identiche, nessuna nuova). I record EWR non entrano in nessuno scenario, la `reliability` generica 45/4 dei radar non
+  cambia nessuna esecuzione, e l'esclusione degli EWR dalla popolazione globale del combat score (G2) garantisce per costruzione che i punteggi esistenti non si
+  spostino. Con il blocco B si spostano invece gli score globali radar/weapon/reliability/availability dei record esistenti, che oggi nessun consumatore legge.
+
+### S31-VISUAL (20 esecuzioni nuove)
+Geometria di S19AD: linea Red di 3 BMP-2 con una difesa aerea in (1000, -300), 4 A-10C `Maverick/Gun CAS` da (-40 km, 0) con rotta di sorvolo, bersaglio ristretto ai
+BMP-2 (ROE `only_designated`), `BOTH_HOLD`, 1800 s. Cinque varianti, 4 semi, stesso `session_id` per le 5 varianti di un seme.
+
+| Variante | Difesa | Quota A-10C | Interruttore | Atteso |
+|---|---|---|---|---|
+| `zsu` | ZSU-57-2 | 3000 m | acceso | la difesa spara (57 mm) |
+| `zsu_off` | ZSU-57-2 | 3000 m | spento | nessun colpo (comportamento precedente) |
+| `vads_low` | M163-VADS | 500 m | acceso | la difesa spara (Vulcan 20 mm) |
+| `vads_low_off` | M163-VADS | 500 m | spento | nessun colpo |
+| `vads_high` | M163-VADS | 3000 m | acceso | nessun colpo: vede a 6 km ma l'arma arriva a 1000 m di quota |
+
+`vads_high` e' il caso che mostra che rilevamento non e' intercettazione. Colpi della difesa misurati dall'esecutore sui 4 semi: `zsu` 150 per seme e 0 perdite Blue;
+`vads_low` 700/650/700/700 con perdite Blue 0/1/1/0; le altre tre varianti 0. Sono valori diversi da quelli orientativi della sonda del piano (550 colpi e 1 perdita;
+2650 colpi e 2 perdite), perche' la geometria reale di S31 non e' quella emulata nella sonda. Le asserzioni dei test sono qualitative e nulla e' stato ritoccato.
+Il test `TestS31VisualSensorRanges` e' unitario e non sta nella fotografia.
+
+### Costanti stimate
+- `acquisition_range` aria 6 km del sensore visivo: STIMA, confidenza bassa (intervallo plausibile 3-8 km). `tracking_range` 5,5 / 5 km ed `engagement_range` 4 / 1,2 km sono dati
+  di fonte a confidenza media; `multi_target_capacity` 1 e' dedotto.
+- `EFFECTIVE_EARTH_RADIUS_FACTOR['visual'] = 1.0`: STIMA dichiarata (linea di vista geometrica, come il TVD).
+- Radar EWR: `reliability` `{'mtbf': 45, 'mttr': 4}` e' una STIMA generica del registro (decisione 12 dell'utente); i dati di fonte (P-18 MTBF 140 h, 55Zh6 MTBCF > 250 h) restano
+  solo nel commento. I campi non sensore (dimensioni, costo, autonomia, velocita', comunicazioni) sono stime di schema. Altezza d'antenna 20 m (`SENSOR_HEIGHT_EWR_M`) per 7
+  record su 8; solo l'SCR-270 ha un dato di fonte (16,8 m).
+
+### Limiti noti
+- Il DES non ha orizzonte radar: un EWR dichiarato per la quota di crociera vede nel DES un aereo radente a tutta portata. La curva portata-quota di fonte e' conservata in
+  `acquisition_profile` ma non letta (opzione (c) della ricerca, aperta).
+- Il sensore visivo non modella notte e meteo.
+- Gli RWR non identificano gli EWR (`sam_category` None): il flag `ewr` di `Aircraft_Rwr_Data` resta inutilizzato.
+- Nessun cueing EWR -> SAM (D-7 seconda parte, fuori perimetro).
+- I siti fissi (Chain Home, AMES 7/80, FPS-20, FPS-117, P-14, Wassermann, Mammut) sono il blocco C, non fatto.

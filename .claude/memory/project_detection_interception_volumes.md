@@ -1,6 +1,6 @@
 ---
 name: project-detection-interception-volumes
-description: "Volumi di rilevamento e intercettazione distinti nel pianificatore rotte (Air_Route_Manager) — D-1..D-7 implementate 2026-09-26 (commit 815dc35f); D-4b/c, D-5 opzione 2, D-8 ancora da fare"
+description: "Volumi di rilevamento e intercettazione distinti nel pianificatore rotte (Air_Route_Manager) — D-1..D-7 implementate 2026-09-26 (commit 815dc35f); D-4b nucleo e D-4c fatte 2026-11-04; restano D-5 opzione 2, D-8, blocco C siti fissi"
 metadata:
   type: project
   originSessionId: b183e431-8211-4d82-bd56-aecf65301f45
@@ -38,8 +38,7 @@ Metriche di rotta separate dal pericolo di intercettazione: `detection_exposure_
 `detection_probability` del risolutore DES come metrica di pianificazione, senza toccarla).
 
 **Fuori scope in questo intervento, ancora da fare**:
-- **D-4b**: ricerca dati EWR (confermato dall'utente: da WWII a Guerra Fredda, non solo Guerra Fredda).
-- **D-4c**: ricerca dati sensore visivo di ripiego per ZSU-57-2/M163 (oggi senza sensore radar).
+- **D-4b e D-4c: FATTE 2026-11-04** (Proposta `Proposta_Dati_Sensori_EWR_Visivo.md`, vedi [[project-sensori-d4b-d4c]]): D-4c = campo `visual` (6 km, stima) per ZSU-57-2/M163, commit `37816355`; D-4b = nucleo di 8 EWR mobili/semimobili (da WWII a Guerra Fredda), commit `cbc75634`. Restano aperti il blocco C (siti fissi: serve prima il modello Vehicle immobile o Structure) e la curva portata-quota (opzione (c) della ricerca).
 - **D-5 opzione 2** (scelta esplicita dell'utente, non ancora implementata): introdurre `dwell_time_s`
   per sensore e rendere la Pd del risolutore DES dipendente dal tempo di permanenza, non solo dalla
   distanza minima — l'utente ha scelto questa opzione più impegnativa (cambia la legge del motore, non
