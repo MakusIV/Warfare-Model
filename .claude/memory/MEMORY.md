@@ -61,6 +61,7 @@ Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-1
 - [Campaign_State](project_campaign_persistence.md) · [Mobile/Military 2026-05-22](project_asset_military_2026_05_22.md) · [UML](project_uml_generation.md)
 
 ## Riferimenti esterni
+- [DCS: classificazione dell'FPS-117 e degli asset 'attivi' non vehicle/ship/aircraft](reference_dcs_attivi_fps117.md) — GROUND_UNIT attiva; documento Google con punti dubbi; resta da verificare la categoria nell'editor
 - [WIKI_LLM_SIMULATION](reference_wiki_llm_simulation.md) — per questioni concettuali
 - [Sabin, Simulating War](reference_philip_sabin_simulating_war.md) — Force/Space/Time/Command, Igo-Ugo
 

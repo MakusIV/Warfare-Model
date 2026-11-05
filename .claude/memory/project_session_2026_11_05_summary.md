@@ -15,7 +15,7 @@ metadata:
 
 ## Prossime attivita' (in ordine)
 1. ~~Manuale DES per il blocco C~~ **FATTO**, des-manual-writer, commit `e2770929` (cap. 3, 7, 8, 9, note d'atlante; chiuse le voci 28 e 29 di §9.6; `:riga` di `Vehicle_Data.py` e `Air_Route_Manager.py` ricalcolati). Verificato dalla sessione principale: perimetro, numeri, campione di `file:riga`.
-2. **Verifica nell'editor DCS**: lo script DCE `ATO_ThreatEvaluation.lua:1182-1276` riconosce anche "FPS-117" (decisione dell'utente, non eseguibile da me).
+2. **Verifica nell'editor DCS** (solo la categoria esatta dell'FPS-117, da fare dall'utente): il resto e' registrato in [[reference-dcs-attivi-fps117]] (FPS-117 = GROUND_UNIT attiva, coerente con `Vehicle` immobile; il documento Google ha punti dubbi).
 3. Spunti aperti: D-5 opzione 2 (`dwell_time_s`, cambia la legge di `Engagement_Resolver.detection_probability`, va pianificata con des-planner), D-7 seconda parte (reti EWR->SAM, Fase 0 C2), D-8, curva portata-quota degli EWR, immobilita' imposta dal motore (C-4, regola nuova con interruttore); F8d logistica; limiti rimandati dell'atlante; lacune di test (`MISSION_SPEED`, `MISSION_START_INVALID` positivo, `final_positions` di un aereo uscito di scena).
 4. Pulizie piccole: test dal nome ingannevole `test_ewr_in_a_session_detects_and_never_fires` (asserisce solo che l'EWR non spara; il test gemello dei siti fissi ha lo stesso nome); controllare nel Piano se P11-P14 del difetto 26 sono fatti.
 
