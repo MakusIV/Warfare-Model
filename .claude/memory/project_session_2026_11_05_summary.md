@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-## Stato di fatto (branch `analysis/dce-dcs-persistence`, sessione su osboxes, NON ancora pushata oltre `2bc0f6bb`: 6 commit avanti)
+## Stato di fatto (branch `analysis/dce-dcs-persistence`, sessione su osboxes, pushata fino alla bozza D-5 (sessione sospesa))
 - Documenti D-4b/D-4c (F4, Piano, Proposta Volumi §9, memoria): commit `421cf999`.
 - Commenti obsoleti di `Air_Route_Manager.py` corretti da des-developer: `ed8d0fa3` (solo testo).
 - **Sospetto su `_mission_outcome` SMENTITO** con sonda: l'esito dell'aereo perso per carburante viene da `fuel_ends`, non dalla salute (S24 Ran 5 OK; caso misto = DESTROYED/FUEL_EXHAUSTED + COMPLETED). Non e' un difetto.
@@ -16,7 +16,7 @@ metadata:
 ## Prossime attivita' (in ordine)
 1. ~~Manuale DES per il blocco C~~ **FATTO**, des-manual-writer, commit `e2770929` (cap. 3, 7, 8, 9, note d'atlante; chiuse le voci 28 e 29 di §9.6; `:riga` di `Vehicle_Data.py` e `Air_Route_Manager.py` ricalcolati). Verificato dalla sessione principale: perimetro, numeri, campione di `file:riga`.
 2. **Verifica nell'editor DCS** (solo la categoria esatta dell'FPS-117, da fare dall'utente): il resto e' registrato in [[reference-dcs-attivi-fps117]] (FPS-117 = GROUND_UNIT attiva, coerente con `Vehicle` immobile; il documento Google ha punti dubbi).
-3. Spunti aperti: D-5 opzione 2 (`dwell_time_s`, cambia la legge di `Engagement_Resolver.detection_probability`, va pianificata con des-planner), D-7 seconda parte (reti EWR->SAM, Fase 0 C2), D-8, curva portata-quota degli EWR, immobilita' imposta dal motore (C-4, regola nuova con interruttore); F8d logistica; limiti rimandati dell'atlante; lacune di test (`MISSION_SPEED`, `MISSION_START_INVALID` positivo, `final_positions` di un aereo uscito di scena).
+3. **D-5 opzione 2 INIZIATA e SOSPESA**: Proposta in BOZZA (`Proposta_Dwell_Time_Rilevamento.md`), decisioni DW-1..DW-8 aperte, sonde S-2/S-3 da eseguire: v. [[project-dwell-time-d5]] (primo passo per riprendere). Altri spunti aperti: D-7 seconda parte (reti EWR->SAM, Fase 0 C2), D-8, curva portata-quota degli EWR, immobilita' imposta dal motore (C-4, regola nuova con interruttore); F8d logistica; limiti rimandati dell'atlante; lacune di test (`MISSION_SPEED`, `MISSION_START_INVALID` positivo, `final_positions` di un aereo uscito di scena).
 4. Pulizie piccole: test dal nome ingannevole `test_ewr_in_a_session_detects_and_never_fires` (asserisce solo che l'EWR non spara; il test gemello dei siti fissi ha lo stesso nome); controllare nel Piano se P11-P14 del difetto 26 sono fatti.
 
 ## Cose non ovvie

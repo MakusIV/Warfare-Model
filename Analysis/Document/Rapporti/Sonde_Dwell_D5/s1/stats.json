@@ -1,0 +1,58 @@
+{
+ "cf": {
+  "10.0": {
+   "detected_new": 29480,
+   "detected_old": 29483,
+   "flipped": 3,
+   "g_below_1": 953
+  },
+  "120.0": {
+   "detected_new": 29019,
+   "detected_old": 29483,
+   "flipped": 464,
+   "g_below_1": 2519
+  },
+  "2.0": {
+   "detected_new": 29483,
+   "detected_old": 29483,
+   "flipped": 0,
+   "g_below_1": 946
+  },
+  "30.0": {
+   "detected_new": 29466,
+   "detected_old": 29483,
+   "flipped": 17,
+   "g_below_1": 1006
+  },
+  "6.0": {
+   "detected_new": 29483,
+   "detected_old": 29483,
+   "flipped": 0,
+   "g_below_1": 946
+  },
+  "60.0": {
+   "detected_new": 29438,
+   "detected_old": 29483,
+   "flipped": 45,
+   "g_below_1": 1204
+  }
+ },
+ "directions": 33446,
+ "dwell_applied": 0,
+ "exposure_hist": {
+  "<1": 946,
+  "<10": 7,
+  "<120": 1315,
+  "<1800": 1553,
+  "<30": 53,
+  "<300": 1903,
+  "<60": 198,
+  "<600": 9228,
+  ">=1800": 18243
+ },
+ "flipped_actual": 0,
+ "g_below_1": 0,
+ "models_with_dwell": {},
+ "with_legs": 33446,
+ "without_legs": 0
+}

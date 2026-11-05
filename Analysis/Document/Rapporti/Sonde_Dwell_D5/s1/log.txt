@@ -1,0 +1,1244 @@
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 267gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 267gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 600gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 600gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 600gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 600gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 600gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 600gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 600gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 600gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 330gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 330gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 600gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 600gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 600gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 600gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 275gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 275gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 275gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 275gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 370gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 370gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 150gal_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 150gal_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 1300L_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 1300L_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 1300L_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 1300L_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 800L_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 800L_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 800L_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 800L_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon 800L_tank dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon 800L_tank dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon PTB-1500 dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon PTB-1500 dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon PTB-1500 dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon PTB-1500 dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon PTB-1500 dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon PTB-1500 dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon PTB-1500 dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon PTB-1500 dict is None, return 0.0
+Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score - weapon PTB-1500 dict is None, return 0.0
+WARNING:Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data:weapon PTB-1500 dict is None, return 0.0
+F-16A Fighting Falcon Radar score: 0.10
+F-16A Fighting Falcon Radar score air: 0.12
+F-16A Fighting Falcon Radar score ground: 0.14
+F-16A Fighting Falcon Radar score sea: 0.00
+F-16A Fighting Falcon TVD score air: 0.00
+F-16A Fighting Falcon TVD score ground: 0.00
+F-16A Fighting Falcon TVD score sea: 0.00
+F-16A Fighting Falcon Radio navigation score: 0.29
+F-16A Fighting Falcon Avionics score: 0.69
+F-16A Fighting Falcon Hydraulic score: 0.25
+F-16A Fighting Falcon Engine score: 0.10
+F-16A Fighting Falcon Speed score: 0.69
+F-16A Fighting Falcon avalaibility: 0.33
+F-16A Fighting Falcon manutenability score (mttr): 0.78
+F-16A Fighting Falcon reliability score (mtbf): 0.51
+F-16A Fighting Falcon combat aggregate: 0.25
+F-14A Tomcat Radar score: 0.40
+F-14A Tomcat Radar score air: 0.60
+F-14A Tomcat Radar score ground: 0.00
+F-14A Tomcat Radar score sea: 0.32
+F-14A Tomcat TVD score air: 0.38
+F-14A Tomcat TVD score ground: 0.00
+F-14A Tomcat TVD score sea: 0.00
+F-14A Tomcat Radio navigation score: 0.36
+F-14A Tomcat Avionics score: 0.65
+F-14A Tomcat Hydraulic score: 0.30
+F-14A Tomcat Engine score: 0.07
+F-14A Tomcat Speed score: 0.82
+F-14A Tomcat avalaibility: 0.01
+F-14A Tomcat manutenability score (mttr): 0.42
+F-14A Tomcat reliability score (mtbf): 0.02
+F-14A Tomcat combat aggregate: 0.31
+F-14B Tomcat Radar score: 0.40
+F-14B Tomcat Radar score air: 0.60
+F-14B Tomcat Radar score ground: 0.00
+F-14B Tomcat Radar score sea: 0.32
+F-14B Tomcat TVD score air: 0.38
+F-14B Tomcat TVD score ground: 0.00
+F-14B Tomcat TVD score sea: 0.00
+F-14B Tomcat Radio navigation score: 0.36
+F-14B Tomcat Avionics score: 0.71
+F-14B Tomcat Hydraulic score: 0.30
+F-14B Tomcat Engine score: 0.09
+F-14B Tomcat Speed score: 0.82
+F-14B Tomcat avalaibility: 0.03
+F-14B Tomcat manutenability score (mttr): 0.53
+F-14B Tomcat reliability score (mtbf): 0.04
+F-14B Tomcat combat aggregate: 0.34
+F-15C Eagle Radar score: 0.16
+F-15C Eagle Radar score air: 0.22
+F-15C Eagle Radar score ground: 0.16
+F-15C Eagle Radar score sea: 0.00
+F-15C Eagle TVD score air: 0.00
+F-15C Eagle TVD score ground: 0.30
+F-15C Eagle TVD score sea: 0.00
+F-15C Eagle Radio navigation score: 0.43
+F-15C Eagle Avionics score: 0.81
+F-15C Eagle Hydraulic score: 0.31
+F-15C Eagle Engine score: 0.12
+F-15C Eagle Speed score: 0.88
+F-15C Eagle avalaibility: 0.04
+F-15C Eagle manutenability score (mttr): 0.55
+F-15C Eagle reliability score (mtbf): 0.07
+F-15C Eagle combat aggregate: 0.29
+F-15E Strike Eagle Radar score: 0.19
+F-15E Strike Eagle Radar score air: 0.23
+F-15E Strike Eagle Radar score ground: 0.29
+F-15E Strike Eagle Radar score sea: 0.00
+F-15E Strike Eagle TVD score air: 0.00
+F-15E Strike Eagle TVD score ground: 0.80
+F-15E Strike Eagle TVD score sea: 0.00
+F-15E Strike Eagle Radio navigation score: 0.43
+F-15E Strike Eagle Avionics score: 0.84
+F-15E Strike Eagle Hydraulic score: 0.31
+F-15E Strike Eagle Engine score: 0.13
+F-15E Strike Eagle Speed score: 0.88
+F-15E Strike Eagle avalaibility: 0.05
+F-15E Strike Eagle manutenability score (mttr): 0.60
+F-15E Strike Eagle reliability score (mtbf): 0.08
+F-15E Strike Eagle combat aggregate: 0.33
+F/A-18A Hornet Radar score: 0.18
+F/A-18A Hornet Radar score air: 0.20
+F/A-18A Hornet Radar score ground: 0.15
+F/A-18A Hornet Radar score sea: 0.16
+F/A-18A Hornet TVD score air: 0.00
+F/A-18A Hornet TVD score ground: 0.56
+F/A-18A Hornet TVD score sea: 0.57
+F/A-18A Hornet Radio navigation score: 0.36
+F/A-18A Hornet Avionics score: 0.78
+F/A-18A Hornet Hydraulic score: 0.27
+F/A-18A Hornet Engine score: 0.10
+F/A-18A Hornet Speed score: 0.61
+F/A-18A Hornet avalaibility: 0.04
+F/A-18A Hornet manutenability score (mttr): 0.61
+F/A-18A Hornet reliability score (mtbf): 0.06
+F/A-18A Hornet combat aggregate: 0.29
+F/A-18C Hornet Radar score: 0.23
+F/A-18C Hornet Radar score air: 0.25
+F/A-18C Hornet Radar score ground: 0.21
+F/A-18C Hornet Radar score sea: 0.21
+F/A-18C Hornet TVD score air: 0.82
+F/A-18C Hornet TVD score ground: 0.79
+F/A-18C Hornet TVD score sea: 0.98
+F/A-18C Hornet Radio navigation score: 0.36
+F/A-18C Hornet Avionics score: 0.81
+F/A-18C Hornet Hydraulic score: 0.27
+F/A-18C Hornet Engine score: 0.11
+F/A-18C Hornet Speed score: 0.61
+F/A-18C Hornet avalaibility: 0.06
+F/A-18C Hornet manutenability score (mttr): 0.67
+F/A-18C Hornet reliability score (mtbf): 0.07
+F/A-18C Hornet combat aggregate: 0.34
+F/A-18C Lot 20 Radar score: 0.24
+F/A-18C Lot 20 Radar score air: 0.25
+F/A-18C Lot 20 Radar score ground: 0.26
+F/A-18C Lot 20 Radar score sea: 0.21
+F/A-18C Lot 20 TVD score air: 0.99
+F/A-18C Lot 20 TVD score ground: 1.00
+F/A-18C Lot 20 TVD score sea: 1.00
+F/A-18C Lot 20 Radio navigation score: 0.37
+F/A-18C Lot 20 Avionics score: 0.85
+F/A-18C Lot 20 Hydraulic score: 0.27
+F/A-18C Lot 20 Engine score: 0.11
+F/A-18C Lot 20 Speed score: 0.61
+F/A-18C Lot 20 avalaibility: 0.07
+F/A-18C Lot 20 manutenability score (mttr): 0.70
+F/A-18C Lot 20 reliability score (mtbf): 0.07
+F/A-18C Lot 20 combat aggregate: 0.37
+F-4E Phantom II Radar score: 0.04
+F-4E Phantom II Radar score air: 0.08
+F-4E Phantom II Radar score ground: 0.00
+F-4E Phantom II Radar score sea: 0.00
+F-4E Phantom II TVD score air: 0.00
+F-4E Phantom II TVD score ground: 0.32
+F-4E Phantom II TVD score sea: 0.00
+F-4E Phantom II Radio navigation score: 0.29
+F-4E Phantom II Avionics score: 0.47
+F-4E Phantom II Hydraulic score: 0.28
+F-4E Phantom II Engine score: 0.08
+F-4E Phantom II Speed score: 0.78
+F-4E Phantom II avalaibility: 0.01
+F-4E Phantom II manutenability score (mttr): 0.37
+F-4E Phantom II reliability score (mtbf): 0.01
+F-4E Phantom II combat aggregate: 0.20
+F-5E Tiger II Radar score: 0.02
+F-5E Tiger II Radar score air: 0.04
+F-5E Tiger II Radar score ground: 0.00
+F-5E Tiger II Radar score sea: 0.00
+F-5E Tiger II TVD score air: 0.00
+F-5E Tiger II TVD score ground: 0.00
+F-5E Tiger II TVD score sea: 0.00
+F-5E Tiger II Radio navigation score: 0.26
+F-5E Tiger II Avionics score: 0.53
+F-5E Tiger II Hydraulic score: 0.23
+F-5E Tiger II Engine score: 0.07
+F-5E Tiger II Speed score: 0.55
+F-5E Tiger II avalaibility: 0.39
+F-5E Tiger II manutenability score (mttr): 0.82
+F-5E Tiger II reliability score (mtbf): 0.50
+F-5E Tiger II combat aggregate: 0.14
+F-86E Sabre Radar score: 0.01
+F-86E Sabre Radar score air: 0.03
+F-86E Sabre Radar score ground: 0.00
+F-86E Sabre Radar score sea: 0.00
+F-86E Sabre TVD score air: 0.00
+F-86E Sabre TVD score ground: 0.00
+F-86E Sabre TVD score sea: 0.00
+F-86E Sabre Radio navigation score: 0.14
+F-86E Sabre Avionics score: 0.06
+F-86E Sabre Hydraulic score: 0.13
+F-86E Sabre Engine score: 0.03
+F-86E Sabre Speed score: 0.34
+F-86E Sabre avalaibility: 0.25
+F-86E Sabre manutenability score (mttr): 0.72
+F-86E Sabre reliability score (mtbf): 0.45
+F-86E Sabre combat aggregate: 0.08
+F-16A MLU Radar score: 0.12
+F-16A MLU Radar score air: 0.16
+F-16A MLU Radar score ground: 0.15
+F-16A MLU Radar score sea: 0.00
+F-16A MLU TVD score air: 0.00
+F-16A MLU TVD score ground: 0.78
+F-16A MLU TVD score sea: 0.00
+F-16A MLU Radio navigation score: 0.31
+F-16A MLU Avionics score: 0.75
+F-16A MLU Hydraulic score: 0.25
+F-16A MLU Engine score: 0.10
+F-16A MLU Speed score: 0.69
+F-16A MLU avalaibility: 0.06
+F-16A MLU manutenability score (mttr): 0.70
+F-16A MLU reliability score (mtbf): 0.06
+F-16A MLU combat aggregate: 0.28
+F-16C Block 52d Radar score: 0.13
+F-16C Block 52d Radar score air: 0.16
+F-16C Block 52d Radar score ground: 0.20
+F-16C Block 52d Radar score sea: 0.00
+F-16C Block 52d TVD score air: 0.82
+F-16C Block 52d TVD score ground: 0.79
+F-16C Block 52d TVD score sea: 0.00
+F-16C Block 52d Radio navigation score: 0.29
+F-16C Block 52d Avionics score: 0.76
+F-16C Block 52d Hydraulic score: 0.25
+F-16C Block 52d Engine score: 0.11
+F-16C Block 52d Speed score: 0.79
+F-16C Block 52d avalaibility: 0.07
+F-16C Block 52d manutenability score (mttr): 0.72
+F-16C Block 52d reliability score (mtbf): 0.06
+F-16C Block 52d combat aggregate: 0.28
+F-16CM Block 50 Radar score: 0.13
+F-16CM Block 50 Radar score air: 0.16
+F-16CM Block 50 Radar score ground: 0.20
+F-16CM Block 50 Radar score sea: 0.00
+F-16CM Block 50 TVD score air: 1.00
+F-16CM Block 50 TVD score ground: 1.00
+F-16CM Block 50 TVD score sea: 0.00
+F-16CM Block 50 Radio navigation score: 0.29
+F-16CM Block 50 Avionics score: 0.77
+F-16CM Block 50 Hydraulic score: 0.25
+F-16CM Block 50 Engine score: 0.11
+F-16CM Block 50 Speed score: 0.79
+F-16CM Block 50 avalaibility: 0.11
+F-16CM Block 50 manutenability score (mttr): 0.83
+F-16CM Block 50 reliability score (mtbf): 0.06
+F-16CM Block 50 combat aggregate: 0.28
+A-10A Thunderbolt II Radar score: 0.00
+A-10A Thunderbolt II Radar score air: 0.00
+A-10A Thunderbolt II Radar score ground: 0.00
+A-10A Thunderbolt II Radar score sea: 0.00
+A-10A Thunderbolt II TVD score air: 0.00
+A-10A Thunderbolt II TVD score ground: 0.00
+A-10A Thunderbolt II TVD score sea: 0.00
+A-10A Thunderbolt II Radio navigation score: 0.00
+A-10A Thunderbolt II Avionics score: 0.57
+A-10A Thunderbolt II Hydraulic score: 0.25
+A-10A Thunderbolt II Engine score: 0.27
+A-10A Thunderbolt II Speed score: 0.26
+A-10A Thunderbolt II avalaibility: 0.98
+A-10A Thunderbolt II manutenability score (mttr): 0.99
+A-10A Thunderbolt II reliability score (mtbf): 0.47
+A-10A Thunderbolt II combat aggregate: 0.12
+A-10C Thunderbolt II Radar score: 0.00
+A-10C Thunderbolt II Radar score air: 0.00
+A-10C Thunderbolt II Radar score ground: 0.00
+A-10C Thunderbolt II Radar score sea: 0.00
+A-10C Thunderbolt II TVD score air: 0.00
+A-10C Thunderbolt II TVD score ground: 0.57
+A-10C Thunderbolt II TVD score sea: 0.00
+A-10C Thunderbolt II Radio navigation score: 0.00
+A-10C Thunderbolt II Avionics score: 0.79
+A-10C Thunderbolt II Hydraulic score: 0.25
+A-10C Thunderbolt II Engine score: 0.28
+A-10C Thunderbolt II Speed score: 0.26
+A-10C Thunderbolt II avalaibility: 0.28
+A-10C Thunderbolt II manutenability score (mttr): 0.96
+A-10C Thunderbolt II reliability score (mtbf): 0.10
+A-10C Thunderbolt II combat aggregate: 0.24
+A-10C II Thunderbolt II Radar score: 0.00
+A-10C II Thunderbolt II Radar score air: 0.00
+A-10C II Thunderbolt II Radar score ground: 0.00
+A-10C II Thunderbolt II Radar score sea: 0.00
+A-10C II Thunderbolt II TVD score air: 0.00
+A-10C II Thunderbolt II TVD score ground: 0.59
+A-10C II Thunderbolt II TVD score sea: 0.00
+A-10C II Thunderbolt II Radio navigation score: 0.00
+A-10C II Thunderbolt II Avionics score: 0.90
+A-10C II Thunderbolt II Hydraulic score: 0.25
+A-10C II Thunderbolt II Engine score: 0.28
+A-10C II Thunderbolt II Speed score: 0.26
+A-10C II Thunderbolt II avalaibility: 0.33
+A-10C II Thunderbolt II manutenability score (mttr): 0.97
+A-10C II Thunderbolt II reliability score (mtbf): 0.11
+A-10C II Thunderbolt II combat aggregate: 0.24
+A-20G Havoc Radar score: 0.00
+A-20G Havoc Radar score air: 0.00
+A-20G Havoc Radar score ground: 0.00
+A-20G Havoc Radar score sea: 0.00
+A-20G Havoc TVD score air: 0.00
+A-20G Havoc TVD score ground: 0.00
+A-20G Havoc TVD score sea: 0.00
+A-20G Havoc Radio navigation score: 0.00
+A-20G Havoc Avionics score: 0.06
+A-20G Havoc Hydraulic score: 0.12
+A-20G Havoc Engine score: 0.01
+A-20G Havoc Speed score: 0.17
+A-20G Havoc avalaibility: 0.29
+A-20G Havoc manutenability score (mttr): 0.79
+A-20G Havoc reliability score (mtbf): 0.41
+A-20G Havoc combat aggregate: 0.09
+A-4E Skyhawk Radar score: 0.00
+A-4E Skyhawk Radar score air: 0.00
+A-4E Skyhawk Radar score ground: 0.00
+A-4E Skyhawk Radar score sea: 0.00
+A-4E Skyhawk TVD score air: 0.00
+A-4E Skyhawk TVD score ground: 0.00
+A-4E Skyhawk TVD score sea: 0.00
+A-4E Skyhawk Radio navigation score: 0.00
+A-4E Skyhawk Avionics score: 0.43
+A-4E Skyhawk Hydraulic score: 0.22
+A-4E Skyhawk Engine score: 0.66
+A-4E Skyhawk Speed score: 0.61
+A-4E Skyhawk avalaibility: 0.56
+A-4E Skyhawk manutenability score (mttr): 0.93
+A-4E Skyhawk reliability score (mtbf): 0.43
+A-4E Skyhawk combat aggregate: 0.15
+F-117 Nighthawk Radar score: 0.00
+F-117 Nighthawk Radar score air: 0.00
+F-117 Nighthawk Radar score ground: 0.00
+F-117 Nighthawk Radar score sea: 0.00
+F-117 Nighthawk TVD score air: 0.00
+F-117 Nighthawk TVD score ground: 0.30
+F-117 Nighthawk TVD score sea: 0.00
+F-117 Nighthawk Radio navigation score: 0.00
+F-117 Nighthawk Avionics score: 0.65
+F-117 Nighthawk Hydraulic score: 0.24
+F-117 Nighthawk Engine score: 0.28
+F-117 Nighthawk Speed score: 0.32
+F-117 Nighthawk avalaibility: 0.15
+F-117 Nighthawk manutenability score (mttr): 0.91
+F-117 Nighthawk reliability score (mtbf): 0.05
+F-117 Nighthawk combat aggregate: 0.10
+B-1B Lancer Radar score: 0.02
+B-1B Lancer Radar score air: 0.00
+B-1B Lancer Radar score ground: 0.08
+B-1B Lancer Radar score sea: 0.00
+B-1B Lancer TVD score air: 0.00
+B-1B Lancer TVD score ground: 0.00
+B-1B Lancer TVD score sea: 0.00
+B-1B Lancer Radio navigation score: 0.00
+B-1B Lancer Avionics score: 1.00
+B-1B Lancer Hydraulic score: 0.35
+B-1B Lancer Engine score: 0.11
+B-1B Lancer Speed score: 0.74
+B-1B Lancer avalaibility: 0.76
+B-1B Lancer manutenability score (mttr): 0.94
+B-1B Lancer reliability score (mtbf): 0.56
+B-1B Lancer combat aggregate: 0.39
+B-52H Stratofortress Radar score: 0.05
+B-52H Stratofortress Radar score air: 0.00
+B-52H Stratofortress Radar score ground: 0.11
+B-52H Stratofortress Radar score sea: 0.09
+B-52H Stratofortress TVD score air: 0.00
+B-52H Stratofortress TVD score ground: 0.00
+B-52H Stratofortress TVD score sea: 0.00
+B-52H Stratofortress Radio navigation score: 0.00
+B-52H Stratofortress Avionics score: 0.86
+B-52H Stratofortress Hydraulic score: 0.38
+B-52H Stratofortress Engine score: 0.06
+B-52H Stratofortress Speed score: 0.31
+B-52H Stratofortress avalaibility: 0.63
+B-52H Stratofortress manutenability score (mttr): 0.91
+B-52H Stratofortress reliability score (mtbf): 0.55
+B-52H Stratofortress combat aggregate: 0.25
+S-3B Viking Radar score: 0.07
+S-3B Viking Radar score air: 0.00
+S-3B Viking Radar score ground: 0.00
+S-3B Viking Radar score sea: 0.29
+S-3B Viking TVD score air: 0.00
+S-3B Viking TVD score ground: 0.00
+S-3B Viking TVD score sea: 0.76
+S-3B Viking Radio navigation score: 0.00
+S-3B Viking Avionics score: 0.71
+S-3B Viking Hydraulic score: 0.24
+S-3B Viking Engine score: 0.26
+S-3B Viking Speed score: 0.30
+S-3B Viking avalaibility: 0.14
+S-3B Viking manutenability score (mttr): 0.80
+S-3B Viking reliability score (mtbf): 0.14
+S-3B Viking combat aggregate: 0.16
+S-3B Viking Tanker Radar score: 0.02
+S-3B Viking Tanker Radar score air: 0.00
+S-3B Viking Tanker Radar score ground: 0.00
+S-3B Viking Tanker Radar score sea: 0.09
+S-3B Viking Tanker TVD score air: 0.00
+S-3B Viking Tanker TVD score ground: 0.00
+S-3B Viking Tanker TVD score sea: 0.00
+S-3B Viking Tanker Radio navigation score: 0.00
+S-3B Viking Tanker Avionics score: 0.65
+S-3B Viking Tanker Hydraulic score: 0.24
+S-3B Viking Tanker Engine score: 0.26
+S-3B Viking Tanker Speed score: 0.30
+S-3B Viking Tanker avalaibility: 0.69
+S-3B Viking Tanker manutenability score (mttr): 0.93
+S-3B Viking Tanker reliability score (mtbf): 0.56
+S-3B Viking Tanker combat aggregate: 0.00
+E-2D Advanced Hawkeye Radar score: 0.35
+E-2D Advanced Hawkeye Radar score air: 0.65
+E-2D Advanced Hawkeye Radar score ground: 0.00
+E-2D Advanced Hawkeye Radar score sea: 0.00
+E-2D Advanced Hawkeye TVD score air: 0.00
+E-2D Advanced Hawkeye TVD score ground: 0.00
+E-2D Advanced Hawkeye TVD score sea: 0.00
+E-2D Advanced Hawkeye Radio navigation score: 0.00
+E-2D Advanced Hawkeye Avionics score: 0.43
+E-2D Advanced Hawkeye Hydraulic score: 0.24
+E-2D Advanced Hawkeye Engine score: 0.01
+E-2D Advanced Hawkeye Speed score: 0.15
+E-2D Advanced Hawkeye avalaibility: 0.78
+E-2D Advanced Hawkeye manutenability score (mttr): 0.94
+E-2D Advanced Hawkeye reliability score (mtbf): 0.58
+E-2D Advanced Hawkeye combat aggregate: 0.00
+E-3A Sentry Radar score: 0.28
+E-3A Sentry Radar score air: 0.51
+E-3A Sentry Radar score ground: 0.00
+E-3A Sentry Radar score sea: 0.00
+E-3A Sentry TVD score air: 0.00
+E-3A Sentry TVD score ground: 0.00
+E-3A Sentry TVD score sea: 0.00
+E-3A Sentry Radio navigation score: 0.00
+E-3A Sentry Avionics score: 0.49
+E-3A Sentry Hydraulic score: 0.31
+E-3A Sentry Engine score: 0.09
+E-3A Sentry Speed score: 0.24
+E-3A Sentry avalaibility: 0.70
+E-3A Sentry manutenability score (mttr): 0.93
+E-3A Sentry reliability score (mtbf): 0.57
+E-3A Sentry combat aggregate: 0.00
+MQ-1 Predator Radar score: 0.00
+MQ-1 Predator Radar score air: 0.00
+MQ-1 Predator Radar score ground: 0.00
+MQ-1 Predator Radar score sea: 0.00
+MQ-1 Predator TVD score air: 0.00
+MQ-1 Predator TVD score ground: 0.22
+MQ-1 Predator TVD score sea: 0.00
+MQ-1 Predator Radio navigation score: 0.00
+MQ-1 Predator Avionics score: 0.22
+MQ-1 Predator Hydraulic score: 0.00
+MQ-1 Predator Engine score: 0.00
+MQ-1 Predator Speed score: 0.00
+MQ-1 Predator avalaibility: 0.37
+MQ-1 Predator manutenability score (mttr): 1.00
+MQ-1 Predator reliability score (mtbf): 0.09
+MQ-1 Predator combat aggregate: 0.09
+MQ-9 Reaper Radar score: 0.01
+MQ-9 Reaper Radar score air: 0.00
+MQ-9 Reaper Radar score ground: 0.03
+MQ-9 Reaper Radar score sea: 0.00
+MQ-9 Reaper TVD score air: 0.00
+MQ-9 Reaper TVD score ground: 0.42
+MQ-9 Reaper TVD score sea: 0.00
+MQ-9 Reaper Radio navigation score: 0.00
+MQ-9 Reaper Avionics score: 0.34
+MQ-9 Reaper Hydraulic score: 0.00
+MQ-9 Reaper Engine score: 0.01
+MQ-9 Reaper Speed score: 0.10
+MQ-9 Reaper avalaibility: 0.38
+MQ-9 Reaper manutenability score (mttr): 0.97
+MQ-9 Reaper reliability score (mtbf): 0.15
+MQ-9 Reaper combat aggregate: 0.20
+C-130 Hercules Radar score: 0.00
+C-130 Hercules Radar score air: 0.00
+C-130 Hercules Radar score ground: 0.00
+C-130 Hercules Radar score sea: 0.00
+C-130 Hercules TVD score air: 0.00
+C-130 Hercules TVD score ground: 0.00
+C-130 Hercules TVD score sea: 0.00
+C-130 Hercules Radio navigation score: 0.00
+C-130 Hercules Avionics score: 0.33
+C-130 Hercules Hydraulic score: 0.27
+C-130 Hercules Engine score: 0.00
+C-130 Hercules Speed score: 0.19
+C-130 Hercules avalaibility: 1.00
+C-130 Hercules manutenability score (mttr): 0.99
+C-130 Hercules reliability score (mtbf): 0.48
+C-130 Hercules combat aggregate: 0.00
+C-17A Globemaster III Radar score: 0.00
+C-17A Globemaster III Radar score air: 0.00
+C-17A Globemaster III Radar score ground: 0.00
+C-17A Globemaster III Radar score sea: 0.00
+C-17A Globemaster III TVD score air: 0.00
+C-17A Globemaster III TVD score ground: 0.00
+C-17A Globemaster III TVD score sea: 0.00
+C-17A Globemaster III Radio navigation score: 0.00
+C-17A Globemaster III Avionics score: 0.52
+C-17A Globemaster III Hydraulic score: 0.35
+C-17A Globemaster III Engine score: 0.10
+C-17A Globemaster III Speed score: 0.22
+C-17A Globemaster III avalaibility: 1.00
+C-17A Globemaster III manutenability score (mttr): 0.99
+C-17A Globemaster III reliability score (mtbf): 0.48
+C-17A Globemaster III combat aggregate: 0.00
+KC-130 Radar score: 0.00
+KC-130 Radar score air: 0.00
+KC-130 Radar score ground: 0.00
+KC-130 Radar score sea: 0.00
+KC-130 TVD score air: 0.00
+KC-130 TVD score ground: 0.00
+KC-130 TVD score sea: 0.00
+KC-130 Radio navigation score: 0.00
+KC-130 Avionics score: 0.33
+KC-130 Hydraulic score: 0.27
+KC-130 Engine score: 0.00
+KC-130 Speed score: 0.19
+KC-130 avalaibility: 1.00
+KC-130 manutenability score (mttr): 0.99
+KC-130 reliability score (mtbf): 0.48
+KC-130 combat aggregate: 0.00
+KC-135 Stratotanker Radar score: 0.00
+KC-135 Stratotanker Radar score air: 0.00
+KC-135 Stratotanker Radar score ground: 0.00
+KC-135 Stratotanker Radar score sea: 0.00
+KC-135 Stratotanker TVD score air: 0.00
+KC-135 Stratotanker TVD score ground: 0.00
+KC-135 Stratotanker TVD score sea: 0.00
+KC-135 Stratotanker Radio navigation score: 0.00
+KC-135 Stratotanker Avionics score: 0.42
+KC-135 Stratotanker Hydraulic score: 0.31
+KC-135 Stratotanker Engine score: 0.16
+KC-135 Stratotanker Speed score: 0.24
+KC-135 Stratotanker avalaibility: 0.93
+KC-135 Stratotanker manutenability score (mttr): 0.99
+KC-135 Stratotanker reliability score (mtbf): 0.48
+KC-135 Stratotanker combat aggregate: 0.00
+KC-135 MPRS Radar score: 0.00
+KC-135 MPRS Radar score air: 0.00
+KC-135 MPRS Radar score ground: 0.00
+KC-135 MPRS Radar score sea: 0.00
+KC-135 MPRS TVD score air: 0.00
+KC-135 MPRS TVD score ground: 0.00
+KC-135 MPRS TVD score sea: 0.00
+KC-135 MPRS Radio navigation score: 0.00
+KC-135 MPRS Avionics score: 0.43
+KC-135 MPRS Hydraulic score: 0.31
+KC-135 MPRS Engine score: 0.16
+KC-135 MPRS Speed score: 0.24
+KC-135 MPRS avalaibility: 0.93
+KC-135 MPRS manutenability score (mttr): 0.99
+KC-135 MPRS reliability score (mtbf): 0.48
+KC-135 MPRS combat aggregate: 0.00
+AJ/ASJ 37 Viggen Radar score: 0.03
+AJ/ASJ 37 Viggen Radar score air: 0.05
+AJ/ASJ 37 Viggen Radar score ground: 0.04
+AJ/ASJ 37 Viggen Radar score sea: 0.00
+AJ/ASJ 37 Viggen TVD score air: 0.00
+AJ/ASJ 37 Viggen TVD score ground: 0.00
+AJ/ASJ 37 Viggen TVD score sea: 0.00
+AJ/ASJ 37 Viggen Radio navigation score: 0.00
+AJ/ASJ 37 Viggen Avionics score: 0.76
+AJ/ASJ 37 Viggen Hydraulic score: 0.25
+AJ/ASJ 37 Viggen Engine score: 0.83
+AJ/ASJ 37 Viggen Speed score: 0.74
+AJ/ASJ 37 Viggen avalaibility: 0.50
+AJ/ASJ 37 Viggen manutenability score (mttr): 0.88
+AJ/ASJ 37 Viggen reliability score (mtbf): 0.50
+AJ/ASJ 37 Viggen combat aggregate: 0.28
+Mirage 2000C Radar score: 0.04
+Mirage 2000C Radar score air: 0.08
+Mirage 2000C Radar score ground: 0.00
+Mirage 2000C Radar score sea: 0.00
+Mirage 2000C TVD score air: 0.00
+Mirage 2000C TVD score ground: 0.00
+Mirage 2000C TVD score sea: 0.00
+Mirage 2000C Radio navigation score: 0.00
+Mirage 2000C Avionics score: 0.82
+Mirage 2000C Hydraulic score: 0.24
+Mirage 2000C Engine score: 1.00
+Mirage 2000C Speed score: 0.77
+Mirage 2000C avalaibility: 0.62
+Mirage 2000C manutenability score (mttr): 0.92
+Mirage 2000C reliability score (mtbf): 0.52
+Mirage 2000C combat aggregate: 0.21
+MiG-15bis Radar score: 0.01
+MiG-15bis Radar score air: 0.02
+MiG-15bis Radar score ground: 0.00
+MiG-15bis Radar score sea: 0.00
+MiG-15bis TVD score air: 0.00
+MiG-15bis TVD score ground: 0.00
+MiG-15bis TVD score sea: 0.00
+MiG-15bis Radio navigation score: 0.11
+MiG-15bis Avionics score: 0.00
+MiG-15bis Hydraulic score: 0.12
+MiG-15bis Engine score: 0.05
+MiG-15bis Speed score: 0.36
+MiG-15bis avalaibility: 0.21
+MiG-15bis manutenability score (mttr): 0.67
+MiG-15bis reliability score (mtbf): 0.43
+MiG-15bis combat aggregate: 0.11
+MiG-19P Radar score: 0.02
+MiG-19P Radar score air: 0.03
+MiG-19P Radar score ground: 0.00
+MiG-19P Radar score sea: 0.00
+MiG-19P TVD score air: 0.00
+MiG-19P TVD score ground: 0.00
+MiG-19P TVD score sea: 0.00
+MiG-19P Radio navigation score: 0.13
+MiG-19P Avionics score: 0.06
+MiG-19P Hydraulic score: 0.13
+MiG-19P Engine score: 0.08
+MiG-19P Speed score: 0.43
+MiG-19P avalaibility: 0.22
+MiG-19P manutenability score (mttr): 0.67
+MiG-19P reliability score (mtbf): 0.44
+MiG-19P combat aggregate: 0.11
+MiG-21bis Radar score: 0.02
+MiG-21bis Radar score air: 0.04
+MiG-21bis Radar score ground: 0.00
+MiG-21bis Radar score sea: 0.00
+MiG-21bis TVD score air: 0.00
+MiG-21bis TVD score ground: 0.00
+MiG-21bis TVD score sea: 0.00
+MiG-21bis Radio navigation score: 0.19
+MiG-21bis Avionics score: 0.33
+MiG-21bis Hydraulic score: 0.14
+MiG-21bis Engine score: 0.12
+MiG-21bis Speed score: 0.70
+MiG-21bis avalaibility: 0.24
+MiG-21bis manutenability score (mttr): 0.70
+MiG-21bis reliability score (mtbf): 0.46
+MiG-21bis combat aggregate: 0.24
+MiG-23MLD Radar score: 0.05
+MiG-23MLD Radar score air: 0.08
+MiG-23MLD Radar score ground: 0.00
+MiG-23MLD Radar score sea: 0.00
+MiG-23MLD TVD score air: 0.00
+MiG-23MLD TVD score ground: 0.00
+MiG-23MLD TVD score sea: 0.00
+MiG-23MLD Radio navigation score: 0.26
+MiG-23MLD Avionics score: 0.54
+MiG-23MLD Hydraulic score: 0.25
+MiG-23MLD Engine score: 0.09
+MiG-23MLD Speed score: 0.80
+MiG-23MLD avalaibility: 0.21
+MiG-23MLD manutenability score (mttr): 0.64
+MiG-23MLD reliability score (mtbf): 0.47
+MiG-23MLD combat aggregate: 0.23
+MiG-25PD Radar score: 0.05
+MiG-25PD Radar score air: 0.10
+MiG-25PD Radar score ground: 0.00
+MiG-25PD Radar score sea: 0.00
+MiG-25PD TVD score air: 0.00
+MiG-25PD TVD score ground: 0.00
+MiG-25PD TVD score sea: 0.00
+MiG-25PD Radio navigation score: 0.29
+MiG-25PD Avionics score: 0.45
+MiG-25PD Hydraulic score: 0.31
+MiG-25PD Engine score: 0.08
+MiG-25PD Speed score: 1.00
+MiG-25PD avalaibility: 0.16
+MiG-25PD manutenability score (mttr): 0.51
+MiG-25PD reliability score (mtbf): 0.46
+MiG-25PD combat aggregate: 0.19
+MiG-25RB Radar score: 0.02
+MiG-25RB Radar score air: 0.00
+MiG-25RB Radar score ground: 0.09
+MiG-25RB Radar score sea: 0.00
+MiG-25RB TVD score air: 0.00
+MiG-25RB TVD score ground: 0.10
+MiG-25RB TVD score sea: 0.00
+MiG-25RB Radio navigation score: 0.29
+MiG-25RB Avionics score: 0.42
+MiG-25RB Hydraulic score: 0.31
+MiG-25RB Engine score: 0.08
+MiG-25RB Speed score: 1.00
+MiG-25RB avalaibility: 0.00
+MiG-25RB manutenability score (mttr): 0.27
+MiG-25RB reliability score (mtbf): 0.00
+MiG-25RB combat aggregate: 0.06
+MiG-27K Radar score: 0.03
+MiG-27K Radar score air: 0.00
+MiG-27K Radar score ground: 0.15
+MiG-27K Radar score sea: 0.00
+MiG-27K TVD score air: 0.00
+MiG-27K TVD score ground: 0.49
+MiG-27K TVD score sea: 0.00
+MiG-27K Radio navigation score: 0.26
+MiG-27K Avionics score: 0.54
+MiG-27K Hydraulic score: 0.25
+MiG-27K Engine score: 0.07
+MiG-27K Speed score: 0.67
+MiG-27K avalaibility: 0.00
+MiG-27K manutenability score (mttr): 0.37
+MiG-27K reliability score (mtbf): 0.00
+MiG-27K combat aggregate: 0.29
+MiG-29A Radar score: 0.05
+MiG-29A Radar score air: 0.09
+MiG-29A Radar score ground: 0.00
+MiG-29A Radar score sea: 0.00
+MiG-29A TVD score air: 0.24
+MiG-29A TVD score ground: 0.00
+MiG-29A TVD score sea: 0.00
+MiG-29A Radio navigation score: 0.29
+MiG-29A Avionics score: 0.67
+MiG-29A Hydraulic score: 0.26
+MiG-29A Engine score: 0.11
+MiG-29A Speed score: 0.80
+MiG-29A avalaibility: 0.02
+MiG-29A manutenability score (mttr): 0.51
+MiG-29A reliability score (mtbf): 0.02
+MiG-29A combat aggregate: 0.24
+MiG-29S Radar score: 0.07
+MiG-29S Radar score air: 0.13
+MiG-29S Radar score ground: 0.00
+MiG-29S Radar score sea: 0.00
+MiG-29S TVD score air: 0.25
+MiG-29S TVD score ground: 0.00
+MiG-29S TVD score sea: 0.00
+MiG-29S Radio navigation score: 0.29
+MiG-29S Avionics score: 0.71
+MiG-29S Hydraulic score: 0.26
+MiG-29S Engine score: 0.11
+MiG-29S Speed score: 0.80
+MiG-29S avalaibility: 0.02
+MiG-29S manutenability score (mttr): 0.54
+MiG-29S reliability score (mtbf): 0.02
+MiG-29S combat aggregate: 0.27
+MiG-31 Radar score: 0.19
+MiG-31 Radar score air: 0.36
+MiG-31 Radar score ground: 0.00
+MiG-31 Radar score sea: 0.00
+MiG-31 TVD score air: 0.00
+MiG-31 TVD score ground: 0.00
+MiG-31 TVD score sea: 0.00
+MiG-31 Radio navigation score: 0.50
+MiG-31 Avionics score: 0.62
+MiG-31 Hydraulic score: 0.33
+MiG-31 Engine score: 0.10
+MiG-31 Speed score: 1.00
+MiG-31 avalaibility: 0.17
+MiG-31 manutenability score (mttr): 0.54
+MiG-31 reliability score (mtbf): 0.48
+MiG-31 combat aggregate: 0.25
+Su-17M4 Radar score: 0.02
+Su-17M4 Radar score air: 0.00
+Su-17M4 Radar score ground: 0.09
+Su-17M4 Radar score sea: 0.00
+Su-17M4 TVD score air: 0.00
+Su-17M4 TVD score ground: 0.00
+Su-17M4 TVD score sea: 0.00
+Su-17M4 Radio navigation score: 0.26
+Su-17M4 Avionics score: 0.49
+Su-17M4 Hydraulic score: 0.25
+Su-17M4 Engine score: 0.08
+Su-17M4 Speed score: 0.60
+Su-17M4 avalaibility: 0.22
+Su-17M4 manutenability score (mttr): 0.66
+Su-17M4 reliability score (mtbf): 0.47
+Su-17M4 combat aggregate: 0.23
+Su-24M Radar score: 0.07
+Su-24M Radar score air: 0.03
+Su-24M Radar score ground: 0.25
+Su-24M Radar score sea: 0.00
+Su-24M TVD score air: 0.00
+Su-24M TVD score ground: 0.52
+Su-24M TVD score sea: 0.00
+Su-24M Radio navigation score: 0.36
+Su-24M Avionics score: 0.57
+Su-24M Hydraulic score: 0.31
+Su-24M Engine score: 0.07
+Su-24M Speed score: 0.54
+Su-24M avalaibility: 0.01
+Su-24M manutenability score (mttr): 0.37
+Su-24M reliability score (mtbf): 0.01
+Su-24M combat aggregate: 0.37
+Su-24MR Radar score: 0.02
+Su-24MR Radar score air: 0.00
+Su-24MR Radar score ground: 0.10
+Su-24MR Radar score sea: 0.00
+Su-24MR TVD score air: 0.00
+Su-24MR TVD score ground: 0.10
+Su-24MR TVD score sea: 0.00
+Su-24MR Radio navigation score: 0.36
+Su-24MR Avionics score: 0.54
+Su-24MR Hydraulic score: 0.31
+Su-24MR Engine score: 0.07
+Su-24MR Speed score: 0.54
+Su-24MR avalaibility: 0.01
+Su-24MR manutenability score (mttr): 0.37
+Su-24MR reliability score (mtbf): 0.01
+Su-24MR combat aggregate: 0.05
+Su-25 Radar score: 0.00
+Su-25 Radar score air: 0.00
+Su-25 Radar score ground: 0.00
+Su-25 Radar score sea: 0.00
+Su-25 TVD score air: 0.00
+Su-25 TVD score ground: 0.22
+Su-25 TVD score sea: 0.00
+Su-25 Radio navigation score: 0.21
+Su-25 Avionics score: 0.48
+Su-25 Hydraulic score: 0.25
+Su-25 Engine score: 0.07
+Su-25 Speed score: 0.36
+Su-25 avalaibility: 0.36
+Su-25 manutenability score (mttr): 0.81
+Su-25 reliability score (mtbf): 0.50
+Su-25 combat aggregate: 0.14
+Su-25T Radar score: 0.00
+Su-25T Radar score air: 0.00
+Su-25T Radar score ground: 0.00
+Su-25T Radar score sea: 0.00
+Su-25T TVD score air: 0.18
+Su-25T TVD score ground: 0.49
+Su-25T TVD score sea: 0.00
+Su-25T Radio navigation score: 0.26
+Su-25T Avionics score: 0.60
+Su-25T Hydraulic score: 0.26
+Su-25T Engine score: 0.07
+Su-25T Speed score: 0.36
+Su-25T avalaibility: 0.35
+Su-25T manutenability score (mttr): 0.79
+Su-25T reliability score (mtbf): 0.51
+Su-25T combat aggregate: 0.26
+Su-25TM Radar score: 0.07
+Su-25TM Radar score air: 0.07
+Su-25TM Radar score ground: 0.15
+Su-25TM Radar score sea: 0.00
+Su-25TM TVD score air: 0.19
+Su-25TM TVD score ground: 0.72
+Su-25TM TVD score sea: 0.00
+Su-25TM Radio navigation score: 0.29
+Su-25TM Avionics score: 0.70
+Su-25TM Hydraulic score: 0.26
+Su-25TM Engine score: 0.07
+Su-25TM Speed score: 0.36
+Su-25TM avalaibility: 0.04
+Su-25TM manutenability score (mttr): 0.60
+Su-25TM reliability score (mtbf): 0.05
+Su-25TM combat aggregate: 0.35
+Su-27 Radar score: 0.14
+Su-27 Radar score air: 0.26
+Su-27 Radar score ground: 0.00
+Su-27 Radar score sea: 0.00
+Su-27 TVD score air: 0.26
+Su-27 TVD score ground: 0.00
+Su-27 TVD score sea: 0.00
+Su-27 Radio navigation score: 0.40
+Su-27 Avionics score: 0.73
+Su-27 Hydraulic score: 0.31
+Su-27 Engine score: 0.11
+Su-27 Speed score: 0.82
+Su-27 avalaibility: 0.02
+Su-27 manutenability score (mttr): 0.48
+Su-27 reliability score (mtbf): 0.03
+Su-27 combat aggregate: 0.31
+Su-30 Radar score: 0.37
+Su-30 Radar score air: 0.40
+Su-30 Radar score ground: 0.34
+Su-30 Radar score sea: 0.36
+Su-30 TVD score air: 0.28
+Su-30 TVD score ground: 0.27
+Su-30 TVD score sea: 0.00
+Su-30 Radio navigation score: 0.50
+Su-30 Avionics score: 0.81
+Su-30 Hydraulic score: 0.31
+Su-30 Engine score: 0.10
+Su-30 Speed score: 0.69
+Su-30 avalaibility: 0.03
+Su-30 manutenability score (mttr): 0.58
+Su-30 reliability score (mtbf): 0.04
+Su-30 combat aggregate: 0.41
+Su-33 Radar score: 0.21
+Su-33 Radar score air: 0.26
+Su-33 Radar score ground: 0.00
+Su-33 Radar score sea: 0.27
+Su-33 TVD score air: 0.26
+Su-33 TVD score ground: 0.00
+Su-33 TVD score sea: 0.42
+Su-33 Radio navigation score: 0.40
+Su-33 Avionics score: 0.73
+Su-33 Hydraulic score: 0.31
+Su-33 Engine score: 0.10
+Su-33 Speed score: 0.75
+Su-33 avalaibility: 0.02
+Su-33 manutenability score (mttr): 0.48
+Su-33 reliability score (mtbf): 0.03
+Su-33 combat aggregate: 0.24
+Su-34 Radar score: 0.47
+Su-34 Radar score air: 0.44
+Su-34 Radar score ground: 0.48
+Su-34 Radar score sea: 0.50
+Su-34 TVD score air: 0.28
+Su-34 TVD score ground: 0.72
+Su-34 TVD score sea: 0.90
+Su-34 Radio navigation score: 0.57
+Su-34 Avionics score: 0.91
+Su-34 Hydraulic score: 0.33
+Su-34 Engine score: 0.09
+Su-34 Speed score: 0.61
+Su-34 avalaibility: 0.05
+Su-34 manutenability score (mttr): 0.63
+Su-34 reliability score (mtbf): 0.06
+Su-34 combat aggregate: 0.44
+Tu-22M Radar score: 0.21
+Tu-22M Radar score air: 0.00
+Tu-22M Radar score ground: 0.39
+Tu-22M Radar score sea: 0.51
+Tu-22M TVD score air: 0.00
+Tu-22M TVD score ground: 0.00
+Tu-22M TVD score sea: 0.00
+Tu-22M Radio navigation score: 0.71
+Tu-22M Avionics score: 0.68
+Tu-22M Hydraulic score: 0.53
+Tu-22M Engine score: 0.06
+Tu-22M Speed score: 0.64
+Tu-22M avalaibility: 0.14
+Tu-22M manutenability score (mttr): 0.39
+Tu-22M reliability score (mtbf): 0.51
+Tu-22M combat aggregate: 0.37
+Tu-95MS Radar score: 0.12
+Tu-95MS Radar score air: 0.00
+Tu-95MS Radar score ground: 0.21
+Tu-95MS Radar score sea: 0.33
+Tu-95MS TVD score air: 0.00
+Tu-95MS TVD score ground: 0.00
+Tu-95MS TVD score sea: 0.00
+Tu-95MS Radio navigation score: 0.86
+Tu-95MS Avionics score: 0.64
+Tu-95MS Hydraulic score: 0.71
+Tu-95MS Engine score: 0.04
+Tu-95MS Speed score: 0.26
+Tu-95MS avalaibility: 0.12
+Tu-95MS manutenability score (mttr): 0.27
+Tu-95MS reliability score (mtbf): 0.53
+Tu-95MS combat aggregate: 0.72
+Tu-142 Radar score: 0.11
+Tu-142 Radar score air: 0.00
+Tu-142 Radar score ground: 0.00
+Tu-142 Radar score sea: 0.46
+Tu-142 TVD score air: 0.00
+Tu-142 TVD score ground: 0.00
+Tu-142 TVD score sea: 0.82
+Tu-142 Radio navigation score: 0.86
+Tu-142 Avionics score: 0.57
+Tu-142 Hydraulic score: 0.71
+Tu-142 Engine score: 0.04
+Tu-142 Speed score: 0.22
+Tu-142 avalaibility: 0.00
+DEBUG:Code.Dynamic_War_Manager.Source.Context.Air_Defense_Efficacy:air_defense_profile: model 'BMP-2' has no air-defence weapon with data
+DEBUG:Code.Dynamic_War_Manager.Source.Context.Air_Defense_Efficacy:air_defense_profile: model 'T-72B' has no air-defence weapon with data
+Code.Dynamic_War_Manager.Source.Context.Region - DEBUG - _invalidate_caches - Caches for Region S30 invalidated (all).
+DEBUG:Code.Dynamic_War_Manager.Source.Context.Region:Caches for Region S30 invalidated (all).
+Code.Dynamic_War_Manager.Source.Context.Region - INFO - add_block - Block Military.Blue-Base added to region S30
+INFO:Code.Dynamic_War_Manager.Source.Context.Region:Block Military.Blue-Base added to region S30
+Code.Dynamic_War_Manager.Source.Context.Region - DEBUG - _invalidate_caches - Caches for Region S30 invalidated (all).
+DEBUG:Code.Dynamic_War_Manager.Source.Context.Region:Caches for Region S30 invalidated (all).
+Code.Dynamic_War_Manager.Source.Context.Region - INFO - add_block - Block Military.Blue-Wing added to region S30
+INFO:Code.Dynamic_War_Manager.Source.Context.Region:Block Military.Blue-Wing added to region S30
+Code.Dynamic_War_Manager.Source.Context.Region - DEBUG - _invalidate_caches - Caches for Region S30 invalidated (all).
+DEBUG:Code.Dynamic_War_Manager.Source.Context.Region:Caches for Region S30 invalidated (all).
+Code.Dynamic_War_Manager.Source.Context.Region - INFO - add_block - Block Military.Blue-Mech added to region S30
+INFO:Code.Dynamic_War_Manager.Source.Context.Region:Block Military.Blue-Mech added to region S30
+Code.Dynamic_War_Manager.Source.Context.Region - DEBUG - _invalidate_caches - Caches for Region S30 invalidated (all).
+DEBUG:Code.Dynamic_War_Manager.Source.Context.Region:Caches for Region S30 invalidated (all).
+Code.Dynamic_War_Manager.Source.Context.Region - INFO - add_block - Block Military.Red-Depot added to region S30
+INFO:Code.Dynamic_War_Manager.Source.Context.Region:Block Military.Red-Depot added to region S30
+DEBUG:Code.Dynamic_War_Manager.Source.Context.Campaign_State:Region snapshot added: mission=S30-CAMPAIGN-1 region=S30
+DEBUG:Code.Dynamic_War_Manager.Source.Logic.Readiness:apply_campaign_processes: asset 'Blue-Mech/mbt0' is absent; keeping its concluded readiness record until it returns
+Tu-142 manutenability score (mttr): 0.00
+Tu-142 reliability score (mtbf): 0.05
+Tu-142 combat aggregate: 0.17
+Tu-160 Radar score: 0.21
+Tu-160 Radar score air: 0.00
+Tu-160 Radar score ground: 0.48
+Tu-160 Radar score sea: 0.43
+Tu-160 TVD score air: 0.00
+Tu-160 TVD score ground: 0.00
+Tu-160 TVD score sea: 0.00
+Tu-160 Radio navigation score: 1.00
+Tu-160 Avionics score: 0.86
+Tu-160 Hydraulic score: 1.00
+Tu-160 Engine score: 0.06
+Tu-160 Speed score: 0.72
+Tu-160 avalaibility: 0.12
+Tu-160 manutenability score (mttr): 0.29
+Tu-160 reliability score (mtbf): 0.52
+Tu-160 combat aggregate: 1.00
+A-50 Radar score: 1.00
+A-50 Radar score air: 1.00
+A-50 Radar score ground: 1.00
+A-50 Radar score sea: 1.00
+A-50 TVD score air: 0.00
+A-50 TVD score ground: 0.00
+A-50 TVD score sea: 0.00
+A-50 Radio navigation score: 1.00
+A-50 Avionics score: 0.54
+A-50 Hydraulic score: 0.53
+A-50 Engine score: 0.04
+A-50 Speed score: 0.22
+A-50 avalaibility: 0.19
+A-50 manutenability score (mttr): 0.51
+A-50 reliability score (mtbf): 0.57
+A-50 combat aggregate: 0.00
+An-26B Radar score: 0.00
+An-26B Radar score air: 0.00
+An-26B Radar score ground: 0.00
+An-26B Radar score sea: 0.00
+An-26B TVD score air: 0.00
+An-26B TVD score ground: 0.00
+An-26B TVD score sea: 0.00
+An-26B Radio navigation score: 0.29
+An-26B Avionics score: 0.13
+An-26B Hydraulic score: 0.19
+An-26B Engine score: 0.01
+An-26B Speed score: 0.15
+An-26B avalaibility: 0.75
+An-26B manutenability score (mttr): 0.84
+An-26B reliability score (mtbf): 1.00
+An-26B combat aggregate: 0.00
+An-30M Radar score: 0.00
+An-30M Radar score air: 0.00
+An-30M Radar score ground: 0.00
+An-30M Radar score sea: 0.00
+An-30M TVD score air: 0.00
+An-30M TVD score ground: 0.01
+An-30M TVD score sea: 0.00
+An-30M Radio navigation score: 0.29
+An-30M Avionics score: 0.12
+An-30M Hydraulic score: 0.18
+An-30M Engine score: 0.01
+An-30M Speed score: 0.15
+An-30M avalaibility: 0.34
+An-30M manutenability score (mttr): 0.78
+An-30M reliability score (mtbf): 0.52
+An-30M combat aggregate: 0.00
+Il-76MD Radar score: 0.02
+Il-76MD Radar score air: 0.00
+Il-76MD Radar score ground: 0.08
+Il-76MD Radar score sea: 0.00
+Il-76MD TVD score air: 0.00
+Il-76MD TVD score ground: 0.00
+Il-76MD TVD score sea: 0.00
+Il-76MD Radio navigation score: 0.57
+Il-76MD Avionics score: 0.35
+Il-76MD Hydraulic score: 0.53
+Il-76MD Engine score: 0.03
+Il-76MD Speed score: 0.22
+Il-76MD avalaibility: 0.24
+Il-76MD manutenability score (mttr): 0.61
+Il-76MD reliability score (mtbf): 0.57
+Il-76MD combat aggregate: 0.00
+Il-78M Radar score: 0.02
+Il-78M Radar score air: 0.00
+Il-78M Radar score ground: 0.08
+Il-78M Radar score sea: 0.00
+Il-78M TVD score air: 0.00
+Il-78M TVD score ground: 0.00
+Il-78M TVD score sea: 0.00
+Il-78M Radio navigation score: 0.57
+Il-78M Avionics score: 0.31
+Il-78M Hydraulic score: 0.53
+Il-78M Engine score: 0.03
+Il-78M Speed score: 0.22
+Il-78M avalaibility: 0.23
+Il-78M manutenability score (mttr): 0.61
+Il-78M reliability score (mtbf): 0.57
+Il-78M combat aggregate: 0.00
+Yak-40 Radar score: 0.00
+Yak-40 Radar score air: 0.00
+Yak-40 Radar score ground: 0.00
+Yak-40 Radar score sea: 0.00
+Yak-40 TVD score air: 0.00
+Yak-40 TVD score ground: 0.00
+Yak-40 TVD score sea: 0.00
+Yak-40 Radio navigation score: 0.21
+Yak-40 Avionics score: 0.09
+Yak-40 Hydraulic score: 0.14
+Yak-40 Engine score: 0.03
+Yak-40 Speed score: 0.18
+Yak-40 avalaibility: 0.96
+Yak-40 manutenability score (mttr): 0.90
+Yak-40 reliability score (mtbf): 0.98
+Yak-40 combat aggregate: 0.00
+compared 1009 runs: IDENTICAL (1137.8 s)
+PROBE_RC 0
+{
+ "cf": {
+  "10.0": {
+   "detected_new": 29480,
+   "detected_old": 29483,
+   "flipped": 3,
+   "g_below_1": 953
+  },
+  "120.0": {
+   "detected_new": 29019,
+   "detected_old": 29483,
+   "flipped": 464,
+   "g_below_1": 2519
+  },
+  "2.0": {
+   "detected_new": 29483,
+   "detected_old": 29483,
+   "flipped": 0,
+   "g_below_1": 946
+  },
+  "30.0": {
+   "detected_new": 29466,
+   "detected_old": 29483,
+   "flipped": 17,
+   "g_below_1": 1006
+  },
+  "6.0": {
+   "detected_new": 29483,
+   "detected_old": 29483,
+   "flipped": 0,
+   "g_below_1": 946
+  },
+  "60.0": {
+   "detected_new": 29438,
+   "detected_old": 29483,
+   "flipped": 45,
+   "g_below_1": 1204
+  }
+ },
+ "directions": 33446,
+ "dwell_applied": 0,
+ "exposure_hist": {
+  "<1": 946,
+  "<10": 7,
+  "<120": 1315,
+  "<1800": 1553,
+  "<30": 53,
+  "<300": 1903,
+  "<60": 198,
+  "<600": 9228,
+  ">=1800": 18243
+ },
+ "flipped_actual": 0,
+ "g_below_1": 0,
+ "models_with_dwell": {},
+ "with_legs": 33446,
+ "without_legs": 0
+}

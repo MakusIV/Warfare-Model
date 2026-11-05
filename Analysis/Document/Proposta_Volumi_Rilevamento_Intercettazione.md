@@ -640,6 +640,8 @@ In ordine di blocco:
 5. **D-5 "Non rilevato" a corda limitata**: si accetta che `AVOID_DETECTION` sia aggiramento puro più la
    metrica Pd? Oppure si introduce `dwell_time_s` per sensore **e** una Pd dipendente dalla permanenza nel
    DES? La seconda cambia la legge del risolutore.
+
+   > **Stato (2026-11-05)**: scelta dell'utente: **opzione 2**. Piano in `Proposta_Dwell_Time_Rilevamento.md` (decisioni DW-1..DW-8 aperte).
 6. **D-6 Nomi**:
    - rinominare `min_detection_time` in `acquisition_time`, con alias e aggiornamento di
      `Reaction_Profile`?
