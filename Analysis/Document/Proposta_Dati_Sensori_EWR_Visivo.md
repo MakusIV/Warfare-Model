@@ -718,7 +718,8 @@ Nessuna unità nuova nella fotografia per il blocco B. Lo scenario EWR con SAM e
 
 ### Blocco C — siti fissi (solo se la decisione 14 li include)
 
-Non eseguibile da questo documento.
+Non eseguibile da questo documento. **Piano del blocco C (2026-11-05): `Proposta_Dati_Sensori_EWR_Siti_Fissi.md`**
+(modello A, `Vehicle` immobile con marcatore `fixed_site`; 7 siti, AN/FPS-20 escluso).
 - Candidati, con le portate proposte dalla ricerca (§4 della ricerca), da rileggere per confidenza:
   Chain Home 160, AMES Type 7 140, AMES Type 80 390, AN/FPS-20 322 o 407 (contraddizione, bassa), AN/FPS-117 330
   (Lockheed, Pd 80 % su 1 m², media-alta; unico con MTBF >2000 h e MTTR <45 min entrambi di fonte),
