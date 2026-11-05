@@ -146,11 +146,11 @@ regola avra' il suo interruttore.
 |---|---|---|
 | S-1 | 7 siti in memoria (velocita' 0, `range` 1, portate e antenne di §4.C.3), tabella `VEHICLE` ricalcolata; 7 moduli di test pertinenti (`Test_Vehicle_Data`, `Test_EWR_Data`, `Test_Combat_Power_Estimation`, `Test_Vehicle`, `Test_Threat_AA_Factory`, `Test_Air_Defense_Efficacy`, `Test_Mobile`) | `Ran 529`, 7 fallimenti, **tutti** sotto-test di `test_all_vehicles_speed_eval_positive` (uno per sito); combat score globale di nessun record esistente cambiato; score di categoria cambiato per gli 8 EWR mobili |
 | S-2 | Siti come `Vehicle` reali in un `Military`, pianificatore, ADE, Fire_Control, sessione DES con un A-10C (come il test 15 del blocco B) | profilo di velocita' tutto 0,0; carburante 1,0, autonomia 1000 m, crociera None, velocita' massima None; `build_threat_aa` None; raggi di §1.4; `air_defence`; fuori dal catalogo RWR; in sessione 0 `AmmunitionEvent` e 0 `FuelEvent` del sito |
-| S-3 | Suite completa con i 7 siti in memoria | v. §1.7.1 |
+| S-3 | Suite completa con i 7 siti in memoria | `Ran 4742`, 7 fallimenti, tutti di `test_all_vehicles_speed_eval_positive` (§1.7.1) |
 | S-4 | Stessa sonda con velocita' 1 km/h | nessun fallimento di `_speed_eval`; crociera e massima 0,28 m/s (gli effetti collaterali di §1.2) |
-| S-5 | Confronto con la fotografia (`Scenario_Baseline --compare`, senza installare nulla) con i 7 siti in memoria | v. §1.7.1 |
+| S-5 | Confronto con la fotografia (`Scenario_Baseline --compare`, senza installare nulla) con i 7 siti in memoria | 1009 IDENTICHE (§1.7.1) |
 
-#### 1.7.1 Esito della sonda S-3
+#### 1.7.1 Esito delle sonde S-3 e S-5 (definitivo)
 
 Suite completa (`unittest discover` come `verifica.sh`, interprete `python3` della VM osboxes), con i 7 siti
 registrati in memoria e la tabella `VEHICLE` ricalcolata: **`Ran 4742`, `FAILED (failures=7, skipped=7)`**. I 7
@@ -159,7 +159,9 @@ fallimenti sono **tutti** sotto-test di `TestSpeedEval.test_all_vehicles_speed_e
 `Test_Combat_Power_Estimation` e `test_range_is_positive_number`. Il conteggio e' quello attuale, perche' la sonda
 non aggiunge test: con i 15 di C.6 diventa 4757.
 
-Confronto con la fotografia nella stessa condizione (sonda S-5): ESITO_CONFRONTO_C5
+Confronto con la fotografia nella stessa condizione (sonda S-5): `Scenario_Baseline --compare` sulla fotografia
+attuale, nulla installato. Esito **`compared 1009 runs: IDENTICAL`** (1090 s). Con i dati del piano l'unico test
+esistente da adattare e' quello di §4.C.5, e la fotografia non cambia.
 
 ---
 
