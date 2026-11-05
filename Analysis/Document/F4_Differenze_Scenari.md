@@ -2634,6 +2634,7 @@ Proposta `Proposta_Dati_Sensori_EWR_Visivo.md`. Il blocco A (D-4c) e' stato eseg
 |---|---|---|---|
 | A: D-4c, campo `visual`, `Mobile.D4C_VISUAL_SENSOR`, S31-VISUAL | `37816355` | 4727 OK (7 skipped) | 1009 esecuzioni: 989 identiche, 0 cambiate, 20 nuove; fotografia a 1009 installata |
 | B: D-4b, 8 record EWR, G2 (EWR fuori dal combat score globale), `Test_EWR_Data` | `cbc75634` | 4742 OK (7 skipped) | 1009 identiche, 0 cambiate, 0 nuove |
+| C: D-4b, 7 siti fissi (marcatore `fixed_site`), 15 test in `Test_EWR_Data` | `efa8f353` | 4757 OK (7 skipped) | 1009 identiche, 0 cambiate, 0 nuove |
 
 ### Il cambio (blocco A)
 ZSU-57-2 e M163-VADS hanno `radar` e `TVD` False: prima della D-4c `Mobile.detection_range` era `None` e il DES non li faceva mai sparare a un aereo
@@ -2680,4 +2681,10 @@ Il test `TestS31VisualSensorRanges` e' unitario e non sta nella fotografia.
 - Il sensore visivo non modella notte e meteo.
 - Gli RWR non identificano gli EWR (`sam_category` None): il flag `ewr` di `Aircraft_Rwr_Data` resta inutilizzato.
 - Nessun cueing EWR -> SAM (D-7 seconda parte, fuori perimetro).
-- I siti fissi (Chain Home, AMES 7/80, FPS-20, FPS-117, P-14, Wassermann, Mammut) sono il blocco C, non fatto.
+- Blocco C (2026-11-05, `Proposta_Dati_Sensori_EWR_Siti_Fissi.md`, des-developer): 7 siti fissi come `Vehicle` immobile con il marcatore `fixed_site` (AN-FPS-117, Chain-Home, AMES-Type-7,
+  AMES-Type-80, Wassermann, Mammut, P-14-Lena); AN/FPS-20 escluso (fonte contraddittoria 322/407 km). Nessuna differenza della fotografia (nessuno scenario istanzia un EWR). Velocita' 0 nei tre
+  regimi, `range` 1 km SEGNAPOSTO di schema (non autonomia); dimensioni, costo e `reliability` 45/4 (salvo FPS-117, 2000 h / 0,75 h da fonte) sono stime; Mammut 300 km e P-14 400 km sono
+  fonti deboli trattate come stima; antenne 73 / 37 / 11,4 m dedotte (Chain Home, Wassermann, Type 80), le altre a 20 m. Adattato un test esistente (`test_all_vehicles_speed_eval_positive`
+  salta i record `fixed_site`). Gli EWR nel registro sono 15 (lo score di categoria degli 8 mobili si sposta, nessun consumatore).
+- Limiti del blocco C: l'immobilita' non e' imposta dal motore (una missione che muovesse un sito lo farebbe muovere, la regola A lo esclude con un warning); torri e copertura angolare non
+  modellate; il DES non ha orizzonte radar, quindi portate di 300-400 km valgono anche per bersagli radenti (costo di calcolo non misurato). Migrazione futura a `Structure` richiede codice.
