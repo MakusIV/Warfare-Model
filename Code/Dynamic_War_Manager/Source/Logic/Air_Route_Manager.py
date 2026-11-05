@@ -621,7 +621,7 @@ def build_threat_aa(asset) -> Optional[ThreatAA]:
 # ── FABBRICA DetectionThreat (volumi di rilevamento, 2026-09-26) ──────────────
 #
 # Il volume di RILEVAMENTO di un asset nasce dai dati sensore gia' presenti nei registri
-# (`radar`/`TVD` -> capabilities['air'] -> acquisition_range), esposti da
+# (`radar`/`TVD`/`visual` -> capabilities['air'] -> acquisition_range), esposti da
 # Mobile.detection_range('air'): gli stessi che il DES usa per rilevare
 # (Contact_Scheduler.mutual_detection_ranges). Il pianificatore di rotta finora leggeva solo
 # il volume delle ARMI (Mobile.air_defense_volume), cioe' quello d'intercettazione.
@@ -649,9 +649,12 @@ EFFECTIVE_EARTH_RADIUS_FACTOR = {'radar': 4.0 / 3.0, 'TVD': 1.0, 'visual': 1.0}
 # ALTEZZA D'ANTENNA/SENSORE [m] sopra il sito. STIME DI PROGETTO DICHIARATE (decisione D-4(a),
 # 2026-09-26), per classe di piattaforma, in attesa di un dato di registro: un record puo'
 # gia' sovrascriverle con la chiave opzionale `antenna_height` [m] nel dizionario
-# `radar`/`TVD` (nessun record la contiene oggi).
+# `radar`/`TVD`/`visual`. Oggi la dichiara solo il record SCR-270 (EWR, 16,8 m, dato DEDOTTO da
+# fonte: antenna alzata a 55 ft); tutti gli altri record usano le stime per classe qui sotto.
 #   veicolo  ~5 m: radar su scafo/torretta di un mezzo semovente (SA-6, SA-8, Tunguska, ...);
-#   EWR      ~20 m: radar di scoperta su palo o sito predisposto (nessun record EWR oggi);
+#   EWR      ~20 m: radar di scoperta su palo o sito predisposto; STIMA per i 7 record EWR senza
+#            `antenna_height` (Freya, P-12, P-18, P-37, 1L13, 55Zh6, AN/TPS-43; gli EWR sono 8
+#            con l'SCR-270, che ha il dato di registro);
 #   nave     ~30 m: centro dell'intervallo 20-40 m delle antenne d'albero delle unita' navali.
 SENSOR_HEIGHT_VEHICLE_M = 5.0
 SENSOR_HEIGHT_EWR_M = 20.0
@@ -699,7 +702,7 @@ def _sensor_record(asset):
 
 
 def sensor_antenna_height(asset, sensor: str) -> float:
-    """Altezza [m] del sensore `sensor` ('radar'/'TVD') dell'asset sopra il sito.
+    """Altezza [m] del sensore `sensor` ('radar'/'TVD'/'visual') dell'asset sopra il sito.
 
     Precedenza: chiave opzionale `antenna_height` del dizionario sensore nel registro; poi la
     stima per classe (SENSOR_HEIGHT_*: nave, EWR, veicolo). V. il commento SENSOR_HEIGHT_*.
