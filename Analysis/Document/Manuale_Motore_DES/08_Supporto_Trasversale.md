@@ -1,5 +1,9 @@
 # Capitolo 7 — Moduli di supporto trasversali
 
+> **Aggiornamento 2026-11-05 (codice `efa8f353`, blocco C della D-4b: siti EWR fissi; manuale riverificato a `f33902ba`).** Sette radar di installazione fissa nel registro `Vehicle_Data` come `Vehicle` **immobile**, con il marcatore `fixed_site` (§7.12, voce «Siti EWR fissi»): gli EWR del registro sono ora **15** e il registro **79 record**. Dati e un marcatore che nessuna regola legge,
+> **nessuna regola nuova e nessun interruttore**; fotografia invariata (1009 identiche). Cambiano in questo capitolo: §7.4 e §7.12 (riferimenti `Vehicle_Data.py` ricalcolati: +7 dopo la riga 109, +27 per i record EWR del nucleo) e §7.8 (testo sull'altezza d'antenna; **riferimenti a `Logic/Air_Route_Manager.py` aumentati di 4 dalla riga 657**: +3 per il commit `ed8d0fa3`, solo commenti
+> e docstring, del 2026-11-05 mattina, **che il manuale del 2026-11-04 non registrava**, e +1 per `efa8f353`, solo commento). Nessun codice del motore o del pianificatore cambia. **Suite e confronto non rieseguiti per questo aggiornamento** (`Ran 4757`, `OK (skipped=7)`, 1009 identiche: numeri verificati dalla sessione principale).
+>
 > **Aggiornamento 2026-11-04 (codice `37816355` D-4c e `cbc75634` D-4b; manuale riverificato a `b171f6a5`).** Due modifiche toccano moduli di questo capitolo e i registri che esso cita:
 > (1) **D-4c, sensore visivo di ripiego**: `Asset/Mobile.py` (terzo sensore `visual` in `DETECTION_SENSORS`, interruttore `D4C_VISUAL_SENSOR`, v. capitolo 3 §3.5), `Logic/Air_Route_Manager.py`
 > (fattore di raggio terrestre `visual` e ciclo `('radar', 'TVD', 'visual')`, §7.8) e `Asset/Vehicle_Data.py` (campo `visual` di ZSU-57-2 e M163-VADS); (2) **D-4b, radar EWR del nucleo**: otto record
@@ -229,7 +233,7 @@ massimo dei tre), e il risolutore non sa quale l'ha prodotta: non può quindi ri
 al radar la degradazione notturna che fisicamente non subisce. Il valore notturno è un
 compromesso fra i sensori, **pesato verso il radar** (`Logic/Engagement_Resolver.py:460-472`). **Conseguenza della D-4c**: per ZSU-57-2 e M163-VADS, che hanno **solo** il sensore
 visivo, di notte la portata di 6 km resta al fattore unico 0,7, mentre le fonti del dato dicono «tiro notturno impraticabile» (ZSU) e «solo tempo sereno» (entrambi): il visivo di notte è con ogni probabilità **sovrastimato** (per il M163 la capacità notturna è «limitata» e incerta, per la ZSU «impraticabile»: `Ricerca_Sensore_Visivo_ZSU57_M163_2026_10_29.md`, righe 36-37, 94-95; non rilette alla fonte primaria); i commenti dei record
-dichiarano «notte/meteo NON modellati per sensore» (`Asset/Vehicle_Data.py:3721`). La correzione per sensore richiede che la finestra di contatto porti il sensore (capitolo 9, «La Pd non distingue radar da ottico»).
+dichiarano «notte/meteo NON modellati per sensore» (`Asset/Vehicle_Data.py:3728`). La correzione per sensore richiede che la finestra di contatto porti il sensore (capitolo 9, «La Pd non distingue radar da ottico»).
 
 ## 7.5 Le dimensioni militari di `Block/Military.py`
 
@@ -500,7 +504,7 @@ il cilindro —, `min_altitude`/`max_altitude` dal cilindro, `source_id`, `edgeI
   per cui il pianificatore non ammette cambi di quota per aggirarlo, v. sotto), con raggio
   `min(acquisition_range, orizzonte_radar)`.
 
-### Orizzonte radar (`radar_horizon_range`, `:667-679`)
+### Orizzonte radar (`radar_horizon_range`, `:671-683`)
 
 ```
 d = sqrt(2*k*R_terra*h_antenna) + sqrt(2*k*R_terra*h_bersaglio)      k = 4/3 (radar standard)
@@ -509,15 +513,15 @@ d = sqrt(2*k*R_terra*h_antenna) + sqrt(2*k*R_terra*h_bersaglio)      k = 4/3 (ra
 Il fattore `k` dipende dal sensore: `EFFECTIVE_EARTH_RADIUS_FACTOR = {'radar': 4/3, 'TVD': 1.0, 'visual': 1.0}` (`Logic/Air_Route_Manager.py:647`); per `TVD` e `visual` si usa la sola linea di vista
 geometrica (`k = 1`), una **STIMA dichiarata** nel commento (`:636-646`). Con i 6 km del visivo l'orizzonte non limita mai (antenna di default 5 m: 7,98 km già con bersaglio a quota del sito; 27,5 km con bersaglio a 30 m).
 
-`build_detection_threat(asset, route_altitude)` (`:728-783`) prova in ordine i sensori `('radar', 'TVD', 'visual')` (`:758`) — la stessa sequenza di `Mobile.DETECTION_SENSORS`, scritta
+`build_detection_threat(asset, route_altitude)` (`:732-787`) prova in ordine i sensori `('radar', 'TVD', 'visual')` (`:762`) — la stessa sequenza di `Mobile.DETECTION_SENSORS`, scritta
 **letteralmente** perché `Air_Route_Manager` non importa `Mobile` a livello di modulo (ciclo d'import noto; la coerenza fra le due sequenze è verificata da un test, `Test_Threat_AA_Factory.test_sensor_tables_are_consistent`) —
-chiamando `Mobile.detection_range('air', sensor=...)` per ciascuno; per ognuno calcola `min(acquisition_range, orizzonte)` con l'altezza d'antenna di `sensor_antenna_height` (`:701`: chiave opzionale
-`antenna_height` del dizionario sensore, poi la stima per classe `SENSOR_HEIGHT_*`: veicolo 5 m, EWR 20 m, nave 30 m, `:656-658`), tiene quello col raggio **effettivo** maggiore (confronto stretto, `:768`: **a parità vince il primo sensore del ciclo**,
+chiamando `Mobile.detection_range('air', sensor=...)` per ciascuno; per ognuno calcola `min(acquisition_range, orizzonte)` con l'altezza d'antenna di `sensor_antenna_height` (`:705`: chiave opzionale
+`antenna_height` del dizionario sensore, poi la stima per classe `SENSOR_HEIGHT_*`: veicolo 5 m, EWR 20 m, nave 30 m, `:660-662`), tiene quello col raggio **effettivo** maggiore (confronto stretto, `:772`: **a parità vince il primo sensore del ciclo**,
 quindi l'ordine `radar, TVD, visual` fa parte del contratto) e restituisce `None` senza sollevare se l'asset non ha posizione o nessun `acquisition_range` aria utilizzabile (un carro senza sensori aria; ZSU-57-2 e M163-VADS
 **solo** con `Mobile.D4C_VISUAL_SENSOR` spento). Dal 2026-11-04 ZSU-57-2 e M163-VADS producono quindi un volume di rilevamento di **6 km** col sensore `'visual'` (prima: `None`, nessun vincolo di rotta; la verifica del test
 è `Test_Threat_AA_Factory.test_visual_fallback_systems_detect_by_sight`, `:439`, con la prova opposta a interruttore spento, `:453`). Il volume visivo è un volume di **rilevamento**: nessun volume d'intercettazione nuovo.
-Un sensore puro (EWR) produce la sua `DetectionThreat` senza bisogno di armi; dal 2026-11-04 il registro ha otto EWR (v. §7.12), con altezza d'antenna di 20 m salvo lo SCR-270 (`antenna_height` 16,8 m,
-dedotta da 55 ft, `Asset/Vehicle_Data.py:4655`). `build_air_defense_threats(asset, route_altitude)` (`:786-806`) restituisce
+Un sensore puro (EWR) produce la sua `DetectionThreat` senza bisogno di armi; dal 2026-11-04 il registro ha otto EWR mobili o semimobili e dal 2026-11-05 altri sette **siti fissi**, quindi **15** (v. §7.12). L'altezza d'antenna è di 20 m (`SENSOR_HEIGHT_EWR_M`) salvo i **quattro** record che dichiarano `antenna_height`: SCR-270 16,8 m (dedotta da 55 ft,
+`Asset/Vehicle_Data.py:4682`), Chain-Home 73 m (`:4906`), AMES-Type-80 11,4 m (`:4956`) e Wassermann 37 m (`:4982`), tutti **dedotti** e da leggere come limiti superiori (§7.12). Gli altri **11** record EWR usano i 20 m. `build_air_defense_threats(asset, route_altitude)` (`:790-810`) restituisce
 la coppia `(DetectionThreat, ThreatAA)` dello stesso sito, con lo **stesso `source_id`**: è il
 legame che il pianificatore d'attacco userà per sapere quando un sito ha già acquisito l'aereo
 (v. §7.9). **Limite noto**: il raggio d'intercettazione resta la sola portata dell'arma, senza il
@@ -536,27 +540,27 @@ prevale, altrimenti l'alias storico `intersecate_threat` (`False` → `AVOID`, `
 | `CROSS_UNINTERCEPTED` | Attraversa i volumi d'intercettazione con la corda di sicurezza (`intersecate_threat=True`). |
 | `AVOID_DETECTION` | Aggira i volumi di **rilevamento** e attraversa con la stessa corda limitata ogni volume d'intercettazione toccato comunque. |
 
-In `AVOID_DETECTION` (`calcRoute`, `:1399-1423`) il motore di ricerca dell'aggiramento (invariato)
+In `AVOID_DETECTION` (`calcRoute`, `:1403-1427`) il motore di ricerca dell'aggiramento (invariato)
 lavora sui volumi di rilevamento (`detections`); i volumi d'intercettazione (`threats`) diventano
 `cross_threats`, attraversati a corda limitata da `_cross_interception_while_avoiding`
-(`:1796-1903`) quando un arco già scelto per evitare il rilevamento li tocca comunque — **mai per
+(`:1800-1907`) quando un arco già scelto per evitare il rilevamento li tocca comunque — **mai per
 costruzione**: ogni intersezione è verificata sui volumi dichiarati (intersezione completa
 richiesta, corda massima da `calcMaxLenghtCrossSegmentInterception`, come in
 `CROSS_UNINTERCEPTED`), non assunta nulla dal solo fatto che il rilevamento sia stato evitato — per
 i SAM tipici (sensore e arma co-locati) i due volumi sono annidati, ma a bassa quota l'orizzonte
 radar può rendere il volume di rilevamento **più piccolo** di quello d'intercettazione. Nessun
-cambio di quota è ammesso per un volume di rilevamento (`_handle_threat_avoidance`, `:2330-2336`):
+cambio di quota è ammesso per un volume di rilevamento (`_handle_threat_avoidance`, `:2334-2340`):
 è costruito a una sola quota, e cambiarla richiederebbe ricostruirlo, non ancora fatto
 (proposta §3.6, Attività D, fuori scope di questo commit).
 
-### Metriche di rilevamento del percorso (decisione D-3/D-5, `Path.compute_detection_metrics`, `:1077-1146`)
+### Metriche di rilevamento del percorso (decisione D-3/D-5, `Path.compute_detection_metrics`, `:1081-1150`)
 
 Separate da `total_danger` (che resta la sola intercettazione): `detection_exposure_s` (somma
 delle durate nei volumi di rilevamento, volumi sovrapposti contati ciascuno), `first_detection_
 time_s` (primo ingresso, `None` se mai), `warning_time_s` (arrivo − primo rilevamento),
 `max_detection_probability` (replica **esatta** la legge di Pd del DES,
 `Engagement_Resolver.detection_probability`, come metrica di pianificazione — nessuna modifica al
-risolutore). `PathCollection.best_path_key(mode)` (`:1235-1246`) cambia il criterio di scelta del
+risolutore). `PathCollection.best_path_key(mode)` (`:1239-1250`) cambia il criterio di scelta del
 percorso migliore solo in `AVOID_DETECTION`: prima il minimo tempo sotto sensore, poi il pericolo
 residuo d'intercettazione, poi la lunghezza (altre modalità: la chiave storica pericolo→lunghezza).
 
@@ -571,8 +575,8 @@ per sito. Nessuna delle due entra in `air_defense_power()` per la parte di rilev
 
 ### Fuori perimetro, dichiarato
 
-Reti di sensori/cueing EWR→SAM (D-7); i **siti fissi** EWR (blocco C della Proposta dei sensori: Chain Home, AN/FPS-117, P-14, ...) e la **curva portata-quota** dei radar
-(`acquisition_profile`, dato conservato ma non letto da nessun codice: v. §7.12 e capitolo 9); attraversamento a corda limitata del **solo** rilevamento (D-5, opzione 2:
+Reti di sensori/cueing EWR→SAM (D-7); la **curva portata-quota** dei radar
+(`acquisition_profile`, dato conservato ma non letto da nessun codice: v. §7.12 e capitolo 9; i **siti fissi** EWR del blocco C sono **fatti** dal 2026-11-05, §7.12); attraversamento a corda limitata del **solo** rilevamento (D-5, opzione 2:
 richiederebbe un dato di tempo di permanenza del sensore e un cambio della legge del risolutore
 DES); la firma a due liste minacce di `plan_attack_profile` (D-8) — implementata insieme al
 pianificatore d'attacco, v. §7.9.
@@ -881,23 +885,46 @@ Modifiche ai registri d'arma e d'aereo, senza codice consumatore nuovo ma con ef
   mezzi: Howell/DC-3 riportato a un caccia, intervallo 3-8 km); solo il modo `air`. Dati di fonte a confidenza media: `tracking_range` 5,5 (ZSU) e 5 (M163), `engagement_range` 4 e 1,2. Non è nel `TVD` **di proposito**: un `TVD` entra in `_TVD_eval`
   e in `_reliability_eval` e sposterebbe la normalizzazione globale di tutti i modelli (la ZSU-57-2 è il minimo globale del combat score, 0,2714 secondo la sonda della Proposta §1.4, non rieseguita); `visual` non entra in nessuno score del registro, quindi il combat score
   dei due mezzi **non riflette** la loro capacità di vedere. Effetto sul DES: da «mai un colpo a un aereo» a «ingaggiano entro la portata dell'arma» (scenario S31-VISUAL, capitolo 8 §8.13). Non cambia nessuna esecuzione preesistente (nessuno scenario usava i due modelli).
-- **Radar EWR del nucleo (D-4b, `cbc75634`, 2026-11-04)**: otto record nuovi in `Asset/Vehicle_Data.py`, `category` e `roles` `'EWR'`, registrati in coda dopo `S300PS_data` (`:4908-4915`): `SCR-270` (`:4633`), `FuMG-80-Freya` (`:4660`), `P-12-Yenisei` (`:4683`),
-  `P-18-Terek` (`:4706`), `P-37-Mech` (`:4731`), `1L13-Nebo-SV` (`:4753`), `55Zh6-Nebo` (`:4777`), `AN-TPS-43` (`:4802`). I nomi DCS («1L13 EWR», «55G6 EWR») sono solo commenti, non chiavi. Il sensore è di **sola scoperta aria**:
+- **Radar EWR del nucleo (D-4b, `cbc75634`, 2026-11-04)**: otto record nuovi in `Asset/Vehicle_Data.py`, `category` e `roles` `'EWR'`, registrati in coda dopo `S300PS_data` (`:5119-5126`; riferimenti ricalcolati al 2026-11-05, dopo il blocco C): `SCR-270` (`:4660`), `FuMG-80-Freya` (`:4687`), `P-12-Yenisei` (`:4710`),
+  `P-18-Terek` (`:4733`), `P-37-Mech` (`:4758`), `1L13-Nebo-SV` (`:4780`), `55Zh6-Nebo` (`:4804`), `AN-TPS-43` (`:4829`). I nomi DCS («1L13 EWR», «55G6 EWR») sono solo commenti, non chiavi. Il sensore è di **sola scoperta aria**:
   `radar['capabilities']['air'] = (True, {tracking_range: 0, acquisition_range: X, engagement_range: 0, multi_target_capacity: 0})` (solo il P-18 ha `multi_target_capacity` 10, di fonte, confidenza media), `ground` e `sea` `False`; nessuna arma (`weapons: {}`),
   `TVD` `False`, nessun `visual`. `acquisition_range` [km]: SCR-270 160, Freya 120, P-12 200, P-18 180, P-37 280, 1L13 250, 55Zh6 400, AN/TPS-43 440; **sono dati di fonte a confidenza da media-alta (P-18, SCR-270) a bassa-media (AN/TPS-43), non uniformi nella quota di riferimento**: il commento di
   ogni record dichiara a quale bersaglio e quota si riferisce (SCR-270: un singolo bombardiere a 6100 m, quindi sovrastima contro un caccia; P-18 e 1L13: caccia a 10 000 m; 55Zh6: caccia a 20 000 m, confidenza media-bassa, da una fonte di seconda mano; Freya, P-12, P-37, AN/TPS-43: quota non qualificata;
   Freya con contraddizione 120/160/200 km fra le fonti). La **scelta di progetto** (decisione 7, «opzione (a)») è un solo `acquisition_range` per record, dalla portata alla quota di crociera, **senza orizzonte nel DES** (limite, capitolo 9).
-  **`acquisition_profile`** (coppie `(quota m, portata km)` di fonte) è conservato come dato **solo nei quattro record che ne hanno uno** (SCR-270, P-18, 1L13, 55Zh6) e **non è letto da nessun codice** (verificato con `grep`: compare solo in `Vehicle_Data.py` e nei test): serve a una Proposta futura sulla curva portata-quota.
-  `reliability` dei radar: `{'mtbf': 45, 'mttr': 4}`, **STIMA generica del registro** (decisione 12 dell'utente: i valori di fonte, per esempio MTBF 140 h del P-18, stanno solo nel commento); `antenna_height` dichiarata **solo** per lo SCR-270 (16,8 m, dedotta da 55 ft), gli altri
-  usano i 20 m di `SENSOR_HEIGHT_EWR_M`. I **campi non-sensore** (dimensioni, costo, autonomia, velocità, comunicazioni) sono **tutti stime di schema**, prodotte in un solo punto da `_ewr_support_fields(mobility)` (`:4579`; `'mobile'` per SCR-270, P-12, P-18, 1L13, AN/TPS-43;
-  `'semi_mobile'` per Freya, P-37, 55Zh6) e dichiarate tali: servono a soddisfare lo schema di `Vehicle_Data`, non sono dati.
+  **`acquisition_profile`** (coppie `(quota m, portata km)` di fonte) è conservato come dato **solo nei quattro record del nucleo che ne hanno uno** (SCR-270, P-18, 1L13, 55Zh6; i siti fissi ne aggiungono due, AMES-Type-7 e Wassermann, quindi sei su quindici) e **non è letto da nessun codice** (verificato con `grep`: compare solo in `Vehicle_Data.py` e nei test): serve a una Proposta futura sulla curva portata-quota.
+  `reliability` dei radar: `{'mtbf': 45, 'mttr': 4}`, **STIMA generica del registro** (decisione 12 dell'utente: i valori di fonte, per esempio MTBF 140 h del P-18, stanno solo nel commento); `antenna_height` dichiarata, **fra gli otto del nucleo, solo** per lo SCR-270 (16,8 m, dedotta da 55 ft), gli altri sette
+  usano i 20 m di `SENSOR_HEIGHT_EWR_M` (i siti fissi ne dichiarano tre in più, v. la voce seguente). I **campi non-sensore** (dimensioni, costo, autonomia, velocità, comunicazioni) sono **tutti stime di schema**, prodotte in un solo punto da `_ewr_support_fields(mobility)` (`:4586`; `'mobile'` per SCR-270, P-12, P-18, 1L13, AN/TPS-43;
+  `'semi_mobile'` per Freya, P-37, 55Zh6; dal blocco C anche `'fixed'`, v. sotto) e dichiarate tali: servono a soddisfare lo schema di `Vehicle_Data`, non sono dati.
+- **Siti EWR fissi (D-4b, blocco C, `efa8f353`, 2026-11-05; Proposta `Proposta_Dati_Sensori_EWR_Siti_Fissi.md`, decisioni C-0..C-4 dell'utente)**: sette radar di installazione fissa nel registro `Vehicle_Data`, che con gli otto del nucleo portano gli **EWR a 15** e il registro a **79 record**
+  (conteggio delle righe `Vehicle_Data(**...)` di registrazione, `grep -c`). Il modello è **A**: un `Vehicle` **immobile** con un marcatore esplicito nel record; **niente `Structure` con sensore e nessun registro `Structure_Data`** (oggi `Asset/Structure.py` non ha `detection_range`: verificato con `grep`, nessuna occorrenza di `detection_range`, `def speed` e `fuel`).
+  - **Chiavi stabili e ordine di registrazione** (`Asset/Vehicle_Data.py:5129-5135`, record `:4858-5034`): `AN-FPS-117` (`AN_FPS117_data`, `:4858`), `Chain-Home` (`:4883`), `AMES-Type-7` (`:4910`), `AMES-Type-80` (`:4935`), `Wassermann` (`:4960`), `Mammut` (`:4987`), `P-14-Lena` (`:5011`), subito dopo `AN_TPS43_data`.
+    **L'AN/FPS-20 è escluso** (decisione C-0): la fonte è contraddittoria (322 o 407 km, entrambe non qualificate, confidenza bassa), quindi non c'è un record con un numero da dichiarare stima. Il nome DCS «FPS-117» resta un commento, non una chiave.
+  - **Il marcatore `fixed_site`** (`fixed_site: bool = False`, **ultimo argomento** del costruttore, `Asset/Vehicle_Data.py:71`; assegnato a `self.fixed_site`, `:109`). Il costruttore ne **valida il tipo prima di registrare** il record (`:84-85`, `ValueError` se non è un `bool`), così un record invalido non entra nel registro (test `test_constructor_rejects_a_non_bool_marker`).
+    È `True` solo nei sette record (lo imposta il ramo `'fixed'` di `_ewr_support_fields`, `:4647-4648`), `False` per tutti gli altri 72. **Nessuna regola del motore lo legge** (né il DES né il pianificatore: `grep -rn fixed_site` sul codice non di test lo trova solo in `Asset/Vehicle_Data.py`, nel costruttore, in `_ewr_support_fields` e nei commenti): serve a dichiarare l'eccezione nei dati (per esempio il test sulla velocità, v. sotto) e a rendere **meccanica** una futura migrazione a `Structure`
+    (`[r for r in registro.values() if r.fixed_site]`), che però richiederà **codice**, non solo dati: `Structure` non ha né `detection_range` né i metodi di `Mobile` (velocità, carburante, sensori). **Nessun interruttore**: sono dati nuovi e un marcatore inerte, non una regola (la stessa ragione del blocco B); se il marcatore diventasse una regola (immobilità imposta, v. limiti), quella avrebbe il suo interruttore.
+  - **Il ramo `'fixed'` di `_ewr_support_fields`** (`:4617-4624`, più l'aggiunta del marcatore a `:4647-4648`). Velocità **0** nei tre regimi (`sustained`, `max`, `off_road`, con `consume` 0): è un **dato vero**, il sito non si muove. `range` **1 km**: è un **SEGNAPOSTO di schema, non un'autonomia**, il primo intero positivo, richiesto da `test_range_is_positive_number`
+    (`Test/Test_Vehicle_Data.py:320`, che chiede `range > 0` per ogni record e **non è stato toccato**). Con velocità 0 `Fuel_Model.cruise_speed` e `max_speed` danno `None` e un sito fermo non consuma; `Mobile.fuel_autonomy` dà 1000 m (`range` 1 km, `Asset/Mobile.py:1260`; per `range <= 0` darebbe `None`, `:1311-1315`), ma nessuna regola legge l'autonomia di un asset fermo.
+    Dimensioni **30 x 10 x 20 m, 50 t** (classe `'big'`, le torri del Chain Home non sono rappresentate), costo **10 M$** (non consumato dal motore) e `consume` 0 sono **stime di schema**, dichiarate nel codice (`:4618-4624`). I rami `'mobile'` e `'semi_mobile'` non cambiano nei valori (controllato dall'esecutore sul diff, rapporto `Rapporti/Rapporto_sensori_C_des-developer.md` §3).
+  - **Portate** (`acquisition_range` aria, km; sensore di sola scoperta aria come per il nucleo: `tracking_range` e `engagement_range` 0, `multi_target_capacity` 0 = «non trovato»): `AN-FPS-117` **330** (scheda Lockheed via riassunto di ricerca, Pd 80 % contro 1 m², quota non specificata, confidenza media-alta; la portata strumentale 10-470 km **non** è usata), `Chain-Home` **160** (bombardieri ad alta quota,
+    confidenza media; contraddizione 160/190 km), `AMES-Type-7` **140** (contro un bombardiere a 6100 m, confidenza media), `AMES-Type-80` **390** (caccia grande o bombardiere piccolo, confidenza media; 440 km dell'infobox non usato), `Wassermann` **190** (a **6000 m** di quota, non 10 000, confidenza media; i 300 km sono una portata massima strumentale non usata),
+    `Mammut` **300** e `P-14-Lena` **400**. Questi ultimi due sono **fonti deboli trattate come STIMA** (bersaglio non qualificato; confidenza media-bassa per il Mammut, bassa-media per il P-14): il commento del record lo dichiara. Due record conservano un `acquisition_profile` di fonte, **non letto da nessun codice**
+    (come per il nucleo): `AMES-Type-7` `((150, 16), (6100, 140))` e `Wassermann` `((50, 35), (6000, 190))`; gli altri cinque non ne hanno.
+  - **Affidabilità**: `reliability` `{'mtbf': 45, 'mttr': 4}` = la **STIMA generica** del registro (decisione 12) per sei siti. **Eccezione**: `AN-FPS-117` ha `{'mtbf': 2000, 'mttr': 0.75}` **da fonte** (Lockheed: MTBF critico «oltre 2000 h», quindi un limite inferiore; MTTR «meno di 45 min» = 0,75 h per conversione, quindi un limite superiore; confidenza media-alta, decisione C-2): è l'unico EWR del registro con entrambi di fonte.
+    Le due grandezze non entrano in nessuna regola del DES; entrano solo negli score del registro, che nessun consumatore legge (v. sotto).
+  - **Altezza d'antenna** (`antenna_height` nel dizionario `radar`, letta dal solo pianificatore, §7.8): `Chain-Home` **73 m** (`:4906`, altezza delle torri riceventi), `Wassermann` **37 m** (`:4982`, minimo dell'intervallo 37-57 m del traliccio), `AMES-Type-80` **11,4 m** (`:4956`, torre piramidale di 7,6 m più metà del riflettore, 3,8 m): tutte **DEDOTTE** (decisione C-3) e da leggere come
+    **limiti superiori**. Gli altri **quattro** (`AN-FPS-117`, `AMES-Type-7`, `Mammut`, `P-14-Lena`) usano i 20 m di `SENSOR_HEIGHT_EWR_M` (**stima**; per il Type 7 l'antenna è in un pozzo a terra e l'altezza non è data). Il commento di `Logic/Air_Route_Manager.py:649-659` elenca ora i quattro record che dichiarano il dato e gli undici che usano la stima. Nel DES l'altezza non conta (non c'è orizzonte).
+  - **Effetti sul resto del registro** (Proposta §1.4, sonda S-2 della Proposta; **non rieseguita** per questo aggiornamento). Il combat score **globale** dei record preesistenti è invariato **per costruzione** (G2: la categoria EWR è fuori dalla popolazione globale, `GLOBAL_COMBAT_SCORE_EXCLUDED_CATEGORIES`, `:64`); il globale dei siti satura in [0, 1] (test dedicato). Si **spostano** invece: gli score di **categoria** EWR degli otto mobili (la popolazione EWR passa da 8 a 15)
+    e altri score globali (velocità, portata, radar, affidabilità, disponibilità: il minimo di velocità diventa 0 e l'AN-FPS-117 è il nuovo massimo di MTBF). **Nessun consumatore oggi** (ricerca della Proposta, non rifatta qui): `category_score` non è letto fuori dai moduli dati e dai test, e `Vehicle.set_combat_power` legge il globale. Un consumatore futuro dovrà tenerne conto.
+  - **Come si comporta un sito nel motore.** Come gli EWR del nucleo, e senza regole nuove: `isEWR` vero e combat power di terra 0; `build_threat_aa` dà `None`; `Military.air_detection_threats()` include il suo volume di rilevamento; **rileva e non spara mai**, **non consuma** e **è un bersaglio** (`Fire_Control.target_class` lo classifica `air_defence`, `Logic/Fire_Control.py:608-609`);
+    `emits_radar` vero ma `sam_category` e profilo AD `None`, quindi è **fuori dal catalogo RWR**; gli inventari di campagna EWR restano vuoti (decisione 17, non ricontrollato nei file). **Nessun cueing EWR→SAM** (D-7, fuori perimetro). Nello scenario di prova della Proposta (sonda S-2, non riverificata) un A-10C lo colpisce.
+  - **Limiti** (capitolo 9 §9.1): immobilità **non imposta** dal motore, DES senza orizzonte radar (portate di 300-400 km anche per bersagli radenti, costo di calcolo delle finestre non misurato), copertura angolare non modellata (Mammut circa 100 gradi, Chain-Home 150, trattati come omnidirezionali), torri non rappresentate, siti WWII a lettura manuale senza latenza di plotting.
 - **Combat score globale senza EWR (D-4b, G2)**: un EWR non combatte (combat power 0 per definizione, `Context/Context.py:775-777`) e, senza armi né corazza, avrebbe il combat score più basso del registro, abbassando il minimo e **riscalando la combat power di ogni `Vehicle`**.
-  `GLOBAL_COMBAT_SCORE_EXCLUDED_CATEGORIES = frozenset({EWR})` (`Asset/Vehicle_Data.py:64`) toglie la categoria dalla popolazione di `get_normalized_combat_score()` **nel solo caso globale** (`category` non passato, `:959-981`), e il risultato globale è
+  `GLOBAL_COMBAT_SCORE_EXCLUDED_CATEGORIES = frozenset({EWR})` (`Asset/Vehicle_Data.py:64`) toglie la categoria dalla popolazione di `get_normalized_combat_score()` **nel solo caso globale** (`category` non passato, `:966-988`; la costante è la stessa per tutti i **15** EWR, siti fissi compresi), e il risultato globale è
   **saturato in [0, 1]** (un EWR normalizzato su una popolazione che non lo contiene resta nell'intervallo). Nessun interruttore (decisione 9). Si **spostano** invece gli score globali `radar`, `weapon`, `reliability` e `availability` dei record preesistenti (per esempio il P-18 è il nuovo massimo
   radar): la Proposta (§1.4) non trova consumatori di questi score fuori dai moduli dati; **non rifatta la ricerca**, ma va tenuta presente da chi ne introdurrà uno.
-- **Come si comporta un EWR nel motore** (tutto verificato sul codice, nessuna regola nuova): `Vehicle.isEWR` (`Asset/Vehicle.py:298-299`); `build_threat_aa` dà `None` (nessuna arma AD) e `Military.air_detection_threats()` include il suo volume di rilevamento (§7.8); in sessione, secondo la Proposta (§1.3, sonda E-4: dichiarata dalla Proposta, non riverificata qui), **rileva** (percezione condivisa del dominio) e
+- **Come si comporta un EWR nel motore** (vale per gli otto del nucleo e per i sette siti fissi; tutto verificato sul codice, nessuna regola nuova): `Vehicle.isEWR` (`Asset/Vehicle.py:298-299`); `build_threat_aa` dà `None` (nessuna arma AD) e `Military.air_detection_threats()` include il suo volume di rilevamento (§7.8); in sessione, secondo la Proposta (§1.3, sonda E-4: dichiarata dalla Proposta, non riverificata qui), **rileva** (percezione condivisa del dominio) e
   **non spara mai** (nessun `AmmunitionEvent` dell'EWR, asserito da `Test_EWR_Data`; come bersaglio è classificato `air_defence`, `Logic/Fire_Control.py:596-608`). **Non emette per gli RWR**: `emits_radar` è `True` (ha un radar aria), ma `sam_category` è `None` perché `roles` contiene solo `'EWR'` e non c'è nessuna arma SAM (`Context/Air_Defense_Efficacy.py:523-552`, `_ROLE_CATEGORY` `:518`),
-  quindi un EWR resta **fuori da `default_rwr_catalogue`** (`:697-698`) e il flag `ewr` di `Aircraft_Rwr_Data` resta senza effetto (§7.10). I test sono `Test_EWR_Data.py` (capitolo 8 §8.13). Gli inventari di campagna (`Initial_Context`/`Actual_Context`) restano a `ag.EWR.value: {}`: la Proposta li lascia vuoti (decisione 17), **non ricontrollato** nei file.
+  quindi un EWR resta **fuori da `default_rwr_catalogue`** (`:697-698`) e il flag `ewr` di `Aircraft_Rwr_Data` resta senza effetto (§7.10). I test sono `Test_EWR_Data.py` (capitolo 8 §8.13; 30 test, di cui 15 dei siti fissi). Gli inventari di campagna (`Initial_Context`/`Actual_Context`) restano a `ag.EWR.value: {}`: la Proposta li lascia vuoti (decisione 17), **non ricontrollato** nei file.
 
 ## 7.13 Dati di campagna: i tempi di turnaround e riparazione e `Campaign_State` (F8c, F8-R)
 

@@ -6,6 +6,9 @@ Modulo: `Logic/Contact_Scheduler.py`.
 > cambia la **fonte** delle portate che `mutual_detection_ranges` chiede ai due asset: `Mobile.detection_range` compone ora **tre** sensori (`radar`, `TVD`, `visual`) e il terzo sta dietro un interruttore, v. §3.5 («Composizione dei sensori»). Nessuna
 > logica dello scheduler è nuova; cambiano i dati e il punto di lettura nel registro.
 >
+> **Aggiornamento 2026-11-05 (codice `efa8f353`, blocco C della D-4b: siti EWR fissi).** `Logic/Contact_Scheduler.py` **non cambia** nemmeno qui (`git diff 6dee967b efa8f353 -- Code` non lo tocca). Il registro ha sette portate nuove, da 140 a 400 km, che lo scheduler legge
+> per il solo canale già descritto (`Mobile.detection_range`); la nota nuova di §3.5 («Siti EWR fissi») dice che cosa significano per le finestre di contatto, dato che il DES non ha orizzonte radar.
+>
 > **Verificato a `fa5fbf1e` (2026-10-23): il modulo è invariato da `dcedc541`** (`Logic/Contact_Scheduler.py` non compare in `git diff dcedc541..HEAD -- Code`; la
 > fase F8 non lo tocca: `position_on_legs` è usata dalla porta di uscita per le `final_positions`, capitolo 6 §6.24). Cambiano solo i riferimenti ai moduli che cambiano
 > (`Session_Simulator`), ricalcolati su `fa5fbf1e`; quelli a questo file restano validi.
@@ -144,15 +147,15 @@ asset. Dal 2026-11-04 i sensori riconosciuti sono tre, `DETECTION_SENSORS = ("ra
   richiesti (`Asset/Mobile.py:1636-1653`, in metri): non la somma, perché guardano lo stesso bersaglio. Un sensore assente (`False`/`None`/attributo mancante), cieco su quel
   modo o con valore nullo dà «nessun raggio» e non solleva nulla (`_sensor_range_km`, `:1533-1568`); se nessun sensore dà un raggio, il risultato è `None`.
 - **Con `sensor='visual'`** si isola il solo sensore visivo. `ValueError` solo per argomenti fuori dominio (`:1614-1618`).
-- **Il campo `visual` esiste solo nei record di `Vehicle_Data`** (argomento `visual: Optional[Dict] = None`, `Asset/Vehicle_Data.py:71`, assegnato a `self.visual`, `:102`) ed
-  è valorizzato per due modelli, `ZSU-57-2` e `M163-VADS` (`Asset/Vehicle_Data.py:3722`, `:3843`): nei registri delle navi e degli aerei, e negli altri veicoli, `getattr(record, 'visual', None)` è `None`
+- **Il campo `visual` esiste solo nei record di `Vehicle_Data`** (argomento `visual: Optional[Dict] = None`, `Asset/Vehicle_Data.py:71`, assegnato a `self.visual`, `:104`) ed
+  è valorizzato per due modelli, `ZSU-57-2` e `M163-VADS` (`Asset/Vehicle_Data.py:3729`, `:3850`): nei registri delle navi e degli aerei, e negli altri veicoli, `getattr(record, 'visual', None)` è `None`
   e `_sensor_range_km` lo scarta (è il caso normale, descritto nel commento di `Asset/Mobile.py:62-81`). Il sensore ha la **stessa forma** di `radar`/`TVD` (`capabilities[modo] = (bool, {...})`), non ha `reliability`
-  e **non entra negli score del registro** (`_TVD_eval`, `_radar_eval`, `_reliability_eval`, `_combat_eval` non lo leggono: commento di `Vehicle_Data.py:100-102`).
+  e **non entra negli score del registro** (`_TVD_eval`, `_radar_eval`, `_reliability_eval`, `_combat_eval` non lo leggono: commento di `Vehicle_Data.py:102-103`).
 - **Interruttore `Mobile.D4C_VISUAL_SENSOR`** (default **`True`**, `Asset/Mobile.py:92`). È una variabile di modulo **letta a ogni chiamata** di `detection_range` (`:1638-1640`): con l'interruttore
   spento il sensore `visual` è tolto dall'elenco e `detection_range(..., sensor='visual')` dà `None`, cioè si ritorna al comportamento precedente (ZSU-57-2 e M163-VADS senza portata propria). Essendo letto
   a ogni chiamata, lo si sostituisce nei test con `patch.object(<modulo di Mobile>, 'D4C_VISUAL_SENSOR', False)`; copiarlo in una variabile locale al caricamento lo renderebbe inefficace.
 - **Che cosa c'è nel dato** (`acquisition_range` aria, km): **6 per entrambi i modelli, una STIMA a confidenza bassa** (Howell/DC-3 riportato alle dimensioni di un caccia, intervallo plausibile 3-8 km), dichiarata come tale
-  nei commenti dei record (`Asset/Vehicle_Data.py:3716-3721`, `:3838-3842`); `tracking_range` 5,5 (ZSU) e 5 (M163), `engagement_range` 4 (ZSU) e 1,2 (M163) sono dati di fonte a confidenza media, `multi_target_capacity` 1 dedotto.
+  nei commenti dei record (`Asset/Vehicle_Data.py:3723-3728`, `:3845-3849`); `tracking_range` 5,5 (ZSU) e 5 (M163), `engagement_range` 4 (ZSU) e 1,2 (M163) sono dati di fonte a confidenza media, `multi_target_capacity` 1 dedotto.
   Solo il modo `air` è dichiarato (`ground` e `sea` hanno `False` e portate 0). **Notte e meteo non sono modellati per sensore**: il visivo subisce l'unico fattore notturno 0,7 come ogni altro sensore
   (capitolo 7 §7.4; limite in capitolo 9). Il DES non applica **nessun orizzonte** alla portata (lo applica solo il pianificatore di rotta, capitolo 7 §7.8).
 
@@ -163,6 +166,15 @@ lo scenario **S31-VISUAL** (capitolo 8 §8.13). I 6 km sono una stima: la probab
 **Determinismo.** Per questi due modelli `_detect_direction` ora **supera** il controllo `own_range is None` e arriva all'estrazione `self._draw()` (`:2001`): lo stream dell'RNG di sessione guadagna un'estrazione per finestra con un aereo in cui l'osservatore è uno dei due
 mezzi. Lo stream cambia **solo nelle sessioni che contengono ZSU-57-2 o M163-VADS** (nessuna di quelle della fotografia preesistente: 989 identiche, capitolo 8 §8.7); `_air_detection_range` (`:3052`) restituisce ora 6000 m per i due mezzi ma serve solo agli intercettori
 (task `Anti_Missile`), che ZSU-57-2 e M163-VADS non sono secondo i task dei loro cannoni (`Asset/Ground_Weapon_Data.py:2254-2300`: `Anti_Air` e `Infantry_Support`; la deduzione sul ruolo di intercettore è della Proposta §A.4, non riverificata riga per riga).
+
+**Siti EWR fissi (D-4b, blocco C, 2026-11-05).** Nessuna riga di questo modulo né del risolutore cambia: sette record di `Vehicle_Data` (marcatore `fixed_site`, capitolo 7 §7.12) hanno il solo sensore `radar`, con `acquisition_range` aria di 330 (AN-FPS-117), 160 (Chain-Home), 140 (AMES-Type-7), 390 (AMES-Type-80),
+190 (Wassermann), 300 (Mammut) e 400 km (P-14-Lena), e `Mobile.detection_range('air')` le legge come quelle di ogni altro radar, in metri. Che cosa significano per le finestre di contatto:
+
+- **Nessun orizzonte nel DES.** Come per gli otto EWR del blocco B (capitolo 9 §9.1, «Limiti dei sensori EWR e visivo»), la portata del registro vale **anche per un bersaglio radente**: il pianificatore di rotta la taglia con l'orizzonte e con l'altezza d'antenna del record (capitolo 7 §7.8), il DES no. Con 300-400 km di raggio
+  `mutual_detection_ranges` (`:972`) dà a `contact_windows` (`:1023`) finestre con aerei lontanissimi dal sito. **Il costo di calcolo di queste finestre non è stato misurato**: nessuno scenario della fotografia contiene un sito (le 1009 esecuzioni sono identiche proprio per questo), quindi nessuna misura esiste; è un limite dichiarato, non una verifica.
+- **Il sito è fermo.** I tre regimi di velocità del record valgono 0; un sito che non è in nessuna missione è «fermo in posizione» (docstring di `run_session`, `Logic/Session_Simulator.py:2191`) e non produce tratti di movimento. Non consuma carburante: `Fuel_Model.cruise_speed` dà `None` per una velocità 0 (`Logic/Fuel_Model.py:330-343`) e un tratto fermo
+  di un asset senza crociera nota non consuma (`_leg_equivalent`, `:346-358`). L'autonomia `range` del record (1 km) è un **segnaposto di schema** e nessuna regola la legge per un asset fermo (capitolo 7 §7.12).
+- **Copertura angolare.** Lo scheduler e il risolutore non hanno settori di scoperta: Mammut (fascio su un arco di circa 100 gradi) e Chain-Home (150 gradi) sono trattati come omnidirezionali (capitolo 9 §9.1).
 
 **Aereo a terra (F4c).** `mutual_detection_ranges(asset_a, asset_b, range_type, *, grounded_a=False,
 grounded_b=False)` (`:972-1020`) e `contact_windows(..., *, grounded_a=False, grounded_b=False)` (`:1023-1100`)

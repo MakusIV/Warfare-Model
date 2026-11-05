@@ -38,6 +38,10 @@ dei moduli (`grep -c ''`) sono quelle della tabella di §10.4. Non sono stati es
 già noto, v. «Limiti e domande» di questo capitolo) **prima e dopo** questo aggiornamento (confronto riga per riga, ignorando i numeri di riga: nessuna differenza) e `--copertura` su `Contact_Scheduler`, `Engagement_Resolver`, `Fuel_Model` e `Readiness` non segnala simboli non citati, né prima né dopo. **Limite**: lo strumento **non controlla i `:riga`** (solo gli identificatori dei blocchi Mermaid), quindi la validità dei riferimenti di riga
 dell'atlante non è stata verificata dallo strumento ma con il confronto `git diff 191b7d37 HEAD` per modulo (v. sopra). Nessun diagramma è stato modificato.
 
+**Nota 2026-11-05 (dopo `efa8f353`, blocco C della D-4b: siti EWR fissi).** Il blocco C tocca le **stesse tre sorgenti non del core** (`Asset/Vehicle_Data.py`: sette record e il marcatore `fixed_site`; `Logic/Air_Route_Manager.py`: un solo commento; e i test), più il commit di soli commenti `ed8d0fa3` del mattino (`git diff 6dee967b HEAD -- Code/`): **nessun modulo del core** dell'atlante cambia, le tabelle di §10.4 e i `:riga` dei diagrammi D57-D129 restano validi
+(`git diff 6dee967b HEAD -- Code/` non compare per `Contact_Scheduler`, `Engagement_Resolver`, `Fire_Control`, `Fuel_Model`, `Mission_Adapter` né `Session_Simulator`) e **nessun diagramma cambia**. Unica correzione di riga: il riferimento a `Air_Route_Manager.py` di `11a_Atlante_Risolutore.md` (import locale di `detection_probability`) passa da `:1099` a **`:1103`**, nei tre punti in cui compare. Capitolo 3 §3.5, capitolo 7 §7.12, capitolo 8 §8.13 e capitolo 9 §9.1 descrivono il blocco.
+**Non rieseguito** `_strumenti/inventario.py` per questo aggiornamento (nessun blocco Mermaid né identificatore del core è stato toccato).
+
 ## 10.2 Tabella-atlante
 
 I link portano al capitolo che contiene il diagramma; il titolo di ogni D1-D56 è quello dell'«Elenco dei diagrammi» di `Manuale_Motore_DES.md`.
