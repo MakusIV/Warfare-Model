@@ -68,7 +68,7 @@ class Vehicle_Data:
 
     _registry = {}
     
-    def __init__(self, constructor: str, made: str, model: str, category: str, physical_characteristics: Dict, start_service: str, end_service: str, cost: int, range: int, roles: str, engine: Dict, weapons: Dict, radar: Dict, TVD: Dict, communication: Dict, hydraulic: Dict, protections: Dict, speed_data: Dict, users: Optional[List[str]] = None, visual: Optional[Dict] = None):
+    def __init__(self, constructor: str, made: str, model: str, category: str, physical_characteristics: Dict, start_service: str, end_service: str, cost: int, range: int, roles: str, engine: Dict, weapons: Dict, radar: Dict, TVD: Dict, communication: Dict, hydraulic: Dict, protections: Dict, speed_data: Dict, users: Optional[List[str]] = None, visual: Optional[Dict] = None, fixed_site: bool = False):
         _PC_KEYS = {'length', 'width', 'height', 'weight'}
         if not isinstance(physical_characteristics, dict) or not _PC_KEYS.issubset(physical_characteristics):
             raise ValueError(
@@ -81,6 +81,8 @@ class Vehicle_Data:
                     f"physical_characteristics['{_k}'] must be a positive int, "
                     f"got: {physical_characteristics[_k]!r}"
                 )
+        if not isinstance(fixed_site, bool):
+            raise ValueError(f"fixed_site must be a bool, got: {fixed_site!r}")
 
         self.constructor = constructor
         self.made = made
@@ -100,6 +102,11 @@ class Vehicle_Data:
         # Sensore visivo dell'equipaggio (D-4c): stessa forma di `radar`/`TVD`, nessuna `reliability`; NON entra
         # negli score (`_TVD_eval`, `_radar_eval`, `_reliability_eval`, `_combat_eval`). None per quasi tutti i modelli.
         self.visual = visual
+        # Marcatore dei SITI FISSI (D-4b blocco C, Proposta_Dati_Sensori_EWR_Siti_Fissi.md): True = installazione
+        # fissa modellata come Vehicle immobile (velocita' 0 nei tre regimi, `range` segnaposto). Nessuna regola del
+        # motore lo legge: serve a dichiarare l'eccezione nei dati e a rendere meccanica una futura migrazione a
+        # Structure. False per tutti gli altri record (default).
+        self.fixed_site = fixed_site
         self.communication = communication
         self.hydraulic = hydraulic
         self.protections = protections
@@ -4580,31 +4587,46 @@ def _ewr_support_fields(mobility: str) -> Dict:
     """Campi NON sensore dei record EWR (D-4b): TUTTI STIME DI SCHEMA DICHIARATE, nessuna fonte.
 
     Servono a soddisfare lo schema di Vehicle_Data (dimensioni intere positive, costo e autonomia > 0, velocita').
-    `mobility`: 'mobile' (radar su autocarro) | 'semi_mobile' (rimorchi, messa in opera di ore).
+    `mobility`: 'mobile' (radar su autocarro) | 'semi_mobile' (rimorchi, messa in opera di ore) |
+    'fixed' (sito fisso, blocco C: Proposta_Dati_Sensori_EWR_Siti_Fissi.md).
     Restituisce dizionari NUOVI a ogni chiamata (nessuna struttura condivisa fra record).
 
     Il `communication` porta una `reliability` {'mtbf': 45, 'mttr': 3} [S], come i "generic comm model"
     del registro. Con la decisione 12 il radar ha una `reliability` propria 45/4, quindi questa non
     serve piu' a evitare la lista vuota di `_reliability_eval`: resta per coerenza di schema.
+
+    Ramo 'fixed': aggiunge `fixed_site: True`; velocita' 0 nei tre regimi (dato vero: il sito non si muove) e
+    `range` 1 km, SEGNAPOSTO di schema (non un'autonomia: il primo intero positivo, richiesto dallo schema; un
+    sito fermo non consuma, v. Fuel_Model.cruise_speed). L'asset e' l'installazione d'antenna con il suo supporto.
     """
-    if mobility not in ('mobile', 'semi_mobile'):
-        raise ValueError(f"mobility must be 'mobile' or 'semi_mobile', got {mobility!r}.")
+    if mobility not in ('mobile', 'semi_mobile', 'fixed'):
+        raise ValueError(f"mobility must be 'mobile', 'semi_mobile' or 'fixed', got {mobility!r}.")
+
+    consumes = (0.4, 0.55, 0.7)
 
     if mobility == 'mobile':
         physical = {'length': 9, 'width': 3, 'height': 4, 'weight': 14}
         cost = 2.0
         range_km = 500
         speeds = {'sustained': 50, 'max': 70, 'off_road': 30}
-    else:
+    elif mobility == 'semi_mobile':
         physical = {'length': 12, 'width': 3, 'height': 6, 'weight': 25}
         cost = 4.0
         range_km = 300
         speeds = {'sustained': 30, 'max': 40, 'off_road': 15}
+    else:
+        # [S] ordine di grandezza di un'antenna fissa con il suo supporto (classe 'big' di
+        # Context.VEHICLE_SIZE_CATEGORY); le torri del Chain Home (73-110 m) NON sono rappresentate.
+        physical = {'length': 30, 'width': 10, 'height': 20, 'weight': 50}
+        cost = 10.0           # M$ [S], non consumato dal motore
+        range_km = 1          # SEGNAPOSTO di schema, NON autonomia (v. docstring)
+        speeds = {'sustained': 0, 'max': 0, 'off_road': 0}
+        consumes = (0, 0, 0)  # nessun consumo dichiarato: il sito non si muove
 
-    return {
+    fields = {
         'physical_characteristics': physical,
         'cost': cost,          # M$ [S], non consumato dal motore (il costo dell'asset viene dal Context)
-        'range': range_km,     # km di autonomia [S]
+        'range': range_km,     # km di autonomia [S] (segnaposto per 'fixed')
         'engine': None,        # il motore non e' il soggetto del record; l'autonomia si legge da `range`
         'weapons': {},         # nessun armamento
         'TVD': False,
@@ -4616,11 +4638,16 @@ def _ewr_support_fields(mobility: str) -> Dict:
         'protections': {'active': None, 'armor': {}, 'reactive': {}},  # nessuna corazza (mezzo non protetto)
         'hydraulic': False,    # non modellato
         'speed_data': {
-            'sustained': {'metric': 'metric', 'speed': speeds['sustained'], 'consume': 0.4},
-            'max': {'metric': 'metric', 'speed': speeds['max'], 'consume': 0.55},
-            'off_road': {'metric': 'metric', 'speed': speeds['off_road'], 'consume': 0.7},
+            'sustained': {'metric': 'metric', 'speed': speeds['sustained'], 'consume': consumes[0]},
+            'max': {'metric': 'metric', 'speed': speeds['max'], 'consume': consumes[1]},
+            'off_road': {'metric': 'metric', 'speed': speeds['off_road'], 'consume': consumes[2]},
         },
     }
+
+    if mobility == 'fixed':
+        fields['fixed_site'] = True
+
+    return fields
 
 
 # Nuovi EWR (D-4b) — nucleo di 8 radar mobili o semimobili
@@ -4823,6 +4850,190 @@ AN_TPS43_data = {
 }
 
 
+# Siti EWR FISSI (D-4b, blocco C; Proposta_Dati_Sensori_EWR_Siti_Fissi.md, decisioni dell'utente del 2026-11-05):
+# Vehicle IMMOBILI con il marcatore `fixed_site` (da `_ewr_support_fields('fixed')`). Stessa forma del radar del
+# nucleo mobile: sola scoperta aria, tracking/engagement 0, multi_target 0 = "non trovato". AN/FPS-117 = riferimento di
+# migliore fonte. AN/FPS-20 ESCLUSO (contraddizione di fonte 322/407 km, conf. bassa).
+
+AN_FPS117_data = {
+    **_ewr_support_fields('fixed'),
+    'constructor': 'Lockheed',   # la fonte e' la scheda Lockheed stessa
+    'model': 'AN-FPS-117',       # il tipo d'unita' DCS "FPS-117" resta un commento, non una chiave
+    'made': 'USA',
+    'users': ['USA'],            # la fonte parla di >15 operatori senza elencarli nella ricerca: si scrive il solo USA
+    'start_service': 1983,       # accettazione Seek Igloo; produzione dal 1980
+    'end_service': None,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'AN/FPS-117 (Seek Igloo)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 330, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 2000, 'mttr': 0.75},
+        # 330: FONTE (scheda Lockheed via riassunto di ricerca), Pd 80 % contro 1 m2, quota del bersaglio non specificata,
+        # conf. media-alta; portata strumentale 10-470 km NON usata. reliability: FONTE (Lockheed, EverythingRF), MTBF
+        # critico >2000 h (limite inferiore), MTTR <45 min = 0.75 h (conversione D, limite superiore), conf. media-alta;
+        # l'unico EWR con entrambi di fonte (decisione C-2). Riferimento di migliore fonte dei siti fissi.
+    },
+}
+
+Chain_Home_data = {
+    **_ewr_support_fields('fixed'),
+    'constructor': 'non trovato',
+    'model': 'Chain-Home',
+    'made': 'UK',
+    'users': ['UK'],
+    'start_service': 1938,
+    'end_service': 1955,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'Chain Home (AMES Type 1)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 160, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 160: FONTE (infobox Wikipedia), bombardieri ad alta quota, conf. media; CONTRADDIZIONE 160/190 km (testo
+        # 'tipicamente 120 mi'). Copertura scarsa sotto 2 gradi di elevazione (fonte): il pianificatore la sovrastima a
+        # bassa quota. antenna_height 73: DEDOTTO, torri riceventi da 73 m (trasmittenti 110 m), limite superiore.
+        # reliability: STIMA [S] generica del registro (decisione 12), non dato di fonte.
+        # Fascio su 150 gradi: il modello lo tratta come omnidirezionale (limite).
+        'antenna_height': 73.0,
+    },
+}
+
+AMES_Type7_data = {
+    **_ewr_support_fields('fixed'),
+    'constructor': 'non trovato',
+    'model': 'AMES-Type-7',
+    'made': 'UK',
+    'users': ['UK'],
+    'start_service': 1941,
+    'end_service': None,         # fine non precisa (anni '60, sostituito da Linesman/Mediator)
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'AMES Type 7 (GCI)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 140, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 140: FONTE (Wikipedia, 'in pratica'; 410 km teorici NON usati) contro un bombardiere a 6100 m (non 10 000),
+        # conf. media; a quota piu' alta la portata reale e' probabilmente maggiore. Profilo: FONTE, bombardiere.
+        # Antenna in pozzo a terra, altezza non data: default EWR 20 m [S]. reliability: STIMA [S] generica (decisione 12).
+        'acquisition_profile': ((150, 16), (6100, 140)),
+    },
+}
+
+AMES_Type80_data = {
+    **_ewr_support_fields('fixed'),
+    'constructor': 'non trovato',
+    'model': 'AMES-Type-80',
+    'made': 'UK',
+    'users': ['UK', 'Canada', 'Sweden'],   # Canada = 1 sito a Metz; Svezia = PS-08 1957-79
+    'start_service': 1955,                 # servizio operativo dal 1955 (installazione 1953)
+    'end_service': 1993,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'AMES Type 80 (Green Garlic)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 390, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 390: FONTE (Wikipedia, testo) caccia grande o bombardiere piccolo 'rilevato affidabilmente oltre 210 nmi',
+        # quota alta, conf. media; infobox 'migliore di 240 nmi (440 km)' NON usato. antenna_height 11.4: DEDOTTO, torre
+        # piramidale 25 ft (7.6 m) + meta' riflettore alto 25 ft (3.8 m). reliability: STIMA [S] generica (decisione 12).
+        'antenna_height': 11.4,
+    },
+}
+
+Wassermann_data = {
+    **_ewr_support_fields('fixed'),
+    'constructor': 'non trovato',
+    'model': 'Wassermann',
+    'made': 'Germany',
+    'users': ['Germany'],
+    'start_service': 1942,       # date dubbie nella fonte ("1942?"; radartutorial 1940)
+    'end_service': 1945,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'Wassermann (FuMG 41 L / 42 S)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 190, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 190: FONTE (sezione tecnica Wikipedia) a 6000 m di quota (non 10 000), conf. media; 300 km = portata
+        # massima/strumentale, NON usata; probabile sottostima a quota di crociera. Profilo: FONTE. antenna_height 37:
+        # DEDOTTO, minimo dell'intervallo 37-57 m del traliccio (L ~40 m, S 60 m), limite superiore. Banda e
+        # designazione contraddittorie fra le fonti. reliability: STIMA [S] generica (decisione 12).
+        'antenna_height': 37.0,
+        'acquisition_profile': ((50, 35), (6000, 190)),
+    },
+}
+
+Mammut_data = {
+    **_ewr_support_fields('fixed'),
+    'constructor': 'non trovato',
+    'model': 'Mammut',           # designazioni FuMG confuse fra le fonti: la chiave non porta il numero FuMG
+    'made': 'Germany',
+    'users': ['Germany'],
+    'start_service': 1944,       # date dubbie nella fonte ("1944?")
+    'end_service': 1945,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'Mammut',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 300, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 300: FONTE DEBOLE trattata come STIMA (infobox e testo Wikipedia; tabella tecnica 325), bersaglio NON
+        # qualificato, conf. media-bassa; potenza contraddittoria (20/200 kW). Fascio su un arco di 100 gradi: il modello
+        # lo tratta come omnidirezionale (limite). reliability: STIMA [S] generica (decisione 12).
+    },
+}
+
+P14_Lena_data = {
+    **_ewr_support_fields('fixed'),
+    'constructor': 'non trovato',
+    'model': 'P-14-Lena',
+    'made': 'USSR',
+    'users': ['USSR', 'Bulgaria', 'China', 'Egypt', 'Iraq', 'Serbia', 'Vietnam'],
+    'start_service': 1959,
+    'end_service': 2003,
+    'category': 'EWR',
+    'roles': ['EWR'],
+    'radar': {
+        'model': 'P-14 Lena (Tall King)',
+        'capabilities': {
+            'air': (True, {'tracking_range': 0, 'acquisition_range': 400, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
+        # 400: FONTE DEBOLE trattata come STIMA (infobox Wikipedia en), NON qualificato, conf. bassa-media; altre fonti
+        # 40-540 km e 593 km strumentali. Portata contro caccia/quota: non trovata. Il record e' la versione statica
+        # 1RL113; la mobile 5N84A (6 rimorchi, oltre 24 h di montaggio) non e' modellata a parte. Costruiti 731 o ~2000
+        # (contraddizione). reliability: STIMA [S] generica (decisione 12).
+    },
+}
+
+
 # SETUP DICTIONARY VALUE 
 SCORES = ('combat score', 'radar score', 'radar score air', 'radar score ground', 'speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 VEHICLE = {}
@@ -4913,6 +5124,15 @@ Vehicle_Data(**P37_Mech_data)
 Vehicle_Data(**Nebo_SV_1L13_data)
 Vehicle_Data(**Nebo_55Zh6_data)
 Vehicle_Data(**AN_TPS43_data)
+
+# Siti EWR fissi (D-4b, blocco C)
+Vehicle_Data(**AN_FPS117_data)
+Vehicle_Data(**Chain_Home_data)
+Vehicle_Data(**AMES_Type7_data)
+Vehicle_Data(**AMES_Type80_data)
+Vehicle_Data(**Wassermann_data)
+Vehicle_Data(**Mammut_data)
+Vehicle_Data(**P14_Lena_data)
 
 
 # Load scores in dict

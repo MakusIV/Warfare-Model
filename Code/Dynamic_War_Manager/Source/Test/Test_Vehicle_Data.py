@@ -711,7 +711,10 @@ class TestSpeedEval(unittest.TestCase):
         self.assertGreater(score, 0.0)
 
     def test_all_vehicles_speed_eval_positive(self):
+        # I siti fissi (marcatore `fixed_site`, D-4b blocco C) hanno velocita' 0 per dato: li verifica Test_EWR_Data.
         for model, obj in Vehicle_Data._registry.items():
+            if getattr(obj, 'fixed_site', False):
+                continue
             with self.subTest(model=model):
                 score = obj._speed_eval()
                 self.assertGreater(score, 0.0)

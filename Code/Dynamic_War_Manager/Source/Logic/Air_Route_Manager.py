@@ -649,12 +649,13 @@ EFFECTIVE_EARTH_RADIUS_FACTOR = {'radar': 4.0 / 3.0, 'TVD': 1.0, 'visual': 1.0}
 # ALTEZZA D'ANTENNA/SENSORE [m] sopra il sito. STIME DI PROGETTO DICHIARATE (decisione D-4(a),
 # 2026-09-26), per classe di piattaforma, in attesa di un dato di registro: un record puo'
 # gia' sovrascriverle con la chiave opzionale `antenna_height` [m] nel dizionario
-# `radar`/`TVD`/`visual`. Oggi la dichiara solo il record SCR-270 (EWR, 16,8 m, dato DEDOTTO da
-# fonte: antenna alzata a 55 ft); tutti gli altri record usano le stime per classe qui sotto.
+# `radar`/`TVD`/`visual`. La dichiarano gli EWR SCR-270 (16,8 m, DEDOTTO: antenna alzata a 55 ft) e tre siti fissi
+# (blocco C): Chain-Home 73 m, Wassermann 37 m, AMES-Type-80 11,4 m, tutti DEDOTTI (limiti superiori, v. i record);
+# tutti gli altri record usano le stime per classe qui sotto.
 #   veicolo  ~5 m: radar su scafo/torretta di un mezzo semovente (SA-6, SA-8, Tunguska, ...);
-#   EWR      ~20 m: radar di scoperta su palo o sito predisposto; STIMA per i 7 record EWR senza
-#            `antenna_height` (Freya, P-12, P-18, P-37, 1L13, 55Zh6, AN/TPS-43; gli EWR sono 8
-#            con l'SCR-270, che ha il dato di registro);
+#   EWR      ~20 m: radar di scoperta su palo o sito predisposto; STIMA per gli 11 record EWR senza
+#            `antenna_height` (Freya, P-12, P-18, P-37, 1L13, 55Zh6, AN/TPS-43, AN-FPS-117, AMES-Type-7,
+#            Mammut, P-14-Lena; gli EWR sono 15: 8 mobili/semimobili e 7 siti fissi);
 #   nave     ~30 m: centro dell'intervallo 20-40 m delle antenne d'albero delle unita' navali.
 SENSOR_HEIGHT_VEHICLE_M = 5.0
 SENSOR_HEIGHT_EWR_M = 20.0
