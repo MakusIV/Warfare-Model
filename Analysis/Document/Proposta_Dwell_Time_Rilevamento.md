@@ -1020,6 +1020,11 @@ Descritto solo come riferimento per un piano futuro; l'esecutore dei blocchi A e
   usa quello con la portata nominale maggiore: divergono solo se un TVD supera un radar dopo l'orizzonte (nessun
   EWR ha TVD).
 - **Copertura angolare, notte unica, nessun orizzonte**: invariati.
+- **Permanenza sommata su piu' passaggi** (trovato il 2026-11-06): se il bersaglio esce e rientra nel volume
+  dell'osservatore con la portata minore dentro la stessa finestra, `_exposure_time` somma i passaggi, contro la regola
+  dell'utente (un'occasione per passaggio, mai la somma). Il limite di fondo (una sola estrazione per finestra) e'
+  precedente alla D-5. Piano in `Proposta_Finestre_Per_Passaggio_Portata_Propria.md` (FP-6: con FP spento il solo
+  passaggio che contiene il CPA; con FP acceso un'estrazione e una permanenza per passaggio).
 
 ### 5.3 Rischi di esecuzione
 
