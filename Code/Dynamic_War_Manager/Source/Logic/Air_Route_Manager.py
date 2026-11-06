@@ -32,6 +32,10 @@ RADIUS_EXTENSION_THREAT_CIRCONFERENCE = 1.03 # factor to increments radius threa
 MIN_SECURE_LENGTH_EDGE = 0.1 # max length of edge in threat zone (per velocizzare il calcolo: tutti i segmenti )
 MIN_DISTANCE_TO_CHANGE_ALTITUDE = 1 # min distance from threat to change altitude
 TOLERANCE_FOR_INTERSECTION_CALCULUS = 0.1 # minimum length of segment to consider it as valid intersection ATT questa è necessaria per distinguere un segmento da un punto 
+# D-5 (Proposta_Dwell_Time_Rilevamento.md B.1): due tratti consecutivi dello stesso volume di rilevamento sono lo STESSO
+# attraversamento se il secondo entra non piu' di CROSSING_JOIN_TOLERANCE_S dopo l'uscita del primo. E' una tolleranza
+# NUMERICA (errore di arrotondamento sugli istanti calcolati edge per edge), NON una stima di modello ne' un dato tarato.
+CROSSING_JOIN_TOLERANCE_S = 1e-6
 
 
 class ThreatMode(Enum):
@@ -48,6 +52,8 @@ class ThreatMode(Enum):
                          scoperta > arma) i volumi sono annidati, ma a bassa quota l'orizzonte radar
                          puo' rendere il volume di rilevamento PIU' PICCOLO di quello d'intercettazione
                          (v. radar_horizon_range), e il controllo si fa sempre sui volumi dichiarati.
+                         Con la D-5 la Pd di un attraversamento dipende anche dalla permanenza (metrica),
+                         ma la modalita' resta aggiramento puro (Proposta_Dwell_Time_Rilevamento.md DW-7).
 
     Le combinazioni ("evita il rilevamento dove puoi, altrimenti attraversa senza essere intercettato")
     restano una strategia del chiamante: piu' chiamate a calcRoute e confronto dei risultati.
@@ -297,14 +303,17 @@ class DetectionThreat(AirThreat):
         acquisition_range:  portata nominale di scoperta [m], prima dell'orizzonte: e' la R della
                             legge di Pd del DES (Engagement_Resolver.detection_probability).
         reference_altitude: quota [m] alla quale e' stato calcolato il raggio del cilindro.
+        dwell_time_s:       periodo di rivisita [s] del sensore (D-5), None = non dichiarato.
     """
 
     def __init__(self, cylinder: Cylinder, sensor: str, acquisition_range: float,
-                 reference_altitude: float, source_id: Optional[str] = None):
+                 reference_altitude: float, source_id: Optional[str] = None,
+                 dwell_time_s: Optional[float] = None):
         super().__init__(0.0, cylinder, source_id=source_id)
         self.sensor = sensor
         self.acquisition_range = float(acquisition_range)
         self.reference_altitude = float(reference_altitude)
+        self.dwell_time_s = float(dwell_time_s) if dwell_time_s else None
 
     def __repr__(self):
             """
@@ -738,6 +747,10 @@ def build_detection_threat(asset, route_altitude: float) -> Optional[DetectionTh
     arriva piu' lontano" di Mobile.detection_range). Il cilindro va dal sito a
     DETECTION_VOLUME_CEILING_M.
 
+    Il periodo di rivisita (`dwell_time_s`, D-5) e' quello del sensore scelto qui (raggio effettivo), che puo'
+    differire da quello del DES (sensore a portata nominale massima, `Mobile.detection_dwell_time`) solo se un TVD
+    supera il radar dopo l'orizzonte (Proposta_Dwell_Time_Rilevamento.md §5.2).
+
     Non richiede armi: un sensore puro (EWR, livello 1 della proposta §2.6) produce la sua
     DetectionThreat senza codice dedicato.
 
@@ -781,10 +794,14 @@ def build_detection_threat(asset, route_altitude: float) -> Optional[DetectionTh
     cylinder = Cylinder(center=Point3D(float(position.x), float(position.y), site_z),
                         radius=radius, height=DETECTION_VOLUME_CEILING_M)
     asset_id = getattr(asset, 'id', None)
+    # D-5: periodo di rivisita del sensore scelto qui (raggio effettivo); None se l'asset non ha il lettore o il
+    # sensore non lo dichiara.
+    dwell = asset.sensor_dwell_time(sensor) if callable(getattr(asset, 'sensor_dwell_time', None)) else None
 
     return DetectionThreat(cylinder=cylinder, sensor=sensor, acquisition_range=nominal,
                            reference_altitude=float(route_altitude),
-                           source_id=str(asset_id) if asset_id is not None else None)
+                           source_id=str(asset_id) if asset_id is not None else None,
+                           dwell_time_s=dwell)
 
 
 def build_air_defense_threats(asset, route_altitude: float) -> Tuple[Optional[DetectionThreat], Optional[ThreatAA]]:
@@ -1089,18 +1106,30 @@ class Path:
           - first_detection_time_s: istante del primo ingresso, dalla partenza; None se mai;
           - warning_time_s: arrivo - first_detection_time_s (0.0 se mai rilevato);
           - max_detection_probability e detection_tracts: per ogni tratto, la Pd con la STESSA
-            legge del DES (Engagement_Resolver.detection_probability, nessuna modifica al
-            risolutore: e' una metrica di pianificazione che ne replica il calcolo, decisione D-5)
+            legge del DES (Engagement_Resolver.detection_probability, compresa la permanenza D-5 con
+            l'interruttore Engagement_Resolver.D5_DWELL_TIME acceso: e' una metrica di pianificazione che
+            ne replica il calcolo, decisione D-5)
             con d = distanza minima (3D) dal sito lungo il tratto e R = acquisition_range NOMINALE del
             sensore (la R del DES). Fuori dal volume (oltre l'orizzonte) Pd = 0. Nessun ritocco alla
             legge: dove il cilindro di pianificazione e la sfera del DES divergono (tratto dentro il
             cilindro ma a distanza 3D > R, cioe' in quota vicino al bordo) il tempo conta
             nell'esposizione ma la Pd vale 0, come nel DES (divergenza nota, proposta §1.4).
 
+        Permanenza (D-5, Proposta_Dwell_Time_Rilevamento.md B.1): i tratti CONTIGUI dello stesso volume
+        (CROSSING_JOIN_TOLERANCE_S) sono un solo attraversamento, come una finestra del DES, anche se si
+        estende su piu' edge: `exposure` = ultima uscita - primo ingresso, `d_min` = minima delle distanze
+        minime. Ogni tratto porta 'crossing_exposure_s' (sempre) e 'dwell_time_s' (della minaccia, None se
+        assente). Solo con D5_DWELL_TIME acceso e dwell_time_s non None la 'detection_probability' di ogni
+        tratto dell'attraversamento diventa detection_probability(d_min, R, dwell_factor(exposure, dwell));
+        altrimenti resta quella per tratto di prima (metriche identiche a interruttore spento).
+
         Sono metriche, non vincoli: servono al chiamante per scegliere fra alternative quando
         l'aggiramento totale del rilevamento non esiste. Non toccano total_danger.
         """
         from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import detection_probability
+        from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+
+        dwell_enabled = ER.D5_DWELL_TIME
 
         self.detection_exposure_s = 0.0
         self.first_detection_time_s = None
@@ -1113,11 +1142,12 @@ class Path:
 
         speed = float(speed)
         travelled = 0.0
+        owners = []  # indice della minaccia di ogni elemento di detection_tracts (parallelo, non nel dizionario)
 
         for edge in self.edges:
             length = float(edge.length)
 
-            for threat in detection_threats:
+            for threat_index, threat in enumerate(detection_threats):
                 interval = _segment_cylinder_interval(edge.wpA.point, edge.wpB.point, threat.cylinder)
 
                 if interval is None:
@@ -1137,6 +1167,7 @@ class Path:
                 if self.first_detection_time_s is None or entry_s < self.first_detection_time_s:
                     self.first_detection_time_s = entry_s
 
+                owners.append(threat_index)
                 self.detection_tracts.append({'source_id': getattr(threat, 'source_id', None),
                                               'edge': edge.name,
                                               'entry_time_s': entry_s,
@@ -1145,6 +1176,36 @@ class Path:
                                               'detection_probability': pd})
 
             travelled += length
+
+        # D-5: raggruppa per minaccia i tratti contigui in attraversamenti (i tratti di una minaccia sono in ordine
+        # di tempo: gli edge si scorrono in sequenza).
+        for threat_index, threat in enumerate(detection_threats):
+            tracts = [t for t, owner in zip(self.detection_tracts, owners) if owner == threat_index]
+            dwell = getattr(threat, 'dwell_time_s', None)
+            sensor_range = float(getattr(threat, 'acquisition_range', 0.0) or threat.cylinder.radius)
+            crossing = []
+
+            for tract in tracts + [None]:
+                if crossing and (tract is None
+                                 or tract['entry_time_s'] - crossing[-1]['exit_time_s'] > CROSSING_JOIN_TOLERANCE_S):
+                    exposure = crossing[-1]['exit_time_s'] - crossing[0]['entry_time_s']
+                    d_min = min(t['min_distance'] for t in crossing)
+
+                    for member in crossing:
+                        member['crossing_exposure_s'] = exposure
+                        member['dwell_time_s'] = dwell
+
+                        if dwell_enabled and dwell is not None:
+                            member['detection_probability'] = detection_probability(
+                                d_min, sensor_range, ER.dwell_factor(exposure, dwell))
+
+                    crossing = []
+
+                if tract is not None:
+                    crossing.append(tract)
+
+        self.max_detection_probability = max((t['detection_probability'] for t in self.detection_tracts),
+                                             default=0.0)
 
         if self.first_detection_time_s is not None:
             self.warning_time_s = travelled / speed - self.first_detection_time_s

@@ -71,6 +71,10 @@ class _AssetStub:
     air_defense_volume = Mobile.air_defense_volume
     detection_range = Mobile.detection_range
     _sensor_range_km = staticmethod(Mobile._sensor_range_km)
+    # D-5: lettori del periodo di rivisita (v. build_detection_threat)
+    sensor_dwell_time = Mobile.sensor_dwell_time
+    _detection_registry_record = Mobile._detection_registry_record
+    _sensor_dwell_s = staticmethod(Mobile._sensor_dwell_s)
 
     def __init__(self, model=None, category=None, position=Point3D(0, 0, 0), id=None):
         self._model = model
@@ -480,6 +484,22 @@ class TestBuildDetectionThreat(unittest.TestCase):
         self.assertEqual(sensor_antenna_height(asset, 'radar'), SENSOR_HEIGHT_SHIP_M)
         threat = build_detection_threat(asset, 30.0)
         self.assertAlmostEqual(float(threat.cylinder.radius), _horizon(SENSOR_HEIGHT_SHIP_M, 30.0), places=3)
+
+    def test_ewr_detection_threat_carries_the_dwell(self):
+        """D-5: la DetectionThreat di un EWR porta il periodo di rivisita del sensore scelto (P-18: 10 giri/min
+        = 6 s, dato di registro del blocco A)."""
+        threat = build_detection_threat(_AssetStub(model='P-18-Terek', category='EWR'), 10_000.0)
+
+        self.assertIsInstance(threat, DetectionThreat)
+        self.assertEqual(threat.sensor, 'radar')
+        self.assertEqual(threat.dwell_time_s, 6.0)
+
+    def test_sensor_without_dwell_gives_none(self):
+        """D-5: un sensore che non dichiara `dwell_time_s` (DW-9: solo gli EWR) da' una minaccia senza dwell."""
+        threat = build_detection_threat(_AssetStub(model='9K331-Tor', category=gat.SAM_SMALL.value), 1000.0)
+
+        self.assertIsInstance(threat, DetectionThreat)
+        self.assertIsNone(threat.dwell_time_s)
 
     def test_ewr_class_uses_pole_height(self):
         self.assertEqual(sensor_antenna_height(_AssetStub(model='2K12-Kub', category='EWR'), 'radar'),

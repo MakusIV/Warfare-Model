@@ -2003,6 +2003,85 @@ class TestDetectionAndInterceptionVolumes(unittest.TestCase):
             planner.excludeThreat([Cylinder(Point3D(0, 0, 0), 1, 1)], self.START)
 
 
+from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import detection_probability
+
+
+class TestDetectionMetricsWithDwell(unittest.TestCase):
+    """D-5, blocco B (Proposta_Dwell_Time_Rilevamento.md B.1/B.2): le metriche di rilevamento del Path replicano la
+    legge del DES con la permanenza (Engagement_Resolver.D5_DWELL_TIME), un attraversamento su piu' edge e' una
+    sola permanenza. Cilindro centrato in (10, 0, 0), raggio 5; edge a quota 10 lungo l'asse x a velocita' 1."""
+
+    def _detection(self, dwell_time_s=None, acquisition_range=20):
+        return DetectionThreat(cylinder=Cylinder(center=Point3D(10, 0, 0), radius=5, height=100), sensor='radar',
+                               acquisition_range=acquisition_range, reference_altitude=10, source_id='site',
+                               dwell_time_s=dwell_time_s)
+
+    def _edge(self, name, x_from, x_to):
+        return Edge(name, 0, Waypoint(name + "a", Point3D(x_from, 0, 10), None),
+                    Waypoint(name + "b", Point3D(x_to, 0, 10), None), 1)
+
+    def _path_through_cylinder(self, edge_bounds=((5, 10), (10, 15))):
+        """Attraversamento di 10 unita' (5 -> 15) dentro il cilindro, spezzato negli edge `edge_bounds`."""
+        return Path([self._edge(f"e{i}", a, b) for i, (a, b) in enumerate(edge_bounds)])
+
+    def _metrics(self, path, detection, switch):
+        with patch.object(ER, 'D5_DWELL_TIME', switch):
+            path.compute_detection_metrics([detection], speed=1)
+
+        return path
+
+    def test_switch_off_metrics_are_unchanged(self):
+        # edge da (0,0,10) a (20,0,10) a velocita' 2: dentro il cilindro per 5 s, dwell dichiarato 100 s ma
+        # interruttore spento -> Pd di sola distanza (d_min = 10, R = 20)
+        edge = Edge("e", 0, Waypoint("a", Point3D(0, 0, 10), None), Waypoint("b", Point3D(20, 0, 10), None), 2)
+        path = Path([edge])
+
+        with patch.object(ER, 'D5_DWELL_TIME', False):
+            path.compute_detection_metrics([self._detection(dwell_time_s=100)], speed=2)
+
+        self.assertAlmostEqual(path.max_detection_probability, detection_probability(10.0, 20.0), places=9)
+        self.assertAlmostEqual(path.detection_exposure_s, 5.0, places=9)
+        self.assertEqual(path.detection_tracts[0]['dwell_time_s'], 100.0)
+        self.assertAlmostEqual(path.detection_tracts[0]['crossing_exposure_s'], 5.0, places=9)
+
+    def test_crossing_split_over_two_edges_is_one_exposure(self):
+        path = self._metrics(self._path_through_cylinder(), self._detection(dwell_time_s=40), True)
+
+        self.assertEqual(len(path.detection_tracts), 2)
+        first, second = path.detection_tracts
+        self.assertAlmostEqual(first['crossing_exposure_s'], 10.0, places=9)
+        self.assertAlmostEqual(second['crossing_exposure_s'], 10.0, places=9)
+        self.assertAlmostEqual(first['detection_probability'], second['detection_probability'], places=12)
+        # d_min dell'attraversamento = 10 (sulla verticale del sito), permanenza 10 s su dwell 40 s -> g = 0,25
+        self.assertAlmostEqual(first['detection_probability'], detection_probability(10.0, 20.0, 0.25), places=9)
+
+    def test_short_crossing_reduces_the_probability(self):
+        edge = self._edge("e", 7.5, 12.5)  # 5 s dentro il cilindro
+        path = self._metrics(Path([edge]), self._detection(dwell_time_s=20), True)
+
+        self.assertAlmostEqual(path.max_detection_probability, detection_probability(10.0, 20.0, 0.25), places=9)
+        self.assertLess(path.max_detection_probability, detection_probability(10.0, 20.0))
+
+    def test_long_crossing_keeps_the_previous_probability(self):
+        detection = self._detection(dwell_time_s=10)  # permanenza 10 s >= dwell: g = 1
+        on = self._metrics(self._path_through_cylinder(), detection, True)
+        off = self._metrics(self._path_through_cylinder(), detection, False)
+
+        self.assertAlmostEqual(on.max_detection_probability, off.max_detection_probability, places=12)
+        self.assertAlmostEqual(on.max_detection_probability, detection_probability(10.0, 20.0), places=9)
+
+    def test_threat_without_dwell_is_unchanged_with_the_switch_on(self):
+        detection = self._detection(dwell_time_s=None)
+        self.assertIsNone(detection.dwell_time_s)
+        on = self._metrics(self._path_through_cylinder(), detection, True)
+        off = self._metrics(self._path_through_cylinder(), detection, False)
+
+        self.assertAlmostEqual(on.max_detection_probability, off.max_detection_probability, places=12)
+        self.assertEqual([t['detection_probability'] for t in on.detection_tracts],
+                         [t['detection_probability'] for t in off.detection_tracts])
+
+
 if __name__ == "__main__":
 
     # Esegui tutti i test
