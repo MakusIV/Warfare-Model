@@ -7,6 +7,7 @@ from Code.Dynamic_War_Manager.Source.DataType.Cylinder import Cylinder
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.Asset import Weapon_Stores as WS
+import math
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Code.Dynamic_War_Manager.Source.Context.Context import (
@@ -1567,6 +1568,27 @@ class Mobile(Asset) :
 
         return value if value > 0.0 else None
 
+    @staticmethod
+    def _sensor_dwell_s(data_record, sensor: str) -> Optional[float]:
+        """`dwell_time_s` [s] del dizionario `sensor` del record (D-5), o None.
+
+        None se il sensore manca, non e' un dizionario, la chiave manca, o il valore non e' un numero
+        (bool escluso) finito e > 0. Mai un'eccezione: e' un dato opzionale.
+        """
+        sensor_data = getattr(data_record, sensor, None)
+
+        if not sensor_data or not isinstance(sensor_data, dict):
+            return None
+
+        value = sensor_data.get('dwell_time_s')
+
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            return None
+
+        value = float(value)
+
+        return value if (math.isfinite(value) and value > 0.0) else None
+
     def detection_range(self, mode: str, sensor: Optional[str] = None,
                         range_type: str = DEFAULT_DETECTION_RANGE_TYPE) -> Optional[float]:
         """Raggio di rilevamento [metri] di questo asset contro bersagli di dimensione `mode`.
@@ -1650,6 +1672,92 @@ class Mobile(Asset) :
             return None
 
         return max(ranges_km) * 1000.0  # km -> m
+
+    def sensor_dwell_time(self, sensor: str) -> Optional[float]:
+        """Periodo di rivisita [s] del sensore `sensor` ('radar'/'TVD'/'visual') del modello, o None (D-5).
+
+        Raises:
+            ValueError: `sensor` fuori da DETECTION_SENSORS.
+        """
+        if sensor not in DETECTION_SENSORS:
+            raise ValueError(f"sensor must be one of {DETECTION_SENSORS!r}, got {sensor!r}")
+
+        data_record = self._detection_registry_record("sensor_dwell_time")
+
+        if data_record is None:
+            return None
+
+        return self._sensor_dwell_s(data_record, sensor)
+
+    def detection_dwell_time(self, mode: str, range_type: str = DEFAULT_DETECTION_RANGE_TYPE) -> Optional[float]:
+        """Periodo di rivisita [s] del sensore che da' `detection_range(mode, range_type=range_type)` (D-5).
+
+        Stesso dispatch di registro e stessa esclusione del visivo (D4C_VISUAL_SENSOR) di detection_range; il
+        sensore e' quello con la portata MASSIMA, a parita' il primo di DETECTION_SENSORS (come
+        Air_Route_Manager.build_detection_threat). None se il modello non e' noto, nessun sensore ha portata sul
+        modo, o il sensore vincente non dichiara `dwell_time_s`.
+
+        Raises:
+            ValueError: `mode` o `range_type` fuori dominio.
+        """
+        if mode not in DETECTION_MODES:
+            raise ValueError(f"mode must be one of {DETECTION_MODES!r}, got {mode!r}")
+
+        if range_type not in DETECTION_RANGE_TYPES:
+            raise ValueError(f"range_type must be one of {DETECTION_RANGE_TYPES!r}, got {range_type!r}")
+
+        data_record = self._detection_registry_record("detection_dwell_time")
+
+        if data_record is None:
+            return None
+
+        sensors = DETECTION_SENSORS
+
+        # D4C_VISUAL_SENSOR e' letto a ogni chiamata (globale di modulo), come in detection_range.
+        if not D4C_VISUAL_SENSOR:
+            sensors = tuple(s for s in sensors if s != VISUAL_SENSOR)
+
+        winner = None
+        best_km = None
+
+        for s in sensors:
+            value = self._sensor_range_km(data_record, s, mode, range_type)
+
+            # Confronto stretto: a parita' di portata resta il primo sensore di DETECTION_SENSORS.
+            if value is not None and (best_km is None or value > best_km):
+                winner, best_km = s, value
+
+        if winner is None:
+            logger.debug(f"detection_dwell_time: no {range_type} on mode {mode!r} for model "
+                         f"{getattr(self, '_model', None)!r}")
+            return None
+
+        return self._sensor_dwell_s(data_record, winner)
+
+    def _detection_registry_record(self, caller: str):
+        """Record di registro del modello (stesso dispatch di detection_range), o None se non e' noto.
+
+        Solo per i lettori D-5 (`sensor_dwell_time`, `detection_dwell_time`): dato opzionale, quindi solo
+        `logger.debug` e mai un warning.
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data as _AircraftData
+
+        model = getattr(self, '_model', None)
+
+        if model is None:
+            logger.debug(f"{caller}: _model not set")
+            return None
+
+        data_record = (_VehicleData._registry.get(model)
+                       or _ShipData._registry.get(model)
+                       or _AircraftData._registry.get(model))
+
+        if data_record is None:
+            logger.debug(f"{caller}: no registry entry for model {model!r}")
+
+        return data_record
 
     def engagement_channels(self, mode: str = 'air') -> Optional[int]:
         """Numero di bersagli di dimensione `mode` che il radar dell'asset gestisce insieme.

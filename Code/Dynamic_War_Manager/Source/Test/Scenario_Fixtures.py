@@ -303,6 +303,41 @@ def declare_sensor(asset, ranges: Mapping[str, float]):
     return asset
 
 
+def declare_dwell(asset, dwell_by_mode: Mapping[str, float]):
+    """Periodo di rivisita DICHIARATO DI TEST [s] per modo (D-5): NON un dato, serve agli scenari che devono
+    mostrare la legge su un tiratore (nessun tiratore del registro ha dati di scansione).
+
+    Scavalca `detection_dwell_time` SOLO sull'istanza e SOLO per i modi indicati; per gli altri delega al registro.
+    Restituisce l'asset.
+
+    Raises:
+        ValueError: modo fuori da DETECTION_MODES o valore non positivo.
+    """
+    declared = {}
+
+    for mode, value in dwell_by_mode.items():
+        if mode not in DETECTION_MODES:
+            raise ValueError(f"mode must be one of {DETECTION_MODES!r}, got {mode!r}")
+
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+            raise ValueError(f"declared dwell must be a positive number, got {value!r}")
+
+        declared[mode] = float(value)
+
+    registry_method = type(asset).detection_dwell_time
+
+    def detection_dwell_time(mode, range_type=DEFAULT_DETECTION_RANGE_TYPE):
+        if mode in declared:
+            return declared[mode]
+
+        return registry_method(asset, mode, range_type=range_type)
+
+    asset.detection_dwell_time = detection_dwell_time
+    asset.declared_dwell = dict(declared)
+
+    return asset
+
+
 def _finish(asset, asset_id: str, sensors: Optional[Mapping[str, float]]):
     asset.id = asset_id
 

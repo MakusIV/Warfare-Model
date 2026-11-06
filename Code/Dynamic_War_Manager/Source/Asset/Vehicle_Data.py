@@ -4656,6 +4656,9 @@ def _ewr_support_fields(mobility: str) -> Dict:
 # armi, `reliability` generica del registro {'mtbf': 45, 'mttr': 4} [S] (decisione 12, scelta
 # dell'utente: DIFFERENTE dalla raccomandazione di ometterla). I nomi DCS ("1L13 EWR", "55G6 EWR")
 # restano commenti informativi e NON diventano chiavi del registro.
+# D-5 (Proposta_Dwell_Time_Rilevamento.md): 'dwell_time_s' [s] nel radar = periodo di rivisita 60/giri al minuto
+# (FONTE la rotazione, D la conversione); assente = nessuna permanenza dichiarata (legge di Pd invariata).
+# Intervalli di giri/min (scelta [S], DW-2): regime normale se la fonte lo cita, altrimenti rotazione piu' veloce.
 
 SCR270_data = {
     **_ewr_support_fields('mobile'),
@@ -4681,6 +4684,8 @@ SCR270_data = {
         # Profilo: quote convertite da ft (D).
         'antenna_height': 16.8,
         'acquisition_profile': ((305, 32), (1524, 80), (6096, 160), (7620, 180)),
+        # dwell_time_s 60: FONTE 1 giro/min (conversione D: 60/1), conf. media. D-5.
+        'dwell_time_s': 60.0,
     },
 }
 
@@ -4727,6 +4732,9 @@ P12_Yenisei_data = {
         'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
         # 200: FONTE (Wikipedia en/ru), quota max 25 km, bersaglio non qualificato, conf. media;
         # altre fonti 250-360 km (360 = portata strumentale).
+        # dwell_time_s 6: FONTE 10 giri/min (2-6 secondo [AC-P12], CONTRADDIZIONE; nessun regime normale citato,
+        # regola: rotazione piu' veloce) -> 60/10 (D). D-5.
+        'dwell_time_s': 6.0,
     },
 }
 
@@ -4752,6 +4760,8 @@ P18_Terek_data = {
         # MTBF 140 h di fonte (conf. media-bassa, contraddizione 140/800 h), MTTR non trovato: nel campo `reliability`
         # va la STIMA generica 45/4 (decisione 12), il 140 h resta solo nel commento.
         'acquisition_profile': ((500, 60), (10000, 180), (20000, 260)),
+        # dwell_time_s 6: FONTE 10 giri/min -> 60/10 (D), conf. media. D-5.
+        'dwell_time_s': 6.0,
     },
 }
 
@@ -4774,6 +4784,8 @@ P37_Mech_data = {
         },
         'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
         # 280: FONTE (Wikipedia ru) contro caccia, quota non indicata, conf. media (bombardiere 350, missile da crociera 235).
+        # dwell_time_s 10: FONTE 3-6 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/6 (D). D-5.
+        'dwell_time_s': 10.0,
     },
 }
 
@@ -4798,6 +4810,8 @@ Nebo_SV_1L13_data = {
         # 250: FONTE (APA, 'non inferiore a') contro caccia a 10 000 m, conf. media; CONTRADDIZIONE con la stampa
         # (60 km a 500 m, 350 km a 27 km). Servizio 1984: Wikipedia en (P-18 sostituito nel 1984); radartutorial ~1990.
         'acquisition_profile': ((500, 50), (10000, 250), (27000, 330)),
+        # dwell_time_s 10: FONTE 3-6 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/6 (D). D-5.
+        'dwell_time_s': 10.0,
     },
 }
 
@@ -4823,6 +4837,8 @@ Nebo_55Zh6_data = {
         # conf. media-bassa; possibile attribuzione al Nebo-U. MTBCF >250 h (radartutorial, conf. media-bassa) solo nel
         # commento; nel campo `reliability` la STIMA generica 45/4 (decisione 12).
         'acquisition_profile': ((500, 65), (20000, 400)),
+        # dwell_time_s 10: FONTE 6 giri/min -> 60/6 (D), conf. media-bassa. D-5.
+        'dwell_time_s': 10.0,
     },
 }
 
@@ -4846,6 +4862,8 @@ AN_TPS43_data = {
         'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
         # 440: FONTE (Wikipedia, massimo 240 nmi), bersaglio non qualificato, conf. bassa-media;
         # i profili per quota CMANO (gioco) NON sono usati.
+        # dwell_time_s 10: FONTE 6 giri/min -> 60/6 (D), conf. media. D-5.
+        'dwell_time_s': 10.0,
     },
 }
 
@@ -4904,6 +4922,7 @@ Chain_Home_data = {
         # reliability: STIMA [S] generica del registro (decisione 12), non dato di fonte.
         # Fascio su 150 gradi: il modello lo tratta come omnidirezionale (limite).
         'antenna_height': 73.0,
+        # nessun dwell_time_s: antenna fissa a illuminazione continua (D), nessun intervallo fra le occasioni. D-5.
     },
 }
 
@@ -4929,6 +4948,8 @@ AMES_Type7_data = {
         # conf. media; a quota piu' alta la portata reale e' probabilmente maggiore. Profilo: FONTE, bombardiere.
         # Antenna in pozzo a terra, altezza non data: default EWR 20 m [S]. reliability: STIMA [S] generica (decisione 12).
         'acquisition_profile': ((150, 16), (6100, 140)),
+        # dwell_time_s 7.5: FONTE 0,5-8 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/8 (D). D-5.
+        'dwell_time_s': 7.5,
     },
 }
 
@@ -4954,6 +4975,9 @@ AMES_Type80_data = {
         # quota alta, conf. media; infobox 'migliore di 240 nmi (440 km)' NON usato. antenna_height 11.4: DEDOTTO, torre
         # piramidale 25 ft (7.6 m) + meta' riflettore alto 25 ft (3.8 m). reliability: STIMA [S] generica (decisione 12).
         'antenna_height': 11.4,
+        # dwell_time_s 15: FONTE 4 giri/min (fino a 6); 4 letto come regime normale = STIMA/interpretazione [S] (la fonte non dice
+        # 'normale'; regola: regime normale se citato) -> 60/4 (D). D-5.
+        'dwell_time_s': 15.0,
     },
 }
 
@@ -5030,6 +5054,8 @@ P14_Lena_data = {
         # 40-540 km e 593 km strumentali. Portata contro caccia/quota: non trovata. Il record e' la versione statica
         # 1RL113; la mobile 5N84A (6 rimorchi, oltre 24 h di montaggio) non e' modellata a parte. Costruiti 731 o ~2000
         # (contraddizione). reliability: STIMA [S] generica (decisione 12).
+        # dwell_time_s 10: FONTE 2-6 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/6 (D). D-5.
+        'dwell_time_s': 10.0,
     },
 }
 

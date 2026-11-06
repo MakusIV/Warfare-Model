@@ -232,6 +232,40 @@ class TestEngagedAssetsCountsInterceptions(unittest.TestCase):
         self.assertEqual(SS._engaged_assets(result), set())
 
 
+class TestDwellTimeSwitch(_Base):
+    """D-5: `Session_Simulator.engage` passa `dwell_time_for` al risolutore solo con D5_DWELL_TIME acceso."""
+
+    def _resolver_calls(self):
+        original = ER.resolve_engagement
+        calls = []
+
+        def spy(*args, **kwargs):
+            calls.append(kwargs)
+            return original(*args, **kwargs)
+
+        with patch.object(ER, 'resolve_engagement', side_effect=spy):
+            self._run()
+
+        return calls
+
+    def test_switch_off_passes_no_reader(self):
+        calls = self._resolver_calls()
+
+        self.assertTrue(calls)
+
+        for kwargs in calls:
+            self.assertNotIn('dwell_time_for', kwargs)
+
+    def test_switch_on_passes_the_registry_reader(self):
+        with patch.object(ER, 'D5_DWELL_TIME', True):
+            calls = self._resolver_calls()
+
+        self.assertTrue(calls)
+
+        for kwargs in calls:
+            self.assertIs(kwargs['dwell_time_for'], ER.registry_dwell_time)
+
+
 # ── SCENARIO END-TO-END ───────────────────────────────────────────────────────
 
 class TestEndToEnd(_Base):

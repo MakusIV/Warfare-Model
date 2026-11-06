@@ -29,6 +29,9 @@ from Code.Dynamic_War_Manager.Source.Asset.Mobile import (                    # 
 # Modulo che contiene davvero Mobile (le globali lette da detection_range, es. l'interruttore D4C_VISUAL_SENSOR)
 Mobile_module = sys.modules[Mobile.__module__]
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data          # noqa
+# Registro vero dei veicoli, importato PRIMA di setUpModule (che lo sostituisce con un falso): serve ai test D-5
+# sui dati reali dei radar EWR, che lo ripristinano in `_vd_mod` solo per la durata del test.
+from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _RealVehicleData  # noqa
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS  # noqa (real data)
 # Cylinder is intentionally NOT imported here: Mobile.py uses a different
 # sys.modules path ('Dynamic_War_Manager…' vs 'Code.Dynamic_War_Manager…'),
@@ -1390,6 +1393,83 @@ class TestDetectionRangeValues(unittest.TestCase):
         _FakeAircraftData._registry['dup'] = _SensorRecord(
             radar=_sensor(air=(True, {'acquisition_range': 999})))
         self.assertAlmostEqual(_MobileStub(model='dup').detection_range('air'), 10_000.0)
+
+
+class _DwellStub(_MobileStub):
+    """Stub con i lettori del periodo di rivisita (D-5) di Mobile."""
+    sensor_dwell_time        = Mobile.sensor_dwell_time
+    detection_dwell_time     = Mobile.detection_dwell_time
+    _detection_registry_record = Mobile._detection_registry_record
+    _sensor_dwell_s          = staticmethod(Mobile._sensor_dwell_s)
+
+
+class TestDetectionDwellTime(unittest.TestCase):
+    """D-5: `dwell_time_s` del sensore che da' la portata di rilevamento (record reali dei radar EWR)."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+        # Il modulo sostituisce Vehicle_Data con un falso: per i test sui dati veri si ripristina il reale.
+        self._real = patch.object(_vd_mod, 'Vehicle_Data', _RealVehicleData)
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+
+    def test_ewr_dwell_from_the_registry(self):
+        with self._real:
+            asset = _DwellStub(model='P-18-Terek')
+
+            self.assertEqual(asset.detection_dwell_time('air'), 6.0)
+            self.assertEqual(asset.sensor_dwell_time('radar'), 6.0)
+            self.assertIsNone(asset.sensor_dwell_time('TVD'))
+
+    def test_records_without_dwell_give_none(self):
+        with self._real:
+            self.assertIsNone(_DwellStub(model='9K331-Tor').detection_dwell_time('air'))
+            self.assertIsNone(_DwellStub(model='AN-FPS-117').detection_dwell_time('air'))
+            self.assertIsNone(_DwellStub(model='ignoto').detection_dwell_time('air'))
+            self.assertIsNone(_DwellStub().detection_dwell_time('air'))
+
+        with self.assertRaises(ValueError):
+            _DwellStub(model='P-18-Terek').detection_dwell_time('underwater')
+
+        with self.assertRaises(ValueError):
+            _DwellStub(model='P-18-Terek').sensor_dwell_time('sonar')
+
+    def test_dwell_follows_the_sensor_of_detection_range(self):
+        """Radar 20 km con dwell 6, TVD 30 km con dwell 2: vince il TVD (portata maggiore); a parita' il radar."""
+        radar = _sensor(air=(True, {'acquisition_range': 20}))
+        radar['dwell_time_s'] = 6.0
+        tvd = _sensor(air=(True, {'acquisition_range': 30}))
+        tvd['dwell_time_s'] = 2.0
+        _FakeVehicleData._registry['two'] = _SensorRecord(radar=radar, TVD=tvd)
+
+        tied = _sensor(air=(True, {'acquisition_range': 20}))
+        tied['dwell_time_s'] = 2.0
+        _FakeVehicleData._registry['tie'] = _SensorRecord(radar=radar, TVD=tied)
+
+        _FakeVehicleData._registry['plain'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 40})), TVD=tvd)
+
+        self.assertEqual(_DwellStub(model='two').detection_dwell_time('air'), 2.0)
+        self.assertEqual(_DwellStub(model='tie').detection_dwell_time('air'), 6.0)
+        # Il sensore vincente (radar, 40 km) non dichiara dwell: None, anche se il TVD piu' corto lo dichiara.
+        self.assertIsNone(_DwellStub(model='plain').detection_dwell_time('air'))
+        self.assertEqual(_DwellStub(model='plain').sensor_dwell_time('TVD'), 2.0)
+
+    def test_invalid_values_are_ignored(self):
+        with self._real:
+            asset = _DwellStub(model='P-18-Terek')
+            radar = _RealVehicleData._registry['P-18-Terek'].radar
+
+            for value in (0, -3, True, '6', float('inf'), float('nan'), None):
+                with self.subTest(value=value), patch.dict(radar, {'dwell_time_s': value}):
+                    self.assertIsNone(asset.detection_dwell_time('air'))
+                    self.assertIsNone(asset.sensor_dwell_time('radar'))
+
+            self.assertEqual(asset.detection_dwell_time('air'), 6.0)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

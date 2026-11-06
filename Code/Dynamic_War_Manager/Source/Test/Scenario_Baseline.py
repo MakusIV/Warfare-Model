@@ -173,6 +173,13 @@ La D-4c (`Mobile.D4C_VISUAL_SENSOR`, campo `visual` di ZSU-57-2 e M163-VADS, `Pr
 cambia le esecuzioni esistenti (nessuno scenario usa ZSU-57-2 o M163-VADS); aggiunge in coda l'unita' S31-VISUAL (5
 varianti, 4 seed): 20 esecuzioni nuove; nessuna voce nuova nel riassunto.
 
+## Permanenza nel volume dopo la D-5
+
+La D-5 opzione 2 (`Engagement_Resolver.D5_DWELL_TIME`, SPENTO; `dwell_time_s` dei radar EWR,
+`Proposta_Dwell_Time_Rilevamento.md`) non cambia le esecuzioni esistenti (interruttore spento; acceso, nessuno
+scenario precedente usa un sensore con `dwell_time_s`). Aggiunge in coda l'unita' S32-DWELL (5 varianti, 4 seed):
+20 esecuzioni nuove; nessuna voce nuova nel riassunto (i `Detection` non sono registrati).
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -385,6 +392,9 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     # ── S31 (D-4c: sensore visivo di ripiego di ZSU-57-2 e M163-VADS) — in coda, nomi stabili ──
     ('S31-VISUAL', 'Test_Session_Scenarios_S31', 'TestS31VisualSensor', None,
      _by_occurrence('zsu', 'zsu_off', 'vads_low', 'vads_low_off', 'vads_high')),
+    # ── S32 (D-5: Pd dipendente dalla permanenza nel volume, dwell_time_s) — in coda, nomi stabili ──
+    ('S32-DWELL', 'Test_Session_Scenarios_S32', 'TestS32DwellTime', None,
+     _by_occurrence('off', 'long', 'short', 'ewr_off', 'ewr_on')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

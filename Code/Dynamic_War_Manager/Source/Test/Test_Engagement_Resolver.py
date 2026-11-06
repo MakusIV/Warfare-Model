@@ -23,6 +23,7 @@ Strategia di setup
   l'iniziativa e' esattamente cio' che alcuni test devono controllare.
 """
 
+import dataclasses
 import random
 import unittest
 from unittest.mock import MagicMock, patch
@@ -3691,6 +3692,199 @@ class TestTargetRules(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             self._run(rules={'b1': 'hold'})
+
+
+# ── D-5: PERMANENZA NEL VOLUME (dwell_time_s) ─────────────────────────────────
+
+class TestDwellFactor(unittest.TestCase):
+    """`dwell_factor`: min(1, permanenza / periodo di rivisita), neutro senza dwell o con permanenza >= periodo."""
+
+    def test_no_dwell_is_neutral(self):
+        self.assertEqual(ER.dwell_factor(5.0, None), 1.0)
+        self.assertEqual(ER.dwell_factor(5.0, 0.0), 1.0)
+
+    def test_exposure_at_least_the_dwell_is_neutral(self):
+        self.assertEqual(ER.dwell_factor(10.0, 10.0), 1.0)
+        self.assertEqual(ER.dwell_factor(30.0, 10.0), 1.0)
+
+    def test_short_exposure_is_proportional(self):
+        self.assertAlmostEqual(ER.dwell_factor(5.0, 10.0), 0.5)
+
+    def test_zero_exposure_gives_zero(self):
+        self.assertEqual(ER.dwell_factor(0.0, 10.0), 0.0)
+
+    def test_invalid_arguments_raise(self):
+        with self.assertRaises(ValueError):
+            ER.dwell_factor(-1.0, 10.0)
+
+        with self.assertRaises(ValueError):
+            ER.dwell_factor(5.0, -10.0)
+
+        with self.assertRaises(ValueError):
+            ER.dwell_factor(5.0, float('inf'))
+
+        with self.assertRaises(TypeError):
+            ER.dwell_factor(5.0, True)
+
+        with self.assertRaises(TypeError):
+            ER.dwell_factor(5.0, 'x')
+
+    def test_switch_is_off_by_default(self):
+        self.assertIs(ER.D5_DWELL_TIME, False)
+
+
+class TestDwellTimeInTheResolver(unittest.TestCase):
+    """`resolve_engagement(dwell_time_for=...)`: la Pd e' ridotta dalla permanenza, le estrazioni non cambiano."""
+
+    def setUp(self):
+        self._log = patch(_ER_LOGGER, MagicMock())
+        self._log.start()
+        self.addCleanup(self._log.stop)
+
+    @staticmethod
+    def _forces(red_ids=('r1',)):
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        red = _Force('red', 'Red', [_Asset(asset_id) for asset_id in red_ids])
+        return blue, red
+
+    def _run(self, windows, rng, *, dwell=None, fire=None, **kwargs):
+        blue, red = self._forces(sorted({w.asset_b_id for w in windows}))
+        reader = None if dwell is None else (dwell if callable(dwell) else (lambda observer, target, mode: dwell))
+
+        return ER.resolve_engagement(blue, red, windows, fire or _always(_kill()), rng,
+                                     dwell_time_for=reader, **kwargs)
+
+    @staticmethod
+    def _key(detection):
+        return (detection.observer_id, detection.target_id, detection.probability, detection.draw,
+                detection.detected, detection.time)
+
+    def test_without_the_reader_the_detections_are_unchanged(self):
+        window = _window('b1', 'r1', t_end=100.0, distance=300.0)
+        plain = self._run([window], _ScriptedRng([0.2, 0.4, 0.6, 0.8]))
+        explicit = ER.resolve_engagement(*self._forces(), [window], _always(_kill()),
+                                         _ScriptedRng([0.2, 0.4, 0.6, 0.8]), dwell_time_for=None)
+
+        self.assertEqual([self._key(d) for d in plain.detections], [self._key(d) for d in explicit.detections])
+
+        for detection in plain.detections:
+            self.assertIsNone(detection.exposure_s)
+            self.assertIsNone(detection.dwell_time_s)
+
+    def test_long_exposure_reproduces_the_previous_law(self):
+        window = _window('b1', 'r1', t_end=1000.0, distance=300.0)
+        before = self._run([window], _ScriptedRng([0.2, 0.4, 0.6, 0.8]))
+        after = self._run([window], _ScriptedRng([0.2, 0.4, 0.6, 0.8]), dwell=5.0)
+
+        self.assertEqual([dataclasses.replace(d, exposure_s=None, dwell_time_s=None) for d in after.detections],
+                         list(before.detections))
+        self.assertEqual(after.salvos, before.salvos)
+        self.assertEqual(after.damage_events, before.damage_events)
+
+    def test_short_exposure_scales_the_probability(self):
+        window = _window('b1', 'r1', t_end=10.0, distance=0.0)
+        without = self._run([window], _ScriptedRng([0.3, 0.9]))
+        missed = self._run([window], _ScriptedRng([0.3, 0.9]), dwell=40.0)
+        seen = self._run([window], _ScriptedRng([0.2, 0.9]), dwell=40.0)
+
+        self.assertTrue(without.detections[0].detected)
+        self.assertAlmostEqual(missed.detections[0].probability, 0.25)
+        self.assertFalse(missed.detections[0].detected)
+        self.assertTrue(seen.detections[0].detected)
+
+    def test_draw_count_and_order_are_unchanged(self):
+        windows = [_window('b1', 'r1', t_end=10.0, distance=0.0),
+                   _window('b1', 'r2', t_start=20.0, t_end=40.0, distance=200.0)]
+        values = [0.11, 0.22, 0.33, 0.44]
+        plain_rng, dwell_rng = _ScriptedRng(values), _ScriptedRng(values)
+
+        plain = self._run(windows, plain_rng, fire=lambda s, t: None)
+        dwelt = self._run(windows, dwell_rng, dwell=40.0, fire=lambda s, t: None)
+
+        self.assertEqual(dwell_rng.calls, plain_rng.calls)
+        self.assertEqual([d.draw for d in dwelt.detections], [d.draw for d in plain.detections])
+        self.assertEqual([(d.observer_id, d.target_id) for d in dwelt.detections],
+                         [(d.observer_id, d.target_id) for d in plain.detections])
+
+    def test_exposure_from_legs_is_not_cut_at_the_window_start(self):
+        """Il bersaglio e' nella portata (5 km) fra t = 50 e t = 150; la finestra parte a 110 (come dopo un
+        ritaglio): la permanenza e' quella vera, 100 s, non i 40 s rimasti nella finestra."""
+        legs = {'b1': [Leg(0.0, 200.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                'r1': [Leg(0.0, 200.0, (-10000.0, 0.0, 0.0), (10000.0, 0.0, 0.0))]}
+        window = ContactWindow('b1', 'r1', t_start=110.0, t_end=150.0, t_cpa=100.0, distance_cpa=0.0,
+                               range_a=5000.0, range_b=None)
+
+        result = self._run([window], _ScriptedRng([0.9, 0.9]), dwell=40.0, legs=legs)
+
+        self.assertAlmostEqual(result.detections[0].exposure_s, 100.0, places=6)
+        self.assertEqual(result.detections[0].dwell_time_s, 40.0)
+
+    def test_inner_observer_without_legs_uses_the_mutual_interval(self):
+        window = ContactWindow('a1', 'b1', t_start=0.0, t_end=100.0, t_cpa=50.0, distance_cpa=0.0,
+                               range_a=2000.0, range_b=1000.0, t_mutual_start=40.0, t_mutual_end=60.0)
+        blue = _Force('blue', 'Blue', [_Asset('a1')])
+        red = _Force('red', 'Red', [_Asset('b1')])
+
+        result = ER.resolve_engagement(blue, red, [window], lambda s, t: None, _ScriptedRng([0.9, 0.9]),
+                                       dwell_time_for=lambda observer, target, mode: 40.0)
+        by_observer = {d.observer_id: d for d in result.detections}
+
+        self.assertAlmostEqual(by_observer['b1'].exposure_s, 20.0)
+        self.assertAlmostEqual(by_observer['a1'].exposure_s, 100.0)
+
+    def test_inner_observer_without_a_mutual_interval_never_detects(self):
+        window = ContactWindow('a1', 'b1', t_start=0.0, t_end=100.0, t_cpa=50.0, distance_cpa=0.0,
+                               range_a=2000.0, range_b=1000.0, t_mutual_start=None, t_mutual_end=None)
+        blue = _Force('blue', 'Blue', [_Asset('a1')])
+        red = _Force('red', 'Red', [_Asset('b1')])
+        rng = _ScriptedRng([0.0, 0.0])
+
+        result = ER.resolve_engagement(blue, red, [window], lambda s, t: None, rng,
+                                       dwell_time_for=lambda observer, target, mode: 10.0)
+        inner = {d.observer_id: d for d in result.detections}['b1']
+
+        self.assertEqual(inner.exposure_s, 0.0)
+        self.assertEqual(inner.probability, 0.0)
+        self.assertFalse(inner.detected)
+        self.assertEqual(rng.calls, 2)
+
+    def test_detection_records_exposure_and_dwell(self):
+        result = self._run([_window('b1', 'r1', t_end=10.0)], _ScriptedRng([0.9, 0.9]), dwell=40.0)
+
+        for detection in result.detections:
+            self.assertEqual(detection.exposure_s, 10.0)
+            self.assertEqual(detection.dwell_time_s, 40.0)
+
+    def test_reader_must_be_callable(self):
+        with self.assertRaises(TypeError):
+            ER.resolve_engagement(*self._forces(), [_window('b1', 'r1')], _always(_kill()), random.Random(0),
+                                  dwell_time_for=5)
+
+    def test_invalid_dwell_from_the_reader_raises(self):
+        window = _window('b1', 'r1', t_end=10.0)
+
+        with self.assertRaises(ValueError):
+            self._run([window], _ScriptedRng([0.5, 0.5]), dwell=lambda o, t, m: -1)
+
+        with self.assertRaises(TypeError):
+            self._run([window], _ScriptedRng([0.5, 0.5]), dwell=lambda o, t, m: 'x')
+
+        result = self._run([window], _ScriptedRng([0.5, 0.5]), dwell=lambda o, t, m: 0)
+
+        for detection in result.detections:
+            self.assertIsNone(detection.dwell_time_s)
+            self.assertIsNone(detection.exposure_s)
+
+    def test_registry_dwell_time_reads_the_observer(self):
+        class _WithDwell:
+            @staticmethod
+            def detection_dwell_time(mode):
+                return {'air': 6.0}.get(mode)
+
+        self.assertEqual(ER.registry_dwell_time(_WithDwell(), object(), 'air'), 6.0)
+        self.assertIsNone(ER.registry_dwell_time(_WithDwell(), object(), 'ground'))
+        self.assertIsNone(ER.registry_dwell_time(object(), object(), 'air'))
+        self.assertIsNone(ER.registry_dwell_time(_WithDwell(), object(), None))
 
 
 if __name__ == '__main__':

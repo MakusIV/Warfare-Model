@@ -727,6 +727,11 @@ Oltre alle posture, `run_session` chiude la porta di uscita con tre dati per la 
 - `operation_outcomes`: `{operation_id: OperationOutcome}` per ogni Operazione dell'ordine, aggregato
   dalla regola dichiarata (`Command/Session_Types.operation_outcome`, tabella §2.H della Proposta F8).
 
+## Permanenza nel volume (D-5)
+Interruttore del risolutore, non di questo modulo: `Engagement_Resolver.D5_DWELL_TIME` (SPENTO). Acceso, `engage`
+passa a `resolve_engagement` il lettore `dwell_time_for=Engagement_Resolver.registry_dwell_time` (Pd ridotta dalla
+permanenza nel volume per i sensori con `dwell_time_s`); spento, la chiamata e' quella di prima.
+
 ## Cosa NON fa
 - Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`.
 - Non valida l'ordine di sessione (lo fa `Logic/Session_Validator`, v. sopra).
@@ -2761,6 +2766,10 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                     if hostile or destroyed else rules
 
             extra['target_rules'] = rules_now
+
+        if ER.D5_DWELL_TIME:
+            # D-5: Pd dipendente dalla permanenza (v. Engagement_Resolver.D5_DWELL_TIME). Spento: chiamata di prima.
+            extra['dwell_time_for'] = ER.registry_dwell_time
 
         result = ER.resolve_engagement(component[0], component[1], group, fire_control,
                                        order.rng(mission_id=None, event_id=event_id, counter=counter),

@@ -17,6 +17,7 @@ attraverso l'RNG di sessione passato dal chiamante.
    decide sia *se* sia *a che distanza* avviene il rilevamento (v. `detection_radius`), e
    quindi *quando*: l'istante e' ricavato analiticamente con
    `Contact_Scheduler.range_intervals` quando il chiamante fornisce i tratti delle rotte.
+   Con `dwell_time_for` (D-5) la soglia e' moltiplicata per il fattore di permanenza.
 2. **Latenza di reazione — chi spara per primo.** Dal rilevamento al primo lancio passa
    `ReactionProfile.total` (RIV+VAL+COM+ATT, `Context/Reaction_Profile.py`); le salve
    successive sono separate da `refire_interval`. E' la parte salvata della "Strategia 1":
@@ -134,6 +135,32 @@ LANCIO: la salva parte solo quando la distanza 3D tiratore-bersaglio e' <= max_r
   avviene all'istante di ingresso gia' calcolato. Il controllo non estrae numeri casuali:
   l'ordine delle estrazioni RNG e' invariato, e con `max_range=None` il percorso di codice
   e' identico a quello precedente.
+
+## Permanenza nel volume (D-5, 2026-11-06)
+
+`Proposta_Dwell_Time_Rilevamento.md`. Un sensore che scandisce (un radar EWR che ruota) offre al bersaglio
+un'occasione di rilevamento a ogni passaggio del fascio, cioe' ogni `dwell_time_s` [s] (periodo di rivisita,
+60 / giri al minuto; chiave opzionale del dizionario del sensore nel registro, oggi solo nei 10 radar EWR). Se il
+bersaglio resta nel volume meno di un periodo, puo' non essere mai illuminato. La legge:
+
+    Pd = min(1, permanenza / dwell_time_s) * Pd(d_cpa)         (`dwell_factor`, composto col fattore)
+
+e' la probabilita' che almeno un'occasione (fase dell'antenna uniforme) cada nella permanenza. Forma: scelta di
+progetto [S] con giustificazione geometrica, nessuna costante. Si riduce esattamente alla legge precedente per
+permanenza >= periodo o per periodo non dichiarato (None); e' un fattore, quindi `detection_radius` resta la sua
+inversa esatta.
+
+* **Permanenza**: `_exposure_time`, dai tratti delle rotte (somma degli intervalli in portata PROPRIA che toccano
+  la finestra). NON e' tagliata all'inizio della finestra: l'intervallo che la contiene conta dal suo inizio
+  vero, cosi' lo spezzare una finestra (decollo/atterraggio, ritaglio) non riduce la Pd per un artefatto. Senza
+  tratti (chiamate dirette): tutta la finestra se la portata propria e' la maggiore, altrimenti l'intervallo
+  reciproco, altrimenti 0.
+* **Chi la attiva**: solo il chiamante che passa `dwell_time_for` a `resolve_engagement`; in sessione lo fa
+  `Session_Simulator` con `D5_DWELL_TIME` acceso (SPENTO di default). Spento, la chiamata e' quella di prima.
+* **RNG**: il calcolo sta prima di `_draw` e non estrae nulla. Numero e ordine delle estrazioni sono invariati in
+  ogni stato dell'interruttore; cambia solo la soglia, come per `detection_factor`.
+* **Limiti** (Proposta §5.2): solo riduzione (nessun cumulo di scansioni su permanenze lunghe); un solo sensore
+  per asset (quello della portata massima); nessun dwell sul tracciamento dei colpi (R-INT).
 
 ## Scorta per arma (decisione A1/A3, 2026-09-26)
 
@@ -385,7 +412,7 @@ eventi finisce sempre e solo quando la coda si svuota.
 - **L'ordine delle estrazioni fa parte del contratto**: prima tutte le estrazioni di
   rilevamento, nell'ordine canonico delle finestre `(t_start, id_a, id_b, t_end)` e per
   ognuna la direzione a->b poi b->a; poi un'estrazione per colpo non intercettato, nell'
-  ordine degli eventi. Coda eventi con tie-break deterministico `(t, tipo, id, sequenza)`,
+  ordine degli eventi (invariato dalla D-5). Coda eventi con tie-break deterministico `(t, tipo, id, sequenza)`,
   tipi nell'ordine LANCIO < IMPATTO < RISOLUZIONE: a parita' di istante tutti i lanci
   leggono lo stato *prima* dei danni (risoluzione simultanea, §4.4 del documento).
 - **Mai eccezioni per dati mancanti** (forza senza asset utilizzabili, asset senza salute
@@ -434,8 +461,10 @@ from Code.Dynamic_War_Manager.Source.Context import Reaction_Profile as RP
 from Code.Dynamic_War_Manager.Source.DataType.State import HEALTH_LEVEL, StateCategory
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
 from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import (
+    GROUNDED_DETECTION_MODE,
     TIME_EPS,
     GroundedSchedule,
+    detection_mode_for,
     position_on_legs,
     range_intervals,
 )
@@ -486,6 +515,14 @@ ADVERSE_WEATHER_DETECTION_FACTOR = 0.8
 #   `recon_unseen_factor`.
 UNSEEN_DETECTION_FACTOR = 0.5
 RECON_EFFICIENCY_FOG_RELIEF = 0.5
+
+# D-5 opzione 2 (Proposta_Dwell_Time_Rilevamento.md), interruttore dedicato:
+#   * `D5_DWELL_TIME` (SPENTO): Pd ridotta dalla PERMANENZA nel volume quando l'osservatore dichiara un periodo di
+#     rivisita (`dwell_time_s` del sensore nel registro): Pd = min(1, permanenza/dwell) * Pd(d_cpa). Lo leggono
+#     Session_Simulator (passa `dwell_time_for` al risolutore solo se acceso) e Air_Route_Manager (metriche di
+#     rilevamento). Spento: legge di sola distanza, come prima. Nessuna estrazione in piu' ne' in ordine diverso in
+#     nessuno dei due stati.
+D5_DWELL_TIME = False
 
 # Una forza e' "operativa" per l'asset con salute sopra questa soglia: e' la stessa
 # frontiera di State.isOperative (sotto il 50% l'asset e' Critical, fuori combattimento).
@@ -616,7 +653,9 @@ class Detection:
     """Esito di un'estrazione di rilevamento (una per finestra e direzione).
 
     `time` e' l'istante del rilevamento (None se non rilevato); `probability` e' la Pd
-    al massimo avvicinamento, `draw` il numero estratto.
+    al massimo avvicinamento, `draw` il numero estratto. `exposure_s` e `dwell_time_s` (D-5) sono
+    la permanenza nel volume e il periodo di rivisita usati dalla legge di permanenza; entrambi
+    None se la legge non e' stata applicata a questa estrazione.
     """
     observer_id: str
     target_id: str
@@ -626,6 +665,8 @@ class Detection:
     draw: float
     detected: bool
     time: Optional[float] = None
+    exposure_s: Optional[float] = None      # permanenza [s] usata dalla legge D-5; None = legge non applicata
+    dwell_time_s: Optional[float] = None    # periodo di rivisita [s] dell'osservatore; None = legge non applicata
 
 
 @dataclass(frozen=True)
@@ -1038,6 +1079,20 @@ def _check_factor(factor) -> float:
     return float(factor)
 
 
+def _check_dwell(value) -> Optional[float]:
+    """Periodo di rivisita [s] validato (D-5): None o 0 = non dichiarato (None); altrimenti float > 0."""
+    if value is None:
+        return None
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(f"dwell time must be a number or None, got {value!r}")
+
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(f"dwell time must be finite and non-negative, got {value!r}")
+
+    return float(value) if value > 0 else None
+
+
 def detection_probability(distance: float, sensor_range: float, factor: float = 1.0) -> float:
     """Pd di un sensore contro un bersaglio a `distance` [m].
 
@@ -1098,6 +1153,48 @@ def detection_radius(draw: float, sensor_range: float, factor: float = 1.0) -> O
     ratio = (1.0 - draw / factor) / (1.0 - PD_AT_ACQUISITION_RANGE)
 
     return float(sensor_range) * ratio ** (1.0 / PD_RANGE_EXPONENT)
+
+
+def dwell_factor(exposure_s: float, dwell_time_s: Optional[float]) -> float:
+    """Fattore di permanenza g in [0, 1] della legge di Pd (D-5): min(1, exposure_s / dwell_time_s).
+
+    E' la probabilita' che almeno un'occasione di rilevamento (un passaggio del fascio, periodo dwell_time_s, fase
+    uniforme) cada nella permanenza. Forma: scelta di progetto [S] con giustificazione geometrica, nessuna costante.
+    dwell_time_s None o 0 -> 1.0 (nessuna permanenza dichiarata: legge di sola distanza).
+
+    Raises:
+        TypeError: argomenti non numerici o booleani.
+        ValueError: exposure_s negativo o non finito; dwell_time_s negativo o non finito.
+    """
+    if isinstance(exposure_s, bool) or not isinstance(exposure_s, (int, float)):
+        raise TypeError(f"exposure_s must be a number, got {exposure_s!r}")
+
+    if not math.isfinite(exposure_s) or exposure_s < 0:
+        raise ValueError(f"exposure_s must be finite and non-negative, got {exposure_s!r}")
+
+    dwell = _check_dwell(dwell_time_s)
+
+    if dwell is None:
+        return 1.0
+
+    return min(1.0, float(exposure_s) / dwell)
+
+
+def registry_dwell_time(observer, target, mode: Optional[str]) -> Optional[float]:
+    """Lettore di default per `resolve_engagement(dwell_time_for=...)`: `observer.detection_dwell_time(mode)`.
+
+    None se `mode` e' None o l'osservatore non espone `detection_dwell_time` (stub, adapter); `target` non e' letto
+    (firma uniforme con detection_factor, per lettori futuri che dipendano dal bersaglio).
+    """
+    if mode is None:
+        return None
+
+    reader = getattr(observer, 'detection_dwell_time', None)
+
+    if not callable(reader):
+        return None
+
+    return reader(mode)
 
 
 # ── DEGRADAZIONE AMBIENTALE DELLA Pd (meteo/notte, da Logic/Meteo_Analysis) ────
@@ -1646,7 +1743,7 @@ class _EngagementRun:
                  reaction_profile_for, detection_factor, salvo_window, provenance,
                  breakpoint_rng=None, morale_for=None, enemy_estimate_for=None, fire_doctrine=None,
                  rwr_catalogue=None, coordination_of=None, grounded=None, activity_criteria=None,
-                 target_rules=None):
+                 target_rules=None, dwell_time_for=None):
         self.fire_control = fire_control
         # Regole di bersaglio di missione (F7a, v. docstring del modulo): per asset tiratore, e ostili noti
         # (asset che hanno lanciato almeno una salva contro il dominio di coordinamento, per dominio).
@@ -1710,6 +1807,8 @@ class _EngagementRun:
         self.in_time_cache: Dict[Tuple[str, int], bool] = {}
         self.reaction_profile_for = reaction_profile_for or RP.profile_for_asset
         self.detection_factor = detection_factor
+        # D-5: lettore (osservatore, bersaglio, modo) -> periodo di rivisita [s] | None; None = legge non applicata.
+        self.dwell_time_for = dwell_time_for
         self.salvo_window = float(salvo_window)
         self.provenance = provenance
         self.contacts = list(contacts or [])
@@ -1998,6 +2097,18 @@ class _EngagementRun:
         if self.detection_factor is not None:
             factor = _check_factor(self.detection_factor(observer.asset, target.asset))
 
+        exposure = dwell = None
+
+        if self.dwell_time_for is not None:
+            # D-5 (D5_DWELL_TIME, v. docstring del modulo): permanenza nel volume proprio. Nessuna estrazione qui:
+            # numero e ordine delle estrazioni restano quelli di prima.
+            mode = GROUNDED_DETECTION_MODE if self._grounded_in(target.id, window) else detection_mode_for(target.asset)
+            dwell = _check_dwell(self.dwell_time_for(observer.asset, target.asset, mode))
+
+            if dwell is not None:
+                exposure = self._exposure_time(window, observer.id, target.id, own_range, other_range)
+                factor = factor * dwell_factor(exposure, dwell)
+
         draw = self._draw()
         distance = max(float(window.distance_cpa), 0.0)
         probability = detection_probability(distance, own_range, factor) if distance <= own_range else 0.0
@@ -2028,7 +2139,7 @@ class _EngagementRun:
         self.detections.append(Detection(observer_id=observer.id, target_id=target.id,
                                          sensor_range=float(own_range), distance_cpa=distance,
                                          probability=probability, draw=draw, detected=detected,
-                                         time=time))
+                                         time=time, exposure_s=exposure, dwell_time_s=dwell))
 
     def _perceive(self, force_id: str, asset_id: str, time: float) -> None:
         """La forza `force_id` percepisce l'asset nemico `asset_id` dall'istante `time`, e con lei
@@ -2105,6 +2216,38 @@ class _EngagementRun:
             return window.t_mutual_start
 
         return window.t_cpa
+
+    def _exposure_time(self, window, observer_id: str, target_id: str, own_range: float,
+                       other_range: Optional[float]) -> float:
+        """Permanenza [s] del bersaglio nel volume dell'osservatore, per la legge di permanenza (D-5).
+
+        Con i tratti di entrambe le rotte: somma, sugli intervalli di `range_intervals` con la portata propria
+        che toccano la finestra, di `min(end, t_end) - start`. NON si taglia all'inizio della finestra
+        (`t_start`): l'intervallo che la contiene conta dal suo inizio vero (il sensore guardava gia'), altrimenti
+        lo spezzare una finestra (decollo/atterraggio, ritaglio G4a) ridurrebbe la Pd per un artefatto di
+        calcolo. Senza tratti (chiamate dirette): `t_end - t_start` se la portata propria e' la maggiore (o
+        l'altra e' None); altrimenti l'intervallo reciproco `t_mutual_end - t_mutual_start` se esiste; altrimenti 0
+        (stesso criterio di `_detection_time`). Nessuna estrazione.
+        """
+        legs_observer = self.legs.get(observer_id)
+        legs_target = self.legs.get(target_id)
+
+        if legs_observer and legs_target:
+            exposure = 0.0
+
+            for start, end in range_intervals(legs_observer, legs_target, own_range):
+                if end >= window.t_start - TIME_EPS and start <= window.t_end + TIME_EPS:
+                    exposure += max(0.0, min(end, window.t_end) - start)
+
+            return exposure
+
+        if other_range is None or own_range >= other_range:
+            return max(0.0, float(window.t_end) - float(window.t_start))
+
+        if window.t_mutual_start is not None and window.t_mutual_end is not None:
+            return max(0.0, float(window.t_mutual_end) - float(window.t_mutual_start))
+
+        return 0.0
 
     # ── coda eventi ───────────────────────────────────────────────────────────
 
@@ -3633,7 +3776,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                        coordination_of: Optional[Mapping[str, str]] = None,
                        grounded: Optional[Iterable[str]] = None,
                        activity_criteria: Optional[Mapping[str, ActivityCriteria]] = None,
-                       target_rules: Optional[Mapping[str, TargetRules]] = None
+                       target_rules: Optional[Mapping[str, TargetRules]] = None,
+                       dwell_time_for: Optional[Callable] = None
                        ) -> Optional[EngagementResult]:
     """Risolve un ingaggio fra due o piu' forze, in un'unica timeline. Non muta alcun asset.
 
@@ -3712,6 +3856,9 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
             "Regole di bersaglio di missione (F7a)" nel docstring del modulo): bersaglio designato, ROE, armi
             designate. None o vuoto (default) = comportamento precedente. In sessione le costruisce
             `Session_Simulator` dalle missioni (`Mission_Adapter.target_rules`).
+        dwell_time_for: (observer, target, mode) -> float | None, periodo di rivisita [s] del sensore
+            dell'osservatore (D-5, v. "Permanenza nel volume"); None (default) = legge di sola distanza. In
+            sessione lo passa Session_Simulator (registry_dwell_time) solo con D5_DWELL_TIME acceso.
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset
@@ -3746,6 +3893,9 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
         if fn is not None and not callable(fn):
             raise TypeError(f"{name} must be callable")
 
+    if dwell_time_for is not None and not callable(dwell_time_for):
+        raise TypeError("dwell_time_for must be callable")
+
     if activity_criteria is not None:
         if not isinstance(activity_criteria, abc.Mapping):
             raise TypeError(f"activity_criteria must be a mapping asset_id -> ActivityCriteria, "
@@ -3771,7 +3921,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                          morale_for=morale_for, enemy_estimate_for=enemy_estimate_for,
                          fire_doctrine=fire_doctrine, rwr_catalogue=rwr_catalogue,
                          coordination_of=coordination_of, grounded=grounded,
-                         activity_criteria=activity_criteria, target_rules=target_rules)
+                         activity_criteria=activity_criteria, target_rules=target_rules,
+                         dwell_time_for=dwell_time_for)
 
     if not run.usable:
         return None
