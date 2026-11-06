@@ -1,0 +1,50 @@
+1185:DIFF S21/S21-5/control: 42 values differ
+1207:DIFF S21/S21-7/control: 56 values differ
+1229:compared 1009 runs: 44 difference lines (946.5 s)
+1230:Traceback (most recent call last):
+1241:TypeError: '<' not supported between instances of 'NoneType' and 'str'
+DIFF S21/S21-5/control: 42 values differ
+    ammunition_consumed.Red-Airbase/aaa0.test:aaa: 16 -> 17
+    ammunition_consumed.Red-Airbase/sam0.test:sam: 4 -> 2
+    ammunition_events[15][0]: 224.440723 -> 224.940723
+    ammunition_events[15][1]: 'Red-Airbase/sam0' -> 'Red-Airbase/aaa0'
+    ammunition_events[15][2]: 'test:sam' -> 'test:aaa'
+    ammunition_events[16][0]: 224.940723 -> 229.940723
+    ammunition_events[17][0]: 229.940723 -> 234.940723
+    ammunition_events[18][0]: 234.940723 -> 239.940723
+    ammunition_events[19][0]: 236.440723 -> '<absent>'
+    ammunition_events[19][1]: 'Red-Airbase/sam0' -> '<absent>'
+    ammunition_events[19][2]: 'test:sam' -> '<absent>'
+    ammunition_events[19][3]: 1 -> '<absent>'
+    assets.Blue-Strike/str2.fuel: 0.848585 -> 0.933812
+    assets.Red-Airbase/aaa0.ammunition: 1984 -> 1983
+    assets.Red-Airbase/aaa0.stores.AZP-23-23mm: 1984 -> 1983
+    assets.Red-Airbase/sam0.ammunition: 4 -> 6
+    assets.Red-Airbase/sam0.stores.9M37-SAM: 4 -> 6
+    counts.fuel_events: 12 -> 11
+    counts.rounds: 20 -> 19
+    counts.salvos: 20 -> 19
+    ... 22 more
+DIFF S21/S21-7/control: 56 values differ
+    ammunition_consumed.Red-Airbase/aaa0.test:aaa: 11 -> 12
+    ammunition_consumed.Red-Airbase/sam0.test:sam: 2 -> '<absent>'
+    ammunition_events[10][0]: 209.940723 -> 214.940723
+    ammunition_events[11][0]: 212.440723 -> 219.940723
+    ammunition_events[11][1]: 'Red-Airbase/sam0' -> 'Red-Airbase/aaa0'
+    ammunition_events[11][2]: 'test:sam' -> 'test:aaa'
+    ammunition_events[12][0]: 214.940723 -> '<absent>'
+    ammunition_events[12][1]: 'Red-Airbase/aaa0' -> '<absent>'
+    ammunition_events[12][2]: 'test:aaa' -> '<absent>'
+    ammunition_events[12][3]: 1 -> '<absent>'
+    ammunition_events[8][0]: 200.440723 -> 204.940723
+    ammunition_events[8][1]: 'Red-Airbase/sam0' -> 'Red-Airbase/aaa0'
+    ammunition_events[8][2]: 'test:sam' -> 'test:aaa'
+    ammunition_events[9][0]: 204.940723 -> 209.940723
+    assets.Blue-Strike/str1.destroyed: True -> False
+    assets.Blue-Strike/str1.fuel: 0.763358 -> 0.848585
+    assets.Blue-Strike/str1.health: 0 -> 100
+    assets.Blue-Strike/str1.operative: False -> True
+    assets.Red-Airbase/aaa0.ammunition: 1989 -> 1988
+    assets.Red-Airbase/aaa0.stores.AZP-23-23mm: 1989 -> 1988
+    ... 36 more
+compared 1009 runs: 44 difference lines (946.5 s)

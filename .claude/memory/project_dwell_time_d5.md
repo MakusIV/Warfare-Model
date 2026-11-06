@@ -2,14 +2,33 @@
 name: project-dwell-time-d5
 description: "D-5 opzione 2 (dwell_time_s, Pd dipendente dalla permanenza): Proposta in BOZZA sospesa il 2026-11-05, decisioni DW-1..DW-8 aperte, sonde S-2/S-3 da eseguire, rischio principale (effetto quasi nullo sulle rotte senza orizzonte radar nel DES)"
 metadata:
+  node_type: memory
   type: project
+  originSessionId: 00c064a6-ac9d-45bd-b548-e01a5d90b01b
+  modified: 2026-11-06T11:39:30.416Z
 ---
 
-## Stato (2026-11-05, sessione sospesa su osboxes, ripresa possibile sul ProArt)
+## STATO AGGIORNATO 2026-11-06 (osboxes): Proposta DEFINITIVA, nessuna decisione aperta
+- `Proposta_Dwell_Time_Rilevamento.md` aggiornata da des-planner con DW-1..DW-9 e sonde S-1..S-3 complete (verificata dal principale: nessun residuo di BOZZA/aperta; Type-80 = 15 s [S]; conteggi attesi invariati: suite 4788 dopo A, 4795 dopo B, confronto 1009 identiche + 20 nuove; ~230 righe di codice e ~440 di test, 38 test per A+B). Riga di stato aggiornata anche in `Proposta_Volumi_Rilevamento_Intercettazione.md` §9 D-5.
+- Sonde: cartella `Rapporti/Sonde_Dwell_D5/` allineata (LEGGIMI, `s2/esito_riassunto.txt`, `s3/esito.txt`, `probe_dwell.py` con sort_keys corretto). Dettagli di LEGGIMI/§1.9 della Proposta sono coerenti salvo la riga ~1058 della Proposta (elenco incoerenze, ormai risolta).
+- Ricerca dati di scansione per SAM/AAA/ecc. (DW-9) FATTA il 2026-11-06 (agente Sonnet, 289 righe, `Analysis/Document/Ricerca_Dwell_Sensori_2026_11_06.md`, non ancora committata ne' letta nel merito dal principale): dato pulito (confidenza media-alta) solo per E-3A (10 s), AN/SPS-49 (12 giri/min default), Roland MPDR-16 (60 giri/min); bassa-media per Buk 9S18, Kub 1S91, Gepard, Tor, Fregat-MA, Type 364; ZSU-23-4 Gun Dish (osservatore piu' usato negli scenari, 12) NON trovato. Il registro mescola ricerca e inseguimento (Buk: Fire Dome ma portata del 9S18M1; S-300PS: 30N6 ma ricerca = Big Bird). Vista/caccia: dwell e' un problema di modello (modo RWS/TWS non modellato; vista richiede legge cumulativa), non un dato mancante.
+- **Prossimo passo**: proporre l'esecutore del blocco A (riga "compito -> agente, modello, motivo", attendere conferma), preparare `ai/oc-<tema>` se OpenCode (commit del piano prima); commit delle modifiche di questa sessione solo su richiesta dell'utente (non ancora fatto).
+
+## Stato (2026-11-05, sessione sospesa su osboxes, ripresa possibile sul ProArt) — SUPERATO dalla sezione sopra
 - Proposta `Analysis/Document/Proposta_Dwell_Time_Rilevamento.md` (des-planner Opus high, ~900 righe): **BOZZA**. Intestazione con "COMPLETO / MANCA". Completi: problema, alternative, decisioni DW-1..DW-8 con raccomandazione, piano blocco A (motore: ~170 righe di codice + ~330 di test, 31 test, scenario S32-DWELL 20 esecuzioni nuove) e blocco B (pianificatore: ~60 + ~110, 7 test), blocco C condizionato, rischi, documenti da aggiornare.
 - Origine: scelta ESPLICITA dell'utente (opzione 2 della D-5 di `Proposta_Volumi_Rilevamento_Intercettazione.md`); il "se" non si riapre, la Proposta discute il "come". Nella Proposta d'origine e' stata aggiunta solo la riga di stato in §9 D-5.
 - **Decisioni per l'utente (TUTTE aperte, raccomandazione del planner)**: DW-1 il dato e' il periodo di rivisita = 60/giri al minuto; DW-2 10 EWR con valore (regola "rotazione piu' veloce" sugli intervalli di fonte), 5 EWR senza dato restano senza valore; DW-3 legge `Pd = min(1, permanenza/dwell) x Pd(d)` (puo' solo ridurre la Pd attuale); DW-4 permanenza calcolata nel risolutore dai tratti, non tagliata all'inizio della finestra; DW-5 interruttore `Engagement_Resolver.D5_DWELL_TIME` spento di default; DW-6 nel pianificatore solo metriche coerenti (blocco B); DW-7 rimandare l'attraversamento a corda limitata nel pianificatore (blocco C); DW-8 S32-DWELL con 5 varianti x 4 semi.
 - **Esito atteso**: suite `Ran 4788` dopo A e `Ran 4795` dopo B; confronto 1009 identiche + 20 nuove, con interruttore spento E acceso (S-1).
+
+## Decisioni PRESE dall'utente (2026-11-06, osboxes) — da registrare nella Proposta (file di des-planner)
+- **DW-1 = (a)** un giro d'antenna: dwell = 60 / giri al minuto, nessun colpo di conferma.
+- **DW-2 = "regime normale se citato"**, altrimenti rotazione piu' veloce: DIVERSA dalla raccomandazione (§2.2 dava Type-80 = 10 s). **AMES-Type-80 = 15 s** (4 giri/min letto come regime base di "4 (fino a 6)", STIMA da dichiarare nel codice e nel rapporto). Gli altri 9 invariati (SCR-270 60, P-12 e P-18 6, Type-7 7,5, P-37/1L13/55Zh6/TPS-43/P-14 10); Chain-Home, Freya, Wassermann, Mammut, AN-FPS-117 senza valore. "Normale" compare nella ricerca solo per l'FPS-20 (riga 351), non nei registri.
+- **DW-3 = L1** `Pd = min(1, permanenza/dwell) x Pd(d)` (come raccomandato). L'utente aveva scelto per errore L2 e l'ha corretta: ragioni = semplicita' della prima versione e **stessi criteri di Pd per ogni sensore di rilevamento** (legge unica generica; i sensori senza dato restano alla legge attuale).
+- **DW-4 = risolutore, dai tratti** (come raccomandato). **DW-5 = raccomandata**: `Engagement_Resolver.D5_DWELL_TIME` spento di default (accensione da decidere dopo la verifica). **DW-6 = si'**, blocco B (pianificatore con la stessa legge, `AVOID_DETECTION` invariato). **DW-7 = rimandare** (blocco C non ora; l'orizzonte radar nel DES e' attivita' separata). **DW-8 = raccomandata**: S32-DWELL 5 varianti x 4 semi, 20 esecuzioni nuove.
+- **DW-9 (nuova, 2026-11-06) = "solo il meccanismo ora"**: la legge e' gia' generica per ogni osservatore del DES (SAM, AAA, asset), ma si danno valori solo ai 10 EWR; per SAM/AAA/radar d'aereo/TVD/vista serve una ricerca dei dati di scansione (agente di ricerca lanciato il 2026-11-06, output `Analysis/Document/Ricerca_Dwell_Sensori_2026_11_06.md`). SAM e AAA sono tiratori: la Pd ridotta cambia gli esiti, quindi nessun valore stimato senza fonte.
+- Prossimo passo: far aggiornare la Proposta a des-planner con DW-1..DW-9 (il file e' suo), poi esecuzione blocco A.
+- Metodo con l'utente: una decisione per volta con spiegazione e esempio numerico; i dialoghi multi-domanda vengono rifiutati; alla fine ha chiesto l'elenco completo in testo e ha risposto con le sigle.
+- Sonde chiuse: S-3 conferma le asserzioni di §4.A.7; S-2 (dwell uniforme 10 s) = 1009 confrontate, 2 cambiate (S21-5 e S21-7 control), coerente con i 3 rilevamenti persi di S-1. `probe_dwell.py` fallisce nel salvataggio finale di stats.json (chiave None con sort_keys): difetto dello script, dati validi.
 
 ## Numeri gia' ottenuti (sonda S-1, letti)
 - Legge accesa in memoria con i soli dati di fonte: `compared 1009 runs: IDENTICAL` (nessuno scenario della fotografia usa un EWR). Estrazioni di rilevamento 33 446 (tutte con i tratti), 29 024 con permanenza >= 5 minuti. Controfattuale (stesso dwell per tutti 2/6/10/30/60/120 s): rilevamenti persi 0/0/3/17/45/464 su 29 483.

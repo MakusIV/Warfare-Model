@@ -641,7 +641,7 @@ In ordine di blocco:
    metrica Pd? Oppure si introduce `dwell_time_s` per sensore **e** una Pd dipendente dalla permanenza nel
    DES? La seconda cambia la legge del risolutore.
 
-   > **Stato (2026-11-05)**: scelta dell'utente: **opzione 2**. Piano in `Proposta_Dwell_Time_Rilevamento.md` (decisioni DW-1..DW-8 aperte).
+   > **Stato (2026-11-06)**: scelta dell'utente: **opzione 2**. Piano `Proposta_Dwell_Time_Rilevamento.md` **DEFINITIVO** (decisioni DW-1..DW-9 prese il 2026-11-06; blocchi A e B da eseguire, blocco C rimandato; sonde S-1..S-3 complete).
 6. **D-6 Nomi**:
    - rinominare `min_detection_time` in `acquisition_time`, con alias e aggiornamento di
      `Reaction_Profile`?

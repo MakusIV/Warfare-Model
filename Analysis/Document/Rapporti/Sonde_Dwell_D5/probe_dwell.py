@@ -135,6 +135,6 @@ rc = SB.main(['--compare', 'Code/Dynamic_War_Manager/Source/Test/baseline/scenar
 stats['models_with_dwell'] = dict(stats['models_with_dwell'])
 stats['exposure_hist'] = dict(stats['exposure_hist'])
 with open(f'{OUT}/stats.json', 'w') as fh:
-    json.dump(stats, fh, indent=1, sort_keys=True)
+    json.dump(stats, fh, indent=1, sort_keys=False)
 print('PROBE_RC', rc)
-print(json.dumps(stats, indent=1, sort_keys=True))
+print(json.dumps(stats, indent=1, sort_keys=False))

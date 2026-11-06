@@ -1,0 +1,32 @@
+seed 0: episodes off=1 long=1 short=1
+  long==off ammo True  ewr_on==ewr_off ammo True
+  ZSU rounds off/short 150 0
+  long ZSU exposures [62.7, 64.7, 66.0, 66.7]
+  first-episode ZSU detected off/short 4 0 subset True
+  total ZSU detected off/short 4 0
+  short bound ok True exposures [62.7, 64.7, 66.0, 66.7]
+  ewr_on P-18 exposures min 385.7142857142858 n 4 prob equal True
+seed 1: episodes off=1 long=1 short=1
+  long==off ammo True  ewr_on==ewr_off ammo True
+  ZSU rounds off/short 150 0
+  long ZSU exposures [62.7, 64.7, 66.0, 66.7]
+  first-episode ZSU detected off/short 4 0 subset True
+  total ZSU detected off/short 4 0
+  short bound ok True exposures [62.7, 64.7, 66.0, 66.7]
+  ewr_on P-18 exposures min 385.7142857142858 n 4 prob equal True
+seed 2: episodes off=1 long=1 short=1
+  long==off ammo True  ewr_on==ewr_off ammo True
+  ZSU rounds off/short 150 0
+  long ZSU exposures [62.7, 64.7, 66.0, 66.7]
+  first-episode ZSU detected off/short 4 0 subset True
+  total ZSU detected off/short 4 0
+  short bound ok True exposures [62.7, 64.7, 66.0, 66.7]
+  ewr_on P-18 exposures min 385.7142857142858 n 4 prob equal True
+seed 3: episodes off=1 long=1 short=1
+  long==off ammo True  ewr_on==ewr_off ammo True
+  ZSU rounds off/short 150 150
+  long ZSU exposures [62.7, 64.7, 66.0, 66.7]
+  first-episode ZSU detected off/short 3 2 subset True
+  total ZSU detected off/short 3 2
+  short bound ok True exposures [62.7, 64.7, 66.0, 66.7]
+  ewr_on P-18 exposures min 385.7142857142858 n 4 prob equal True

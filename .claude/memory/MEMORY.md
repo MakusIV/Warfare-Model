@@ -3,7 +3,7 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
-- [D-5 opzione 2 (dwell_time_s): Proposta in BOZZA sospesa il 2026-11-05, decisioni DW-1..DW-8 aperte, sonde S-2/S-3 da fare](project_dwell_time_d5.md) — RIPARTIRE DA QUI: primo passo in fondo al file; rischio principale: senza orizzonte radar nel DES la legge non accorcia le rotte
+- [D-5 opzione 2 (dwell_time_s): Proposta DEFINITIVA il 2026-11-06, DW-1..DW-9 decise, sonde S-1..S-3 complete](project_dwell_time_d5.md) — RIPARTIRE DA QUI: prossimo passo = esecutore del blocco A (proporre e attendere conferma); ricerca dati sensori SAM/AAA in corso (DW-9); rischio: senza orizzonte radar nel DES la legge non accorcia le rotte
 - [Sessione 2026-11-05 osboxes — blocco C siti fissi EWR FATTO (suite 4757, fotografia 1009), sospetto _mission_outcome smentito](project_session_2026_11_05_summary.md) — prossime attivita': manuale DES per il blocco C, D-5 opz. 2, verifica DCS FPS-117
 - [Sessione 2026-11-04 ProArt — CHIUSA, pushata: D-4b/D-4c fatte (blocchi A e B), manuale DES aggiornato, suite 4742, fotografia 1009](project_session_2026_11_04_summary.md) — prossime attivita' in parte superate dalla sessione 2026-11-05 (documenti, commenti e blocco C fatti)
 - [Sensori D-4b/D-4c: dettaglio decisioni, blocchi A (37816355), B (cbc75634), C siti fissi (efa8f353), costi](project_sensori_d4b_d4c.md) — costo B 0,678 $ (StreamLake)

@@ -1,18 +1,19 @@
 # Proposta: tempo di permanenza `dwell_time_s` e Pd dipendente dalla permanenza nel DES (D-5, opzione 2)
 
-**Stato: BOZZA, sospesa il 2026-11-05.**
-- **COMPLETO**: §0 sintesi; §1 problema e comportamento attuale (catena, RNG, dati di fonte, numeri della corda);
-  §2 alternative con raccomandazione per le 6 domande; §3 decisioni DW-1..DW-8 formulate con raccomandazione; §4
-  piano dei blocchi A e B (file, firme, test, esito atteso) e blocco C condizionato; §5 rischi; documenti da
-  aggiornare; scelte minori. Sonda **S-1 completa** (§1.9).
-- **MANCA**: esito della sonda **S-2** (fermata a meta', nessun numero: comando di rilancio in §1.9); sonda **S-3**
-  (verifica della geometria di S32-DWELL, script pronto, mai eseguita: §1.9); dopo S-3, eventuale ritocco dei test
-  §4.A.7 se la geometria non desse gli esiti attesi. Nessun altro numero da riempire; nessun segnaposto.
-- **Decisioni per l'utente**: tutte formulate (§3), nessuna presa.
+**Stato: DEFINITIVA (decisioni DW-1..DW-9 prese dall'utente il 2026-11-06).** Bozza scritta il 2026-11-05,
+completata il 2026-11-06.
+- **Decisioni**: tutte prese (§3): DW-1 (a), DW-2 "regime normale se citato, altrimenti rotazione piu' veloce"
+  (diversa dalla raccomandazione iniziale: **AMES-Type-80 = 15 s**), DW-3 L1, DW-4 nel risolutore, DW-5
+  `D5_DWELL_TIME` spento, DW-6 blocco B si', DW-7 blocco C rimandato, DW-8 S32-DWELL 5 x 4, DW-9 (nuova) solo il
+  meccanismo: valori ai soli 10 EWR.
+- **Sonde**: **S-1, S-2 e S-3 complete** (§1.9). S-3 conferma la geometria di S32-DWELL: nessun ritocco ai test di
+  §4.A.7.
+- **Da eseguire**: blocchi A e B (§4). Il blocco C e' descritto ma **non** si esegue (DW-7).
 
-Nessun file di codice o di test modificato. Le sonde di §1.9 sono script di sola lettura: accendono la legge
-**in memoria** e rieseguono il confronto con la fotografia, senza installare nulla e senza toccare il repository;
-copia persistente in `.ai-run/sonde_dwell/` (fuori dal versionamento).
+Nessun file di codice o di test modificato da questo documento. Le sonde di §1.9 sono script di sola lettura:
+accendono la legge **in memoria** e rieseguono il confronto con la fotografia, senza installare nulla e senza
+toccare il repository; copia versionata degli script e dell'esito di S-1 in
+`Analysis/Document/Rapporti/Sonde_Dwell_D5/`, log di S-2 e S-3 in `.ai-run/sonde_dwell/` (fuori dal versionamento).
 **Origine**: `Proposta_Volumi_Rilevamento_Intercettazione.md` §3.3 e §9 D-5 ("Non rilevato" a corda limitata).
 L'utente ha scelto **esplicitamente l'opzione 2**: `dwell_time_s` per sensore e una Pd del DES che dipende dalla
 permanenza nel volume, perche' l'aggiramento puro allungherebbe troppo le rotte e annullare missioni per
@@ -20,7 +21,9 @@ l'impossibilita' di evitare il rilevamento sarebbe eccessivo in un contesto Guer
 questo documento discute il "come".
 **Fonte dei dati**: `Ricerca_EWR_2026_10_29.md` §3 (righe "Antenna/mobilita'", giri al minuto), riletta per i 15 EWR
 dei registri.
-**Esecutore**: `des-developer` (Claude Sonnet, sforzo alto). Alternativa: `oc-developer`.
+**Esecutore**: `des-developer` (Claude Sonnet, sforzo alto). Alternativa: `oc-developer`. L'esecutore segue il
+piano di §4 cosi' com'e': nessuna decisione di design resta aperta; se il codice reale non corrisponde (righe,
+firme, esiti), si ferma e riferisce.
 **Convenzioni**: **[V]** = verificato leggendo il codice (`file:riga`) o eseguendolo; **[I]** = ipotesi o
 conoscenza generale, non verificata nel repository; **[S]** = stima o scelta di progetto, mai dato tarato;
 **F/D/S** = Fonte / Dedotto / Stima, come nella ricerca. Percorsi di codice relativi a
@@ -33,26 +36,29 @@ conoscenza generale, non verificata nel repository; **[S]** = stima o scelta di 
 **Risultato principale, da leggere prima delle decisioni.** Con i dati di fonte (periodo di rotazione degli EWR,
 6-60 s) la legge "Pd ridotta se la permanenza e' piu' breve del periodo di scansione" ha un effetto **quasi nullo
 sulle rotte**: la corda che un aereo puo' percorrere dentro un volume EWR con Pd ridotta e' al piu' `v * dwell`,
-cioe' 1,5-2,5 km a 250 m/s contro raggi di 120-440 km, e la penetrazione corrispondente nel volume e' di pochi metri
+cioe' 1,5-3,75 km a 250 m/s contro raggi di 120-440 km, e la penetrazione corrispondente nel volume e' di pochi metri
 (§1.8). La legge e' fisicamente corretta e utile (contatti radenti, esposizioni brevi, sensori lenti come lo
 SCR-270 o la scoperta a vista, futuri radar SAM), ma **da sola non accorcia le rotte contro una copertura EWR in
 quota**: per quello servono l'orizzonte radar nel DES (oggi assente, §1.6) o l'accettazione del rilevamento come
-costo. Lo dico qui perche' tocca la motivazione della scelta; la decisione DW-7 lo rende esplicito.
+costo. Per questo DW-7 ha rimandato il blocco C e l'orizzonte radar nel DES resta un'attivita' separata.
 
-| Tema | Raccomandazione | Effetto sulla fotografia |
+| Tema | Decisione presa (2026-11-06) | Effetto sulla fotografia |
 |---|---|---|
-| Che cos'e' `dwell_time_s` (DW-1) | **periodo di rivisita** del sensore = 60 / giri al minuto; nessun fattore di conferma (la conferma e' gia' nella RIV) | — |
-| Valori (DW-2) | 10 EWR con giri/min di fonte; regola "rotazione piu' veloce" se la fonte da' un intervallo; 5 EWR senza dato -> nessuna permanenza; nessun altro sensore | — |
-| Legge (DW-3) | `Pd = g * Pd(d_cpa)`, `g = min(1, permanenza / dwell)`: SOLO riduzione, si riduce alla legge attuale per permanenza >= dwell o dwell assente | — |
+| Che cos'e' `dwell_time_s` (DW-1) | (a) **periodo di rivisita** del sensore = 60 / giri al minuto; nessun fattore di conferma (la conferma e' gia' nella RIV) | — |
+| Valori (DW-2) | 10 EWR con giri/min di fonte; regola "**regime normale se citato, altrimenti rotazione piu' veloce**" (AMES-Type-80 = 15 s, [S]); 5 EWR senza dato -> nessuna permanenza | — |
+| Legge (DW-3) | L1: `Pd = g * Pd(d_cpa)`, `g = min(1, permanenza / dwell)`: SOLO riduzione, si riduce alla legge attuale per permanenza >= dwell o dwell assente; legge unica per ogni sensore | — |
 | Permanenza e RNG (DW-4) | calcolata nel risolutore dai tratti (`range_intervals` con la portata propria), **non tagliata** all'inizio della finestra; stessa unica estrazione per coppia e direzione, stesso ordine | — |
-| Interruttore (DW-5) | `Engagement_Resolver.D5_DWELL_TIME = False` (spento di default) | spento: **1009 identiche** |
+| Interruttore (DW-5) | `Engagement_Resolver.D5_DWELL_TIME = False` (spento di default); l'accensione si decide dopo la verifica | spento: **1009 identiche** |
 | Pianificatore (DW-6) | blocco B: `DetectionThreat.dwell_time_s` e metriche di `Path` con la stessa legge; `AVOID_DETECTION` invariato (aggiramento puro) | nessuna (il pianificatore non e' nella fotografia) |
-| Attraversamento a corda limitata nel pianificatore (DW-7) | **non ora** (blocco C descritto ma rimandato): con i dati di fonte non accorcia nessuna rotta | — |
-| Scenario (DW-8) | S32-DWELL: 5 varianti x 4 semi = **20 esecuzioni nuove** | +20 |
-| Con l'interruttore ACCESO (sonda S-1) | — | **1009 identiche** (nessuno scenario usa un sensore con dwell di fonte) |
+| Attraversamento a corda limitata nel pianificatore (DW-7) | **rimandato** (blocco C descritto, non eseguito): con i dati di fonte non accorcia nessuna rotta | — |
+| Scenario (DW-8) | S32-DWELL: 5 varianti x 4 semi = **20 esecuzioni nuove** (geometria confermata dalla sonda S-3) | +20 |
+| Estensione ad altri sensori (DW-9) | **solo il meccanismo ora**: la legge vale per ogni osservatore, ma i valori si danno ai soli 10 EWR; SAM, AAA, radar d'aereo, navi, TVD e vista senza valore finche' manca una fonte | — |
+| Con l'interruttore ACCESO e i soli dati di fonte (sonda S-1) | — | **1009 identiche** (nessuno scenario usa un sensore con dwell di fonte) |
+| Sensibilita': dwell fittizio di 10 s a OGNI osservatore (sonda S-2) | — | 1007 identiche, **2 cambiate** (S21-5 e S21-7 `control`) |
 
 **Dimensione stimata**: blocco A ~170 righe di codice + ~330 righe di test (31 test); blocco B ~60 righe + ~110 di
-test (7 test). Blocco C (se scelto) ~120 righe + ~150 di test. Suite attesa: `Ran 4788` dopo A, `Ran 4795` dopo B.
+test (7 test). Blocco C (rimandato, DW-7) ~120 righe + ~150 di test. Suite attesa: `Ran 4788` dopo A, `Ran 4795`
+dopo B (base 4757). La scelta DW-2 (Type-80 15 s invece di 10 s) cambia un valore, non il numero dei test.
 
 ---
 
@@ -164,7 +170,7 @@ esiti di tiro solo se la applica il sensore **di un tiratore**.
 La ricerca EWR riporta il regime di rotazione dell'antenna (colonna "Antenna/mobilita'", tutti **F**, confidenza
 media salvo dove indicato). Periodo di rivisita = 60 / giri al minuto (**D**, conversione).
 
-| Record (chiave) | Giri/min nella fonte | Riga ricerca | Periodo [s] con la regola "piu' veloce" (DW-2) |
+| Record (chiave) | Giri/min nella fonte | Riga ricerca | Periodo [s] con la regola di DW-2 ("normale" se citato, altrimenti "piu' veloce") |
 |---|---|---|---|
 | `SCR-270` | 1 | `:203` | **60** |
 | `P-12-Yenisei` | 10 (2-6 secondo [AC-P12]: contraddizione) | `:231` | **6** |
@@ -174,7 +180,7 @@ media salvo dove indicato). Periodo di rivisita = 60 / giri al minuto (**D**, co
 | `55Zh6-Nebo` | 6 (conf. media-bassa) | `:325` | **10** |
 | `AN-TPS-43` | 6 | `:363` | **10** |
 | `AMES-Type-7` | 0,5-8 | `:217` | **7,5** |
-| `AMES-Type-80` | 4 (fino a 6) | `:338` | **10** |
+| `AMES-Type-80` | 4 (fino a 6) | `:338` | **15** [S]: "4 (fino a 6)" letto come regime base 4 giri/min (= "normale") e massimo 6; la fonte non dice "normale", e' un'interpretazione |
 | `P-14-Lena` | 2-6 | `:246` | **10** |
 | `Chain-Home` | antenna fissa a illuminazione continua (cortina trasmittente, 150 gradi) | `:128` | **nessuna** (nessun intervallo fra le occasioni di rilevamento: legge attuale) |
 | `FuMG-80-Freya` | schiera orientabile 360 gradi, velocita' non data | `:154` | nessuna (dato mancante) |
@@ -182,23 +188,27 @@ media salvo dove indicato). Periodo di rivisita = 60 / giri al minuto (**D**, co
 | `Mammut` | scansione elettronica su 100 gradi, cadenza non data | `:179` | nessuna (dato mancante) |
 | `AN-FPS-117` | array planare, rotazione non riportata | `:377` | nessuna (dato mancante: **non** si usa il valore che si "sa" da fuori ricerca) |
 
-Nessun dato per radar SAM, radar d'aereo, TVD e visivo: per loro `dwell_time_s` resta assente (legge attuale).
+Nessun dato per radar SAM, radar d'aereo, TVD e visivo: per loro `dwell_time_s` resta assente (legge attuale;
+DW-9). Nella ricerca EWR la parola "normale" accanto ai giri al minuto compare solo per l'AN/FPS-20 (`:351`,
+"3,3/5/10 giri/min (normale 5)"), radar assente dai registri: con la regola di DW-2 l'unico record che usa il
+ramo "regime normale" e' l'AMES-Type-80, per interpretazione della dicitura "4 (fino a 6)".
 
 ### 1.8 I numeri della corda: cosa la legge puo' e non puo' dare [calcolo, I per le velocita']
 
-Con la legge raccomandata (§2.3) la Pd di un attraversamento e' `<= permanenza / dwell`. La corda percorsa in un
+Con la legge L1 (DW-3, §2.3) la Pd di un attraversamento e' `<= permanenza / dwell`. La corda percorsa in un
 tempo pari al periodo e' `L = v * dwell`; la massima profondita' di penetrazione di una corda `L` in un cerchio di
 raggio `R` e' circa `L^2 / (8 R)`.
 
 | Caso | v [m/s] | dwell [s] | L = v*dwell | R [km] | penetrazione |
 |---|---|---|---|---|---|
 | P-18 / P-12, caccia | 250 [I] | 6 | 1,5 km | 180-200 | ~1,5 m |
-| 1L13, P-37, TPS-43, ..., caccia | 250 [I] | 10 | 2,5 km | 250-440 | 2-3 m |
+| 1L13, P-37, 55Zh6, TPS-43, P-14, caccia | 250 [I] | 10 | 2,5 km | 250-440 | 2-3 m |
+| AMES Type 80, caccia | 250 [I] | 15 [S] (DW-2) | 3,75 km | 390 | ~4,5 m |
 | AMES Type 7, bombardiere WWII | 100 [I] | 7,5 | 0,75 km | 140 | ~0,5 m |
 | SCR-270, bombardiere WWII | 100 [I] | 60 | 6 km | 160 | ~28 m |
 | A-10C (`Mobile.speed['nominal']` = 155,6 m/s [V]) vs volume visivo 6 km a 3000 m | 155,6 | 30 (stima di test) | 4,7 km | 5,2 (sezione a 3000 m) | ~0,5 km |
 
-Lettura: contro un EWR a rotazione (6-10 s) "attraversare senza essere visti" equivale a sfiorarne il bordo per
+Lettura: contro un EWR a rotazione (6-15 s) "attraversare senza essere visti" equivale a sfiorarne il bordo per
 qualche secondo; un attraversamento vero dura minuti e ha Pd invariata. **E' fisica, non un difetto della
 legge**: la portata pubblicata di un EWR e' per una singola scansione (es. AN/FPS-117: Pd 80 % contro 1 m2 a 330 km,
 ricerca `:374`), e qualunque modello cumulativo darebbe Pd **ancora piu' alta** per permanenze lunghe. Cio' che in
@@ -207,18 +217,21 @@ pianificatore c'e', nel DES no (§1.6). La legge serve davvero dove il volume e'
 contatti radenti, pop-up, sensori a vista, radar WWII lenti, e in futuro radar SAM con dati di scansione e volumi
 ridotti dall'orizzonte.
 
-### 1.9 Sonde eseguite (sola lettura, scratchpad di sessione)
+### 1.9 Sonde eseguite (sola lettura) — S-1, S-2, S-3 complete
 
-Script `probe_dwell.py` nella scratchpad: sostituisce in memoria `_EngagementRun._detect_direction` con la legge
+Script `probe_dwell.py`: sostituisce in memoria `_EngagementRun._detect_direction` con la legge
 di §2.3 e la permanenza di §2.4 (stesso codice del piano), poi chiama
-`Scenario_Baseline.main(['--compare', <fotografia>, '--save', <scratchpad>, '--quiet'])`. Per ogni estrazione
+`Scenario_Baseline.main(['--compare', <fotografia>, '--save', <cartella_uscita>, '--quiet'])`. Per ogni estrazione
 registra anche la decisione **controfattuale** per dwell ipotetici di 2, 6, 10, 30, 60, 120 s (stessa estrazione,
 nessun effetto sull'esito).
 
 **S-1 — legge accesa con i soli dati di fonte** (dwell dei 10 EWR della tabella §1.7, nessun altro sensore).
 Esito letto: `compared 1009 runs: IDENTICAL (1137.8 s)`. Nessun osservatore della fotografia dichiara un dwell
 (`dwell_applied = 0`): nessuno scenario usa un EWR. **Accendere l'interruttore non cambia nessuna delle 1009
-esecuzioni.**
+esecuzioni.** S-1 e' stata eseguita il 2026-11-05 con il valore di allora dell'AMES-Type-80 (10 s); l'esito vale
+anche con i 15 s di DW-2, perche' nessun osservatore della fotografia ha un dwell (nessuno scenario usa un EWR;
+l'AMES-Type-80 compare solo in `Test/Test_EWR_Data.py`) [V: `dwell_applied = 0`, `models_with_dwell` vuoto in
+`s1/stats.json`].
 
 Statistiche raccolte nella stessa esecuzione, su tutte le estrazioni di rilevamento delle 1009 sessioni (tutte con
 i tratti: `with_legs = 33446`, `without_legs = 0`):
@@ -240,29 +253,49 @@ rilevamenti su 33 446 con la legge attuale):
 | rilevamenti persi | 0 | 0 | 3 | 17 | 45 | 464 |
 
 Lettura: negli scenari esistenti le permanenze sono lunghe (29 024 su 33 446, l'87 %, da 5 minuti in su); con periodi di 6-10 s, cioe'
-quelli di fonte, la legge cambierebbe 3 rilevamenti su 29 483 anche se la si desse a **ogni** sensore.
+quelli di fonte di 8 EWR su 10, la legge cambierebbe al piu' 3 rilevamenti su 29 483 anche se la si desse a
+**ogni** sensore. Il valore 15 s (AMES-Type-80, DW-2) non e' fra i controfattuali: con la stessa estrazione i
+rilevamenti persi crescono con il dwell, quindi a 15 s sono fra 3 e 17 (non misurato).
 
 **S-2 — sensibilita' a livello di esecuzione**: dwell uniforme di 10 s per **ogni** osservatore (valore fittizio di
-sonda, non un dato). **INCOMPLETA**: fermata a meta' il 2026-11-05 per la sospensione della sessione, nessun
-esito. Rilancio (dalla root del repo, ~19 min su osboxes, mai in parallelo con suite o confronto):
+sonda, non un dato; `probe_dwell.py uniform:10`), eseguita il 2026-11-06. Esito letto:
+`compared 1009 runs: 44 difference lines (946.5 s)` (44 = righe stampate nel riepilogo, due intestazioni `DIFF` con
+le loro righe accorciate). **2 esecuzioni cambiate, 1007 identiche**:
 
-```
-mkdir -p .ai-run/sonde_dwell/s2 && python3 .ai-run/sonde_dwell/probe_dwell.py uniform:10 .ai-run/sonde_dwell/s2 > .ai-run/sonde_dwell/s2/log.txt 2>&1
-grep -E '^(compared|CHANGED|NEW|PROBE_RC)' .ai-run/sonde_dwell/s2/log.txt
-```
+| Esecuzione | Valori differenti | Cosa cambia (letto dal log) |
+|---|---|---|
+| `S21/S21-5/control` | 42 | il SAM di `Red-Airbase/sam0` spara 2 colpi invece di 4; un colpo SAM diventa un colpo AAA (`aaa0`), gli istanti successivi slittano |
+| `S21/S21-7/control` | 56 | il SAM `sam0` non spara (2 colpi -> nessuno); due colpi SAM diventano AAA; il bersaglio Blue `Blue-Strike/str1` **sopravvive** invece di essere distrutto |
 
-Atteso dal controfattuale di S-1 (non e' un esito): al piu' 3 rilevamenti persi, quindi poche esecuzioni cambiate.
+Coerente con il controfattuale di S-1 (3 rilevamenti persi a 10 s su 29 483): pochi rilevamenti persi bastano a
+cambiare un'esecuzione quando l'osservatore e' un **tiratore** (qui un SAM di S21). Il confronto e' valido. Lo
+script `probe_dwell.py` fallisce poi nel salvataggio finale di `stats.json` (`TypeError: '<' not supported between
+instances of 'NoneType' and 'str'` in `json.dump(..., sort_keys=True)`: una chiave `None` in un dizionario di
+statistiche), quindi lo `stats.json` di S-2 e' **parziale**: e' un difetto dello script di sonda, non del
+repository; non va corretto per questo piano. Implicazione per DW-9 in §2.8.
 
-**S-3 — prova della geometria di S32-DWELL** (5 varianti x 4 semi, in memoria): script scritto, **MAI eseguito**.
-Rilancio (dalla root del repo, pochi minuti [I]):
-`python3 .ai-run/sonde_dwell/probe_s32.py > .ai-run/sonde_dwell/s3_log.txt 2>&1`. Deve confermare le asserzioni
-di §4.A.7: `long == off` e `ewr_on == ewr_off` negli eventi di munizioni, permanenze della ZSU >= 30 s in `long`,
-sottoinsieme e riduzione dei rilevamenti in `short`, limite `probability <= exposure/600`.
+**S-3 — prova della geometria di S32-DWELL** (5 varianti x 4 semi, in memoria; `probe_s32.py`, rc = 0), eseguita
+il 2026-11-06. **Tutte le asserzioni di §4.A.7 confermate**, nessun ritocco ai test necessario:
 
-**Dove sono le sonde** (copia persistente, fuori dal versionamento): `.ai-run/sonde_dwell/probe_dwell.py` (S-1,
-S-2: `python3 probe_dwell.py source|uniform:<s> <cartella_uscita> [regex --only]`), `.ai-run/sonde_dwell/probe_s32.py`
-(S-3), esiti di S-1 in `.ai-run/sonde_dwell/s1/` (`log.txt`, `stats.json`), log parziale di S-2 in
-`.ai-run/sonde_dwell/s2_incompleta/log.txt`.
+| Seme | `long` == `off` (munizioni) | `ewr_on` == `ewr_off` (munizioni) | colpi ZSU `off` / `short` | ZSU rilevati `off` / `short` (primo episodio = totale; sottoinsieme) | esposizioni ZSU in `long` [s] | P-18 in `ewr_on`: esposizione minima, probabilita' |
+|---|---|---|---|---|---|---|
+| 0 | si' | si' | 150 / 0 | 4 / 0, si' | 62,7; 64,7; 66,0; 66,7 | 385,7 s, uguale a `ewr_off` |
+| 1 | si' | si' | 150 / 0 | 4 / 0, si' | idem | idem |
+| 2 | si' | si' | 150 / 0 | 4 / 0, si' | idem | idem |
+| 3 | si' | si' | 150 / 150 | 3 / 2, si' | idem | idem |
+
+Ogni seme ha un solo episodio per variante. Totale dei rilevamenti della ZSU sui 4 semi: `off` 15, `short` 2 (la
+stima di §4.A.7 era ~15,5 contro ~1,7). La premessa "la ZSU spara in `off`" vale in **tutti** i semi; il limite
+`probability <= exposure/600` e' rispettato in ogni seme. Le esposizioni della ZSU (62,7-66,7 s) sono uguali in
+`long` e `short` (dipendono dalla geometria, non dal dwell): >= 30 s in `long` (g = 1), < 600 s in `short`.
+
+**Dove sono le sonde**: copia versionata degli script e dell'esito di S-1 in
+`Analysis/Document/Rapporti/Sonde_Dwell_D5/` (`probe_dwell.py` per S-1 e S-2:
+`<python> probe_dwell.py source|uniform:<s> <cartella_uscita> [regex --only]`; `probe_s32.py` per S-3;
+`s1/log.txt`, `s1/stats.json`). I log di S-2 (`s2/log.txt`, `s2/capture.json`, `s2/stats.json` parziale) e di S-3
+(`s3_log.txt`) sono in `.ai-run/sonde_dwell/` (fuori dal versionamento, solo sulla macchina osboxes). Le sonde non
+vanno rieseguite per eseguire questo piano: restano riferimento. Il `LEGGIMI.md` della cartella versionata descrive
+ancora S-2 come incompleta e S-3 come mai eseguita (scritto il 2026-11-05): fa fede questa sezione.
 
 ---
 
@@ -276,7 +309,7 @@ S-2: `python3 probe_dwell.py source|uniform:<s> <cartella_uscita> [regex --only]
 | (b) periodo x colpi di conferma M | tempo per una traccia confermata | piu' vicino al "tracciato" dei sistemi automatici | M non e' nella ricerca: STIMA nuova (2-3 [I]); si somma alla RIV, che gia' copre rilevamento -> lancio |
 | (c) permanenza minima per un rilevamento certo | soglia deterministica: sotto non si vede, sopra Pd(d) | semplice da pianificare | toglie la casualita' proprio dove la fisica e' casuale (fase dell'antenna); salto discontinuo |
 
-**Raccomandazione: (a).** Unita': secondi, `float > 0`. **Dove vive**: chiave opzionale `dwell_time_s` nel
+**Raccomandazione: (a). DECISIONE DW-1 (presa il 2026-11-06): (a)**, nessun fattore di conferma. Unita': secondi, `float > 0`. **Dove vive**: chiave opzionale `dwell_time_s` nel
 dizionario del sensore (`record.radar['dwell_time_s']`), accanto ad `antenna_height`: e' un dato **del sensore**,
 non del modo. **Default**: assente (o `None`) = nessuna permanenza dichiarata = legge attuale, in qualunque stato
 dell'interruttore. Il valore `0` e' trattato come assente (illuminazione continua, Chain-Home); valori negativi,
@@ -284,12 +317,23 @@ non numerici o booleani sono **ignorati** dal lettore del registro (come `_senso
 
 ### 2.2 Valori: quale regola per gli intervalli (DW-2)
 
-La fonte da' spesso un intervallo (3-6, 2-6, 0,5-8 giri/min). Opzioni: (i) **rotazione piu' veloce** (periodo
-piu' breve); (ii) punto medio; (iii) valore "normale" quando citato, altrimenti punto medio.
-**Raccomandazione (i)**: e' una regola sola, senza giudizi caso per caso, ed e' prudente per chi attacca (la
-permanenza che riduce la Pd e' la piu' breve; il pianificatore non promette attraversamenti che il difensore non
-concede). Per il Type 80 da' 10 s invece dei 15 s del regime normale (4 giri/min), per il P-12 risolve la
-contraddizione 10 / 2-6 a favore di 10. [S] scelta di progetto, dichiarata nel commento di ogni record.
+La fonte da' spesso un intervallo (3-6, 2-6, 0,5-8 giri/min). Opzioni considerate: (i) **rotazione piu' veloce**
+(periodo piu' breve); (ii) punto medio; (iii) valore "normale" quando citato, altrimenti punto medio.
+La raccomandazione iniziale era (i): una regola sola, senza giudizi caso per caso, prudente per chi attacca (la
+permanenza che riduce la Pd e' la piu' breve).
+
+**DECISIONE DW-2 (presa il 2026-11-06), diversa dalla raccomandazione: "regime normale se citato, altrimenti
+rotazione piu' veloce"** (variante di (iii) con il ramo di (i)). Effetti sui 10 record:
+- **AMES-Type-80 = 15 s** (60/4): la fonte dice "4 giri/min (fino a 6)" (`Ricerca_EWR_2026_10_29.md:338`); 4 e'
+  letto come regime base, cioe' "normale", e 6 come massimo. La parola "normale" non c'e': e' una **stima/
+  interpretazione [S]**, dichiarata nel commento del record e nel rapporto dell'esecutore.
+- Tutti gli altri valori **invariati** rispetto alla regola (i), perche' nessuna loro fonte cita un regime normale:
+  SCR-270 60 s; P-12 6 s (la contraddizione 10 / 2-6 si risolve con il ramo "piu' veloce", a favore di 10 giri/min);
+  P-18 6 s; AMES-Type-7 7,5 s; P-37, 1L13, 55Zh6, TPS-43, P-14 10 s.
+- Chain-Home, Freya, Wassermann, Mammut, AN-FPS-117: nessun valore (come prima).
+- Nella ricerca EWR "normale" compare solo per l'AN/FPS-20 (`:351`), che non e' nei registri.
+
+[S] scelta di progetto, dichiarata nel commento di ogni record.
 
 ### 2.3 Forma della legge (domanda 2)
 
@@ -299,7 +343,9 @@ contraddizione 10 / 2-6 a favore di 10. [S] scelta di progetto, dichiarata nel c
 | L2 cumulativa | `Pd = 1 - prod_k (1 - p(d(t_k)))` sulle occasioni `t_k` ogni `dwell` | fisicamente completa anche per permanenze lunghe | cambia il significato di `PD_AT_ACQUISITION_RANGE` (diventa per scansione) e quindi va ritarata **tutta** la legge; rende i sensori con dwell molto piu' "vedenti" di quelli senza (incoerenza fra record); inversione numerica per l'istante; nessuna riduzione all'attuale |
 | L3 a gradino | `Pd = Pd(d_cpa)` se `tau >= dwell`, altrimenti 0 | semplice | discontinua; = opzione (c) di §2.1 |
 
-**Raccomandazione: L1**, come funzione pubblica e pura `dwell_factor(exposure_s, dwell_time_s)` composta con la
+**Raccomandazione: L1. DECISIONE DW-3 (presa il 2026-11-06): L1**, motivata dall'utente con la semplicita' della
+prima versione e con lo stesso criterio di Pd per ogni sensore di rilevamento (legge unica generica). Si realizza
+come funzione pubblica e pura `dwell_factor(exposure_s, dwell_time_s)` composta con la
 legge esistente attraverso il fattore: `detection_probability(d, R, factor * dwell_factor(tau, dwell))`.
 
 Composizione e limiti:
@@ -321,7 +367,8 @@ Composizione e limiti:
 | **(a) nel risolutore** | `_EngagementRun._exposure_time`, dai tratti (`range_intervals` con la portata propria) | modifica locale; costo nullo quando la legge e' spenta o il sensore non dichiara dwell; puo' guardare prima dell'inizio della finestra | ricalcola un `range_intervals` per direzione con dwell |
 | (b) nello scheduler | campi `exposure_a/exposure_b` di `ContactWindow` | lo scheduler calcola gia' gli intervalli interni (`:1075`) | tocca `ContactWindow`, `contact_windows`, `trim_contact_window`, `_pair_windows`; la finestra resta tagliata ai suoi estremi |
 
-**Raccomandazione (a).** Regola della permanenza `tau` per la direzione osservatore -> bersaglio:
+**Raccomandazione (a). DECISIONE DW-4 (presa il 2026-11-06): (a), nel risolutore dai tratti.** Regola della
+permanenza `tau` per la direzione osservatore -> bersaglio:
 - **con i tratti di entrambi** (sempre in sessione): somma, sugli intervalli di `range_intervals(tratti_oss,
   tratti_bers, portata_propria)` che toccano la finestra (`end >= t_start - TIME_EPS` e `start <= t_end +
   TIME_EPS`), di `min(end, t_end) - start`. L'intervallo che contiene l'inizio della finestra **conta dal suo
@@ -342,7 +389,8 @@ estrazioni invariati in ogni stato dell'interruttore**; cambia solo la soglia, c
 - (c) in `Mobile` come `D4C_VISUAL_SENSOR`, spegnendo il **dato** (`detection_dwell_time` -> None): una leva sola,
   ma governa una regola del motore attraverso l'accessore di un dato.
 
-**Raccomandazione (a), spento di default** (il compito lo chiede: non si accende). "Identico con interruttore
+**Raccomandazione (a), spento di default. DECISIONE DW-5 (presa il 2026-11-06): (a), `D5_DWELL_TIME = False`**;
+l'eventuale accensione si decide dopo la verifica del lavoro, non in questo piano. "Identico con interruttore
 spento" significa: `Session_Simulator` non passa `dwell_time_for` (la chiamata a `resolve_engagement` e'
 **letteralmente** quella di prima), `_detect_direction` esegue le stesse istruzioni, il `Detection` ha due campi in
 piu' a `None` (non registrati nella fotografia), le metriche del pianificatore sono quelle di prima: **1009
@@ -358,7 +406,8 @@ l'interruttore acceso: la legge e' attiva solo se il chiamante passa il lettore.
 | P2 (blocco C) | P1 + in `AVOID_DETECTION` un volume di rilevamento con dwell si **attraversa** se la Pd dell'attraversamento e' <= una soglia del chiamante (`detection_pd_max`), invece di aggirarlo | e' la "corda limitata" della D-5 | con i dati di fonte la corda ammessa e' 1,5-6 km (§1.8): nessuna rotta si accorcia contro un EWR; tocca la ricerca del percorso e la chiave di scelta |
 
 **Raccomandazione: P1 ora, P2 rimandato** finche' non esistono sensori con dwell e volumi piccoli (radar SAM con
-dati di scansione, orizzonte nel DES). Il vincolo "**rilevamento != intercettazione**" resta per costruzione in
+dati di scansione, orizzonte nel DES). **DECISIONI DW-6 e DW-7 (prese il 2026-11-06): P1 si' (blocco B); P2
+rimandato (blocco C descritto in §4 ma non eseguito; l'orizzonte radar nel DES resta un'attivita' separata).** Il vincolo "**rilevamento != intercettazione**" resta per costruzione in
 ogni opzione: P1 non tocca la ricerca; in P2 l'attraversamento di un volume di rilevamento non esenta il tratto dal
 controllo dei volumi d'intercettazione (`cross_threats`, `Air_Route_Manager.py:1755-1765`), che restano attraversati
 solo con la loro corda di sicurezza.
@@ -382,50 +431,81 @@ chiaramente sopra e sotto la permanenza calcolata (§4.A.7), dichiarati come tal
 Esecuzioni nuove: **20**. Un'unita' con un sensore di registro a dwell che faccia sparare un tiratore non esiste
 oggi (nessun tiratore ha dati di scansione): e' il motivo dei valori dichiarati di test.
 
+**DECISIONE DW-8 (presa il 2026-11-06): S32-DWELL con 5 varianti x 4 semi = 20 esecuzioni nuove**, come in tabella.
+La sonda S-3 (§1.9) ha confermato la geometria: esposizioni della ZSU 62,7-66,7 s in ogni seme, rilevamenti della
+ZSU 15 in `off` e 2 in `short` sui 4 semi.
+
 ### 2.7 Dimensione e blocchi (domanda 6)
 
 | Blocco | Contenuto | File | Righe (stima) | Test | Fotografia |
 |---|---|---|---|---|---|
 | **A** | dato, lettori, legge, interruttore, scenario | `Asset/Vehicle_Data.py`, `Asset/Mobile.py`, `Logic/Engagement_Resolver.py`, `Logic/Session_Simulator.py`, `Test/Scenario_Fixtures.py`, `Test/Scenario_Baseline.py`, 5 file di test (1 nuovo) | ~170 + ~330 test | 31 | 1009 identiche + 20 nuove |
 | **B** | pianificatore coerente (P1) | `Logic/Air_Route_Manager.py`, 2 file di test | ~60 + ~110 test | 7 | invariata |
-| C (solo con DW-7 = P2) | attraversamento a corda limitata | `Logic/Air_Route_Manager.py`, `Test/Test_Air_Route_Manager.py` | ~120 + ~150 test | 6 | invariata |
+| C (rimandato, DW-7: NON eseguire) | attraversamento a corda limitata | `Logic/Air_Route_Manager.py`, `Test/Test_Air_Route_Manager.py` | ~120 + ~150 test | 6 | invariata |
 
-**Raccomandazione**: A e B in un solo branch `ai/oc-dwell-time` (o di `des-developer`), due commit; A per primo,
-perche' B importa `dwell_factor` e `D5_DWELL_TIME` da A. Il rischio e' basso: la legge e' spenta di default e,
-anche accesa, tocca solo i 10 record EWR, assenti dalla fotografia.
+**Organizzazione (conseguenza di DW-6 e DW-7)**: A e B in un solo branch `ai/oc-dwell-time` (o di
+`des-developer`), due commit; A per primo, perche' B importa `dwell_factor` e `D5_DWELL_TIME` da A. Il rischio e'
+basso: la legge e' spenta di default e, anche accesa, tocca solo i 10 record EWR, assenti dalla fotografia.
 
----
+### 2.8 Estensione ad altri sensori (DW-9)
 
-## 3. Decisioni aperte per l'utente
+La legge e' **gia' generica**: `_detect_direction` (`Logic/Engagement_Resolver.py:1986-2031`) e' lo stesso codice
+per ogni osservatore del DES (SAM, AAA, aerei, navi, EWR), e il lettore di default `registry_dwell_time` ->
+`Mobile.detection_dwell_time` (§4.A.2-A.3) legge `dwell_time_s` da qualunque dizionario di sensore (`radar`, `TVD`,
+`visual`) di qualunque record di `Vehicle_Data`, `Ship_Data`, `Aircraft_Data`. Il blocco B fa lo stesso per
+`DetectionThreat` (`sensor_dwell_time`). Dare un dwell a un'altra classe di sensori e' quindi **solo un dato**.
 
-1. **DW-1 Significato di `dwell_time_s`**: (a) periodo di rivisita = 60 / giri al minuto, senza colpi di conferma
-   (**raccomandato**); (b) periodo x M colpi (M stimato); (c) soglia deterministica.
-2. **DW-2 Valori e regola sugli intervalli**: 10 EWR con dato di fonte, regola "rotazione piu' veloce"
-   (**raccomandato**, tabella §1.7); Chain-Home senza permanenza (illuminazione continua, D); Freya, Wassermann,
-   Mammut e AN-FPS-117 senza dato (nessun valore inventato). Alternative: punto medio; regime "normale" se citato.
-3. **DW-3 Forma della legge**: L1 `Pd = min(1, tau/dwell) * Pd(d_cpa)` (**raccomandata**); L2 cumulativa (richiede
-   la ritaratura di tutta la legge); L3 a gradino.
-4. **DW-4 Permanenza**: nel risolutore dai tratti, non tagliata all'inizio della finestra (**raccomandato**); oppure
-   nello scheduler, tagliata alla finestra.
-5. **DW-5 Interruttore**: `Engagement_Resolver.D5_DWELL_TIME`, default **False** (**raccomandato**); alternative
-   in `Session_Simulator` o in `Mobile`. Da decidere anche se, dopo la verifica, lo si **accende**: la sonda S-1
-   dice che accenderlo non cambia nessuna delle 1009 esecuzioni (§1.9).
-6. **DW-6 Pianificatore**: P1, metriche coerenti e `AVOID_DETECTION` invariato (**raccomandato**, blocco B);
-   oppure P0 (nessun cambio).
-7. **DW-7 Attraversamento a corda limitata nel pianificatore (P2, blocco C)**: rimandarlo (**raccomandato**:
-   con i dati di fonte non accorcia nessuna rotta, §1.8) oppure farlo ora con una soglia `detection_pd_max` del
-   chiamante. Collegata: l'effetto che motiva la D-5 (rotte non allungate dal rilevamento) richiede piuttosto
-   l'**orizzonte radar nel DES**, che propongo come attivita' separata da pianificare (non in questo piano).
-8. **DW-8 Scenario S32-DWELL**: 5 varianti x 4 semi con valori di permanenza **dichiarati di test** sulla ZSU
-   (30 s, 600 s) e il P-18 con il dato di fonte (**raccomandato**); oppure solo le due varianti EWR (nessun effetto
-   visibile nella fotografia, ma nessun valore di test).
+| Opzione | Contenuto | Pro | Contro |
+|---|---|---|---|
+| **(a) solo il meccanismo ora** | valori ai soli 10 EWR (§1.7); nessun valore per SAM, AAA, radar d'aereo, navi, TVD, vista | nessun numero senza fonte; con l'interruttore acceso la fotografia resta identica (S-1) | la legge non agisce su nessun tiratore finche' mancano i dati |
+| (b) valori stimati ora per le altre classi | `dwell_time_s` [S] per SAM/AAA/aerei | la legge agirebbe subito | SAM e AAA sono **tiratori**: una Pd ridotta cambia gli esiti di tiro (§1.5); numeri senza fonte che cambiano la fotografia con l'interruttore acceso |
+
+**DECISIONE DW-9 (nuova, presa il 2026-11-06): (a) solo il meccanismo ora.** Motivi: SAM e AAA sono tiratori, quindi
+nessun valore stimato senza fonte; la sonda S-2 mostra che un dwell uniforme di 10 s a **ogni** osservatore cambia
+gia' 2 esecuzioni su 1009 (i SAM di S21-5 e S21-7, §1.9) e il controfattuale di S-1 da' 17, 45 e 464 rilevamenti
+persi su 29 483 a 30, 60 e 120 s: estendere i valori a SAM e AAA **cambiera' la fotografia con l'interruttore
+acceso**, e quel confronto andra' riletto esecuzione per esecuzione. Con l'interruttore spento la fotografia resta
+identica in ogni caso (`Session_Simulator` non passa il lettore).
+
+Un agente di ricerca sta raccogliendo i dati per classe di sensore in `Ricerca_Dwell_Sensori_2026_11_06.md`. **Quel
+documento NON e' un ingresso di questo piano**: l'esecutore non lo legge e non ne usa i valori. Quando i dati
+arriveranno, l'estensione sara' un intervento separato e senza cambi di codice (procedura in "Estensioni future").
 
 ---
 
-## 4. Piano di intervento (opzioni raccomandate)
+## 3. Decisioni dell'utente (tutte prese il 2026-11-06)
 
-Il piano assume DW-1..DW-8 come raccomandato. Se l'utente sceglie diversamente, l'esecutore **non** adatta il
-piano: si ferma e lo riferisce.
+1. **DW-1 Significato di `dwell_time_s`**: **(a)** periodo di rivisita = 60 / giri al minuto, senza colpi di
+   conferma (come raccomandato). Scartate: (b) periodo x M colpi; (c) soglia deterministica.
+2. **DW-2 Valori e regola sugli intervalli**: **"regime normale se citato, altrimenti rotazione piu' veloce"**
+   (diversa dalla raccomandazione "rotazione piu' veloce"). 10 EWR con dato di fonte (tabella §1.7), con
+   **AMES-Type-80 = 15 s** [S, interpretazione di "4 (fino a 6)"] e gli altri 9 valori invariati; Chain-Home senza
+   permanenza (illuminazione continua, D); Freya, Wassermann, Mammut e AN-FPS-117 senza dato (nessun valore inventato).
+3. **DW-3 Forma della legge**: **L1** `Pd = min(1, tau/dwell) * Pd(d_cpa)` (come raccomandato), per semplicita' della
+   prima versione e stesso criterio di Pd per ogni sensore. Scartate: L2 cumulativa; L3 a gradino.
+4. **DW-4 Permanenza**: **nel risolutore dai tratti**, non tagliata all'inizio della finestra (come raccomandato).
+5. **DW-5 Interruttore**: **`Engagement_Resolver.D5_DWELL_TIME`, default False** (come raccomandato). L'eventuale
+   accensione si decide dopo la verifica del lavoro (fuori da questo piano; S-1: accenderlo con i soli dati di
+   fonte non cambia nessuna delle 1009 esecuzioni).
+6. **DW-6 Pianificatore**: **P1, blocco B** (metriche coerenti, `AVOID_DETECTION` invariato), come raccomandato.
+7. **DW-7 Attraversamento a corda limitata (P2, blocco C)**: **rimandato** (come raccomandato): il blocco C resta
+   descritto in §4 ma non si esegue. L'orizzonte radar nel DES resta un'attivita' separata da pianificare.
+8. **DW-8 Scenario S32-DWELL**: **5 varianti x 4 semi = 20 esecuzioni nuove** (come raccomandato), con i valori di
+   permanenza dichiarati di test sulla ZSU (30 s, 600 s) e il P-18 con il dato di fonte (6 s).
+9. **DW-9 Estensione ad altri sensori (nuova)**: **solo il meccanismo ora** (§2.8): valori ai soli 10 EWR; nessun
+   valore per SAM, AAA, radar d'aereo, navi, TVD, vista finche' non c'e' una fonte.
+
+**Decisioni ancora aperte per l'esecuzione**: nessuna. Restano fuori da questo piano, da decidere dopo:
+l'accensione di `D5_DWELL_TIME` (dopo la verifica); i valori per le altre classi di sensori (DW-9, dopo la
+ricerca); l'orizzonte radar nel DES e il blocco C (DW-7).
+
+---
+
+## 4. Piano di intervento (decisioni DW-1..DW-9 prese)
+
+Il piano realizza le decisioni di §3 (blocchi A e B; il blocco C **non** si esegue). Se il codice reale non
+corrisponde al piano (righe, firme, esiti dei test o del confronto), l'esecutore **non** adatta il piano: si ferma
+e lo riferisce.
 
 ### Blocco A — dato, legge, interruttore, scenario
 
@@ -437,15 +517,15 @@ presenti), aggiungere la chiave e una riga di commento nel formato del blocco:
 | Record (variabile) | Riga attuale del record | Valore | Commento da scrivere (testo esatto) |
 |---|---|---|---|
 | `SCR270_data` | `:4660` | `60.0` | `# dwell_time_s 60: FONTE 1 giro/min (conversione D: 60/1), conf. media. D-5.` |
-| `P12_Yenisei_data` | `:4710` | `6.0` | `# dwell_time_s 6: FONTE 10 giri/min (2-6 secondo [AC-P12], CONTRADDIZIONE; regola: rotazione piu' veloce) -> 60/10 (D). D-5.` |
+| `P12_Yenisei_data` | `:4710` | `6.0` | `# dwell_time_s 6: FONTE 10 giri/min (2-6 secondo [AC-P12], CONTRADDIZIONE; nessun regime normale citato, regola: rotazione piu' veloce) -> 60/10 (D). D-5.` |
 | `P18_Terek_data` | `:4733` | `6.0` | `# dwell_time_s 6: FONTE 10 giri/min -> 60/10 (D), conf. media. D-5.` |
-| `P37_Mech_data` | `:4758` | `10.0` | `# dwell_time_s 10: FONTE 3-6 giri/min (regola: rotazione piu' veloce) -> 60/6 (D). D-5.` |
-| `Nebo_SV_1L13_data` | `:4780` | `10.0` | `# dwell_time_s 10: FONTE 3-6 giri/min (regola: rotazione piu' veloce) -> 60/6 (D). D-5.` |
+| `P37_Mech_data` | `:4758` | `10.0` | `# dwell_time_s 10: FONTE 3-6 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/6 (D). D-5.` |
+| `Nebo_SV_1L13_data` | `:4780` | `10.0` | `# dwell_time_s 10: FONTE 3-6 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/6 (D). D-5.` |
 | `Nebo_55Zh6_data` | `:4804` | `10.0` | `# dwell_time_s 10: FONTE 6 giri/min -> 60/6 (D), conf. media-bassa. D-5.` |
 | `AN_TPS43_data` | `:4829` | `10.0` | `# dwell_time_s 10: FONTE 6 giri/min -> 60/6 (D), conf. media. D-5.` |
-| `AMES_Type7_data` | `:4910` | `7.5` | `# dwell_time_s 7.5: FONTE 0,5-8 giri/min (regola: rotazione piu' veloce) -> 60/8 (D). D-5.` |
-| `AMES_Type80_data` | `:4935` | `10.0` | `# dwell_time_s 10: FONTE 4 giri/min, fino a 6 (regola: rotazione piu' veloce) -> 60/6 (D). D-5.` |
-| `P14_Lena_data` | `:5011` | `10.0` | `# dwell_time_s 10: FONTE 2-6 giri/min (regola: rotazione piu' veloce) -> 60/6 (D). D-5.` |
+| `AMES_Type7_data` | `:4910` | `7.5` | `# dwell_time_s 7.5: FONTE 0,5-8 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/8 (D). D-5.` |
+| `AMES_Type80_data` | `:4935` | `15.0` | `# dwell_time_s 15: FONTE 4 giri/min (fino a 6); 4 letto come regime normale = STIMA/interpretazione [S] (la fonte non dice 'normale'; regola: regime normale se citato) -> 60/4 (D). D-5.` |
+| `P14_Lena_data` | `:5011` | `10.0` | `# dwell_time_s 10: FONTE 2-6 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/6 (D). D-5.` |
 
 Nei 5 record senza dato (`FuMG80_Freya_data`, `AN_FPS117_data`, `Chain_Home_data`, `Wassermann_data`,
 `Mammut_data`) **nessuna chiave**; nel solo `Chain_Home_data` aggiungere il commento
@@ -453,6 +533,12 @@ Nei 5 record senza dato (`FuMG80_Freya_data`, `AN_FPS117_data`, `Chain_Home_data
 Sopra il blocco "Nuovi EWR (D-4b)" (`:4653-4658`) aggiungere al commento esistente due righe:
 `# D-5 (Proposta_Dwell_Time_Rilevamento.md): 'dwell_time_s' [s] nel radar = periodo di rivisita 60/giri al minuto`
 `# (FONTE la rotazione, D la conversione); assente = nessuna permanenza dichiarata (legge di Pd invariata).`
+
+e una terza riga con la regola sugli intervalli (DW-2):
+`# Intervalli di giri/min (scelta [S], DW-2): regime normale se la fonte lo cita, altrimenti rotazione piu' veloce.`
+
+Il testo dei commenti della tabella e' quello da scrivere, compreso il marcatore [S] del Type-80: l'esecutore puo'
+solo andare a capo per rispettare la larghezza di riga del file, senza cambiare le parole.
 
 #### A.2 `Asset/Mobile.py`: due lettori
 
@@ -668,8 +754,22 @@ Classe nuova **`TestDwellTimeInTheResolver`** (11), con gli stub del file (`_Ass
 
 `Test/Test_EWR_Data.py`, classe nuova **`TestEWRDwellTime`** (2):
 1. `test_source_dwell_values`: i 10 valori della tabella A.1 (`subTest` per modello), letti da
-   `Vehicle_Data._registry[model].radar['dwell_time_s']`.
-2. `test_records_without_rotation_data_have_no_dwell`: i 5 record senza chiave.
+   `Vehicle_Data._registry[model].radar['dwell_time_s']`. Costante di modulo da scrivere nel test (valori di DW-2):
+
+```python
+# D-5, DW-2: periodo di rivisita [s] = 60 / giri al minuto; regime normale se citato, altrimenti rotazione piu'
+# veloce. AMES-Type-80 15: 4 giri/min letto come regime normale di "4 (fino a 6)", interpretazione [S].
+EWR_DWELL_S = {
+    'SCR-270': 60.0, 'P-12-Yenisei': 6.0, 'P-18-Terek': 6.0, 'P-37-Mech': 10.0, '1L13-Nebo-SV': 10.0,
+    '55Zh6-Nebo': 10.0, 'AN-TPS-43': 10.0, 'AMES-Type-7': 7.5, 'AMES-Type-80': 15.0, 'P-14-Lena': 10.0,
+}
+```
+
+2. `test_records_without_rotation_data_have_no_dwell`: i 5 record senza chiave (`FuMG-80-Freya`, `AN-FPS-117`,
+   `Chain-Home`, `Wassermann`, `Mammut`: `assertNotIn('dwell_time_s', radar)`).
+
+Le chiavi del registro sono quelle che il file usa gia' in `EWR_MODELS` e `FIXED_SITE_MODELS`
+(`Test_EWR_Data.py`); se una chiave scritta qui non coincide, l'esecutore usa quella del file e lo riferisce.
 
 `Test/Test_Session_Simulator.py`, classe nuova **`TestDwellTimeSwitch(_Base)`** (2) (`_Base` esistente, `:160`):
 1. `test_switch_off_passes_no_reader`: spia su `ER.resolve_engagement` (`patch.object(..., side_effect=...)` che
@@ -727,9 +827,17 @@ Ciclo esterno sui semi, interno sulle varianti (stesso `session_id` per le 5 var
    `ewr_on` e `ewr_off`; ogni Detection del P-18 (`Red-Line/ewr0`) in `ewr_on` ha `dwell_time_s == 6.0`,
    `exposure_s >= 6.0` e la stessa `probability` della Detection corrispondente in `ewr_off`.
 
+**Valori attesi, misurati dalla sonda S-3** (§1.9; stessa legge e stessa permanenza, in memoria): esposizioni
+della ZSU 62,7 / 64,7 / 66,0 / 66,7 s in ogni seme (stesse in `long` e `short`); Detection rilevate della ZSU
+`off` / `short` = 4 / 0 nei semi 0-2 e 3 / 2 nel seme 3 (totale 15 / 2); colpi della ZSU `off` = 150 in ogni seme
+(premessa del test 1 vera in tutti i semi); un solo episodio per variante e seme; esposizione minima del P-18 in
+`ewr_on` 385,7 s, probabilita' uguale a `ewr_off`. Nessuno di questi numeri va scritto come asserzione esatta:
+le asserzioni restano quelle dei test 1-6 (relazioni, non valori), che S-3 ha confermato tutte. I numeri servono
+all'esecutore per riconoscere un'esecuzione anomala. Il P-18 ha dwell 6 s: la scelta DW-2 sull'AMES-Type-80 non
+tocca S32-DWELL.
+
 Se (2), (4) o (6) fallissero, l'esecutore **non** cambia i valori dichiarati ne' la geometria: si ferma e
-riferisce i conteggi e le `exposure_s` osservate (atteso per (4): con g ~0,1 e Pd di partenza ~0,97 su 16 coppie,
-~1,7 rilevamenti contro ~15,5; per (2): ogni permanenza della ZSU >= 62 s, calcolo di §2.6).
+riferisce i conteggi e le `exposure_s` osservate, confrontandoli con i valori di S-3 qui sopra.
 
 #### A.8 `Test/Scenario_Baseline.py`: unita' in coda
 
@@ -761,18 +869,26 @@ scenario precedente usa un sensore con `dwell_time_s`). Aggiunge in coda l'unita
 - **Nomi stabili**: unita' `S32-DWELL`, varianti `off`, `long`, `short`, `ewr_off`, `ewr_on`, semi `S32-DWELL-0..3`,
   asset `Red-Line/ad0` (ZSU), `Red-Line/ewr0` (P-18), `Blue-CAS/cas0..3`. Nessun nome esistente cambia.
 - **Costanti**: nessuna costante stimata nuova nel motore. I `dwell_time_s` sono dati di fonte convertiti (D) con
-  una regola dichiarata [S]; 30 s e 600 s sono dichiarazioni di test, commentate come tali.
+  una regola dichiarata [S] (DW-2); il valore dell'AMES-Type-80 (15 s) e' in piu' un'interpretazione [S] della
+  fonte, da dichiarare nel commento del record (testo di A.1) e nel rapporto; 30 s e 600 s sono dichiarazioni di
+  test, commentate come tali.
+- **DW-9**: `dwell_time_s` **solo** nei 10 record EWR di A.1. Nessun valore in record di SAM, AAA, aerei, navi, ne'
+  in dizionari `TVD`/`visual`, nemmeno se l'esecutore trovasse dati in altri documenti (es.
+  `Ricerca_Dwell_Sensori_2026_11_06.md`, che non e' un ingresso di questo piano).
 - **Core indifferente al simulatore**: nessun import dall'adapter DCS; i lettori stanno in `Mobile` e nel
   risolutore.
 - **Import** con il percorso completo.
 
 #### A.10 Esito atteso del blocco A
 
-- Suite: `Ran 4788 tests` (4757 + 31), `OK (skipped=7)`.
+- Suite: `Ran 4788 tests` (4757 + 31), `OK (skipped=7)` [base verificata: ultima suite `Ran 4757 tests`,
+  `OK (skipped=7)`, in `.ai-run/suite.log` del 2026-11-05]. Il valore 15 s dell'AMES-Type-80 entra solo come
+  `subTest` di `TestEWRDwellTime.test_source_dwell_values`: il numero dei test non cambia.
 - Confronto con la fotografia: **1009 identiche, 0 cambiate, 20 nuove** (`S32-DWELL/S32-DWELL-<k>/<variante>`).
   Le 1009 restano identiche perche' l'interruttore e' spento (nessun `dwell_time_for` passato); restano identiche
-  anche con l'interruttore acceso (sonda S-1). Fra le nuove, per costruzione: `long` = `off` e `ewr_on` = `ewr_off`
-  nel contenuto (chiavi diverse).
+  anche con l'interruttore acceso (sonda S-1; vale anche con l'AMES-Type-80 a 15 s, perche' nessuno scenario usa
+  un EWR). Le 20 nuove non dipendono dall'AMES-Type-80 (il P-18 di S32 ha 6 s). Fra le nuove, per costruzione e
+  come misurato da S-3: `long` = `off` e `ewr_on` = `ewr_off` nel contenuto (chiavi diverse).
 
 ### Blocco B — pianificatore coerente (P1)
 
@@ -834,7 +950,9 @@ scenario precedente usa un sensore con `dwell_time_s`). Aggiunge in coda l'unita
 Suite `Ran 4795 tests`, `OK (skipped=7)`; confronto **1009 identiche + 20 nuove** (le stesse del blocco A: il
 pianificatore non entra in nessuna sessione della fotografia).
 
-### Blocco C — attraversamento a corda limitata del rilevamento (SOLO se DW-7 = "farlo ora")
+### Blocco C — attraversamento a corda limitata del rilevamento (RIMANDATO, DW-7: NON eseguire)
+
+Descritto solo come riferimento per un piano futuro; l'esecutore dei blocchi A e B non lo implementa.
 
 1. `calcRoute(..., detection_pd_max: Optional[float] = None)` (`:1309`): valido in (0, 1], altrimenti
    `ValueError`. Con `mode == AVOID_DETECTION`, `detection_pd_max` non None **e** `ER.D5_DWELL_TIME` acceso, a ogni
@@ -868,16 +986,26 @@ pianificatore non entra in nessuna sessione della fotografia).
 ### 5.1 Valori deboli che entrano nel codice
 
 - I 10 `dwell_time_s` sono **dati di fonte** di confidenza media (55Zh6 media-bassa), con una **regola di progetto**
-  [S] sugli intervalli (rotazione piu' veloce). Il P-12 ha una contraddizione di fonte (10 contro 2-6 giri/min).
+  [S] sugli intervalli (DW-2: regime normale se citato, altrimenti rotazione piu' veloce). Il P-12 ha una
+  contraddizione di fonte (10 contro 2-6 giri/min). L'AMES-Type-80 (15 s) poggia in piu' su un'**interpretazione**
+  [S] della fonte ("4 (fino a 6)" letto come regime normale 4): con la lettura "piu' veloce" sarebbe 10 s.
 - La **forma** L1 e' una scelta di progetto [S] con giustificazione geometrica [I], non tarata; non modella la
   conferma M su N (assorbita nella RIV, dichiarato).
 - Nessuna costante stimata nuova nel motore; `CROSSING_JOIN_TOLERANCE_S` (blocco B) e' una tolleranza numerica.
 - Valori di test di S32 (30 s, 600 s): dichiarati di test, mai nei registri.
+- **Dati mancanti per i tiratori (DW-9)**: SAM, AAA, radar d'aereo, navi, TVD e vista non hanno `dwell_time_s`.
+  Finche' mancano, la legge non agisce su nessun tiratore, quindi non cambia nessun esito di tiro dei registri; e'
+  la scelta voluta (nessun valore senza fonte), ma significa che la D-5 oggi non produce effetti visibili nelle
+  sessioni della fotografia. Quando i dati arriveranno (ricerca in corso), estenderli a SAM e AAA **cambiera' la
+  fotografia con l'interruttore acceso** (S-2: gia' 10 s a tutti cambiano 2 esecuzioni su 1009; S-1: 17, 45, 464
+  rilevamenti persi su 29 483 a 30, 60, 120 s) e il confronto andra' riletto; con l'interruttore spento resta
+  identica.
 
 ### 5.2 Limiti di modello (da dichiarare nel manuale)
 
-- **La legge non accorcia le rotte contro gli EWR** (§1.8): con periodi di 6-60 s la corda a Pd ridotta e' di
-  pochi km. L'effetto "volo basso non visto" richiede l'orizzonte nel DES, assente.
+- **La legge non accorcia le rotte contro gli EWR** (§1.8), rischio principale e invariato dopo le decisioni: con
+  periodi di 6-60 s la corda a Pd ridotta e' di pochi km (al piu' 3,75 km a 250 m/s per i periodi fino a 15 s).
+  L'effetto "volo basso non visto" richiede l'orizzonte nel DES, assente (attivita' separata, DW-7).
 - **Solo riduzione**: per permanenze lunghe la Pd resta quella della distanza minima (nessun cumulo di scansioni).
 - **Sensore unico per asset**: la permanenza e' quella del sensore che da' la portata massima; un secondo sensore
   piu' corto senza dwell non entra.
@@ -901,6 +1029,11 @@ pianificatore non entra in nessuna sessione della fotografia).
 - `Test_Session_Scenarios_S32` aggiunge 20 sessioni (~1 minuto di suite in piu' [I], come S31).
 - Firma del lettore `(observer, target, mode)`: diversa da `detection_factor` `(observer, target)` per il modo del
   bersaglio a terra; dichiarata nella docstring.
+- Le sonde S-2 e S-3 sono state eseguite con lo script di sonda, non con il codice che scrivera' l'esecutore: se
+  la permanenza implementata differisse da quella di §2.4, i valori di S-3 citati in §4.A.7 non si
+  riprodurrebbero (segnale utile, non motivo per cambiare i test).
+- Script di sonda `probe_dwell.py`: difetto noto nel salvataggio di `stats.json` con la modalita' `uniform`
+  (chiave `None`, §1.9); riguarda solo le sonde, non il repository ne' questo piano.
 
 ---
 
@@ -913,13 +1046,35 @@ pianificatore non entra in nessuna sessione della fotografia).
   implementato" sostituita da "legge D-5 fatta dietro `D5_DWELL_TIME`; corda limitata nel pianificatore rimandata,
   DW-7"); atlante `11a_Atlante_Risolutore.md` (costante `D5_DWELL_TIME`, funzioni `dwell_factor` e
   `registry_dwell_time`, sequenza di `_detect_direction`).
+  Nel cap. 9 anche il limite DW-9 (meccanismo generico, valori ai soli EWR, nessun tiratore con dwell) e la
+  regola DW-2 con l'interpretazione [S] dell'AMES-Type-80.
 - **`F4_Differenze_Scenari.md`**: sezione "D-5 — permanenza nel volume (2026-11-xx)": il cambio, 1009 identiche, 20
-  nuove di S32-DWELL, esito della sonda S-1 con l'interruttore acceso, valori di fonte e regola, limiti.
+  nuove di S32-DWELL, esiti delle sonde S-1 (interruttore acceso, 1009 identiche) e S-2 (sensibilita': 10 s a ogni
+  osservatore cambiano 2 esecuzioni di S21), valori di fonte e regola DW-2, limiti, DW-9.
 - **`Piano_Implementazione_Missione.md`**: riga in §5 "D-5 (Pd con permanenza)" fuori dalla numerazione F, come
-  D-4b/D-4c; stato dell'interruttore.
-- **`Proposta_Volumi_Rilevamento_Intercettazione.md`** §9 D-5: nota di stato con il riferimento a questo piano
-  (gia' aggiunta come rimando) e, a lavoro fatto, l'esito.
-- **Memoria** (solo la sessione principale): voce sulla D-5 (decisioni DW-*, interruttore, finding della corda).
+  D-4b/D-4c; stato dell'interruttore; DW-9 (valori ad altri sensori in attesa di fonte).
+- **`Proposta_Volumi_Rilevamento_Intercettazione.md`** §9 D-5: riga di stato aggiornata il 2026-11-06 (Proposta
+  definitiva); a lavoro fatto, l'esito.
+- **`Rapporti/Sonde_Dwell_D5/LEGGIMI.md`** (sessione principale): descrive ancora S-2 come incompleta e S-3 come mai
+  eseguita; da allineare a §1.9 ed eventualmente copiare li' i log di S-2 e S-3 (oggi solo in `.ai-run/`).
+- **Memoria** (solo la sessione principale): voce sulla D-5 (decisioni DW-1..DW-9, interruttore, finding della
+  corda, esiti S-2 e S-3).
+
+## Estensioni future (fuori da questo piano)
+
+- **Valori per altre classi di sensori (DW-9)**: quando la ricerca per classe di sensore
+  (`Ricerca_Dwell_Sensori_2026_11_06.md`, in preparazione) sara' completa e approvata, l'estensione e' **solo un
+  dato**, senza cambi di codice: aggiungere la chiave `dwell_time_s` [s] al dizionario del sensore (`radar`, `TVD`
+  o `visual`) nei record interessati di `Vehicle_Data`, `Ship_Data` o `Aircraft_Data`, con commento F/D/S e fonte
+  come in A.1, e un test del valore nel file di test del registro. Poi: suite (con l'interruttore spento la
+  fotografia resta identica) e un confronto con l'interruttore **acceso** (sonda tipo S-1 con i nuovi valori), da
+  rileggere esecuzione per esecuzione prima di decidere l'accensione. Test da adeguare in quel momento: quelli che
+  usano un record come esempio "senza dwell" (`Test_Mobile.TestDetectionDwellTime.test_records_without_dwell_give_none`
+  e `Test_Threat_AA_Factory` B.2-7 usano il 9K331-Tor; `Test_EWR_Data` test 2 i 5 EWR senza dato): falliranno se
+  quel record riceve un valore, ed e' il segnale voluto.
+- **Accensione di `D5_DWELL_TIME`** (DW-5): dopo la verifica dei blocchi A e B; con i soli dati EWR non cambia la
+  fotografia (S-1).
+- **Blocco C e orizzonte radar nel DES** (DW-7): attivita' separate, da pianificare.
 
 ## Scelte minori lasciate all'esecutore (da elencare nel rapporto)
 
@@ -928,3 +1083,4 @@ pianificatore non entra in nessuna sessione della fotografia).
 - La sessione minima di `Test_Session_Simulator` per i 2 test dell'interruttore.
 - I campi confrontati negli eventi di danno del test S32 2 (purche' ne confronti l'istante e l'asset).
 - La struttura interna di `Test_Session_Scenarios_S32.py` (riuso di funzioni di S31 o copia locale di `build`).
+- La data nei titoli `2026-11-xx` (docstring del risolutore, A.3 punto 8): quella del commit del blocco A.
