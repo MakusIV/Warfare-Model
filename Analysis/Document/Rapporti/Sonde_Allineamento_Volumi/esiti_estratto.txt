@@ -1,0 +1,63 @@
+# Estratto versionato degli esiti delle sonde V-0..V-2b (log completi in .ai-run/sonde_volumi/, fuori dal versionamento). Estratto il 2026-11-07 con: grep -E '^(compared|PROBE_RC|RUNS|TOTALS|SWITCH|HIST|UNITS|MODELS)'
+
+## v0
+compared 1029 runs: 20 difference lines (485.2 s)
+PROBE_RC 1
+RUNS 1029 (in fotografia 1009, nuove 20)
+RUNS_FLAGGED 42 (in fotografia 42)
+TOTALS {"cand_air_registry": 362, "cand_static_excluded": 48, "cand_static_excluded_dyn_ok": 0, "cand_static_ok_dyn_never": 0, "cyl_above": 523, "cyl_available": 1510, "cyl_below": 0, "cyl_outside_radius": 1238, "engagements": 1258, "salvos": 28214, "salvos_air": 7489, "salvos_air_no_legs": 0, "salvos_air_registry_weapon": 252, "salvos_air_test_weapon": 6977, "sw_above_max": 0, "sw_below_min": 0, "sw_static_differs": 0, "sw_with_band": 242}
+UNITS {"S12": 6, "S13": 6, "S14": 6, "S21": 16, "S5": 2, "S9": 6}
+
+## v1
+compared 1029 runs: 20 difference lines (487.7 s)
+PROBE_RC 1
+RUNS 1029 (in fotografia 1009, nuove 20)
+RUNS_FLAGGED 42 (in fotografia 42)
+TOTALS {"cand_air_registry": 362, "cand_static_excluded": 48, "cand_static_excluded_dyn_ok": 0, "cand_static_ok_dyn_never": 0, "cyl_above": 523, "cyl_available": 1510, "cyl_below": 0, "cyl_outside_radius": 1238, "engagements": 1258, "entry_checks_band": 978, "entry_differs": 0, "entry_later_with_band": 0, "entry_none_with_band": 0, "salvos": 28214, "salvos_air": 7489, "salvos_air_no_legs": 0, "salvos_air_registry_weapon": 252, "salvos_air_test_weapon": 6977, "sw_above_max": 0, "sw_below_min": 0, "sw_static_differs": 0, "sw_with_band": 242}
+UNITS {"S12": 6, "S13": 6, "S14": 6, "S21": 16, "S5": 2, "S9": 6}
+
+## v2
+compared 1029 runs: 20 difference lines (485.4 s)
+PROBE_RC 1
+RUNS 1029 (in fotografia 1009, nuove 20)
+RUNS_SWITCH 14
+RUNS_FLAGGED 56 (in fotografia 56)
+TOTALS {"cand_air_registry": 362, "cand_static_excluded": 48, "cand_static_excluded_dyn_ok": 0, "cand_static_ok_dyn_never": 0, "cyl_above": 523, "cyl_available": 1510, "cyl_below": 0, "cyl_outside_radius": 1238, "engagements": 1258, "entry_checks_air_ceiling": 90, "entry_checks_band": 978, "entry_differs": 0, "entry_differs_air": 0, "entry_later_with_band": 0, "entry_none_with_band": 0, "fc_air_defer": 48, "fc_air_defer_static_ok": 0, "fc_air_differs": 0, "fc_bomb_alt_differs": 0, "fc_calls_alt": 3091, "fc_calls_no_legs": 0, "fc_keys_dynamic": 353, "fc_keys_static": 353, "salvos": 28214, "salvos_air": 7489, "salvos_air_no_legs": 0, "salvos_air_registry_weapon": 252, "salvos_air_test_weapon": 6977, "sw_above_max": 0, "sw_below_min": 0, "sw_static_differs": 0, "sw_with_band": 242}
+UNITS {"S12": 6, "S13": 6, "S14": 6, "S19": 4, "S21": 16, "S21R": 6, "S31-VISUAL": 4, "S5": 2, "S9": 6}
+SWITCH S19/S19-0/replay: entry=0 entry_air=0 fc_air=0 defer=5 defer_static_ok=0 bomb=0
+SWITCH S19/S19-0/run: entry=0 entry_air=0 fc_air=0 defer=5 defer_static_ok=0 bomb=0
+SWITCH S19/S19-1/run: entry=0 entry_air=0 fc_air=0 defer=5 defer_static_ok=0 bomb=0
+SWITCH S19/S19-2/run: entry=0 entry_air=0 fc_air=0 defer=5 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-0: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-1: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-2: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-3: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-4: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-5: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S31-VISUAL/S31-VISUAL-0/vads_high: entry=0 entry_air=0 fc_air=0 defer=4 defer_static_ok=0 bomb=0
+SWITCH S31-VISUAL/S31-VISUAL-1/vads_high: entry=0 entry_air=0 fc_air=0 defer=4 defer_static_ok=0 bomb=0
+SWITCH S31-VISUAL/S31-VISUAL-2/vads_high: entry=0 entry_air=0 fc_air=0 defer=4 defer_static_ok=0 bomb=0
+SWITCH S31-VISUAL/S31-VISUAL-3/vads_high: entry=0 entry_air=0 fc_air=0 defer=4 defer_static_ok=0 bomb=0
+
+## v2b
+compared 30 runs: IDENTICAL (10.5 s)
+PROBE_RC 0
+RUNS 30 (in fotografia 30, nuove 0)
+RUNS_SWITCH 14
+RUNS_FLAGGED 14 (in fotografia 14)
+TOTALS {"cand_air_registry": 132, "cand_static_excluded": 48, "cand_static_excluded_dyn_ok": 0, "cand_static_ok_dyn_never": 0, "cyl_above": 0, "cyl_available": 105, "cyl_below": 0, "cyl_outside_radius": 0, "engagements": 30, "entry_checks_air_ceiling": 0, "entry_checks_band": 384, "entry_differs": 0, "entry_differs_air": 0, "entry_later_with_band": 0, "entry_none_with_band": 0, "fc_air_defer": 48, "fc_air_defer_entry": 0, "fc_air_defer_static_ok": 0, "fc_air_differs": 0, "fc_bomb_alt_differs": 0, "fc_calls_alt": 869, "fc_calls_no_legs": 0, "fc_keys_dynamic": 130, "fc_keys_static": 130, "salvos": 218, "salvos_air": 105, "salvos_air_no_legs": 0, "salvos_air_registry_weapon": 105, "salvos_air_test_weapon": 0, "sw_above_max": 0, "sw_below_min": 0, "sw_static_differs": 0, "sw_with_band": 105}
+UNITS {"S19": 4, "S21R": 6, "S31-VISUAL": 4}
+SWITCH S19/S19-0/replay: entry=0 entry_air=0 fc_air=0 defer=5 defer_static_ok=0 bomb=0
+SWITCH S19/S19-0/run: entry=0 entry_air=0 fc_air=0 defer=5 defer_static_ok=0 bomb=0
+SWITCH S19/S19-1/run: entry=0 entry_air=0 fc_air=0 defer=5 defer_static_ok=0 bomb=0
+SWITCH S19/S19-2/run: entry=0 entry_air=0 fc_air=0 defer=5 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-0: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-1: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-2: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-3: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-4: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S21R/S21R-5: entry=0 entry_air=0 fc_air=0 defer=2 defer_static_ok=0 bomb=0
+SWITCH S31-VISUAL/S31-VISUAL-0/vads_high: entry=0 entry_air=0 fc_air=0 defer=4 defer_static_ok=0 bomb=0
+SWITCH S31-VISUAL/S31-VISUAL-1/vads_high: entry=0 entry_air=0 fc_air=0 defer=4 defer_static_ok=0 bomb=0
+SWITCH S31-VISUAL/S31-VISUAL-2/vads_high: entry=0 entry_air=0 fc_air=0 defer=4 defer_static_ok=0 bomb=0
+SWITCH S31-VISUAL/S31-VISUAL-3/vads_high: entry=0 entry_air=0 fc_air=0 defer=4 defer_static_ok=0 bomb=0

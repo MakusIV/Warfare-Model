@@ -371,6 +371,7 @@ canna -> `gun`; siluri -> `torpedo`. Tutte non bersagli.
 | antinave da aereo (Harpoon AGM-84A, Exocet non a registro) contro nave | intercettabile | **si'** (navale, se `ad_detectable`) | regola A2S |
 | antinave da nave (RGM-84, P-270) contro nave | intercettabile | **si'** | `anti_ship` navale |
 | antinave lanciato da terra (batteria costiera) | nessuna batteria costiera con missili nel registro terrestre [V] | come sopra (classe del missile) | — |
+| antinave da bombardiere contro bersaglio terrestre (es. Kh-22N del Tu-22M) | intercettabile | **non intercettabile da nessuno** (classe `anti_ship` non bersaglio delle difese terrestri, R-BI-3) | [I] la regola dell'utente esclude l'A2G (aria-superficie) solo per cacciabombardieri/aerei d'attacco e ammetterebbe un cruise da bombardiere. Nessun caso nella fotografia (sonda B-0). Il blocco 0 deve classificare il Kh-22N: se `cruise`, e' bersaglio dei terrestri. Nessuna decisione nuova. |
 | Tomahawk da nave contro terra | intercettabile | **si'** (cruise, terrestre e navale) | — |
 | cruise lanciato da terra | non a registro [V] | `cruise` | — |
 | razzi MLRS (Grad, Smerch) | non intercettabili | non intercettabili | C-RAM non modellato; la regola dice mai |
@@ -863,6 +864,12 @@ obbligatorio dopo la decisione BI-6:
 4. la **zona grigia** (atteso [I]: Kh-29L/T/TE, Kh-58, AGM-88, Kh-31P, LD-10) presentata all'utente voce per voce;
 5. una nota sui missili citati dall'utente ma **assenti dai registri** (Brimstone, Vikhr, APKWS [V]): nessuna voce da
    creare in questa Proposta.
+
+Nota [I] (caso limite M1, §2.3): un antinave lanciato da un **bombardiere** contro un bersaglio **terrestre** (es.
+Kh-22N del Tu-22M) non e' intercettabile da nessuno con la classe `anti_ship` (non bersaglio delle difese terrestri,
+tabella R-BI-3). La regola dell'utente esclude l'A2G (aria-superficie) solo per cacciabombardieri/aerei d'attacco e
+ammetterebbe un cruise da bombardiere: il blocco 0 deve quindi **classificare il Kh-22N** (se `cruise`, diventa
+bersaglio dei terrestri). Nessuna decisione nuova.
 
 ### 5.2 Blocco 1 — dati nei registri
 

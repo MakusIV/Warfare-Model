@@ -1,0 +1,54 @@
+# Estratto versionato dell'esito della sonda P-0 (log completo in .ai-run/sonde_passaggi/p0/, fuori dal versionamento). Estratto il 2026-11-07 con: grep -E '^(compared|PROBE_RC|RUNS|TOTALS|HIST|UNITS|MODELS|AFTER_PASS|MULTI|RINT)'
+compared 1029 runs: 20 difference lines (484.4 s)
+PROBE_RC 1
+RUNS 1029 (in fotografia 1009, nuove 20)
+RUNS_WITH_MULTI 0 (in fotografia 0)
+RUNS_WITH_AFTER_PASS 44  RUNS_WITH_RINT 0
+TOTALS {"cpa_not_in_first": 0, "directions": 33910, "engagements": 1258, "extra_draws": 0, "first_flip_by_distance": 0, "inner_single_salvos_after_pass": 151, "multi": 0, "multi_detected": 0, "multi_detected_after_first": 0, "multi_outer": 0, "multi_with_salvos": 0, "rint_last_not_earliest": 0, "salvos": 28214, "salvos_after_next_pass_start": 0, "salvos_between_passes": 0, "without_legs": 0} MAX_PASSES 0
+HIST {"0": 946, "1": 32964}
+UNITS {}
+MODELS []
+AFTER_PASS S13/S13-2: 2
+AFTER_PASS S13/S13-4: 4
+AFTER_PASS S14/S14-4: 2
+AFTER_PASS S21/S21-3/control: 3
+AFTER_PASS S21/S21-3/parked: 8
+AFTER_PASS S21/S21-5/control: 4
+AFTER_PASS S21/S21-5/parked: 1
+AFTER_PASS S21/S21-7/control: 2
+AFTER_PASS S21/S21-7/parked: 1
+AFTER_PASS S24-ORBIT/S24-ORBIT-0/full: 1
+AFTER_PASS S26-BINGO/S26-BINGO-0/engagement_fuel_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-0/none: 4
+AFTER_PASS S26-BINGO/S26-BINGO-0/switch_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-0/transfer_continue: 4
+AFTER_PASS S26-BINGO/S26-BINGO-1/engagement_fuel_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-1/none: 4
+AFTER_PASS S26-BINGO/S26-BINGO-1/switch_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-1/transfer_continue: 4
+AFTER_PASS S26-BINGO/S26-BINGO-2/engagement_fuel_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-2/none: 4
+AFTER_PASS S26-BINGO/S26-BINGO-2/switch_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-2/transfer_continue: 4
+AFTER_PASS S26-BINGO/S26-BINGO-3/engagement_fuel_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-3/none: 4
+AFTER_PASS S26-BINGO/S26-BINGO-3/switch_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-3/transfer_continue: 4
+AFTER_PASS S26-BINGO/S26-BINGO-4/engagement_fuel_off: 3
+AFTER_PASS S26-BINGO/S26-BINGO-4/none: 3
+AFTER_PASS S26-BINGO/S26-BINGO-4/switch_off: 3
+AFTER_PASS S26-BINGO/S26-BINGO-4/transfer_continue: 4
+AFTER_PASS S26-BINGO/S26-BINGO-5/engagement_fuel_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-5/none: 4
+AFTER_PASS S26-BINGO/S26-BINGO-5/switch_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-5/transfer_continue: 4
+AFTER_PASS S26-BINGO/S26-BINGO-6/engagement_fuel_off: 3
+AFTER_PASS S26-BINGO/S26-BINGO-6/none: 3
+AFTER_PASS S26-BINGO/S26-BINGO-6/switch_off: 3
+AFTER_PASS S26-BINGO/S26-BINGO-6/transfer_continue: 3
+AFTER_PASS S26-BINGO/S26-BINGO-7/engagement_fuel_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-7/none: 4
+AFTER_PASS S26-BINGO/S26-BINGO-7/switch_off: 4
+AFTER_PASS S26-BINGO/S26-BINGO-7/transfer_continue: 4
+AFTER_PASS S28-CLASS/S28-CLASS-2/self_defence: 1
+AFTER_PASS S28-CLASS/S28-CLASS-2/self_defence_off: 1

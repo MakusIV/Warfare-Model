@@ -729,14 +729,15 @@ dell'esecuzione.
 
 ### 4.0 Precondizioni (l'esecutore le verifica e si ferma se mancano)
 
-1. Il blocco B della D-5 e' committato (`git log` mostra il commit; `git status` pulito su
+1. Branch dedicato creato dalla sessione principale; `git status` pulito (come BI §5.0.1 e VA §4.0.1).
+2. Il blocco B della D-5 e' committato (`git log` mostra il commit; `git status` pulito su
    `Logic/Air_Route_Manager.py`, `Test/Test_Air_Route_Manager.py`, `Test/Test_Threat_AA_Factory.py`).
-2. Base: suite `Ran 4795 tests`, `OK (skipped=7)` [V: `.ai-run/suite.log` del 2026-11-06 su osboxes, working tree con
+3. Base: suite `Ran 4795 tests`, `OK (skipped=7)` [V: `.ai-run/suite.log` del 2026-11-06 su osboxes, working tree con
    il blocco B]; confronto `compared 1029 runs: 20 difference lines` (20 NEW di S32-DWELL) [V:
    `.ai-run/confronto.log`].
-3. La sonda P-0 e' stata eseguita (§1.8: fatto il 2026-11-07, numeri registrati), le decisioni FP-1..FP-10 sono
+4. La sonda P-0 e' stata eseguita (§1.8: fatto il 2026-11-07, numeri registrati), le decisioni FP-1..FP-10 sono
    prese (al 2026-11-07: FP-1, FP-2 e FP-3 decise, FP-4..FP-10 ancora aperte).
-4. Copia della cattura di P-0 conservata: `.ai-run/sonde_passaggi/p0/capture.json` (serve alla verifica di S32 in
+5. Copia della cattura di P-0 conservata: `.ai-run/sonde_passaggi/p0/capture.json` (serve alla verifica di S32 in
    §4.1.6) [V: presente sul ProArt il 2026-11-07, ~13,5 MB]. `.ai-run/` e' fuori dal versionamento (`.gitignore:37`):
    se l'esecutore lavora su un'altra macchina (osboxes) il file non c'e'; in quel caso si ferma e lo dice (la sessione
    principale lo copia o riesegue P-0 su quella macchina, ~20 minuti [S]).
@@ -747,7 +748,7 @@ dell'esecuzione.
 
 1. **Import** (`:463-470`): aggiungere `clamp_legs` e `closest_point_of_approach` all'import da `Contact_Scheduler`
    (ordine alfabetico come oggi).
-2. **Interruttore**, subito dopo `D5_DWELL_TIME = False` (`:525`), testo esatto:
+2. **Interruttore**, in coda, nell'ordine di esecuzione (BI, poi VA, poi FP), come dice la tabella di coordinamento di BI §6.1 (non subito dopo `D5_DWELL_TIME = False`, `:525`); testo esatto:
 
 ```python
 # Rilevamento per passaggio nella portata propria (Proposta_Finestre_Per_Passaggio_Portata_Propria.md), interruttore
@@ -1288,7 +1289,7 @@ finestre osservate.
 
 #### 4.2.2 `Test/Scenario_Baseline.py`
 
-In `UNITS`, dopo S32-DWELL (`:395-397`):
+In `UNITS`, in coda, nell'ordine di esecuzione (BI, poi VA, poi FP), come dice la tabella di coordinamento di BI §6.1 (non dopo S32-DWELL, `:395-397`):
 
 ```python
     # ── S33 (FP: un'occasione di rilevamento per passaggio nel volume proprio) — in coda, nomi stabili ──

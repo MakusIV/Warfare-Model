@@ -403,17 +403,18 @@ l'allineamento si ottiene cambiando il solo DES. Le alternative per il pianifica
 
   ```python
   def _own_intervals(self, observer_id: str, target_id: str, own_range: float,
-                     scale: float = 1.0) -> Optional[List[Tuple[float, float]]]:
+                     radius: Optional[float] = None) -> Optional[List[Tuple[float, float]]]:
       """Intervalli in cui il bersaglio e' nel volume di rilevamento PROPRIO dell'osservatore (oggi la sfera di
-      raggio own_range), ridotto per omotetia di `scale` (raggio estratto / portata, per l'istante di rilevamento).
+      raggio own_range, o di raggio `radius` — il raggio estratto, per l'istante di rilevamento — se dato).
       None senza i tratti di entrambi. Unico punto da sostituire con un volume di rilevamento diverso."""
   ```
 
-  con corpo `range_intervals(legs_o, legs_t, own_range * scale)`, usato dalle 4 chiamate. La sostituzione futura del
+  con corpo `range_intervals(legs_o, legs_t, own_range if radius is None else radius)`, usato dalle 4 chiamate. La sostituzione futura del
   volume tocca solo questo metodo; la logica dei passaggi (estrazioni, CPA del passaggio, finestra d'ingaggio) no.
   Due vincoli da dichiarare per un volume futuro: (i) deve restare **contenuto nella sfera** di raggio `own_range`
-  (altrimenti le finestre dello scheduler, costruite sulla sfera, non lo coprono); (ii) l'omotetia sostituisce il
-  "raggio estratto" di `detection_radius`, cosi' la legge di Pd resta funzione di una distanza normalizzata.
+  (altrimenti le finestre dello scheduler, costruite sulla sfera, non lo coprono); (ii) il raggio estratto passa come
+  `radius` **invariato** (non come fattore: stessi float di oggi), cosi' la legge di Pd resta funzione di una distanza
+  normalizzata.
 - **Quando farlo**: (a) dentro il blocco 1 della FP, prima della sua esecuzione (refactor a comportamento identico,
   ~10 righe, la FP va aggiornata da chi pianifica); (b) dopo la FP, in un commit separato; (c) solo quando arrivera'
   un volume di rilevamento non sferico. Raccomandazione: **(a)**, perche' evita di riscrivere 4 chiamate nuove subito
@@ -556,7 +557,7 @@ tratti che ha gia', la fascia arriva nella `ShotSpec`); nessun tipo "volume" gen
 | Lavoro | Stato | Relazione con VA |
 |---|---|---|
 | D-5 blocchi A e B | committati (`8943b292`, `effb0dcf`) | indipendente (rilevamento) |
-| BI (bersagli intercettabili) | scelte BI-1..BI-11 registrate, BI-12 aperta | **prima di VA**: stessi file (`ShotSpec`, `shot_spec_for`, interruttori, docstring, `UNITS`); conflitti di riga, non di logica (tabella sotto) |
+| BI (bersagli intercettabili) | decisioni BI-1..BI-12 tutte prese | **prima di VA**: stessi file (`ShotSpec`, `shot_spec_for`, interruttori, docstring, `UNITS`); conflitti di riga, non di logica (tabella sotto) |
 | FP (finestre per passaggio) | Proposta in BOZZA, FP-1..FP-4 decise, FP-5 sospesa, sonda P-0 fatta | indipendente sull'ingaggio; VA-6 (a) e' gia' nel suo blocco 1 (`_own_intervals`) |
 | Estensione dei dwell a SAM/AAA (DW-9 rivista) | Proposta da scrivere | rende i SAM/AAA osservatori con dwell: piu' sensibili ai passaggi (FP) che alla forma d'arma |
 | **VA (questa)** | BOZZA | — |
@@ -577,7 +578,7 @@ Punti di conflitto fra BI e VA [V sui due piani scritti; nessuno eseguito]:
 | `_call_fire_control`, `_fire_control`, `_schedule_next`, `_in_range_at`, `_range_entry`, introspezione (`:1669-1691`) | — | quote all'istante, rinvio, fascia | solo VA |
 | docstring del modulo del risolutore | punto della catena BI | sezione "Quota nel volume d'ingaggio" | sezioni distinte |
 | `Fire_Control.py` `shot_spec_for` (`:744-791`) | `intercept_domains=intercept_domains_for(weapon)` | tre argomenti di quota | stesso costruttore: argomenti aggiunti in coda, BI prima |
-| `Fire_Control.py` `make_registry_fire_control`, `restrict_by_policy`, docstring "Quota" | — | `altitudes`, quattro varianti | solo VA (la tabella BI §6.1 dice ancora "invariati per VA": da aggiornare da chi pianifica la BI) |
+| `Fire_Control.py` `make_registry_fire_control`, `restrict_by_policy`, docstring "Quota" | — | `altitudes`, quattro varianti | solo VA |
 | `Scenario_Baseline.UNITS` e docstring | S35-ADTGT | S34-BAND (dopo S35, nessuna rinumerazione) | in coda, nell'ordine di esecuzione |
 
 Nessuna regola legge i campi dell'altra: un colpo con `intercept_domains` e quote nuove e' trattato da BI all'impatto
@@ -818,6 +819,9 @@ def accepts_keyword(fire_control: Callable, name: str) -> bool:
     `test_geometry_is_isolated_and_replaceable` sostituisce la funzione con una a 3 parametri e deve restare verde);
     altrimenti `self.engagement_intervals(legs_shooter, legs_target, float(max_range), band=band)`. Senza tratti:
     `engagement_intervals_without_legs(...)` come oggi, la fascia **ignorata** (ripiego dichiarato).
+    Annotazione di tipo da estendere: `range_cache` (`:1833`) dichiara `Dict[Tuple[str, str, float], ...]`; con la
+    chiave allargata a `band` l'annotazione va estesa di conseguenza (chiave larga con `band`). Scelta minore per
+    l'esecutore, da elencare nel rapporto.
 11. **Chiamanti di `_range_entry`**: `_schedule_next` (`:2549`) e `_in_range_at` (`:2883`) passano
     `band=self._band_of(spec)`.
 12. **Rinvio fuori fascia (VA-2.1 (i))**, metodo nuovo:
@@ -1193,6 +1197,12 @@ Rispetto al piano con VA-2 (a) e VA-3 (a) (~110 + ~400, 21 test): circa il doppi
   non dichiarano `altitudes`; nella fotografia producono 523 salve sopra il tetto del cilindro del pianificatore e
   1 238 oltre il raggio (V-0). La regola VA non le tocca; dar loro portata e fascia cambierebbe la fotografia
   (attivita' separata, decisione dell'utente).
+- **Fascia/tetto senza portata, controllo solo all'istante**: una `ShotSpec` con fascia (`min_altitude`/`max_altitude`)
+  o tetto (`max_target_z`) ma `max_range = None` non riceve alcun controllo nel tempo (il rinvio salta le opzioni senza
+  `max_range`, §4.1.2 punto 12): la regola "una disuguaglianza, due istanti" vale solo all'istante della fire control.
+  Non e' una regressione (meglio del filtro statico, che nel tempo non vede alcuna quota). Frequenza: il principale ha
+  verificato che nei registri terrestri e navali (31 armi con fascia di quota) nessuna manca di portata; le armi
+  aria-aria non sono state controllate [I].
 
 ### 5.3 Cosa non e' stato verificato
 
@@ -1219,9 +1229,6 @@ Rispetto al piano con VA-2 (a) e VA-3 (a) (~110 + ~400, 21 test): circa il doppi
 - **`Piano_Implementazione_Missione.md`**: riga in §5 fuori numerazione F, come D-4b/D-4c e D-5, con lo stato
   dell'interruttore.
 - **`Proposta_Volumi_Rilevamento_Intercettazione.md`** §5: nota di stato "lato DES dell'ingaggio: v. VA".
-- **`Proposta_Bersagli_Intercettabili_Difesa_Aerea.md`** §6.1: la riga `Fire_Control.py` della tabella dei conflitti
-  ("`in_altitude_envelope` e il filtro statico restano invariati per il piano VA") non e' piu' vera: VA tocca anche
-  `make_registry_fire_control`, `restrict_by_policy` e `_call_fire_control` (aggiornamento di chi pianifica la BI).
 - **`Piano_Lavori_2026_09_24.md`** Attivita' D: stato (primitive fascia e intersezione fatte; volume di rilevamento da
   fare).
 - **Memoria** (solo la sessione principale): decisioni VA, interruttore, esiti delle sonde.
