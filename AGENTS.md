@@ -47,7 +47,7 @@ identiche/cambiate/nuove e' in `.ai-run/confronto.log` (cercalo con `grep -E '^(
 | `AGENTS.md`, `.opencode/`, `opencode.json`, `.githooks/`, `tools/ai/` | l'utente (o Claude su sua richiesta) | sola lettura |
 | `Analysis/Document/Proposta_*.md` | l'agente che pianifica (`des-planner` o `oc-planner`) | sola lettura: e' il contratto |
 | `Analysis/Document/Rapporti/` | ogni agente il proprio file: `Rapporto_*` (esecutori), `Revisione_*` (`oc-reviewer`), `Diagnosi_*` (`oc-debugger`) | — |
-| `Analysis/Document/Bozze/` | `oc-writer` (bozze, poi integrate da `des-manual-writer` o dalla sessione principale) | — |
+| `Analysis/Document/Bozze/` | `oc-writer` (bozze, poi integrate da `des-manual-writer` o dalla sessione principale); `Bozze/Ricerca_*_oc-researcher.md` solo `oc-researcher` (ricerche di dati sul web) | — |
 | `Analysis/Document/Manuale_Motore_DES/` | `des-manual-writer` | sola lettura |
 | codice e test | l'esecutore, **solo sul proprio branch** | — |
 
@@ -59,6 +59,7 @@ identiche/cambiate/nuove e' in `.ai-run/confronto.log` (cercalo con `grep -E '^(
 | `oc-reviewer` | GLM 5.3 high | solo `Revisione_*.md` | no | `/rivedi <branch> <Proposta>` |
 | `oc-debugger` | DeepSeek V4 Pro high | solo `Diagnosi_*.md` | no | `/diagnosi <sintomo>` |
 | `oc-writer` | DeepSeek V4.1 Flash high | bozze e documenti `.md` non riservati, rapporto | si', solo `ai/*` | `/bozza <tema>` |
+| `oc-researcher` | DeepSeek V4.1 Flash high (scelto il 2026-11-07 dopo la prova su 3 missili con GLM 5.3 e V4 Pro: qualita' pari o migliore, costo ~5 volte inferiore) | solo `Bozze/Ricerca_*_oc-researcher.md`; unico agente con accesso al web | no | `/ricerca <tema e compito>` |
 | `oc-helper` | Qwen3.8 27B locale (Game_PC) | su conferma | no | — |
 
 L'agente globale `oc-ui-developer` e' disattivato in questo progetto (`opencode.json`).
