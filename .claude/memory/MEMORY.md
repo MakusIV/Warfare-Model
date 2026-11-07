@@ -3,6 +3,7 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
+- [Dati BI (blocco 0): decisioni D1-D6 sulla Proposta dati dei 52 missili — D1-D6 decise](project_bi_dati_decisioni.md) — in corso 2026-11-07: D1-D6 tutte decise; tutte le decisioni dati prese (D1-D6 + 5 voci grigie); Proposte allineate, Kormoran confermato True; da committare; poi codice BI blocchi 1-3
 - [Sessione 2026-11-07 ProArt — Proposte FP/BI/VA committate e rilette (BI e VA pronte, FP da correggere dopo FP-5/FP-6); nuovo agente oc-researcher (V4.1 Flash) provato](project_session_2026_11_07_summary.md) — RIPARTIRE DA QUI: blocco 0 della BI (ricerca dati dei 52 missili) con oc-researcher in lotti, poi codice BI -> VA -> FP-5 -> FP
 - [Come presentare le decisioni all'utente: sigle spiegate, ruoli, esempi, una per volta, verifica con agente Opus high](feedback_presentazione_decisioni.md) — dal 2026-11-07
 - [D-5 opzione 2 (dwell_time_s): Proposta DEFINITIVA il 2026-11-06, DW-1..DW-9 decise, sonde S-1..S-3 complete](project_dwell_time_d5.md) — RIPARTIRE DA QUI: prossimo passo = esecutore del blocco A (proporre e attendere conferma); ricerca dati sensori SAM/AAA in corso (DW-9); rischio: senza orizzonte radar nel DES la legge non accorcia le rotte

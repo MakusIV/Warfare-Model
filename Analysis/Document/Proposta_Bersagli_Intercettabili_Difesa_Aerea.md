@@ -11,6 +11,10 @@ ProArt (§1.8). Nessun file di codice o di test
 modificato; scritti solo questo documento, lo script e il LEGGIMI della sonda in
 `Analysis/Document/Rapporti/Sonde_Bersagli_Intercettabili/` e due ritocchi a
 `Proposta_Finestre_Per_Passaggio_Portata_Propria.md` (FP-4 decisa, FP-5 sospesa).
+- **Blocco 0 (ricerca dati) ESEGUITO e approvato il 2026-11-07**: `Proposta_Dati_Bersagli_Intercettabili.md` (decisioni
+  D1-D6 di quel documento; metro del Maverick: diametro <= 304,8 mm **e** massa <= 304 kg, lunghezza esclusa; valori
+  per il blocco 1 nel suo §10.2). Allineati qui §2.2, §2.3, §2.5, BI-2 e BI-7 (note), §5.0-§5.2 (test 5), §6.1, §7,
+  §8; nessuna decisione BI-1..BI-12 cambiata.
 - **Esecutore previsto**: `des-developer` (Claude Sonnet, sforzo alto: risolutore, interruttore, registri). Alternativa:
   `oc-developer`. L'esecutore segue §5 cosi' com'e'; se il codice reale non corrisponde (righe, firme, esiti) si ferma e
   riferisce. Il blocco 0 (ricerca dati) **non** e' dell'esecutore: e' una ricerca con fonti (§5.1).
@@ -102,7 +106,7 @@ fermati in **16** esecuzioni (S6 4, S16 4, S19AD 6, S2 2); l'unico missile **dei
 colpi, Tor, S19AD `tor_rear`); gli altri sono armi della tabella di test (`test:anti_ship` 351 colpi fermati da una nave,
 `test:anti_radiation` 10 da un Buk). Nessun AAM, SAM, ATGM, bomba guidata o razzo fermato.
 
-**Dimensione stimata** [S] (aggiornata dopo le scelte): blocco 0 ricerca dati (nessun codice); blocco 1 ~110 righe di
+**Dimensione stimata** [S] (aggiornata dopo le scelte): blocco 0 ricerca dati (nessun codice; eseguito); blocco 1 ~110 righe di
 dati nei registri (classe, flag, dimensioni di supporto dove trovate) + ~90 di test (6 test); blocco 2 ~120 righe di
 codice + ~320 di test (circa 21 test); blocco 3 ~380 righe di test (circa 15 test) + 3 righe della tabella della
 fotografia, **32 esecuzioni nuove**; blocco 4 documenti.
@@ -345,8 +349,8 @@ Per un colpo `c` (della salva `s`) e un intercettore `i` (gia' selezionato dalla
 
 | Classe proposta | Modelli | Terrestre | Navale | Zona d'ombra |
 |---|---|---|---|---|
-| `cruise` (lanciati da bombardieri) | Kh-55, Kh-101, Kh-555, Kh-65, KD-20 | si' | si' | — |
-| `cruise` **tattici** (anche da cacciabombardieri) | Kh-59, Kh-59M, KD-63, KD-63B | si' (BI-2 (a)) / no (BI-2 (b)) | si' | **BI-2**: Kh-59 e' portato da Su-30/Su-34 e da Tu-160 [V §1.5] |
+| `cruise` (lanciati da bombardieri) | Kh-55, Kh-101, Kh-555, Kh-65, KD-20; **KD-63, KD-63B** (solo dal bombardiere H-6 secondo GlobalSecurity, fonte unica; nessun lanciatore nei loadout [V]) | si' | si' | correzione del 2026-11-07 (Proposta dati, decisione D3.2 (a)): KD-63/KD-63B non sono lanciabili da cacciabombardieri |
+| `cruise` **tattici** (anche da cacciabombardieri) | Kh-59, Kh-59M | si' (BI-2 (a)) / no (BI-2 (b)) | si' | **BI-2**: il caso vero e' il Kh-59, portato da Su-30/Su-34 e da Tu-160 [V §1.5]; il Kh-59M non ha lanciatori nei loadout [V] |
 | `anti_ship` | AGM-84A, RB-04E, RB-15, RB-15F, Kormoran, Sea Eagle, Kh-22N, Kh-31A, Kh-35, Kh-41 | — | si' se `ad_detectable` | dimensione (BI-7); molti sono "cruise antinave" [I] |
 | `arm` | AGM-45, AGM-88, Kh-58, Kh-25MP, Kh-25MPU, Kh-31P, LD-10 | **no** | se `ad_detectable` | **BI-3**; candidati "piccoli" con il metro del Maverick [I]: AGM-45 (Shrike), Kh-25MP/MPU; zona grigia [I]: AGM-88, Kh-58, Kh-31P, LD-10 |
 | `tactical`, famiglia Maverick | AGM-65D, AGM-65K, RB-75T | **no** | **no** (`ad_detectable` fisso False, BI-6) | decisione dell'utente: "piccolo", in ogni contesto |
@@ -355,6 +359,15 @@ Per un colpo `c` (della salva `s`) e un intercettore `i` (gia' selezionato dalla
 
 **Navale `MISSILES_ASM` (8)**: Tomahawk `cruise` (Land_Attack + Anti_Ship) -> terrestre e navale si'; Harpoon, Granit,
 Moskit, Vulkan, YJ-12, YJ-18, YJ-83 `anti_ship` -> navale si' (con `ad_detectable`, presunto vero, BI-7).
+
+**Esito del blocco 0** (2026-11-07, `Proposta_Dati_Bersagli_Intercettabili.md` §1, §5 e §10.2; prevale sulle ipotesi
+della tabella sopra, che resta come traccia): classi confermate dalle fonti per tutte le 52 voci; il **Mistral** resta
+`tactical` con `ad_detectable` False (anomalia del registro, decisione D2 (a) della Proposta dati); il **Kh-22N** resta
+`anti_ship` (D3.1 (a)). Flag: **32 True, 20 False**. Kh-29L/T/TE, Kh-58 e Kh-31P superano l'Harpoon in diametro e
+massa: `ad_detectable` **True** (D3.3 (a)); AGM-45, Kh-25ML, Kh-25MR, Kh-66, LD-10 e i candidati "piccoli" (AGM-114,
+BGM-71D, 9M114, 9M120, 9M120-F, Hot-3, Mistral) **False**; in **zona grigia**, approvate dall'utente voce per voce,
+AGM-88, Kh-25MP, Kh-25MPU, RB-05A, RB-05E (**False**) e il Kormoran sul bordo alto (**True**). I nomi comuni Shturm,
+Ataka e Shrike sono confermati dalle fonti (bozza L2 e L4 della ricerca).
 
 **Derivate, senza dato nuovo**: AAM aerei -> `aam`; SAM terrestri (task Anti_Air) e navali -> `sam`; ATGM terrestri
 (task Anti_Tank) -> `atgm`; `BOMBS` -> `guided_bomb`/`bomb` dal `type`; `ROCKETS` aerei e terrestri -> `rocket`; armi a
@@ -371,7 +384,7 @@ canna -> `gun`; siluri -> `torpedo`. Tutte non bersagli.
 | antinave da aereo (Harpoon AGM-84A, Exocet non a registro) contro nave | intercettabile | **si'** (navale, se `ad_detectable`) | regola A2S |
 | antinave da nave (RGM-84, P-270) contro nave | intercettabile | **si'** | `anti_ship` navale |
 | antinave lanciato da terra (batteria costiera) | nessuna batteria costiera con missili nel registro terrestre [V] | come sopra (classe del missile) | — |
-| antinave da bombardiere contro bersaglio terrestre (es. Kh-22N del Tu-22M) | intercettabile | **non intercettabile da nessuno** (classe `anti_ship` non bersaglio delle difese terrestri, R-BI-3) | [I] la regola dell'utente esclude l'A2G (aria-superficie) solo per cacciabombardieri/aerei d'attacco e ammetterebbe un cruise da bombardiere. Nessun caso nella fotografia (sonda B-0). Il blocco 0 deve classificare il Kh-22N: se `cruise`, e' bersaglio dei terrestri. Nessuna decisione nuova. |
+| antinave da bombardiere contro bersaglio terrestre (es. Kh-22N del Tu-22M) | intercettabile | **non intercettabile da nessuno** (classe `anti_ship` non bersaglio delle difese terrestri, R-BI-3) | [I] la regola dell'utente esclude l'A2G (aria-superficie) solo per cacciabombardieri/aerei d'attacco e ammetterebbe un cruise da bombardiere. Nessun caso nella fotografia (sonda B-0). Il blocco 0 deve classificare il Kh-22N: se `cruise`, e' bersaglio dei terrestri. Nessuna decisione nuova. **Esito del blocco 0** (2026-11-07): Kh-22N `anti_ship` (Proposta dati, D3.1 (a)); il caso non puo' accadere con i registri attuali, perche' il Kh-22N ha solo la riga di efficacia `ship` e la fire control non lo usa mai contro un bersaglio terrestre [V, Proposta dati §2.2]. |
 | Tomahawk da nave contro terra | intercettabile | **si'** (cruise, terrestre e navale) | — |
 | cruise lanciato da terra | non a registro [V] | `cruise` | — |
 | razzi MLRS (Grad, Smerch) | non intercettabili | non intercettabili | C-RAM non modellato; la regola dice mai |
@@ -406,19 +419,25 @@ che difende un trasporto navale in porto. Le due letture divergono solo li' (BI-
   confidenza e motivazione; dove esistono, diametro, lunghezza e peso [con fonte] come dati di supporto. Nessuna
   soglia numerica nel codice.
 - Ogni valore entra nei registri con il commento `# STIMA [S]: <fonte/assunzione>`.
-- **Metro del Maverick e coerenza con il riferimento Harpoon** (decisione BI-6, 2026-11-07). Due ancore, entrambe da
-  documentare con fonte nel blocco 0:
-  - ancora **bassa** = Maverick (AGM-65), fissata dall'utente: `ad_detectable` False in ogni contesto;
-  - ancora **alta** = riferimento rilevabile (BI-7 (a): Harpoon, diametro 343 mm a registro navale [V], lunghezza e
-    massa da fonte): `ad_detectable` True.
-  Regola di coerenza [S]: (1) un missile con diametro **e** massa (e, se nota, lunghezza) **non maggiori** di quelli del
-  Maverick e' False, senza eccezioni; (2) un missile con diametro e massa **non minori** di quelli dell'Harpoon e' True;
-  (3) i missili fra le due ancore sono la **zona grigia**: la ricerca propone il valore con motivazione e confidenza e
-  l'utente li approva uno per uno (elenco atteso [I]: Kh-29, Kh-58, AGM-88, Kh-31P, LD-10, Kh-25 se piu' grandi del
-  Maverick). Cosi' nessun missile di taglia analoga al Maverick puo' risultare True per un errore di trascrizione: il
-  blocco 1 scrive nel registro anche le dimensioni di supporto trovate (`diameter_mm`, `mass_kg`, eventuale `length_m`,
-  con fonte) e un test verifica le regole (1) e (2) su tutte le voci che le hanno (§5.2). Nessuna soglia numerica nel
-  codice di produzione: le ancore stanno nel test e nel documento dati.
+- **Metro del Maverick e coerenza con il riferimento Harpoon** (decisione BI-6, 2026-11-07). Due ancore, documentate
+  con fonte nel blocco 0 (`Proposta_Dati_Bersagli_Intercettabili.md` §3 e §5, decisioni D1 = R1-K, cioe' metro
+  sull'inviluppo della famiglia Maverick, e D4.1 (a) del 2026-11-07):
+  - ancora **bassa** = famiglia Maverick fissata False dall'utente (AGM-65D, AGM-65K, RB-75T), presa come **inviluppo**:
+    diametro **304,8 mm** (FAS, *Federation of American Scientists*: "1 foot") e massa **304 kg**
+    (designation-systems, colonna AGM-65F/G, la cellula del K; i 306 kg di Wikipedia per il K non sono verificati con
+    fonte primaria e non si usano); `ad_detectable` False in ogni contesto;
+  - ancora **alta** = riferimento rilevabile (BI-7 (a): Harpoon aviolanciato AGM-84A, diametro **343 mm** (anche a
+    registro navale [V]) e massa **515,25 kg** (FAS)): `ad_detectable` True.
+  Regola di coerenza [S]: (1) un missile con diametro <= 304,8 mm **e** massa <= 304 kg (**non maggiore** del Maverick)
+  e' False, senza eccezioni; (2) un missile con diametro >= 343 mm **e** massa >= 515,25 kg (**non minore**
+  dell'Harpoon) e' True; (3) i missili fra le due ancore sono la **zona grigia**, approvata dall'utente voce per voce:
+  esito AGM-88, Kh-25MP, Kh-25MPU, RB-05A, RB-05E (False) e Kormoran (True, 340 mm < 343). La **lunghezza e' esclusa**
+  dal metro (AGM-45, Kh-25, RB-05 e AGM-88 sono piu' lunghi del Maverick ma piu' stretti; le lunghezze sono anche i dati
+  piu' discordi). Cosi' nessun missile di taglia analoga al Maverick puo' risultare True per un errore di trascrizione:
+  il blocco 1 scrive nel registro anche le dimensioni di supporto trovate (`diameter_mm`, `mass_kg`, con fonte; nessun
+  `length_m`) e un test verifica le regole (1) e (2) su tutte le voci che le hanno e congela l'elenco delle voci grigie
+  approvate (§5.2, test 5). Nessuna soglia numerica nel codice di produzione: le ancore stanno nel test e nel documento
+  dati.
 - Estensione futura, fuori perimetro: scalare il raggio di scoperta del colpo in R-INT con l'RCS (oggi il colpo e' visto
   come un aereo, `Proposta_Intercettazione_Reazione.md:66-67`; la decisione Q2 del 2026-09-30 prevedeva gia' "ridurre il
   raggio contro i colpi" quando ci sara' un dato, `:97-99`).
@@ -579,7 +598,9 @@ Kh-25, Kh-29), che non sono cruise. Con (b) il codice dovrebbe leggere anche la 
 scelta utente: raccomandata
 
 **DECISA dall'utente il 2026-11-07: (a), la categoria vince** (Kh-59, Kh-59M, KD-63, KD-63B `cruise`, bersagli anche
-delle difese terrestri). Incoerenza segnalata: I-1 (§4.13).
+delle difese terrestri). Incoerenza segnalata: I-1 (§4.13). Nota del blocco 0 (Proposta dati, D3.2 (a)): KD-63 e
+KD-63B sono lanciati solo dal bombardiere H-6, non da cacciabombardieri; restano `cruise` per la categoria; il caso di
+cruise da cacciabombardiere e' il Kh-59.
 
 ### BI-3 — Missili antiradiazione (ARM)
 
@@ -704,6 +725,8 @@ coerenza fra il flag e il riferimento (dettaglio in §2.5):
 - default quando manca il dato: `anti_ship` e `cruise` True, `arm`/`tactical` False [S] (invariato).
 Esempio: Hellfire (AGM-114, piu' piccolo del Maverick [I]) -> False per la regola (1); RGM-84 Harpoon navale -> True per
 la regola (2); Kh-29T (diametro ~380 mm [I], massa maggiore del Maverick [I]) -> zona grigia, proposta della ricerca.
+Esito del blocco 0 (Proposta dati §5): Hellfire 180 mm / 45,7 kg -> False obbligatorio; Kh-29T 380 mm / 685 kg, sopra
+l'Harpoon -> True obbligatorio; ancore e regole definitive in §2.5.
 
 ### BI-8 — Armi non a registro (`test:*`) e fire control a tabella
 
@@ -837,16 +860,24 @@ implementata (stessi test, righe ed esecuzioni).
 
 ## 5. Piano di revisione (decisioni dell'utente del 2026-11-07: BI-1 C+F, BI-2 (a), BI-3 (a), BI-4 (a), BI-5 (a), BI-6 (a) con Maverick fisso piccolo, BI-7 (a), BI-8 (a), BI-9 (a) W1, BI-10 (a) come S35, BI-11 (a), BI-12 (a))
 
-Tutte le decisioni sono prese: il piano e' eseguibile dopo l'approvazione del blocco 0 (dati).
+Tutte le decisioni sono prese e il blocco 0 (dati) e' eseguito e approvato (2026-11-07): il piano e' eseguibile dal
+blocco 1.
 
 ### 5.0 Precondizioni (l'esecutore le verifica e si ferma se mancano)
 1. Branch dedicato creato dalla sessione principale; `git status` pulito; nessun altro esecutore al lavoro su
    `Logic/Engagement_Resolver.py` o `Logic/Fire_Control.py` (§6).
-2. Il blocco 0 (dati) consegnato e approvato dall'utente (le decisioni BI-1..BI-12 sono registrate in §4).
+2. Il blocco 0 (dati) consegnato e approvato dall'utente (le decisioni BI-1..BI-12 sono registrate in §4): **fatto il
+   2026-11-07**, `Proposta_Dati_Bersagli_Intercettabili.md` con le decisioni D1-D6 prese; l'esecutore controlla che il
+   suo stato dica "DECISO".
 3. Righe citate ancora valide: `Logic/Fire_Control.py:763-768` (calcolo di `interceptable`), `Logic/Engagement_Resolver.py:614`
    (campo), `:3291`, `:3350`. Se sono slittate per l'esecuzione di FP o VA, cercare i punti per contenuto e riferire.
 
-### 5.1 Blocco 0 — ricerca dati (non codice; `oc-writer` o sessione principale con l'utente)
+### 5.1 Blocco 0 — ricerca dati (non codice; `oc-writer` o sessione principale con l'utente) — ESEGUITO
+
+**Eseguito e approvato il 2026-11-07**: ricerca di `oc-researcher` in sette lotti (L1-L7, 0,196 $) e ricerca mirata M1
+(0,371 $), verifiche della sessione principale, decisioni D1-D6 dell'utente; prodotto
+`Analysis/Document/Proposta_Dati_Bersagli_Intercettabili.md`, valori per il blocco 1 nel suo §10.2. Il testo sotto e'
+il mandato originale, lasciato come traccia; i punti 1-5 sono coperti da quel documento (§3, §5, §4, §6, §4 in fondo).
 
 Prodotto: `Analysis/Document/Proposta_Dati_Bersagli_Intercettabili.md` (stile `Proposta_Dati_Anti_Missile.md`): per
 ciascuno dei 44 `MISSILES_ASM` aerei e degli 8 navali: classe (§2.2), `ad_detectable`, diametro/lunghezza/massa se
@@ -869,19 +900,25 @@ Nota [I] (caso limite M1, §2.3): un antinave lanciato da un **bombardiere** con
 Kh-22N del Tu-22M) non e' intercettabile da nessuno con la classe `anti_ship` (non bersaglio delle difese terrestri,
 tabella R-BI-3). La regola dell'utente esclude l'A2G (aria-superficie) solo per cacciabombardieri/aerei d'attacco e
 ammetterebbe un cruise da bombardiere: il blocco 0 deve quindi **classificare il Kh-22N** (se `cruise`, diventa
-bersaglio dei terrestri). Nessuna decisione nuova.
+bersaglio dei terrestri). Nessuna decisione nuova. **Esito**: `anti_ship` (Proposta dati, D3.1 (a)); il Kh-22N ha solo
+la riga di efficacia `ship` [V], quindi non e' mai lanciato contro bersagli terrestri e il caso non si presenta con i
+registri attuali. Anomalia di designazione (per tre fonti in inglese la "N" e' la versione nucleare) segnalata in
+Proposta dati §7, IR-21 (incoerenza di registro n. 21), da non correggere nel blocco 1.
 
 ### 5.2 Blocco 1 — dati nei registri
 
 - `Asset/Aircraft_Weapon_Data.py` (`AIR_WEAPONS['MISSILES_ASM']`, 44 voci) e `Asset/Ship_Weapon_Data.py`
   (`SHIP_WEAPONS['MISSILES_ASM']`, 8 voci): campo nuovo `'munition_class'` (str, uno di `'cruise'`, `'anti_ship'`,
   `'arm'`, `'tactical'`, piu' `'ballistic'` per il futuro) e, dove il blocco 0 lo da', `'ad_detectable'` (bool), ogni
-  voce con commento `# STIMA [S]: <fonte>`. Commento di testa che rimanda a questa Proposta e al documento dati.
+  voce con commento `# STIMA [S]: <fonte>`. Commento di testa che rimanda a questa Proposta e al documento dati. Valori:
+  tabella del §10.2 di `Proposta_Dati_Bersagli_Intercettabili.md` (52 voci, tutte con classe e flag; regole di
+  scrittura nel suo §10.1).
 - **Famiglia Maverick** (AGM-65D, AGM-65K, RB-75T in `AIR_WEAPONS['MISSILES_ASM']`): `'ad_detectable': False` scritto
   sempre, con il commento `# decisione dell'utente BI-6 (2026-11-07): Maverick piccolo, non rilevabile da nessuna
   difesa aerea` (non `STIMA`: e' una decisione, non un dato).
-- **Dimensioni di supporto** dove il blocco 0 le ha trovate con fonte: `'diameter_mm'` e `'mass_kg'` (ed eventualmente
-  `'length_m'`) sulle stesse voci, commento con la fonte. Servono al test di coerenza, non al motore.
+- **Dimensioni di supporto** dove il blocco 0 le ha trovate con fonte: `'diameter_mm'` (44 voci) e `'mass_kg'` (46
+  voci) sulle stesse voci, commento con la fonte e con l'altro valore se le fonti discordano; **nessun `'length_m'`**
+  (lunghezza esclusa dal metro, Proposta dati D1). Servono al test di coerenza, non al motore.
 - Nessun altro registro cambia (classi derivate, R-BI-1).
 - Verifica prima di scrivere: che gli scorer (`get_missiles_score` e simili, `Asset/Aircraft_Weapon_Data.py:441-537`;
   `Asset/Ship_Weapon_Data.py:793-812`) non iterino su tutte le chiavi della voce (un campo nuovo li romperebbe). Se lo
@@ -889,12 +926,24 @@ bersaglio dei terrestri). Nessuna decisione nuova.
 - Test (6, nei file esistenti `Test/Test_Aircraft_Weapon_Data.py` e `Test/Test_Ship_Weapon_Data.py`):
   1. ogni voce `MISSILES_ASM` ha `munition_class` in `{'ballistic','cruise','anti_ship','arm','tactical'}`;
   2. `ad_detectable`, `diameter_mm`, `mass_kg`, se presenti, sono rispettivamente bool e numeri positivi;
-  3. le classi delle voci elencate in §2.2 sono quelle approvate (tabella del blocco 0);
+  3. le classi delle voci elencate in §2.2 sono quelle approvate (tabella del blocco 0, Proposta dati §10.2);
   4. AGM-65D, AGM-65K e RB-75T hanno `ad_detectable` **presente e False** (decisione BI-6);
-  5. **coerenza col metro del Maverick**: con D_M, M_M = diametro e massa del Maverick e D_H, M_H = quelli dell'Harpoon
-     (dal documento dati, scritti come costanti del test con la fonte), nessuna voce con `ad_detectable` True ha
-     `diameter_mm <= D_M` e `mass_kg <= M_M`; nessuna voce con `ad_detectable` False ha `diameter_mm >= D_H` e
-     `mass_kg >= M_H` (solo voci con entrambe le dimensioni);
+  5. **coerenza col metro del Maverick** (Proposta dati §5 e §10.1; sta in `Test/Test_Aircraft_Weapon_Data.py` e legge
+     sia `AIR_WEAPONS['MISSILES_ASM']` sia `SHIP_WEAPONS['MISSILES_ASM']`): costanti del test con la fonte
+     `D_M = 304.8` (FAS, *Federation of American Scientists*), `M_M = 304` (designation-systems, AGM-65F/G),
+     `D_H = 343` (FAS), `M_H = 515.25` (FAS) e
+     `GREY_ZONE_APPROVED = {'AGM-88': False, 'Kh-25MP': False, 'Kh-25MPU': False, 'RB-05A': False, 'RB-05E': False,
+     'Kormoran': True}` (voci in zona grigia approvate dall'utente il 2026-11-07). Sulle voci con **entrambe** le
+     dimensioni: (1) nessuna voce con `ad_detectable` True ha `diameter_mm <= D_M` e `mass_kg <= M_M`; (2) nessuna voce
+     con `ad_detectable` False ha `diameter_mm >= D_H` e `mass_kg >= M_H`; (3b) l'insieme delle voci che non soddisfano
+     ne' la condizione di (1) ne' quella di (2) (zona grigia) e' esattamente `{'AGM-88', 'Kh-25MP', 'Kh-25MPU',
+     'RB-05A', 'Kormoran'}`. Inoltre (3a) ogni voce di `GREY_ZONE_APPROVED` esiste nel registro aereo e ha
+     `ad_detectable` presente e uguale al valore approvato (anche RB-05E, che non ha dimensioni). Le voci senza la coppia
+     (8: RB-75T, 9M120-F, RB-05E, Kh-555, Kh-65, KD-20, KD-63B, YJ-18) sono saltate da (1), (2) e (3b). Le voci grigie
+     non sono eccezioni alle regole (1) e (2), che non le riguardano: l'asserzione (3) serve a congelare l'approvazione
+     dell'utente (un True scritto per errore sull'AGM-88 farebbe fallire il test) e a segnalare ogni voce che entra o
+     esce dalla zona grigia per un valore cambiato. Esito atteso con i valori del §10.2: 44 voci con la coppia, 13 False
+     obbligatorie, 26 True obbligatorie, 5 in zona grigia; il test passa;
   6. punteggi invariati: `get_weapon_score` di tre missili (AGM-65D, Kh-55, RGM-84-Harpoon) identico a prima (valore
      letto prima della modifica e inserito nel test).
 - Esito atteso: suite +6 test, tutti OK; confronto **1009 identiche** (la fire control non legge ancora i campi).
@@ -1095,7 +1144,7 @@ con `intercept_domains` e quote e' trattato da VA al lancio e dalla BI all'impat
 
 **Ordine** (BI-11 e VA §2.8): **BI blocchi 0-3 -> VA blocchi 1-2 -> ripresa di FP-5 -> FP blocchi 1-2 -> estensione
 dei dwell a SAM/AAA**. Mai due esecutori insieme su `Logic/Engagement_Resolver.py` o `Logic/Fire_Control.py`; il
-blocco 0 della BI (ricerca dati) non tocca codice e puo' procedere in parallelo. Ogni piano successivo rilegge le
+blocco 0 della BI (ricerca dati, senza codice) e' eseguito (2026-11-07). Ogni piano successivo rilegge le
 righe citate (precondizioni gia' scritte nei tre piani).
 
 **Suite e confronto lungo la sequenza** (B = `Ran` della suite sul checkout di partenza, letto dall'ESITO, mai stimato):
@@ -1126,7 +1175,9 @@ altro effetto sulla logica.
   dominio terrestre, accettata dall'utente come limite [S] (BI-12 (a)): Kh-29/Kh-58 mai bersagli delle difese
   terrestri, il Kh-59 si'.
 - **Metro del Maverick**: la coerenza dei flag dipende dalle dimensioni di supporto trovate dalla ricerca; voci senza
-  diametro o massa sfuggono al test di coerenza (restano al default di classe [S]).
+  diametro o massa sfuggono al test di coerenza (restano al default di classe [S]): sono 8 (Proposta dati §10.2). Le
+  voci vicine ai confini (AGM-65K a 304 kg, RB-05A a 305 kg, Kormoran a 340 mm) dipendono dal valore scelto fra fonti
+  discordi con la regola D4.2 (a) della Proposta dati.
 - **Balistici assenti**: la parte "balistici" e' scritta ma non provabile in sessione finche' i registri non avranno un
   missile balistico.
 - **Dimensione binaria**: nessuna Pd del colpo; R-INT continua a vedere un colpo ammesso come un aereo (ottimistico per
@@ -1142,9 +1193,11 @@ altro effetto sulla logica.
 
 - **Nessun valore di RCS, diametro, lunghezza o peso dei missili aerei** e' stato cercato o verificato in questa
   sessione (nessuna ricerca su fonti esterne): i confronti di dimensione dell'esempio di BI-7 (Maverick 305 mm, Kh-29
-  380 mm) sono conoscenza generale [I].
+  380 mm) sono conoscenza generale [I]. **Superato dal blocco 0** (2026-11-07): dimensioni con fonte, confidenza e
+  livello di verifica in `Proposta_Dati_Bersagli_Intercettabili.md`; nessuna RCS pubblicata per nessuna delle 52 voci.
 - La classificazione di §2.2 (cruise/anti_ship/arm/tactical) e' una proposta [S] su conoscenza generale [I], non su
   fonti; Kh-59/KD-63 come cruise, Kh-29 come "grande", Mistral come anomalia del registro sono da confermare.
+  **Confermata dal blocco 0** (esito in §2.2), con il Mistral `tactical` per decisione dell'utente.
 - Che il `caliber` dei missili sia il diametro [I].
 - Che gli scorer dei registri ignorino un campo stringa nuovo (§5.2: l'esecutore lo verifica).
 - Che `restrict_by_policy` non ricostruisca le `ShotSpec` per campi espliciti (§5.3.3).
@@ -1152,7 +1205,8 @@ altro effetto sulla logica.
 - Le geometrie di S35 non sono state costruite ne' misurate: le asserzioni di §5.4 sono attese qualitative [I]; in
   particolare che l'Arleigh Burke fermi oggi (interruttore spento) i Maverick di `naval_maverick_off`.
 - Le dimensioni del Maverick, dell'Harpoon (salvo il diametro a registro), del Kh-29 e dei candidati "piccoli", e i
-  nomi comuni Shturm/Ataka/Shrike: conoscenza generale [I], da verificare nel blocco 0.
+  nomi comuni Shturm/Ataka/Shrike: conoscenza generale [I], da verificare nel blocco 0. **Verificati nel blocco 0**
+  (ancore e Kh-29 riletti dalla sessione principale; candidati "piccoli" e nomi comuni dalle bozze della ricerca).
 - Il numero esatto di test della suite attuale non e' stato riletto (la suite non e' stata eseguita in questa sessione:
   solo la sonda B-0).
 - Verificato invece [V]: righe di codice citate (lette il 2026-11-07), statistiche dei registri e lanciatori dei
