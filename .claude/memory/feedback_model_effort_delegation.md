@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: 4b5fdb17-4e5b-46ee-ad95-08f076180fc8
-  modified: 2026-10-18T12:00:00.000Z
+  modified: 2026-11-07T11:09:15.313Z
 ---
 
 ## Schema in vigore dal 2026-10-18 (deciso dall'utente per ridurre il consumo di token)
@@ -93,3 +93,15 @@ Assegnazione per tipo di attività:
 dall'utente; mai inserito nella descrizione di un'opzione di una domanda su altro, mai esteso da un passo al
 successivo (G4a -> G4b) senza chiedere. Una nota di memoria che dice "proposta Opus high" riguarda l'analisi del
 principale, non l'implementazione delegata. Origine: G4a e G4b lanciati a effort high senza conferma esplicita.
+
+## Decisione 2026-11-07 (sessione ProArt): orchestratore resta Sonnet 5.5 high; verifiche delicate a un agente Opus 5.5 high
+- L'utente ha valutato Opus 5.5 medium come orchestratore (costo stimato +25..50% per token mix, beneficio non misurato) e ha scelto di
+  **restare su Sonnet high**. Per le considerazioni che richiedono **disciplina di verifica** (confronto di una raccomandazione con la
+  regola dichiarata dall'utente, affermazioni sul codice da controllare, rilettura incrociata di una Proposta prima dell'esecutore) il
+  principale deve essere piu' cauto e **delegare a un agente Opus 5.5 high** (des-planner con model opus, effort high), non decidere da solo.
+- **Why:** errori del principale nella sessione 2026-11-07, quasi tutti di processo: FP-3 raccomandata (b) per compatibilita' con la
+  fotografia invece che per fedelta' alla regola dell'utente; "il DES ignora la quota" senza aver trovato il filtro statico in
+  `Fire_Control.in_altitude_envelope`; semi-ellissoide proposta senza aver verificato la sottostima a media quota; glossario scritto a memoria.
+- **How to apply:** prima di raccomandare un'opzione, riscriverne l'effetto rispetto alla regola dell'utente; mai riportare come fatto
+  un'affermazione sul codice non letta; per verifiche incrociate e riletture di Proposte lanciare l'agente Opus high (richiesta esplicita
+  dell'utente, quindi niente ulteriore conferma sul modello/sforzo) e dichiarare nel riepilogo cosa e' stato verificato da chi.

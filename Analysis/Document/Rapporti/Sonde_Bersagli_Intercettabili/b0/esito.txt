@@ -1,0 +1,66 @@
+NEW S32-DWELL/S32-DWELL-0/ewr_off: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-0/ewr_on: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-0/long: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-0/off: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-0/short: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-1/ewr_off: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-1/ewr_on: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-1/long: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-1/off: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-1/short: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-2/ewr_off: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-2/ewr_on: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-2/long: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-2/off: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-2/short: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-3/ewr_off: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-3/ewr_on: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-3/long: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-3/off: in the current capture, not in the baseline
+NEW S32-DWELL/S32-DWELL-3/short: in the current capture, not in the baseline
+compared 1029 runs: 20 difference lines (487.6 s)
+PROBE_RC 1
+RUNS 1029 (in fotografia 1009, nuove 20)
+TOTALS {"interceptable_rounds": 2847, "interceptable_rounds_facing_interceptors": 615, "replay_mismatch": 0, "resolutions": 23721, "resolutions_with_interceptors": 308, "stopped_rounds": 397}
+RUNS_WITH_STOPS 16 (in fotografia 16)
+UNITS_WITH_STOPS {"S16": 4, "S19AD": 6, "S2": 2, "S6": 4}
+CHANGED[unmodelled_as_before] 6 (in fotografia 6) UNITS {"S19AD": 6}
+CHANGED[by_role] 8 (in fotografia 8) UNITS {"S19AD": 6, "S2": 2}
+STOPPED 302 Ship|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya
+STOPPED 49 Aircraft(Fighter)|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya
+STOPPED 36 Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|Vehicle:9K331-Tor
+STOPPED 10 Aircraft(Fighter)|None|test:anti_radiation|Vehicle|Vehicle:9K37-Buk
+FACING 314 Ship|None|test:anti_ship|Ship
+FACING 104 Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle
+FACING 76 Aircraft(Fighter)|None|test:anti_ship|Ship
+FACING 49 Aircraft(Fighter)|None|test:anti_radiation|Vehicle
+FACING 32 Aircraft(Fighter)|None|test:agm|Structure
+FACING 28 Aircraft(Fighter)|None|test:agm|Vehicle
+FACING 12 Aircraft(Attacker)|None|test:agm|Vehicle
+RINT 151 Ship|None|test:anti_ship|Ship|geometry|ok
+RINT 58 Aircraft(Fighter)|None|test:agm|Structure|geometry|late
+RINT 31 Aircraft(Fighter)|None|test:agm|Vehicle|geometry|late
+RINT 31 Aircraft(Fighter)|None|test:anti_ship|Ship|geometry|ok
+RINT 25 Aircraft(Fighter)|None|test:anti_radiation|Vehicle|geometry|late
+RINT 24 Aircraft(Attacker)|None|test:agm|Vehicle|geometry|late
+RINT 14 Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|seen|ok
+RINT 9 Aircraft(Fighter)|None|test:anti_radiation|Vehicle|geometry|ok
+RINT 6 Aircraft(Fighter)|None|test:agm|Structure|seen|late
+RINT 4 Aircraft(Fighter)|None|test:agm|Vehicle|seen|late
+RINT 4 Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|geometry|ok
+RINT 1 Aircraft(Fighter)|None|test:anti_ship|Ship|seen|ok
+RINT 1 Aircraft(Fighter)|None|test:anti_radiation|Vehicle|seen|ok
+CHANGED[unmodelled_as_before] S19AD/S19-0/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[unmodelled_as_before] S19AD/S19-1/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[unmodelled_as_before] S19AD/S19-2/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[unmodelled_as_before] S19AD/S19-3/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[unmodelled_as_before] S19AD/S19-4/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[unmodelled_as_before] S19AD/S19-5/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[by_role] S19AD/S19-0/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[by_role] S19AD/S19-1/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[by_role] S19AD/S19-2/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[by_role] S19AD/S19-3/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[by_role] S19AD/S19-4/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[by_role] S19AD/S19-5/tor_rear: excluded_stopped=6 stopped=6
+CHANGED[by_role] S2/S2-0-sead: excluded_stopped=3 stopped=3
+CHANGED[by_role] S2/S2-6-sead: excluded_stopped=7 stopped=7

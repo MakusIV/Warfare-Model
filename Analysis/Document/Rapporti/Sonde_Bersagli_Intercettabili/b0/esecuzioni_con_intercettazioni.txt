@@ -1,0 +1,16 @@
+S16/S16-0 6 {'Aircraft(Fighter)|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya': 6}
+S16/S16-1 19 {'Aircraft(Fighter)|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya': 19}
+S16/S16-2 15 {'Aircraft(Fighter)|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya': 15}
+S16/S16-3 9 {'Aircraft(Fighter)|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya': 9}
+S19AD/S19-0/tor_rear 6 {'Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|Vehicle:9K331-Tor': 6}
+S19AD/S19-1/tor_rear 6 {'Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|Vehicle:9K331-Tor': 6}
+S19AD/S19-2/tor_rear 6 {'Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|Vehicle:9K331-Tor': 6}
+S19AD/S19-3/tor_rear 6 {'Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|Vehicle:9K331-Tor': 6}
+S19AD/S19-4/tor_rear 6 {'Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|Vehicle:9K331-Tor': 6}
+S19AD/S19-5/tor_rear 6 {'Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|Vehicle:9K331-Tor': 6}
+S2/S2-0-sead 3 {'Aircraft(Fighter)|None|test:anti_radiation|Vehicle|Vehicle:9K37-Buk': 3}
+S2/S2-6-sead 7 {'Aircraft(Fighter)|None|test:anti_radiation|Vehicle|Vehicle:9K37-Buk': 7}
+S6/S6-0 80 {'Ship|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya': 80}
+S6/S6-1 62 {'Ship|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya': 62}
+S6/S6-2 80 {'Ship|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya': 80}
+S6/S6-3 80 {'Ship|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya': 80}

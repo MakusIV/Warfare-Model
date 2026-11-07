@@ -3,6 +3,8 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
+- [Sessione 2026-11-07 ProArt — SOSPESA per budget: P-0 fatta, FP-1..4 + BI-1..12 + VA-1..8 decise, 3 Proposte NON committate, rilettura incrociata Opus high da rifare in due meta](project_session_2026_11_07_summary.md) — RIPARTIRE DA QUI: commit documenti, rilettura incrociata, poi esecuzione BI -> VA -> FP-5 -> FP
+- [Come presentare le decisioni all'utente: sigle spiegate, ruoli, esempi, una per volta, verifica con agente Opus high](feedback_presentazione_decisioni.md) — dal 2026-11-07
 - [D-5 opzione 2 (dwell_time_s): Proposta DEFINITIVA il 2026-11-06, DW-1..DW-9 decise, sonde S-1..S-3 complete](project_dwell_time_d5.md) — RIPARTIRE DA QUI: prossimo passo = esecutore del blocco A (proporre e attendere conferma); ricerca dati sensori SAM/AAA in corso (DW-9); rischio: senza orizzonte radar nel DES la legge non accorcia le rotte
 - [Sessione 2026-11-05 osboxes — blocco C siti fissi EWR FATTO (suite 4757, fotografia 1009), sospetto _mission_outcome smentito](project_session_2026_11_05_summary.md) — prossime attivita': manuale DES per il blocco C, D-5 opz. 2, verifica DCS FPS-117
 - [Sessione 2026-11-04 ProArt — CHIUSA, pushata: D-4b/D-4c fatte (blocchi A e B), manuale DES aggiornato, suite 4742, fotografia 1009](project_session_2026_11_04_summary.md) — prossime attivita' in parte superate dalla sessione 2026-11-05 (documenti, commenti e blocco C fatti)

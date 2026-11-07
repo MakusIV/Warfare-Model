@@ -1,0 +1,122 @@
+{
+ "totals": {
+  "resolutions": 23721,
+  "resolutions_with_interceptors": 308,
+  "interceptable_rounds": 2847,
+  "interceptable_rounds_facing_interceptors": 615,
+  "stopped_rounds": 397,
+  "replay_mismatch": 0
+ },
+ "units_with_stops": {
+  "S16": 4,
+  "S19AD": 6,
+  "S2": 2,
+  "S6": 4
+ },
+ "stopped": {
+  "Aircraft(Fighter)|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya": 49,
+  "Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|Vehicle:9K331-Tor": 36,
+  "Aircraft(Fighter)|None|test:anti_radiation|Vehicle|Vehicle:9K37-Buk": 10,
+  "Ship|None|test:anti_ship|Ship|Ship:FSG 1241.1MP Molniya": 302
+ },
+ "facing": {
+  "Aircraft(Attacker)|None|test:agm|Vehicle": 12,
+  "Aircraft(Fighter)|None|test:agm|Structure": 32,
+  "Aircraft(Fighter)|None|test:agm|Vehicle": 28,
+  "Aircraft(Fighter)|None|test:anti_ship|Ship": 76,
+  "Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle": 104,
+  "Aircraft(Fighter)|None|test:anti_radiation|Vehicle": 49,
+  "Ship|None|test:anti_ship|Ship": 314
+ },
+ "rint_paths": {
+  "Aircraft(Attacker)|None|test:agm|Vehicle|geometry|late": 24,
+  "Aircraft(Fighter)|None|test:agm|Structure|geometry|late": 58,
+  "Aircraft(Fighter)|None|test:agm|Structure|seen|late": 6,
+  "Aircraft(Fighter)|None|test:agm|Vehicle|geometry|late": 31,
+  "Aircraft(Fighter)|None|test:agm|Vehicle|seen|late": 4,
+  "Aircraft(Fighter)|None|test:anti_ship|Ship|geometry|ok": 31,
+  "Aircraft(Fighter)|None|test:anti_ship|Ship|seen|ok": 1,
+  "Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|seen|ok": 14,
+  "Aircraft(Attacker)|MISSILES_ASM|AGM-65D|Vehicle|geometry|ok": 4,
+  "Aircraft(Fighter)|None|test:anti_radiation|Vehicle|geometry|late": 25,
+  "Aircraft(Fighter)|None|test:anti_radiation|Vehicle|geometry|ok": 9,
+  "Aircraft(Fighter)|None|test:anti_radiation|Vehicle|seen|ok": 1,
+  "Ship|None|test:anti_ship|Ship|geometry|ok": 151
+ },
+ "changed": {
+  "unmodelled_as_before": [
+   [
+    "S19AD/S19-0/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-1/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-2/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-3/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-4/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-5/tor_rear",
+    6,
+    6
+   ]
+  ],
+  "by_role": [
+   [
+    "S19AD/S19-0/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-1/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-2/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-3/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-4/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S19AD/S19-5/tor_rear",
+    6,
+    6
+   ],
+   [
+    "S2/S2-0-sead",
+    3,
+    3
+   ],
+   [
+    "S2/S2-6-sead",
+    7,
+    7
+   ]
+  ]
+ }
+}

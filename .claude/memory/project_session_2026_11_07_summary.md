@@ -1,0 +1,30 @@
+---
+name: project-session-2026-11-07-summary
+description: "Sessione 2026-11-07 ProArt (sospesa per budget 5h al 70%): sonda P-0 fatta, FP-1..FP-4 decise, 3 Proposte (FP, BI bersagli intercettabili, VA volumi allineati) con BI-1..BI-12 e VA-1..VA-8 decise, NIENTE committato, rilettura incrociata Opus high da rifare in due meta"
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 695ff177-5a7a-4644-9469-5c6efb8cb41e
+  modified: 2026-11-07T15:19:23.951Z
+---
+
+## Stato a fine sessione (2026-11-07, ProArt, branch `analysis/dce-dcs-persistence`)
+Nessun codice toccato, **NIENTE committato** (working tree: Proposte nuove/modificate, sonde, memoria). Nessun esecutore lanciato. Il budget 5h era oltre il 70%: l'agente di rilettura incrociata (Opus high) e' stato FERMATO senza rapporto.
+
+## Le tre Proposte (tutte in `Analysis/Document/`, scritte da des-planner Opus high)
+1. `Proposta_Finestre_Per_Passaggio_Portata_Propria.md` = **FP** (un'occasione di rilevamento per passaggio nel volume proprio). **Decise**: FP-1 = B-R (passaggi dai tratti nel risolutore), FP-2 = O3 (stream separato `pass_rng`), FP-3 = (a) il candidato al tiro vale fino alla FINE DEL PASSAGGIO (traccia persa all'uscita, anche con un solo passaggio), FP-4 = (a) CPA del passaggio. **FP-5 SOSPESA** (istante di rilevamento per R-INT; l'utente vuole che dopo l'esecuzione della BI venga riproposta "in dettaglio e con esempi"; c'e' la nuova opzione (d) legata al passaggio: la traccia persa all'uscita non deve far "vedere il lancio"). **FP-6..FP-10 ancora APERTE** (FP-10 = tolleranza di unione di passaggi molto ravvicinati). Sonda **P-0 eseguita** (484 s): 1009 esecuzioni senza direzioni multi-passaggio (`RUNS_WITH_MULTI` 0), 44 esecuzioni con 151 salve dopo la fine del passaggio (S13, S14, S21, S24-ORBIT, S26-BINGO, S28-CLASS); con interruttore acceso e FP-3 (a) cambiano al piu' quelle 44. Scenario S33-PASSES con variante CAS (8 varianti x 5 semi = 40 nuove).
+2. `Proposta_Bersagli_Intercettabili_Difesa_Aerea.md` = **BI**. Regola dell'utente: SAM/AAA considerano missili target solo se balistici/cruise e/o di dimensione comparabile a quella di aerei/cruise/balistici; A2G dei cacciabombardieri mai target dei terrestri; A2S target dei navali se di dimensione compatibile; bombe e razzi mai target; Maverick piccolo (non rilevabile da nessuna difesa, `ad_detectable` falso fisso). **BI-1..BI-12 TUTTE decise** (quasi tutte "raccomandata"; BI-6 (a) con Maverick piccolo; BI-9 (a) W1 `intercept_domains` nella `ShotSpec` + interruttore `Engagement_Resolver.BI_AD_TARGET_RULE = False`; BI-12 (a) il criterio di dimensione solo per i navali). Sonda B-0 in `Rapporti/Sonde_Bersagli_Intercettabili/`: nella fotografia l'unico missile dei registri fermato e' l'AGM-65D dal Tor in S19AD `tor_rear` (36 colpi); con interruttore acceso cambiano 6 esecuzioni. Scenario **S35-ADTGT** (32 nuove). Blocco 0 = ricerca dati con fonti sui 52 missili aria-superficie (non per l'esecutore). Dimensione ~42 test.
+3. `Proposta_Allineamento_Volumi_DES_Pianificatore.md` = **VA**. **Tutte decise**: VA-1 sfera ∩ fascia di quota; VA-2 (d) filtro ricalcolato alla quota dell'istante di tiro (keyword `altitudes` per introspezione) + VA-2.1 (i) rinvio della decisione; VA-3 (b) `max_target_z` assoluto per le armi d'aereo; VA-4 (a) cilindro del pianificatore invariato; VA-5 separare rilevamento/ingaggio; VA-6 (a) `_own_intervals` unico punto del volume di rilevamento (dentro il blocco 1 di FP); VA-7 interruttore `VA_ENGAGEMENT_ALTITUDE_BAND` spento; VA-8/VA-8r scenario **S34-BAND** 8 varianti x 4 semi = 32 nuove. Sonde V-0/V-1/V-2: 0 differenze sulla fotografia anche con interruttore acceso. ~215 righe codice, ~680 di test (il doppio delle (a)).
+
+## Ordine di esecuzione deciso
+BI -> VA -> ripresa di FP-5 (illustrata in dettaglio con esempi) -> blocchi FP -> estensione dei dwell (DW-9). Conteggi attesi (da riconciliare, vedi sotto): BI B+6/+27/+42, VA B+65/+74 (BI-planner) oppure B+23/B+32 con B=dopo BI (VA-planner); FP 4815/4829 sulla base 4795. Confronto: 1009 identiche + NEW (20 S32 + 32 S35 + 32 S34 + 40 S33).
+
+## PROSSIMI PASSI (in ordine)
+1. **Commit dei documenti** (Proposte, sonde, memoria) su richiesta dell'utente.
+2. **Rilettura incrociata Opus 5.5 high**, da rilanciare dopo il reset del budget in DUE META con rapporto scritto in modo INCREMENTALE (`Rapporti/Revisione_Incrociata_BI_VA_FP_*.md`): parte 1 = fedelta' alle regole dell'utente e verifica del codice per BI e VA; parte 2 = coerenza fra le tre Proposte, tabella unica dell'ordine con base e `Ran N`, completezza per l'esecutore. Il prompt originale e' ricostruibile da questa nota: regole R1 (passaggi distinti, traccia persa all'uscita), R2 (regola BI), R3 (VA), R4 (ruoli); punti da controllare: ShotSpec (campi BI `intercept_domains` poi VA in coda), `Test/Scenario_Fixtures.py` (il BI-planner dice che VA non lo modifica: verificare), memoizzazione `Fire_Control.py:862-869`, `restrict_by_policy`, nomi interruttori/scenari/UNITS, catena dei conteggi.
+3. Correggere `Rapporti/Sonde_Finestre_Passaggio/LEGGIMI.md` e `probe_switch_on.py` (citano ancora solo MULTI/RINT come esito atteso; aggiungere AFTER_PASS; P-1 non e' piu' "0 cambiate").
+4. Poi proporre l'esecuzione (riga "compito -> agente, modello, motivo", attendere conferma): blocco 0 ricerca dati (agente di ricerca Sonnet high + revisione Opus), blocchi codice BI con des-developer Sonnet high (tocca risolutore e interruttori), branch/commit del piano prima.
+5. Presentare FP-6..FP-10 (una per volta) dopo la BI.
+
+## Errori del principale da NON ripetere (questa sessione)
+FP-3 raccomandata (b) per compatibilita' con la fotografia invece che per fedelta' alla regola dell'utente; "il DES ignora la quota" senza aver trovato il filtro statico `Fire_Control.in_altitude_envelope`; semi-ellissoide proposta senza verifica; glossario scritto a memoria; esempio R-INT con la ZSU-57-2 che non e' un intercettore (nessun `Anti_Missile`); confusione tra "candidato" (occasione di tiro dell'osservatore) e bersaglio. Vedi [[feedback-model-effort-delegation]] e [[feedback-presentazione-decisioni]].
