@@ -1,6 +1,6 @@
 ---
 name: project-session-2026-11-07-summary
-description: "Sessione 2026-11-07 ProArt: sonda P-0, FP-1..4 + BI-1..12 + VA-1..8 decise, 3 Proposte committate e rilette da oc-reviewer (BI e VA pronte, FP da correggere), nuovo agente oc-researcher (V4.1 Flash) provato; prossimo passo = blocco 0 BI (ricerca dati missili)"
+description: "Sessione 2026-11-07/08 ProArt: Proposte FP/BI/VA, blocco 0 BI (dati 52 missili, D1-D6) e blocco 1 BI (codice) FATTI e mergiati; prossimo = blocco 2 BI (fire control + risolutore, compito pronto in .ai-run/compito_bi_blocco2.txt)"
 metadata:
   node_type: memory
   type: project
@@ -23,11 +23,17 @@ Nessun codice del motore toccato. Commit della giornata: `94b391c9` (3 Proposte 
 ## Ordine di esecuzione deciso
 BI -> VA -> ripresa di FP-5 (illustrata in dettaglio con esempi) -> blocchi FP -> estensione dei dwell (DW-9). Conteggi attesi (da riconciliare, vedi sotto): BI B+6/+27/+42, VA B+65/+74 (BI-planner) oppure B+23/B+32 con B=dopo BI (VA-planner); FP 4815/4829 sulla base 4795. Confronto: 1009 identiche + NEW (20 S32 + 32 S35 + 32 S34 + 40 S33).
 
+## STATO A FINE SESSIONE (2026-11-08, ProArt, branch `analysis/dce-dcs-persistence`, niente pushato)
+- Commit della sessione dopo c7ccfb1e/81f92846: `809cf357` (blocco 0 BI: Proposta dati + bozze di ricerca L1-L7/M1 + BI allineata + costi), `61df9437` (BI blocco 1 su `ai/des-bi-blocco1`, des-developer Sonnet high), `a74d7505` (merge del blocco 1), `c50fa60d` (memoria), piu' il commit di chiusura. Branch `ai/des-bi-blocco1` mergiato (si puo' cancellare); `ai/des-bi-blocco2` NON esiste piu' (era vuoto): ricrearlo dal commit di chiusura prima di lanciare.
+- **Decisioni dati prese** (dettaglio in [[project-bi-dati-decisioni]]): metro del Maverick = diametro <= 304,8 mm E massa <= 304 kg (lunghezza esclusa); Mistral tactical False; Kh-22N anti_ship; KD-63 cruise; Kh-29/Kh-58/Kh-31P True; ancora Harpoon 515,25 kg; grigie AGM-88, Kh-25MP/MPU, RB-05A/E False, Kormoran True. 32 True/20 False.
+- **BI blocco 1 FATTO e verificato**: suite `Ran 4801 OK (skipped=7)`, confronto `UNCHANGED (1009)`, `compared 1029 runs: 20 difference lines` (le 20 = NEW S32-DWELL: l'atteso corretto E' 1029/20, non 1009 puro). Costi ricerca: L1-L7 0,196 $, M1 0,371 $ (in Costi_Deleghe); costo del blocco 1 (des-developer) e del planner Opus non registrati (Pro).
+
 ## PROSSIMI PASSI (in ordine)
-1. **Blocco 0 della BI** (ricerca dati dei 52 missili aria-superficie: 44 aerei + 8 navali + ancore Maverick/Harpoon + candidati piccoli + Kh-22N): `oc-researcher` (Flash) in lotti di ~8-10 voci con compiti in `.ai-run/`; ogni lotto scrive `Bozze/Ricerca_Dati_Bersagli_<lotto>_oc-researcher.md`; controllo a campione dal principale (ancore, discordanze, zona grigia) con l'agente `web-fetch`; poi un planner integra in `Proposta_Dati_Bersagli_Intercettabili.md` per l'approvazione dell'utente. Il comando lo lancia l'UTENTE dalla root del repo.
-2. Poi delega dei blocchi codice BI 1-3 (des-developer Sonnet high proposto; branch `ai/...` dopo commit del piano), poi VA, poi ripresa di FP-5 (illustrata in dettaglio con esempi) e FP-6..FP-10 una per volta, poi riscrittura del blocco 1 di FP (punti 8 e 10, precondizioni, esiti attesi).
-3. Correggere `Rapporti/Sonde_Finestre_Passaggio/LEGGIMI.md` e `probe_switch_on.py` (citano ancora solo MULTI/RINT; P-1 con FP-3 (a) cambia al piu' le 44 esecuzioni AFTER_PASS).
-4. Push solo su richiesta dell'utente.
+1. **BI blocco 2** (fire control + risolutore, interruttore `BI_AD_TARGET_RULE` spento): compito gia' scritto in `.ai-run/compito_bi_blocco2.txt` (non versionato: se manca, rigenerarlo dal §5.3 della BI). Prima: ricreare il branch `ai/des-bi-blocco2` dal commit corrente, working tree pulito; poi des-developer Sonnet high (conferma utente; proposto). Atteso: suite ~4822, confronto `compared 1029: 20`, sonda B-1 (accendere la regola: cambiano ESATTAMENTE le 6 S19AD `tor_rear`). Poi verifica del principale (suite+confronto+sonda), merge.
+2. BI blocco 3 (scenario S35-ADTGT, +32 NEW) e blocco 4 (documenti, manuale); poi VA (blocchi 4860/4869), poi riprendere FP-5 (da illustrare in dettaglio con esempi) e FP-6..FP-10 una per volta, riscrivere il blocco 1 di FP (punti 8 e 10, precondizioni, esiti attesi) e poi i blocchi FP; infine estensione dwell (DW-9).
+3. Correggere `Rapporti/Sonde_Finestre_Passaggio/LEGGIMI.md` e `probe_switch_on.py` (P-1 con FP-3 (a): al piu' le 44 AFTER_PASS cambiano).
+4. Segnalare al manutentore dei registri le incoerenze della Proposta dati §7 (22+: tra queste Mistral nel registro A2G, Kh-22N nucleare nelle fonti vs convenzionale nel registro, RB-05A `max_speed: 1`); nessuna corretta nel blocco 1.
+5. Push solo su richiesta dell'utente (oggi ~10 commit locali non pushati).
 
 ## Errori del principale da NON ripetere (questa sessione)
 FP-3 raccomandata (b) per compatibilita' con la fotografia invece che per fedelta' alla regola dell'utente; "il DES ignora la quota" senza aver trovato il filtro statico `Fire_Control.in_altitude_envelope`; semi-ellissoide proposta senza verifica; glossario scritto a memoria; esempio R-INT con la ZSU-57-2 che non e' un intercettore (nessun `Anti_Missile`); confusione tra "candidato" (occasione di tiro dell'osservatore) e bersaglio. Vedi [[feedback-model-effort-delegation]] e [[feedback-presentazione-decisioni]].
