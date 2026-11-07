@@ -1235,10 +1235,19 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
     },
 
     # ─────────────────────────────────────────────────────────────────────────
+    # Campi per la regola dei bersagli intercettabili dalla difesa aerea (BI, blocco 1):
+    # 'munition_class', 'ad_detectable', 'diameter_mm', 'mass_kg'. Nessuno e' ancora letto dal motore.
+    # Piano: Analysis/Document/Proposta_Bersagli_Intercettabili_Difesa_Aerea.md (§5.2);
+    # valori e fonti: Analysis/Document/Proposta_Dati_Bersagli_Intercettabili.md (§10.2).
+    # Sono stime di progetto [S] su dati di fonti aperte, non dati tarati: lunghezza esclusa dal metro.
     'MISSILES_ASM': {
 
         'RGM-84-Harpoon': {
             'model':          'RGM-84-Harpoon',
+            'munition_class': 'anti_ship', # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            'ad_detectable':  True,        # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            'diameter_mm':    343,         # STIMA [S]: Wikipedia, con booster (661,5 FAS, 690 d-s), Proposta_Dati_Bersagli_Intercettabili.md §10.2 (accanto a caliber, che entra nel punteggio)
+            'mass_kg':        691,         # STIMA [S]: Wikipedia, con booster (661,5 FAS, 690 d-s), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             'start_service':  1977,
             'end_service':    None,
             'caliber':        343,
@@ -1253,6 +1262,10 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
 
         'BGM-109-Tomahawk': {
             'model':          'BGM-109-Tomahawk',
+            'munition_class': 'cruise',    # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            'ad_detectable':  True,        # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            'diameter_mm':    520,         # STIMA [S]: Wikipedia, senza booster (1.315), Proposta_Dati_Bersagli_Intercettabili.md §10.2 (accanto a caliber, che entra nel punteggio)
+            'mass_kg':        1300,        # STIMA [S]: Wikipedia, senza booster (1.315), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             'start_service':  1983,
             'end_service':    None,
             'caliber':        519,
@@ -1267,6 +1280,10 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
 
         'P-700-Granit': {
             'model':          'P-700-Granit',
+            'munition_class': 'anti_ship', # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            'ad_detectable':  True,        # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            'diameter_mm':    850,         # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2 (accanto a caliber, che entra nel punteggio)
+            'mass_kg':        7000,        # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             'start_service':  1983,
             'end_service':    None,
             'caliber':        850,
@@ -1281,6 +1298,10 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
 
         'P-270-Moskit': {
             'model':          'P-270-Moskit',
+            'munition_class': 'anti_ship', # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            'ad_detectable':  True,        # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            'diameter_mm':    800,         # STIMA [S]: Wikipedia, sezione 3M-80E (4.500 infobox, 3.970 3M-80E1), Proposta_Dati_Bersagli_Intercettabili.md §10.2 (accanto a caliber, che entra nel punteggio)
+            'mass_kg':        4150,        # STIMA [S]: Wikipedia, sezione 3M-80E (4.500 infobox, 3.970 3M-80E1), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             'start_service':  1984,
             'end_service':    None,
             'caliber':        760,
@@ -1295,6 +1316,10 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
 
         'P-1000-Vulkan': {
             'model':          'P-1000-Vulkan',
+            'munition_class': 'anti_ship', # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            'ad_detectable':  True,        # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            'diameter_mm':    880,         # STIMA [S]: ru-wiki (intervallo 7.000-8.000; 4.800 sospetta copia del P-500), Proposta_Dati_Bersagli_Intercettabili.md §10.2 (accanto a caliber, che entra nel punteggio)
+            'mass_kg':        7000,        # STIMA [S]: ru-wiki (intervallo 7.000-8.000; 4.800 sospetta copia del P-500), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             'start_service':  1987,
             'end_service':    None,
             'caliber':        880,
@@ -1309,6 +1334,10 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
 
         'YJ-12': {
             'model':          'YJ-12',
+            'munition_class': 'anti_ship', # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            'ad_detectable':  True,        # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            'diameter_mm':    500,         # STIMA [S]: GlobalSecurity, versione aviolanciata (0,6 m e ~3 t zh-wiki, stimati), Proposta_Dati_Bersagli_Intercettabili.md §10.2 (accanto a caliber, che entra nel punteggio)
+            'mass_kg':        2000,        # STIMA [S]: GlobalSecurity, versione aviolanciata (0,6 m e ~3 t zh-wiki, stimati), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             'start_service':  2015,
             'end_service':    None,
             'caliber':        500,
@@ -1323,6 +1352,9 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
 
         'YJ-18': {
             'model':          'YJ-18',
+            'munition_class': 'anti_ship', # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            'ad_detectable':  True,        # STIMA [S]: default di classe, nessuna coppia diametro-massa (Proposta_Dati_Bersagli_Intercettabili.md §5.1, D6 (a))
+            # diameter_mm e mass_kg non scritti: nessun dato dimensionale (Proposta dati §8, D6 (a): stima e limite superiore, non scritti)
             'start_service':  2015,
             'end_service':    None,
             'caliber':        540,
@@ -1337,6 +1369,10 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
 
         'YJ-83': {
             'model':          'YJ-83',
+            'munition_class': 'anti_ship', # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            'ad_detectable':  True,        # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            'diameter_mm':    360,         # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2 (accanto a caliber, che entra nel punteggio)
+            'mass_kg':        800,         # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             'start_service':  1998,
             'end_service':    None,
             'caliber':        360,

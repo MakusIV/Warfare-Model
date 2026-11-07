@@ -118,6 +118,10 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import (
     is_weapon_introduced,
     get_weapon_cost,
 )
+from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import (
+    SHIP_WEAPONS,
+    get_weapon_score as get_ship_weapon_score,
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  UNIT TESTS
@@ -2145,6 +2149,188 @@ class TestBombsReleaseField(unittest.TestCase):
         for model in ("Mk-84", "Mk-82AIR", "BK-90MJ1"):
             with self.subTest(model=model):
                 self.assertGreater(get_bombs_score(model), 0.0)
+
+
+class TestAdTargetFields(unittest.TestCase):
+    """Campi 'munition_class', 'ad_detectable', 'diameter_mm', 'mass_kg' dei registri MISSILES_ASM
+    (BI, blocco 1: Analysis/Document/Proposta_Bersagli_Intercettabili_Difesa_Aerea.md §5.2;
+    valori: Analysis/Document/Proposta_Dati_Bersagli_Intercettabili.md §10.2).
+
+    I campi non sono ancora letti dal motore: i test congelano i dati approvati dall'utente
+    (classi, famiglia Maverick, zona grigia del metro) e il punteggio delle armi.
+    """
+
+    # Classi approvate (Proposta dati §10.2): 44 voci aeree e 8 navali.
+    APPROVED_CLASS_AIR = {
+        "AGM-65D": "tactical",
+        "AGM-65K": "tactical",
+        "RB-75T": "tactical",
+        "AGM-114": "tactical",
+        "BGM-71D": "tactical",
+        "9M114": "tactical",
+        "9M120": "tactical",
+        "9M120-F": "tactical",
+        "Hot-3": "tactical",
+        "Mistral": "tactical",
+        "Kh-25ML": "tactical",
+        "Kh-25MR": "tactical",
+        "Kh-66": "tactical",
+        "Kh-29L": "tactical",
+        "Kh-29T": "tactical",
+        "Kh-29TE": "tactical",
+        "AGM-45": "arm",
+        "AGM-88": "arm",
+        "Kh-58": "arm",
+        "Kh-31P": "arm",
+        "Kh-25MP": "arm",
+        "Kh-25MPU": "arm",
+        "LD-10": "arm",
+        "RB-05A": "tactical",
+        "RB-05E": "tactical",
+        "AGM-84A": "anti_ship",
+        "RB-04E": "anti_ship",
+        "RB-15": "anti_ship",
+        "RB-15F": "anti_ship",
+        "Kormoran": "anti_ship",
+        "Sea Eagle": "anti_ship",
+        "Kh-31A": "anti_ship",
+        "Kh-35": "anti_ship",
+        "Kh-41": "anti_ship",
+        "Kh-22N": "anti_ship",
+        "Kh-55": "cruise",
+        "Kh-555": "cruise",
+        "Kh-101": "cruise",
+        "Kh-65": "cruise",
+        "KD-20": "cruise",
+        "Kh-59": "cruise",
+        "Kh-59M": "cruise",
+        "KD-63": "cruise",
+        "KD-63B": "cruise",
+    }
+    APPROVED_CLASS_SHIP = {
+        "RGM-84-Harpoon": "anti_ship",
+        "BGM-109-Tomahawk": "cruise",
+        "P-700-Granit": "anti_ship",
+        "P-270-Moskit": "anti_ship",
+        "P-1000-Vulkan": "anti_ship",
+        "YJ-12": "anti_ship",
+        "YJ-18": "anti_ship",
+        "YJ-83": "anti_ship",
+    }
+
+    # Costanti del metro del Maverick (Proposta dati §5.1). STIMA [S]: scelte di progetto su valori con fonte.
+    D_M = 304.8    # mm, FAS (Federation of American Scientists), AGM-65: "1 foot"
+    M_M = 304      # kg, designation-systems, AGM-65F/G
+    D_H = 343      # mm, FAS, AGM-84 Harpoon
+    M_H = 515.25   # kg, FAS, AGM-84 Harpoon
+
+    # Voci in zona grigia, approvate dall'utente il 2026-11-07 voce per voce (Proposta dati §6).
+    GREY_ZONE_APPROVED = {
+        'AGM-88': False, 'Kh-25MP': False, 'Kh-25MPU': False,
+        'RB-05A': False, 'RB-05E': False, 'Kormoran': True,
+    }
+
+    def setUp(self):
+        self._logger_patcher = patch(_LOGGER_PATH, MagicMock())
+        self._logger_patcher.start()
+        self.air = AIR_WEAPONS["MISSILES_ASM"]
+        self.ship = SHIP_WEAPONS["MISSILES_ASM"]
+
+    def tearDown(self):
+        self._logger_patcher.stop()
+
+    def _all_entries(self):
+        """(registro, modello, voce) per le 44 voci aeree e le 8 navali."""
+        for reg, weapons in (("air", self.air), ("ship", self.ship)):
+            for model, data in weapons.items():
+                yield reg, model, data
+
+    @staticmethod
+    def _is_number(value):
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+    def _pairs(self):
+        """Voci con diameter_mm e mass_kg entrambi presenti (le sole su cui gira il metro)."""
+        return {model: data for _, model, data in self._all_entries()
+                if 'diameter_mm' in data and 'mass_kg' in data}
+
+    def _small(self, data):
+        """Condizione della regola (1): non maggiore del Maverick."""
+        return data['diameter_mm'] <= self.D_M and data['mass_kg'] <= self.M_M
+
+    def _large(self, data):
+        """Condizione della regola (2): non minore dell'Harpoon."""
+        return data['diameter_mm'] >= self.D_H and data['mass_kg'] >= self.M_H
+
+    def test_1_munition_class_present_and_valid(self):
+        """Ogni voce MISSILES_ASM (44 aeree, 8 navali) ha 'munition_class' fra le cinque classi ammesse."""
+        allowed = {'ballistic', 'cruise', 'anti_ship', 'arm', 'tactical'}
+        self.assertEqual(len(self.air), 44)
+        self.assertEqual(len(self.ship), 8)
+        for reg, model, data in self._all_entries():
+            with self.subTest(registry=reg, model=model):
+                self.assertIn('munition_class', data)
+                self.assertIn(data['munition_class'], allowed)
+
+    def test_2_optional_fields_have_expected_types(self):
+        """'ad_detectable' (bool), 'diameter_mm' e 'mass_kg' (numeri positivi, mai bool), se presenti."""
+        for reg, model, data in self._all_entries():
+            with self.subTest(registry=reg, model=model):
+                if 'ad_detectable' in data:
+                    self.assertIsInstance(data['ad_detectable'], bool)
+                for field in ('diameter_mm', 'mass_kg'):
+                    if field in data:
+                        self.assertTrue(self._is_number(data[field]), f"{field} non numerico")
+                        self.assertGreater(data[field], 0)
+
+    def test_3_classes_are_the_approved_ones(self):
+        """Le classi delle 52 voci sono quelle approvate (Proposta dati §10.2); nessuna voce in piu' o in meno."""
+        self.assertEqual(set(self.air), set(self.APPROVED_CLASS_AIR))
+        self.assertEqual(set(self.ship), set(self.APPROVED_CLASS_SHIP))
+        for model, cls in self.APPROVED_CLASS_AIR.items():
+            with self.subTest(registry="air", model=model):
+                self.assertEqual(self.air[model]['munition_class'], cls)
+        for model, cls in self.APPROVED_CLASS_SHIP.items():
+            with self.subTest(registry="ship", model=model):
+                self.assertEqual(self.ship[model]['munition_class'], cls)
+
+    def test_4_maverick_family_not_detectable(self):
+        """AGM-65D, AGM-65K e RB-75T: 'ad_detectable' presente e False (decisione dell'utente BI-6)."""
+        for model in ('AGM-65D', 'AGM-65K', 'RB-75T'):
+            with self.subTest(model=model):
+                self.assertIn('ad_detectable', self.air[model])
+                self.assertIs(self.air[model]['ad_detectable'], False)
+
+    def test_5_flags_coherent_with_maverick_gauge(self):
+        """Coerenza dei flag col metro del Maverick (Proposta dati §5 e §10.1), sulle voci con diametro e massa.
+
+        (1) nessuna voce True e' non maggiore del Maverick; (2) nessuna voce False e' non minore dell'Harpoon;
+        (3a) le voci in zona grigia approvate hanno il flag approvato; (3b) la zona grigia e' esattamente
+        quella approvata (una voce che entra o esce per un valore cambiato fa fallire il test).
+        """
+        pairs = self._pairs()
+        self.assertEqual(len(pairs), 44)
+        for model, data in pairs.items():
+            with self.subTest(rule="1-2", model=model):
+                self.assertIn('ad_detectable', data)
+                if data['ad_detectable']:
+                    self.assertFalse(self._small(data), f"{model}: True ma non maggiore del Maverick")
+                else:
+                    self.assertFalse(self._large(data), f"{model}: False ma non minore dell'Harpoon")
+        for model, flag in self.GREY_ZONE_APPROVED.items():
+            with self.subTest(rule="3a", model=model):
+                self.assertIn(model, self.air)
+                self.assertIn('ad_detectable', self.air[model])
+                self.assertIs(self.air[model]['ad_detectable'], flag)
+        grey = {model for model, data in pairs.items()
+                if not self._small(data) and not self._large(data)}
+        self.assertEqual(grey, {'AGM-88', 'Kh-25MP', 'Kh-25MPU', 'RB-05A', 'Kormoran'})
+
+    def test_6_weapon_scores_unchanged(self):
+        """get_weapon_score di AGM-65D, Kh-55 e RGM-84-Harpoon identico al valore letto prima del blocco 1."""
+        self.assertEqual(get_weapon_score("AGM-65D"), 1.416515714285714)
+        self.assertEqual(get_weapon_score("Kh-55"), 103.14253968253968)
+        self.assertEqual(get_ship_weapon_score("MISSILES_ASM", "RGM-84-Harpoon"), 0.2600272727272727)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
