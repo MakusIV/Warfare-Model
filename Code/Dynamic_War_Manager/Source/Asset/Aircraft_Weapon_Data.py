@@ -2111,10 +2111,19 @@ AIR_WEAPONS = {
             },
         },
     },
+    # Campi per la regola dei bersagli intercettabili dalla difesa aerea (BI, blocco 1):
+    # 'munition_class', 'ad_detectable', 'diameter_mm', 'mass_kg'. Nessuno e' ancora letto dal motore.
+    # Piano: Analysis/Document/Proposta_Bersagli_Intercettabili_Difesa_Aerea.md (§5.2);
+    # valori e fonti: Analysis/Document/Proposta_Dati_Bersagli_Intercettabili.md (§10.2).
+    # Sono stime di progetto [S] su dati di fonti aperte, non dati tarati: lunghezza esclusa dal metro.
     'MISSILES_ASM': {
         "RB-05A": {
             "type": "ASM",
             "model": "RB-05A",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: zona grigia, flag approvato dall'utente il 2026-11-07 (Proposta_Dati_Bersagli_Intercettabili.md §6.7)
+            "diameter_mm": 300,  # STIMA [S]: Astronautix, Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 305,  # STIMA [S]: AEF, Wikipedia en/sv (304 Astronautix), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["Sweden"],
             "seeker": "electro-optical",
             "task": ["Anti_Ship", "Strike", "SEAD"],
@@ -2190,6 +2199,10 @@ AIR_WEAPONS = {
         "RB-15F": {
             "type": "ASM",
             "model": "RB-15F",
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 500,  # STIMA [S]: Robotmuseum (scheda della F), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 565,  # STIMA [S]: Robotmuseum (scheda della F), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["Sweden"],
             "task": ["Anti_Ship"],
             "start_service": 1985,
@@ -2219,6 +2232,10 @@ AIR_WEAPONS = {
         "AGM-45": {
             "type": "ASM",
             "model": "AGM-45",
+            "munition_class": "arm",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 203,  # STIMA [S]: Wikipedia, d-s, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 177,  # STIMA [S]: Wikipedia, d-s, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USA", "Israel", "UK"],
             "task": ["SEAD"],
             "start_service": 1966,
@@ -2239,6 +2256,10 @@ AIR_WEAPONS = {
         "AGM-84A": {
             "type": "ASM",
             "model": "AGM-84A",
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 343,  # STIMA [S]: FAS, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 515.25,  # STIMA [S]: FAS, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USA", "UK", "Germany", "Denmark", "Australia", "Japan", "South Korea", "Taiwan", "Egypt", "Saudi Arabia"],
             "task": ["Anti_Ship"],
             "start_service": 1970,
@@ -2259,6 +2280,10 @@ AIR_WEAPONS = {
         "AGM-88": {
             "type": "ASM",
             "model": "AGM-88",
+            "munition_class": "arm",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: zona grigia, flag approvato dall'utente il 2026-11-07 (Proposta_Dati_Bersagli_Intercettabili.md §6.1)
+            "diameter_mm": 254,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 361,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USA", "Germany", "Italy", "Spain", "Greece", "Turkey", "Israel", "Australia", "South Korea", "Taiwan"],
             "task": ["SEAD"],
             "start_service": 1985,
@@ -2279,6 +2304,10 @@ AIR_WEAPONS = {
         "Kormoran": {
             "type": "ASM",
             "model": "Kormoran",
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: zona grigia, flag approvato dall'utente il 2026-11-07 (Proposta_Dati_Bersagli_Intercettabili.md §6.11)
+            "diameter_mm": 340,  # STIMA [S]: missilery, CMANO 0.34 (344 Wikipedia, GlobalMilitary), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 600,  # STIMA [S]: Wikipedia, GlobalMilitary, CMANO (660 missilery), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["Germany", "Italy"],
             "task": ["Anti_Ship"],
             "start_service": 1973,
@@ -2299,6 +2328,9 @@ AIR_WEAPONS = {
         "RB-05E": {
             "type": "ASM",
             "model": "RB-05E",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: zona grigia, flag approvato dall'utente il 2026-11-07 (Proposta_Dati_Bersagli_Intercettabili.md §6.8)
+            # diameter_mm e mass_kg non scritti: nessun dato dimensionale (Proposta dati §8, D6 (a))
             "users": ["Sweden"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1972,
@@ -2369,6 +2401,10 @@ AIR_WEAPONS = {
         "RB-04E": {
             "type": "ASM",
             "model": "RB-04E",
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 500,  # STIMA [S]: Robotmuseum (scheda della E), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 625,  # STIMA [S]: Robotmuseum (scheda della E), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["Sweden"],
             "task": ["Anti_Ship"],
             "start_service": 1975,
@@ -2389,6 +2425,10 @@ AIR_WEAPONS = {
         "Sea Eagle": {
             "type": "ASM",
             "model": "Sea Eagle",
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 400,  # STIMA [S]: Wikipedia (600-730 missilery), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 580,  # STIMA [S]: Wikipedia (600-730 missilery), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["UK", "India", "Saudi Arabia"],
             "task": ["Anti_Ship"],
             "start_service": 1985,
@@ -2409,6 +2449,9 @@ AIR_WEAPONS = {
         "RB-75T": {
             "type": "ASM",
             "model": "RB-75T",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # decisione dell'utente BI-6 (2026-11-07): Maverick piccolo, non rilevabile da nessuna difesa aerea
+            "mass_kg": 295,  # STIMA [S]: Robotmuseum (diametro non pubblicato), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["Sweden"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1972,
@@ -2479,6 +2522,10 @@ AIR_WEAPONS = {
         "RB-15": {
             "type": "ASM",
             "model": "RB-15",
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 500,  # STIMA [S]: Robotmuseum, Wikipedia (senza booster), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 568,  # STIMA [S]: Robotmuseum, Wikipedia (senza booster), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["Sweden", "Finland", "Croatia"],
             "task": ["Anti_Ship"],
             "start_service": 1989,
@@ -2499,6 +2546,10 @@ AIR_WEAPONS = {
         "AGM-65D": {
             "type": "ASM",
             "model": "AGM-65D",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # decisione dell'utente BI-6 (2026-11-07): Maverick piccolo, non rilevabile da nessuna difesa aerea
+            "diameter_mm": 304.8,  # STIMA [S]: FAS, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 220,  # STIMA [S]: d-s (218,25 FAS), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USA", "UK", "Germany", "Italy", "Spain", "Greece", "Turkey", "Israel", "Egypt", "South Korea", "Taiwan"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1986,
@@ -2569,6 +2620,10 @@ AIR_WEAPONS = {
         "AGM-65K": {
             "type": "ASM",
             "model": "AGM-65K",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # decisione dell'utente BI-6 (2026-11-07): Maverick piccolo, non rilevabile da nessuna difesa aerea
+            "diameter_mm": 304.8,  # STIMA [S]: FAS, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 304,  # STIMA [S]: d-s colonna F/G (306 Wikipedia, non verificato), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USA", "South Korea", "Taiwan"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1970,
@@ -2639,6 +2694,10 @@ AIR_WEAPONS = {
         "AGM-114": {
             "type": "ASM",
             "model": "AGM-114",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 180,  # STIMA [S]: Wikipedia (178 d-s, stesso 7 in), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 45.7,  # STIMA [S]: d-s colonna AGM-114B/C, variante del registro (45-49 Wikipedia, famiglia), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USA", "UK", "Germany", "France", "Italy", "Israel", "Saudi Arabia", "UAE", "Japan", "South Korea", "Australia"],
             "task": ["Strike", "SEAD", "Anti_Ship"],
             "start_service": 1984,
@@ -2709,6 +2768,10 @@ AIR_WEAPONS = {
         "BGM-71D": {
             "type": "ASM",
             "model": "BGM-71D",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 152,  # STIMA [S]: Wikipedia, FAS, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 21.5,  # STIMA [S]: Wikipedia, FAS, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USA", "UK", "Germany", "Italy", "Turkey", "Greece", "Israel", "Egypt", "Saudi Arabia", "Iran", "Pakistan"],
             "task": ["Strike", "SEAD"],
             "start_service": 1970,
@@ -2776,6 +2839,9 @@ AIR_WEAPONS = {
         "9M120-F": {
         "type": "ASM",
         "model": "9M120-F",
+        "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+        "ad_detectable": False,  # STIMA [S]: default di classe, nessuna coppia diametro-massa (Proposta_Dati_Bersagli_Intercettabili.md §5.1, D6 (a))
+        # diameter_mm e mass_kg non scritti: nessun dato dimensionale (Proposta dati §8, D6 (a))
         "users": ["Russia", "Belarus", "Kazakhstan", "Algeria"],
         "task": ["Strike", "Anti_Ship"],
         "start_service": 1980,
@@ -2840,6 +2906,10 @@ AIR_WEAPONS = {
         "9M120": {
             "type": "ASM",
             "model": "9M120",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 130,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 49.5,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["Russia", "Belarus", "Kazakhstan", "Algeria", "Syria"],
             "task": ["Strike", "Anti_Ship"],
             "start_service": 1980,
@@ -2904,6 +2974,10 @@ AIR_WEAPONS = {
         "9M114": {
             "type": "ASM",
             "model": "9M114",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 130,  # STIMA [S]: Wikipedia (missile senza tubo), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 31.4,  # STIMA [S]: Wikipedia (missile senza tubo), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
             "task": ["Strike", "Anti_Ship"],
             "start_service": 1975,
@@ -2968,6 +3042,10 @@ AIR_WEAPONS = {
         "Hot-3": {
             "type": "ASM",
             "model": "Hot-3",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 150,  # STIMA [S]: Wikipedia (riga HOT-3), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 24.5,  # STIMA [S]: Wikipedia (riga HOT-3), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["France", "Germany", "Egypt", "Iraq", "Saudi Arabia", "UAE", "Syria"],
             "task": ["Strike", "Anti_Ship"],
             "start_service": 1978,
@@ -3032,6 +3110,10 @@ AIR_WEAPONS = {
         "Mistral": {
             "type": "ASM",
             "model": "Mistral",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2 (anomalia di registro: SAM portatile tra gli A2G, D2 (a))
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 90,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 19.7,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["France", "Belgium", "Brazil", "Chile", "Cyprus", "Egypt", "Finland", "Indonesia", "South Korea", "Norway", "Singapore"],
             "task": ["Strike", "Anti_Ship"],
             "start_service": 1985,
@@ -3095,6 +3177,10 @@ AIR_WEAPONS = {
         "Kh-55": {  # subsonic strategic cruise missile, land attack (AS-15 Kent)
             "type": "ASM",
             "model": "Kh-55",
+            "munition_class": "cruise",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 514,  # STIMA [S]: CSIS, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 1210,  # STIMA [S]: CSIS, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "Ukraine"],
             "task": ["Strike"],
             "start_service": 1983,
@@ -3169,6 +3255,10 @@ AIR_WEAPONS = {
         "Kh-101": {  # precision strategic cruise missile, land attack
             "type": "ASM",
             "model": "Kh-101",
+            "munition_class": "cruise",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 510,  # STIMA [S]: CSIS (2.400 Wikipedia), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 2300,  # STIMA [S]: CSIS (2.400 Wikipedia), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["Russia"],
             "task": ["Strike", "Pinpoint_Strike"],
             "start_service": 2013,
@@ -3243,6 +3333,10 @@ AIR_WEAPONS = {
         "Kh-22N": {  # radar antiship
             "type": "ASM",
             "model": "Kh-22N",
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2 (D3.1 (a))
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 920,  # STIMA [S]: Wikipedia inglese, Weapons Parade, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 5820,  # STIMA [S]: Wikipedia inglese (5.635-5.900 kg secondo variante e fonte); nome della voce: Proposta dati §7 IR-21, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "Ukraine"],
             "task": ["Anti_Ship"],
             "start_service": 1967,
@@ -3272,6 +3366,10 @@ AIR_WEAPONS = {
         "Kh-58": {  # antiradiation
             "type": "ASM",
             "model": "Kh-58",
+            "munition_class": "arm",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2), D3.3 (a)
+            "diameter_mm": 380,  # STIMA [S]: KTRV (Kh-58E), Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 650,  # STIMA [S]: KTRV (Kh-58E), Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "India", "Syria", "Libya", "Iraq", "Algeria"],
             "task": ["SEAD"],
             "start_service": 1975,  # 1978 --1982 vers. U
@@ -3301,6 +3399,10 @@ AIR_WEAPONS = {
         "Kh-66": {  # radar beam-riding
             "type": "ASM",
             "model": "Kh-66",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 275,  # STIMA [S]: airwar (278 FAS), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 290,  # STIMA [S]: airwar (278 FAS), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "Syria", "Libya", "Iraq", "Egypt"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1967,
@@ -3375,6 +3477,10 @@ AIR_WEAPONS = {
         "Kh-59": {  # TV guided, vers. M -> 1990
             "type": "ASM",
             "model": "Kh-59",
+            "munition_class": "cruise",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 380,  # STIMA [S]: ru-wiki, Kh-59 base (790 stessa fonte), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 760,  # STIMA [S]: ru-wiki, Kh-59 base (790 stessa fonte), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "India", "China", "Algeria"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1980,
@@ -3449,6 +3555,10 @@ AIR_WEAPONS = {
         "Kh-25ML": {  # laser guided
             "type": "ASM",
             "model": "Kh-25ML",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 275,  # STIMA [S]: FAS (299 Wikipedia), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 300,  # STIMA [S]: FAS (299 Wikipedia), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria", "Vietnam"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1975,
@@ -3523,6 +3633,10 @@ AIR_WEAPONS = {
         "Kh-25MR": {  # radar guided
             "type": "ASM",
             "model": "Kh-25MR",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 275,  # STIMA [S]: missilery.info (300 Astronautix; 320 ru-wiki respinto, ricerca M1), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 299,  # STIMA [S]: missilery.info (300 Astronautix; 320 ru-wiki respinto, ricerca M1), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1975,
@@ -3597,6 +3711,10 @@ AIR_WEAPONS = {
         "Kh-25MPU": {  # antiradiation
             "type": "ASM",
             "model": "Kh-25MPU",
+            "munition_class": "arm",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: zona grigia, flag approvato dall'utente il 2026-11-07 (Proposta_Dati_Bersagli_Intercettabili.md §6.5)
+            "diameter_mm": 275,  # STIMA [S]: redstar.gr, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 315,  # STIMA [S]: redstar.gr, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "India", "Syria"],
             "task": ["SEAD"],
             "start_service": 1975,  # 1978 --1982 vers. U
@@ -3626,6 +3744,10 @@ AIR_WEAPONS = {
         "Kh-25MP": {  # antiradiation
             "type": "ASM",
             "model": "Kh-25MP",
+            "munition_class": "arm",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: zona grigia, flag approvato dall'utente il 2026-11-07 (Proposta_Dati_Bersagli_Intercettabili.md §6.4)
+            "diameter_mm": 275,  # STIMA [S]: FAS (315 Wikipedia e ru-wiki), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 320,  # STIMA [S]: FAS (315 Wikipedia e ru-wiki), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya"],
             "task": ["SEAD"],
             "start_service": 1975,  # 1978 --1982 vers. U
@@ -3655,6 +3777,10 @@ AIR_WEAPONS = {
         "Kh-29L": {  # laser guided
             "type": "ASM",
             "model": "Kh-29L",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2), D3.3 (a)
+            "diameter_mm": 380,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 660,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "India", "China", "Syria", "Algeria"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1980,
@@ -3728,6 +3854,10 @@ AIR_WEAPONS = {
         "Kh-29T": {  # TV guided
             "type": "ASM",
             "model": "Kh-29T",
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2), D3.3 (a)
+            "diameter_mm": 380,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 685,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ["USSR", "Russia", "India", "China", "Syria", "Algeria"],
             "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1980,
@@ -3804,6 +3934,10 @@ AIR_WEAPONS = {
         "Kh-29TE": {
             "type": 'ASM',
             "model": 'Kh-29TE',
+            "munition_class": "tactical",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2), D3.3 (a)
+            "diameter_mm": 380,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 690,  # STIMA [S]: Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ['USSR', 'Russia', 'India', 'China', 'Syria', 'Algeria'],
             "task": ['Anti_Ship', 'Strike', 'SEAD'],
             "start_service": 1980,
@@ -3981,6 +4115,10 @@ AIR_WEAPONS = {
         "Kh-31A": {
             "type": 'ASM',
             "model": 'Kh-31A',
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 360,  # STIMA [S]: Wikipedia, missilery, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 610,  # STIMA [S]: Wikipedia, missilery, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ['USSR', 'Russia', 'India', 'Bulgaria', 'Syria', 'Libya', 'Iraq', 'Algeria', 'Poland'],
             "task": ['Anti_Ship'],
             "start_service": 1991,
@@ -4012,6 +4150,10 @@ AIR_WEAPONS = {
         "Kh-31P": {
             "type": 'ASM',
             "model": 'Kh-31P',
+            "munition_class": "arm",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2), D3.3 (a)
+            "diameter_mm": 360,  # STIMA [S]: Rosoboronexport, Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 600,  # STIMA [S]: Rosoboronexport, Wikipedia, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ['USSR', 'Russia', 'Bulgaria', 'Georgia', 'Syria', 'Libya', 'Iraq', 'Algeria', 'Poland'],
             "task": ['SEAD'],
             "start_service": 1991,
@@ -4043,6 +4185,10 @@ AIR_WEAPONS = {
         "Kh-35": {
             "type": 'ASM',
             "model": 'Kh-35',
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 420,  # STIMA [S]: Wikipedia, versione aerea, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 520,  # STIMA [S]: Wikipedia, versione aerea, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ['USSR', 'Russia', 'Ukraine', 'India', 'Belarus', 'Pakistan', 'Algeria', 'Turkmenistan'],
             "task": ['Anti_Ship'],
             "start_service": 1992,
@@ -4074,6 +4220,10 @@ AIR_WEAPONS = {
         "Kh-41": {
             "type": 'ASM',
             "model": 'Kh-41',
+            "munition_class": "anti_ship",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 760,  # STIMA [S]: testpilot (scheda del Kh-41), airwar (800 mm e 4.500 kg Wikipedia), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 3950,  # STIMA [S]: testpilot (scheda del Kh-41), airwar (800 mm e 4.500 kg Wikipedia), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ['USSR', 'Russia', 'India'],
             "task": ['Anti_Ship'],
             "start_service": 2000,
@@ -4105,6 +4255,9 @@ AIR_WEAPONS = {
         "Kh-65": {
             "type": 'ASM',
             "model": 'Kh-65',
+            "munition_class": "cruise",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: default di classe, nessuna coppia diametro-massa (Proposta_Dati_Bersagli_Intercettabili.md §5.1, D6 (a))
+            "mass_kg": 1650,  # STIMA [S]: Wikipedia (Kh-65SE); diametro non trovato, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ['USSR', 'Russia'],
             "task": ['Strike'],
             "start_service": 1992,
@@ -4286,6 +4439,9 @@ AIR_WEAPONS = {
         "Kh-555": {
             "type": 'ASM',
             "model": 'Kh-555',
+            "munition_class": "cruise",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: default di classe, nessuna coppia diametro-massa (Proposta_Dati_Bersagli_Intercettabili.md §5.1, D6 (a))
+            # diameter_mm e mass_kg non scritti: nessun dato dimensionale (Proposta dati §8, D6 (a))
             "users": ['USSR', 'Russia', 'Ukraine'],
             "task": ['Strike'],
             "start_service": 1992,
@@ -4467,6 +4623,10 @@ AIR_WEAPONS = {
         "Kh-59M": {
             "type": 'ASM',
             "model": 'Kh-59M',
+            "munition_class": "cruise",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 380,  # STIMA [S]: ru-wiki, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 930,  # STIMA [S]: ru-wiki, Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ['USSR', 'Russia', 'India', 'China', 'Algeria'],
             "task": ['Anti_Ship', 'Strike', 'SEAD'],
             "start_service": 1990,
@@ -4644,6 +4804,10 @@ AIR_WEAPONS = {
         "LD-10": {
             "type": 'ASM',
             "model": 'LD-10',
+            "munition_class": "arm",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": False,  # STIMA [S]: metro del Maverick R1-K, voce non maggiore dell'ancora bassa (esito F!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 200,  # STIMA [S]: zh-wiki, GlobalSecurity (203 mm e 234 kg Deagel, portata 60 km), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 200,  # STIMA [S]: zh-wiki, GlobalSecurity (203 mm e 234 kg Deagel, portata 60 km), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ['China'],
             "task": ['SEAD'],
             "start_service": 2012,
@@ -4675,6 +4839,10 @@ AIR_WEAPONS = {
         "KD-63": {
             "type": 'ASM',
             "model": 'KD-63',
+            "munition_class": "cruise",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2 (D3.2 (a): solo da bombardiere)
+            "ad_detectable": True,  # STIMA [S]: metro del Maverick R1-K, voce non minore dell'Harpoon (esito T!, Proposta_Dati_Bersagli_Intercettabili.md §5.2)
+            "diameter_mm": 760,  # STIMA [S]: GlobalSecurity (fonte unica, non verificata dal principale), Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "mass_kg": 2000,  # STIMA [S]: GlobalSecurity (fonte unica, non verificata dal principale), Proposta_Dati_Bersagli_Intercettabili.md §10.2
             "users": ['China'],
             "task": ['Strike'],
             "start_service": 2005,
@@ -4856,6 +5024,9 @@ AIR_WEAPONS = {
         "KD-63B": {
             "type": 'ASM',
             "model": 'KD-63B',
+            "munition_class": "cruise",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2 (D3.2 (a): solo da bombardiere)
+            "ad_detectable": True,  # STIMA [S]: default di classe, nessuna coppia diametro-massa (Proposta_Dati_Bersagli_Intercettabili.md §5.1, D6 (a))
+            # diameter_mm e mass_kg non scritti: nessun dato dimensionale (Proposta dati §8, D6 (a))
             "users": ['China'],
             "task": ['Strike'],
             "start_service": 2013,
@@ -5037,6 +5208,9 @@ AIR_WEAPONS = {
         "KD-20": {
             "type": 'ASM',
             "model": 'KD-20',
+            "munition_class": "cruise",  # STIMA [S]: classe approvata, Proposta_Dati_Bersagli_Intercettabili.md §10.2
+            "ad_detectable": True,  # STIMA [S]: default di classe, nessuna coppia diametro-massa (Proposta_Dati_Bersagli_Intercettabili.md §5.1, D6 (a))
+            # diameter_mm e mass_kg non scritti: nessun dato dimensionale (Proposta dati §8, D6 (a))
             "users": ['China'],
             "task": ['Strike'],
             "start_service": 2015,
