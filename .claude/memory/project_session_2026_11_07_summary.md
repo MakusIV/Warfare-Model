@@ -8,6 +8,16 @@ metadata:
   modified: 2026-11-07T15:19:23.951Z
 ---
 
+## RIPRESA DA OSBOXES (fine sessione ProArt 2026-11-08, notte) — LEGGERE PER PRIMO
+- Tutto e' committato e pushato su `analysis/dce-dcs-persistence` (ultimo commit di questa sessione: vedi `git log`). Su osboxes: `git pull`, poi `pip install -r requirements.txt` nel venv (aggiunto `pymupdf4llm`, serve solo per convertire PDF in markdown).
+- **Base verificata**: suite `Ran 4844 OK (skipped=7)`, confronto `UNCHANGED (1009)` e `compared 1061 runs: 52 difference lines` (BI blocchi 0-3 mergiati; VA e FP NON eseguite). Su osboxes suite ~21 min e confronto ~17 min (piu' lenti del ProArt).
+- **Prossima attivita'**: BI blocco 4 (documenti: manuale DES `05_Strato2_Risolutore_Ingaggio.md`, atlante `11a`, `10_Limiti_Estensioni_Divergenze.md`, `F4_Differenze_Scenari.md`, `Piano_Implementazione_Missione.md`; elenco e righe in BI §5.5) con `des-manual-writer` + principale; poi VA blocchi 1-2 e FP blocchi 1-2 (des-developer Sonnet high, branch dedicato dal tip, base letta dall'ESITO); sonda P-1 (FP) eseguita dal principale e letta dall'utente.
+- **File LOCALI del ProArt, NON nel repo** (non esistono su osboxes): `.ai-run/compito_*.txt` (compiti degli agenti), script delle sonde nella scratchpad. Se servono, rigenerarli dalla Proposta/memoria. Tutto il resto (Proposte, rapporti, revisioni, bozze D1-D4, sonde in `Rapporti/`) e' nel repo.
+- **Cancellare con l'ok dell'utente** i branch gia' mergiati (solo sul ProArt): `ai/des-bi-blocco1`, `ai/des-bi-blocco2`, `ai/oc-bi-blocco3`.
+- **Ricerche dwell**: bozze D1-D4 in `Analysis/Document/Bozze/`; D2 con 3 valori NON verificati (Buk 9S18, Tor GlobalSecurity, 64N6E: GlobalSecurity risponde 403 al lettore: chiedere all'utente di incollare le frasi o tenerli [S]). Estensione dei dwell (DW-9) = Proposta di des-planner, scelte dell'utente.
+- **Nota wiki** rete multistrato: [[project-wiki-rete-multistrato-nota]] (attendere il via dell'utente).
+- Pendenti: revisione di L1 (Proposta separata), analisi mirata degli interruttori + proposta regola AGENTS.md, segnalazione delle 22+ incoerenze dei registri al manutentore.
+
 ## STATO DI FATTO A FINE SESSIONE (2026-11-08 sera, ProArt, branch `analysis/dce-dcs-persistence`) — PIU' RECENTE, prevale sul resto
 - **Codice**: BI blocchi 0, 1, 2 fatti e mergiati (merge 4803424b; suite `Ran 4829 OK (skipped=7)`, confronto `UNCHANGED (1009)` + `compared 1029: 20` NEW S32). Nessun altro codice toccato oggi. VA e FP NON ancora eseguite.
 - **Proposta FP riscritta** (des-planner) con FP-1..FP-10 tutte decise + tre conferme dell'utente (P-1 = 44 AFTER_PASS + eventuali RINT_D non misurate; S33 `on`/`cas_on` con FP e D-5 accese e dwell ZSU 2 s [S], 13 test; FP-10 senza unione con FP spenta). **Rilettura incrociata oc-reviewer (GLM 5.3, Reka, 0,9183 $)**: verdetto "pronto per l'esecutore", 0 bloccanti; 1 importante + 2 minori, tutti riletti dal principale e CORRETTI. Righe di codice citate tutte esatte.
