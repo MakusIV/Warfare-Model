@@ -1135,7 +1135,7 @@ Punti di contatto [V sui piani scritti: VA §4.1.2-§4.1.4, §4.2, §6; FP §4.1
 | `Logic/Fire_Control.py` `make_registry_fire_control` (protocollo `altitudes`, chiave di memoizzazione con le quote dell'istante), `restrict_by_policy` (quattro varianti per introspezione), docstring "Quota" | — (la BI non li tocca: `intercept_domains` si calcola in `shot_spec_for`) | **si'** (VA §4.1.3 punti 1, 3, 4); `in_altitude_envelope`, `rank_weapons` invariati | — | solo VA; **correzione della stesura precedente**, che diceva "Fire_Control invariato per VA" |
 | `Logic/Fire_Control.py` costanti e funzioni nuove | `AD_TARGET_DOMAINS`, `AD_SIZE_GATED_NAVAL`, `AD_DETECTABLE_DEFAULT`, `munition_class`, `intercept_domains_for` | — | — | solo BI |
 | `Test/Scenario_Fixtures.py` | non modificato (BI-8 (a): `SHOTS` invariate) | il testo del piano VA usa `route_for` con la terza coordinata (`:584`) e lascia `SHOTS` senza quote (§4.1.4); **nessuna modifica esplicita** trovata nel piano [V sul testo; da ricontrollare se il piano VA cambia] | — | nessun conflitto atteso |
-| scenari | **S35-ADTGT** (`Test_Session_Scenarios_S35.py`, 32 esecuzioni) | **S34-BAND** (`Test_Session_Scenarios_S34.py`, 8 varianti x 4 = 32) | S33-PASSES (40) | file distinti |
+| scenari | **S35-ADTGT** (`Test_Session_Scenarios_S35.py`, 32 esecuzioni) | **S34-BAND** (`Test_Session_Scenarios_S34.py`, 8 varianti x 4 = 32) | **S33-PASSES** (`Test_Session_Scenarios_S33.py`, 4 varianti x 5 semi = 20 esecuzioni, 13 test; FP §4.0.2) | file distinti |
 | `Scenario_Baseline.UNITS` e docstring | riga S35-ADTGT dopo S32 | riga S34-BAND **dopo S35-ADTGT** (VA §4.2.2), nessuna rinumerazione | S33-PASSES in coda alle precedenti | in coda, nell'ordine di esecuzione (l'ordine delle righe non segue il numero) |
 | docstring del modulo del risolutore | punto 4 della catena | sezione "Quota nel volume d'ingaggio" | sezione FP | sezioni distinte |
 
@@ -1157,8 +1157,11 @@ righe citate (precondizioni gia' scritte nei tre piani).
 | BI blocco 3 | `B + 42` (circa 15 test) | NEW: + 32 S35-ADTGT |
 | VA blocco 1 (base VA = `B + 42`) | `B + 65` (23 test, VA §4.1.7) | invariato (20 S32 + 32 S35 NEW) |
 | VA blocco 2 | `B + 74` (9 test, VA §4.2.4: `Ran B_VA + 32` complessivi) | NEW: + 32 S34-BAND |
+| FP blocco 1 (base FP = `B_FP`, letta dall'ESITO dopo VA blocco 2) | `B_FP + 30` (30 test, FP §4.0.1) | invariato (20 S32 + 32 S35 + 32 S34 NEW) |
+| FP blocco 2 | `B_FP + 43` (13 test di S33, FP §4.0.1) | NEW: + 20 S33-PASSES (4 varianti x 5 semi); totale `compared 1113 runs: 104 difference lines` |
 
-I conteggi della BI non cambiano con l'ordine BI -> VA (la BI viene prima); quelli della VA partono da `B + 42`. Le
+I conteggi della BI non cambiano con l'ordine BI -> VA (la BI viene prima); quelli della VA partono da `B + 42`, quelli
+della FP da `B_FP`. Le
 esecuzioni S35 non dipendono dall'interruttore VA (spento di default): restano identiche alla loro cattura dopo VA,
 come VA §2.8 si aspetta. Se l'utente invertisse l'ordine (VA prima), `intercept_domains` andrebbe in coda dopo i campi
 di VA, `shot_spec_for` e gli interruttori si comporrebbero all'inverso e le base di suite si scambierebbero: nessun
