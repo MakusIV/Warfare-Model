@@ -4,7 +4,9 @@ Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-1
 
 ## Start here
 - [Dati BI (blocco 0): decisioni D1-D6 + voci grigie, TUTTE prese; blocco 1 fatto](project_bi_dati_decisioni.md) — metro Maverick 304,8 mm e 304 kg, lunghezza esclusa; 32 True/20 False
-- [Sessione 2026-11-07/08 ProArt — Proposte FP/BI/VA; blocco 0 e blocco 1 della BI FATTI e mergiati (suite 4801, confronto 1029/20)](project_session_2026_11_07_summary.md) — RIPARTIRE DA QUI: BI blocco 2 (compito in .ai-run/compito_bi_blocco2.txt, ricreare branch ai/des-bi-blocco2), poi blocco 3, VA, FP-5/FP
+- [Sessione 2026-11-07/08 ProArt — Proposte FP/BI/VA; BI blocchi 0, 1 e 2 FATTI e mergiati (suite 4829, confronto 1029/20, sonda B-1 ok)](project_session_2026_11_07_summary.md) — RIPARTIRE DA QUI: FP-1..FP-10 TUTTE DECISE (dettaglio in project_fp_decisioni_complete); BI blocco 3 (S35-ADTGT) e 4, poi VA, FP
+- [FP: decisioni FP-1..FP-10 TUTTE prese (2026-11-08) + elenco modifiche da riportare nella Proposta](project_fp_decisioni_complete.md) — prossimo: riscrittura Proposta FP con des-planner (Opus high), conferma dell'utente
+- [Interruttori: si tengono solo se lo stato precedente e' un'alternativa valida, si eliminano se sostituiti; analisi mirata dopo FP (2026-11-08)](feedback_interruttori_criterio.md) — rimozione con nuova fotografia decisa dall'utente
 - [Come presentare le decisioni all'utente: sigle spiegate, ruoli, esempi, una per volta, verifica con agente Opus high](feedback_presentazione_decisioni.md) — dal 2026-11-07
 - [D-5 opzione 2 (dwell_time_s): Proposta DEFINITIVA il 2026-11-06, DW-1..DW-9 decise, sonde S-1..S-3 complete](project_dwell_time_d5.md) — RIPARTIRE DA QUI: prossimo passo = esecutore del blocco A (proporre e attendere conferma); ricerca dati sensori SAM/AAA in corso (DW-9); rischio: senza orizzonte radar nel DES la legge non accorcia le rotte
 - [Sessione 2026-11-05 osboxes — blocco C siti fissi EWR FATTO (suite 4757, fotografia 1009), sospetto _mission_outcome smentito](project_session_2026_11_05_summary.md) — prossime attivita': manuale DES per il blocco C, D-5 opz. 2, verifica DCS FPS-117
