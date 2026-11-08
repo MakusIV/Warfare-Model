@@ -5,6 +5,7 @@ Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-1
 ## Start here
 - [Dati BI (blocco 0): decisioni D1-D6 + voci grigie, TUTTE prese; blocco 1 fatto](project_bi_dati_decisioni.md) — metro Maverick 304,8 mm e 304 kg, lunghezza esclusa; 32 True/20 False
 - [Sessione 2026-11-07/08 ProArt — Proposte FP/BI/VA; BI blocchi 0, 1 e 2 FATTI e mergiati (suite 4829, confronto 1029/20, sonda B-1 ok)](project_session_2026_11_07_summary.md) — RIPARTIRE DA QUI: FP-1..FP-10 TUTTE DECISE (dettaglio in project_fp_decisioni_complete); BI blocco 3 (S35-ADTGT) e 4, poi VA, FP
+- [BI blocco 3: P-1..P-7 aperti (P-1 Rezky decisa), revisione di L1 rinviata (2026-11-08)](project_bi_blocco3_punti_aperti.md) — S35 non eseguibile finche' non decisi; oc-developer sul branch `ai/oc-bi-blocco3`
 - [FP: decisioni FP-1..FP-10 TUTTE prese (2026-11-08) + elenco modifiche da riportare nella Proposta](project_fp_decisioni_complete.md) — prossimo: riscrittura Proposta FP con des-planner (Opus high), conferma dell'utente
 - [Interruttori: si tengono solo se lo stato precedente e' un'alternativa valida, si eliminano se sostituiti; analisi mirata dopo FP (2026-11-08)](feedback_interruttori_criterio.md) — rimozione con nuova fotografia decisa dall'utente
 - [Come presentare le decisioni all'utente: sigle spiegate, ruoli, esempi, una per volta, verifica con agente Opus high](feedback_presentazione_decisioni.md) — dal 2026-11-07
