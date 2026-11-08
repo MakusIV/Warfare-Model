@@ -3887,5 +3887,123 @@ class TestDwellTimeInTheResolver(unittest.TestCase):
         self.assertIsNone(ER.registry_dwell_time(_WithDwell(), object(), None))
 
 
+# ── BERSAGLI INTERCETTABILI DALLA DIFESA AEREA (BI_AD_TARGET_RULE, 2026-11-07) ─────────────────────────────────────────
+
+class Ship(_ZonedInterceptor):
+    """Stub di nave: il risolutore riconosce le navi per nome di classe (validate_class), come per `Aircraft`."""
+
+
+class TestAirDefenceTargetRule(unittest.TestCase):
+    """Regola dell'utente sui bersagli intercettabili (Proposta_Bersagli_Intercettabili_Difesa_Aerea.md, blocco 2):
+    con `BI_AD_TARGET_RULE` acceso un intercettore ferma un colpo solo se il suo dominio ('land' | 'naval', BI-5) e' fra
+    gli `intercept_domains` della ShotSpec; None = non dichiarato (BI-8). Il filtro e' PRIMA di L1 e R-INT, che non
+    cambiano, e non estrae nulla.
+
+    Geometria come TestLauncherInsideInterceptionZone: bersaglio r1 nell'origine, tiratore b1 fermo a (x, 0, 0), una
+    salva di 5 colpi intercettabili a t = 2 s; intercettori nell'origine, 3 canali ciascuno, V_I di 12 km.
+    """
+
+    ALL = frozenset({'land', 'naval'})
+
+    def _run(self, domains, interceptors=None, rule=True, x=15_000.0, tof=REACTION_TOF, rng=None):
+        spec = _miss(rounds=5, interceptable=True, time_of_flight=tof, intercept_domains=domains)
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        interceptors = interceptors or [_ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0)]
+        red = _Force('red', 'Red', [_Asset('r1')] + interceptors, interceptors=[(i, 3) for i in interceptors])
+        legs = {'b1': [Leg(0.0, 100.0, (x, 0.0, 0.0), (x, 0.0, 0.0))],
+                'r1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+        for i in interceptors:
+            p = (float(i.position.x), float(i.position.y), float(i.position.z))
+            legs[i.id] = [Leg(0.0, 100.0, p, p)]
+        windows = [ContactWindow('b1', 'r1', t_start=0.0, t_end=2.9, t_cpa=2.9, distance_cpa=x,
+                                 range_a=50_000.0, range_b=None)]
+        self.rng = rng or _ScriptedRng([0.0] * 20)
+        with patch(_ER_LOGGER), patch.object(ER, 'BI_AD_TARGET_RULE', rule):
+            return ER.resolve_engagement(blue, red, windows, _always(spec), self.rng,
+                                         legs=legs, reaction_profile_for=_profiles({}, default=(2.0, 1.0)))
+
+    def test_switch_is_off_by_default(self):
+        self.assertIs(ER.BI_AD_TARGET_RULE, False)
+
+    def test_switch_off_empty_domains_are_stopped_as_before(self):
+        result = self._run(frozenset(), rule=False)
+        self.assertEqual(result.resolutions[0].intercepted, 3)
+        self.assertEqual(result.interceptions_consumed(), {'r2': 3})
+
+    def test_switch_on_empty_domains_nobody_intercepts(self):
+        result = self._run(frozenset())
+        resolution, = result.resolutions
+        self.assertEqual(resolution.intercepted, 0)
+        self.assertEqual(result.interception_events, ())
+        self.assertEqual(len(result.damage_events), 5)
+
+    def test_switch_on_naval_only_stops_the_ship_not_the_land_interceptor(self):
+        land = self._run(frozenset({'naval'}), [_ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0)])
+        self.assertEqual(land.resolutions[0].intercepted, 0)
+        self.assertEqual(land.interception_events, ())
+        ship = self._run(frozenset({'naval'}), [Ship('r2', (0.0, 0.0, 0.0), 12_000.0)])
+        self.assertEqual(ship.resolutions[0].intercepted, 3)
+        self.assertEqual(ship.interceptions_consumed(), {'r2': 3})
+
+    def test_switch_on_land_only_stops_the_land_interceptor_not_the_ship(self):
+        self.assertEqual(self._run(frozenset({'land'}), [Ship('r2', (0.0, 0.0, 0.0), 12_000.0)])
+                         .resolutions[0].intercepted, 0)
+        self.assertEqual(self._run(frozenset({'land'})).resolutions[0].intercepted, 3)
+
+    def test_switch_on_both_domains_are_stopped_by_both(self):
+        land = _ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0)
+        ship = Ship('r3', (0.0, 300.0, 0.0), 12_000.0)
+        for interceptors in ([land], [ship]):
+            with self.subTest(interceptor=interceptors[0].id):
+                self.assertEqual(self._run(self.ALL, interceptors).resolutions[0].intercepted, 3)
+        # due intercettori di domini diversi: i 5 colpi si dividono (3 + 2) nell'ordine dell'allocazione
+        result = self._run(self.ALL, [land, ship])
+        self.assertEqual(result.resolutions[0].intercepted, 5)
+        self.assertEqual(sum(result.interceptions_consumed().values()), 5)
+
+    def test_switch_on_undeclared_domains_behave_as_before(self):
+        """BI-8: None = fire control che non dichiara i domini (es. arma `test:*`): vale solo `interceptable`."""
+        for interceptor in (_ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0), Ship('r2', (0.0, 0.0, 0.0), 12_000.0)):
+            with self.subTest(interceptor=type(interceptor).__name__):
+                self.assertEqual(self._run(None, [interceptor]).resolutions[0].intercepted, 3)
+
+    def test_switch_on_filter_is_applied_before_not_instead_of_l1(self):
+        """L1 si applica ancora ai colpi ammessi: lancio dentro il V_I di 12 km -> non fermato."""
+        self.assertEqual(self._run(self.ALL, x=8_000.0).resolutions[0].intercepted, 0)
+        self.assertEqual(self._run(self.ALL, x=15_000.0).resolutions[0].intercepted, 3)
+
+    def test_switch_on_filter_is_applied_before_not_instead_of_r_int(self):
+        """R-INT si applica ancora ai colpi ammessi: tempo di volo nullo -> mai fermato."""
+        self.assertEqual(self._run(self.ALL, tof=0.0).resolutions[0].intercepted, 0)
+
+    def test_switch_on_draws_the_same_rng_when_the_admitted_rounds_do_not_change(self):
+        """Il filtro non estrae nulla: con tutti i colpi ammessi le estrazioni sono quelle dell'interruttore spento."""
+        off = self._run(self.ALL, rule=False)
+        off_calls = self.rng.calls
+        on = self._run(self.ALL, rule=True)
+        self.assertEqual(self.rng.calls, off_calls)
+        self.assertEqual(on.resolutions[0].intercepted, off.resolutions[0].intercepted)
+        self.assertEqual([(d.observer_id, d.target_id, d.draw) for d in on.detections],
+                         [(d.observer_id, d.target_id, d.draw) for d in off.detections])
+
+    def test_interceptable_rounds_excludes_rounds_with_empty_domains(self):
+        self.assertEqual(self._run(frozenset(), rule=True).resolutions[0].interceptable_rounds, 0)
+        self.assertEqual(self._run(frozenset(), rule=False).resolutions[0].interceptable_rounds, 5)
+        self.assertEqual(self._run(None, rule=True).resolutions[0].interceptable_rounds, 5)
+        self.assertEqual(self._run(frozenset({'naval'}), rule=True).resolutions[0].interceptable_rounds, 5)
+
+    def test_intercept_domains_validation(self):
+        self.assertIsNone(ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5).intercept_domains)
+        self.assertEqual(ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5,
+                                     intercept_domains=frozenset({'land'})).intercept_domains, frozenset({'land'}))
+        self.assertEqual(ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5,
+                                     intercept_domains=frozenset()).intercept_domains, frozenset())
+
+        for bad in ({'air'}, frozenset({'air'}), frozenset({'land', 'air'}), ['land'], 'land'):
+            with self.subTest(value=bad):
+                with self.assertRaises(ValueError):
+                    ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5, intercept_domains=bad)
+
+
 if __name__ == '__main__':
     unittest.main()

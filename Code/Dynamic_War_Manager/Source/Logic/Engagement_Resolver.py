@@ -53,6 +53,10 @@ attraverso l'RNG di sessione passato dal chiamante.
    nessuna estrazione) e reagisce in RIV+VAL+COM+ATT. Rilevamento per asset; tempo di volo
    dell'intercettore e RCS del colpo non modellati. Un colpo con tempo di volo nullo non si
    intercetta mai.
+   Con `BI_AD_TARGET_RULE` acceso (SPENTO di default, Proposta_Bersagli_Intercettabili_Difesa_Aerea.md)
+   un intercettore ferma un colpo solo se il suo dominio ('land' | 'naval') e' fra gli
+   `intercept_domains` della ShotSpec (None = non dichiarato: nessun vincolo); il filtro e' prima di
+   L1 e R-INT, che non cambiano, e non estrae nulla.
 5. **Danno per singolo colpo.** Ogni colpo superstite passa da
    `Damage_Model.build_damage_event` (che chiama `resolve_hit`), con un `draw` estratto
    qui dall'RNG iniettato. Nessuna reimplementazione del contratto del danno.
@@ -524,6 +528,15 @@ RECON_EFFICIENCY_FOG_RELIEF = 0.5
 #     nessuno dei due stati.
 D5_DWELL_TIME = False
 
+# Bersagli intercettabili (Proposta_Bersagli_Intercettabili_Difesa_Aerea.md), interruttore dedicato:
+#   * `BI_AD_TARGET_RULE` (SPENTO): un intercettore ferma un colpo solo se il suo dominio ('land' | 'naval') e' fra
+#     gli `intercept_domains` della ShotSpec (None = non dichiarato: nessun vincolo). Letto all'inizio di ogni run.
+#     Spento: nessun filtro, come prima. Nessuna estrazione in piu' ne' in ordine diverso in nessuno dei due stati.
+BI_AD_TARGET_RULE = False
+
+# Domini di difesa aerea ammessi in `ShotSpec.intercept_domains` ('land' = intercettore non navale, 'naval' = nave).
+AD_DOMAINS = frozenset({'land', 'naval'})
+
 # Una forza e' "operativa" per l'asset con salute sopra questa soglia: e' la stessa
 # frontiera di State.isOperative (sotto il 50% l'asset e' Critical, fuori combattimento).
 OPERATIVE_HEALTH_FLOOR = int(round(DM.HEALTH_MAX * HEALTH_LEVEL[StateCategory.CRITICAL.value]))
@@ -605,6 +618,10 @@ class ShotSpec:
         stock_per_round: unita' di scorta dell'arma consumate da UN colpo della salva
             (>= 1, decisione A3 2026-09-26): 1 per missili, bombe e proietti singoli; i
             colpi di una raffica per le armi a tiro rapido, il cui "colpo" e' una raffica.
+        intercept_domains: domini di difesa aerea ('land' | 'naval') che possono considerare il
+            colpo un bersaglio (regola dell'utente del 2026-11-07, v. `BI_AD_TARGET_RULE`); None
+            = non dichiarato, nessun vincolo. Lo legge il risolutore solo con l'interruttore
+            acceso; lo decide chi conosce l'arma (la fire control), come `interceptable`.
     """
     accuracy: float
     destroy_capacity: float
@@ -615,6 +632,7 @@ class ShotSpec:
     cycle_time: Optional[float] = None
     max_range: Optional[float] = None
     stock_per_round: int = 1
+    intercept_domains: Optional[FrozenSet[str]] = None
 
     def __post_init__(self):
         for name in ('accuracy', 'destroy_capacity'):
@@ -646,6 +664,11 @@ class ShotSpec:
         if isinstance(self.stock_per_round, bool) or not isinstance(self.stock_per_round, int) \
                 or self.stock_per_round < 1:
             raise ValueError(f"stock_per_round must be an int >= 1, got {self.stock_per_round!r}")
+
+        if self.intercept_domains is not None and (not isinstance(self.intercept_domains, frozenset)
+                                                   or not self.intercept_domains <= AD_DOMAINS):
+            raise ValueError(f"intercept_domains must be None or a frozenset of {sorted(AD_DOMAINS)}, "
+                             f"got {self.intercept_domains!r}")
 
 
 @dataclass(frozen=True)
@@ -1805,6 +1828,10 @@ class _EngagementRun:
         self.detected_at: Optional[Dict[Tuple[str, str], float]] = None
         self.air_range_cache: Dict[str, Optional[float]] = {}
         self.in_time_cache: Dict[Tuple[str, int], bool] = {}
+        # BI (regola dell'utente del 2026-11-07): interruttore letto una volta per run, e dominio AD ('land' | 'naval')
+        # di ogni intercettore (memoizzato per id).
+        self.ad_target_rule = BI_AD_TARGET_RULE
+        self.ad_domain_cache: Dict[str, str] = {}
         self.reaction_profile_for = reaction_profile_for or RP.profile_for_asset
         self.detection_factor = detection_factor
         # D-5: lettore (osservatore, bersaglio, modo) -> periodo di rivisita [s] | None; None = legge non applicata.
@@ -3159,6 +3186,21 @@ class _EngagementRun:
 
         return self.zone_cache[shadow.id]
 
+    def _ad_domain(self, shadow: "_Shadow") -> str:
+        """Dominio di difesa aerea dell'intercettore (BI-5): 'naval' per una nave (`Ship`), altrimenti 'land'."""
+        if shadow.id not in self.ad_domain_cache:
+            self.ad_domain_cache[shadow.id] = 'naval' if validate_class(shadow.asset, 'Ship') else 'land'
+
+        return self.ad_domain_cache[shadow.id]
+
+    def _admissible(self, shadow: "_Shadow", salvo: Salvo) -> bool:
+        """Regola BI: True se `BI_AD_TARGET_RULE` e' spento o la ShotSpec non dichiara i domini (None); altrimenti
+        solo se il dominio dell'intercettore e' fra gli `intercept_domains` del colpo. Nessuna estrazione."""
+        if not self.ad_target_rule or salvo.spec.intercept_domains is None:
+            return True
+
+        return self._ad_domain(shadow) in salvo.spec.intercept_domains
+
     def _may_intercept(self, shadow: "_Shadow", salvo: Salvo) -> bool:
         """Regola L1: True se il punto di lancio della salva e' FUORI dal V_I dell'intercettore.
 
@@ -3288,7 +3330,11 @@ class _EngagementRun:
             self.in_flight.pop(salvo.salvo_id, None)
 
         rounds = sum(s.rounds for s in ordered)
-        interceptable = sum(s.rounds for s in ordered if s.spec.interceptable)
+        # BI: con la regola accesa non contano i colpi che nessun dominio AD puo' considerare un bersaglio.
+        interceptable = sum(s.rounds for s in ordered
+                            if s.spec.interceptable
+                            and (not self.ad_target_rule or s.spec.intercept_domains is None
+                                 or s.spec.intercept_domains))
 
         # Difesa di salva per DOMINIO (F4b++, 2026-10-11, deviazione 8c del piano della Missione):
         # intercettano gli asset di TUTTE le forze del dominio della forza colpita (senza
@@ -3347,7 +3393,8 @@ class _EngagementRun:
 
                 free = available.get(shadow.id, 0) - used.get(shadow.id, 0)
 
-                if free <= 0 or not self._may_intercept(shadow, salvo) or not self._in_time(shadow, salvo):
+                if free <= 0 or not self._admissible(shadow, salvo) or not self._may_intercept(shadow, salvo) \
+                        or not self._in_time(shadow, salvo):
                     continue
 
                 take = min(free, left)

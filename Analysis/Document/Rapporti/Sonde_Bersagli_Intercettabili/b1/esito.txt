@@ -1,0 +1,15 @@
+compared 1029 runs: 152 difference lines (490.5 s)
+PROBE_RC 1
+B1_CHANGED_KEYS 6
+B1_CHANGED S19AD/S19-0/tor_rear interception_events 3 -> 0 damage_events 6 -> 12 interceptions {"Red-Line/ad0": {"9M331-SAM": 6}} -> {} differing_keys ['ammunition_consumed', 'ammunition_events', 'assets', 'counts', 'damage_events', 'engagements', 'interception_events', 'interceptions', 'postures']
+B1_CHANGED S19AD/S19-1/tor_rear interception_events 3 -> 0 damage_events 5 -> 11 interceptions {"Red-Line/ad0": {"9M331-SAM": 6}} -> {} differing_keys ['ammunition_consumed', 'ammunition_events', 'assets', 'counts', 'damage_events', 'engagements', 'force_outcomes', 'interception_events', 'interceptions', 'postures']
+B1_CHANGED S19AD/S19-2/tor_rear interception_events 3 -> 0 damage_events 6 -> 11 interceptions {"Red-Line/ad0": {"9M331-SAM": 6}} -> {} differing_keys ['ammunition_consumed', 'ammunition_events', 'assets', 'counts', 'damage_events', 'engagements', 'interception_events', 'interceptions']
+B1_CHANGED S19AD/S19-3/tor_rear interception_events 3 -> 0 damage_events 5 -> 11 interceptions {"Red-Line/ad0": {"9M331-SAM": 6}} -> {} differing_keys ['ammunition_consumed', 'ammunition_events', 'assets', 'counts', 'damage_events', 'engagements', 'force_outcomes', 'interception_events', 'interceptions', 'postures']
+B1_CHANGED S19AD/S19-4/tor_rear interception_events 3 -> 0 damage_events 6 -> 10 interceptions {"Red-Line/ad0": {"9M331-SAM": 6}} -> {} differing_keys ['ammunition_consumed', 'ammunition_events', 'assets', 'counts', 'damage_events', 'engagements', 'interception_events', 'interceptions', 'postures']
+B1_CHANGED S19AD/S19-5/tor_rear interception_events 3 -> 0 damage_events 6 -> 8 interceptions {"Red-Line/ad0": {"9M331-SAM": 6}} -> {} differing_keys ['ammunition_consumed', 'ammunition_events', 'assets', 'counts', 'damage_events', 'engagements', 'interception_events', 'interceptions', 'postures']
+B1_NEW_KEYS 20 ['S32-DWELL']
+B1_EXPECTED_SET OK
+B1_TOR_ZERO True
+B1_MORE_DAMAGE True
+B1_ANTISHIP_RUNS 8 rounds_stopped 351
+B1_ANTISHIP_IDENTICAL True
