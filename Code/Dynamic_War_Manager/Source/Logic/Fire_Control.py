@@ -129,6 +129,11 @@ costante nuove). Conseguenze, tutte dalla catena esistente:
 * `interceptable`: True per missili (SAM, AAM, ASM, ATGM) e bombe guidate
   (`type == 'Guided bombs'`); False per proiettili, razzi non guidati, bombe a caduta
   libera e siluri (le difese di salva sono SAM/cannoni AA, che non intercettano un siluro).
+* `intercept_domains` (Proposta_Bersagli_Intercettabili_Difesa_Aerea.md, regola dell'utente del
+  2026-11-07): i domini di difesa aerea ('land' | 'naval') che possono considerare il colpo un
+  BERSAGLIO, dalla classe di munizione dell'arma e dal flag `ad_detectable` del registro (v.
+  `munition_class`, `intercept_domains_for`, `AD_TARGET_DOMAINS`). Sempre valorizzato (e' un dato
+  dell'arma, come `interceptable`); lo legge il risolutore solo con `BI_AD_TARGET_RULE` acceso.
 * `time_of_flight`: ENGAGEMENT_RANGE_FRACTION x max_range / velocita' dell'arma quando il
   registro da' entrambe, altrimenti DEFAULT_TIME_OF_FLIGHT_S per categoria. La distanza
   vera di tiro non e' nota alla fire control (la calcola il risolutore, dopo).
@@ -279,6 +284,17 @@ SPEED_OF_SOUND_MS = 340.3
 
 # Nodo -> m/s (definizione): la velocita' dei siluri di Ship_Weapon_Data e' in nodi.
 KNOT_MS = 1852.0 / 3600.0
+
+# Regola dell'utente del 2026-11-07 (Proposta_Bersagli_Intercettabili_Difesa_Aerea.md): domini di difesa aerea che
+# possono considerare un colpo un BERSAGLIO, per classe di munizione. 'land' = intercettore non navale, 'naval' =
+# nave. Le classi 'anti_ship', 'arm', 'tactical' sono ammesse dai navali solo se il missile e' `ad_detectable`.
+# Il criterio di dimensione vale SOLO per i navali (decisione BI-12 (a), scelta di progetto [S]): per le difese
+# terrestri contano solo le classi 'cruise' e 'ballistic' (Kh-29/Kh-58 mai bersagli dei terrestri).
+AD_LAND, AD_NAVAL = 'land', 'naval'
+AD_TARGET_DOMAINS = {'ballistic': {AD_LAND, AD_NAVAL}, 'cruise': {AD_LAND, AD_NAVAL}}
+AD_SIZE_GATED_NAVAL = frozenset({'anti_ship', 'arm', 'tactical'})
+# Default di `ad_detectable` quando il registro non lo dichiara (STIMA [S], BI-7).
+AD_DETECTABLE_DEFAULT = {'cruise': True, 'ballistic': True, 'anti_ship': True, 'arm': False, 'tactical': False}
 
 # Aerei a terra (F4c): tipo d'aereo (Context.Air_Asset_Type) -> tipo PARCHEGGIATO corrispondente
 # (Context.Parked_Asset_Type), la classificazione gia' esistente degli aerei sul piazzale di una
@@ -742,6 +758,64 @@ def select_weapon(weapons: Tuple[_Weapon, ...], keys: Tuple[str, ...], dimension
     return ranked[0] if ranked else None
 
 
+def munition_class(weapon: _Weapon) -> Optional[str]:
+    """Classe di munizione dell'arma (regola R-BI-1), o None se non classificata.
+
+    `data['munition_class']` se il registro la dichiara (missili aria-superficie e navali); altrimenti
+    derivata da categoria e task: bombe -> 'guided_bomb' (`type == 'Guided bombs'`) o 'bomb'; razzi, cannoni e
+    siluri -> 'rocket', 'gun', 'torpedo'; missili: AAM aerei -> 'aam', terrestri con task `Anti_Tank` -> 'atgm',
+    con task `Anti_Air` (terrestri o `MISSILES_SAM` navali) -> 'sam'. Altrimenti None.
+    """
+    declared = weapon.data.get('munition_class')
+
+    if isinstance(declared, str):
+        return declared
+
+    kind = weapon.kind
+
+    if kind == 'bomb':
+        return 'guided_bomb' if weapon.data.get('type') == 'Guided bombs' else 'bomb'
+
+    if kind in ('rocket', 'gun', 'torpedo'):
+        return kind
+
+    if kind != 'missile':
+        return None
+
+    if weapon.weapon_type == 'MISSILES_AAM':
+        return 'aam'
+
+    tasks = weapon.tasks or frozenset()
+
+    if weapon.domain == 'ground' and 'Anti_Tank' in tasks:
+        return 'atgm'
+
+    if 'Anti_Air' in tasks or weapon.weapon_type == 'MISSILES_SAM':
+        return 'sam'
+
+    return None
+
+
+def intercept_domains_for(weapon: _Weapon) -> Optional[FrozenSet[str]]:
+    """Domini di difesa aerea che possono considerare un colpo dell'arma un bersaglio (regola R-BI-3).
+
+    None se la classe di munizione non e' nota (nessun vincolo, BI-8). Altrimenti `AD_TARGET_DOMAINS` della
+    classe, piu' il dominio navale per le classi di `AD_SIZE_GATED_NAVAL` se `ad_detectable` (dal registro, o
+    `AD_DETECTABLE_DEFAULT`) e' vero. Mai None se la classe e' nota: l'insieme vuoto = nessun dominio.
+    """
+    munition = munition_class(weapon)
+
+    if munition is None:
+        return None
+
+    domains = set(AD_TARGET_DOMAINS.get(munition, ()))
+
+    if munition in AD_SIZE_GATED_NAVAL and bool(weapon.data.get('ad_detectable', AD_DETECTABLE_DEFAULT[munition])):
+        domains.add(AD_NAVAL)
+
+    return frozenset(domains)
+
+
 def shot_spec_for(weapon: _Weapon, accuracy: float, destroy_capacity: float, is_air: bool = False,
                   release_altitude_m: Optional[float] = None,
                   attack_speed_kmh: Optional[float] = None) -> ShotSpec:
@@ -787,7 +861,8 @@ def shot_spec_for(weapon: _Weapon, accuracy: float, destroy_capacity: float, is_
                     destroy_capacity=min(1.0, max(0.0, destroy_capacity)),
                     rounds=SALVO_ROUNDS[kind], weapon=weapon.model,
                     time_of_flight=time_of_flight, interceptable=interceptable,
-                    cycle_time=cycle_time, max_range=max_range, stock_per_round=burst)
+                    cycle_time=cycle_time, max_range=max_range, stock_per_round=burst,
+                    intercept_domains=intercept_domains_for(weapon))
 
 
 def _attack_speed_kmh(shooter_key: Tuple[str, str, Optional[str]]) -> Optional[float]:

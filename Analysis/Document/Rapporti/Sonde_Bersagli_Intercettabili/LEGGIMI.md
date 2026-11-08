@@ -7,7 +7,7 @@ completa va nella cartella indicata (`.ai-run/`, fuori dal versionamento); qui s
 | Sonda | Quando | Cosa | Esito | File |
 |---|---|---|---|---|
 | B-0 | prima di ogni codice | per esecuzione: colpi intercettabili arrivati su forze con intercettori e colpi fermati, per arma/categoria, lanciatore, bersaglio e intercettore; esecuzioni che cambierebbero con la regola nuova in due varianti per le armi di test | **eseguita il 2026-11-07 sul ProArt**, v. sotto | `probe_intercepts.py` |
-| B-1 | dopo il blocco 2 del piano | accende `BI_AD_TARGET_RULE` in memoria e riesegue il confronto | da scrivere dall'esecutore (modello: `../Sonde_Finestre_Passaggio/probe_switch_on.py`) | — |
+| B-1 | dopo il blocco 2 del piano | accende `BI_AD_TARGET_RULE` in memoria e riesegue il confronto | **eseguita il 2026-11-08 sul ProArt** (blocco 2): cambiano esattamente le 6 esecuzioni `S19AD/S19-<0..5>/tor_rear`, v. `b1/esito.txt` | `probe_switch_on.py` |
 
 ## Comandi (dalla root del repo)
 

@@ -37,8 +37,10 @@ dal disingaggio alla prima perdita (difetto noto, §5.3 della proposta).
 """
 
 import unittest
+from unittest.mock import patch
 
 from Code.Dynamic_War_Manager.Source.Command.Mission_Types import MissionRules, Target, TargetKind, TargetProvenance
+from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
 from Code.Dynamic_War_Manager.Source.Logic.Fire_Control import make_registry_fire_control
 from Code.Dynamic_War_Manager.Source.Test import Scenario_Fixtures as F
 from Code.Dynamic_War_Manager.Source.Test.Test_Session_Scenarios_S10_S18 import BOTH_HOLD
@@ -246,6 +248,31 @@ class TestS19MissionRulesReplaceTheTestFilters(F.LoggerSilencer, unittest.TestCa
         """Controprova: con tutta la linea designata (ROE di default) la difesa aerea e' ingaggiabile."""
         _, cas, (_, salvos) = self.runs['whole_line']
         self.assertIn(self.AD, {salvo.target_id for salvo in salvos if salvo.shooter_id in cas.assets})
+
+
+class TestS19AdTargetRule(F.LoggerSilencer, unittest.TestCase):
+    """BI (blocco 2, Proposta_Bersagli_Intercettabili_Difesa_Aerea.md): con la fire control dei registri e
+    `BI_AD_TARGET_RULE` acceso il Tor non ferma piu' i Maverick (classe 'tactical', `ad_detectable` False: non sono
+    bersagli di una difesa terrestre); spento li ferma come prima. Variante del Tor arretrato di S19AD, stessa sessione
+    della fotografia (`S19-0`); NON in `Scenario_Baseline` (i metodi di test non sono eseguiti dalla fotografia)."""
+
+    AD = 'Red-Line/ad0'
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.off = run_variant('S19-0', '9K331-Tor', TOR_REAR_X, 300.0, 4, OVERFLIGHT)
+        with patch.object(ER, 'BI_AD_TARGET_RULE', True):
+            cls.on = run_variant('S19-0', '9K331-Tor', TOR_REAR_X, 300.0, 4, OVERFLIGHT)
+
+    def test_switch_off_the_tor_intercepts_mavericks(self):
+        self.assertGreater(_interceptions(self.off[2], self.AD), 0)
+
+    def test_switch_on_the_tor_never_intercepts_mavericks(self):
+        _, cas, outcome = self.on
+        self.assertGreater(sum(e.rounds for e in outcome.ammunition_events if e.weapon == MAVERICK), 0)  # premessa
+        self.assertEqual(_interceptions(outcome, self.AD), 0)
+        self.assertEqual(outcome.interception_events, ())
 
 
 if __name__ == '__main__':

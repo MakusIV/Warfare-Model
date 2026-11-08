@@ -894,5 +894,133 @@ class TestRestrictByPolicy(_FireControlFixture, unittest.TestCase):
         self.assertFalse(FC.WeaponPolicy('m', 'air', policy.rules, False).allows('AIM-9M', C.TARGET_CLASS_AIR))
 
 
+class TestInterceptDomains(_FireControlFixture, unittest.TestCase):
+    """Regola dell'utente sui bersagli intercettabili (BI, blocco 2): `ShotSpec.intercept_domains` dalla classe
+    di munizione e dal flag `ad_detectable` dei registri (Proposta_Bersagli_Intercettabili_Difesa_Aerea.md §2.1)."""
+
+    NONE = frozenset()
+    BOTH = frozenset({'land', 'naval'})
+    NAVAL = frozenset({'naval'})
+
+    @staticmethod
+    def weapon(domain, model):
+        """`_Weapon` del registro del dominio ('air' | 'ground' | 'ship') per il modello `model`."""
+        registry = {'air': AWD.AIR_WEAPONS, 'ground': GWD.GROUND_WEAPONS, 'ship': SWD.SHIP_WEAPONS}[domain]
+        category = next(c for c, models in registry.items() if isinstance(models, dict) and model in models)
+        return FC._Weapon(model, category, domain, registry[category][model])
+
+    def domains(self, domain, model):
+        """intercept_domains della ShotSpec costruita da `shot_spec_for` (non solo da `intercept_domains_for`)."""
+        return FC.shot_spec_for(self.weapon(domain, model), 0.5, 0.5).intercept_domains
+
+    @staticmethod
+    def by_weapon(specs):
+        return {spec.weapon: spec for spec in specs}
+
+    def test_maverick_is_not_a_target_against_a_ground_vehicle(self):
+        a10 = self.aircraft(A10, 3_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        specs = self.by_weapon(self.ranked(a10, F.make_vehicle(self.red, 'Red/bmp-bi', 'BMP-2', (0, 0, 0))))
+        self.assertEqual(specs['AGM-65D'].intercept_domains, self.NONE)
+
+    def test_maverick_is_not_a_target_even_of_naval_defences(self):
+        """BI-6: ad_detectable fisso False anche contro una nave (uso A2S)."""
+        a10 = self.aircraft(A10, 3_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        ship = F.make_ship(self.red, 'Red/burke-bi', BURKE, (0.0, 0.0, 0.0))
+        specs = self.by_weapon(self.ranked(a10, ship))
+        self.assertEqual(specs['AGM-65D'].intercept_domains, self.NONE)
+        self.assertEqual(self.domains('air', 'AGM-65K'), self.NONE)
+
+    def test_cruise_missiles_are_targets_of_both_domains(self):
+        for model in ('Kh-55', 'Kh-101'):
+            with self.subTest(model=model):
+                self.assertEqual(self.domains('air', model), self.BOTH)
+
+    def test_kh59_family_is_a_cruise_target_of_both_domains(self):
+        """BI-2 (a): i cruise tattici dei cacciabombardieri sono bersagli come gli altri cruise."""
+        for model in ('Kh-59', 'Kh-59M'):
+            with self.subTest(model=model):
+                self.assertEqual(self.domains('air', model), self.BOTH)
+
+    def test_air_launched_antiship_is_a_target_of_naval_defences_only(self):
+        self.assertEqual(self.domains('air', 'AGM-84A'), self.NAVAL)
+
+    def test_arm_with_small_size_is_not_a_target(self):
+        self.assertEqual(self.domains('air', 'AGM-88'), self.NONE)
+
+    def test_ship_launched_missiles(self):
+        """RGM-84-Harpoon (anti_ship) solo navali; BGM-109-Tomahawk (cruise) entrambi; via la fire control di una nave."""
+        shooter = self.ship(BURKE)
+        specs = self.by_weapon(self.ranked(shooter, F.make_ship(self.red, 'Red/burke-bi2', BURKE, (0.0, 0.0, 0.0))))
+        self.assertEqual(specs['RGM-84-Harpoon'].intercept_domains, self.NAVAL)
+        self.assertEqual(specs['BGM-109-Tomahawk'].intercept_domains, self.BOTH)
+
+    def test_bombs_rockets_and_guns_are_never_targets(self):
+        for domain, model in (('air', 'GBU-12'), ('air', 'Mk-82'), ('air', 'Hydra-70MK5'), ('air', 'GAU-8/A')):
+            with self.subTest(model=model):
+                self.assertEqual(self.domains(domain, model), self.NONE)
+
+    def test_sam_aam_and_atgm_are_never_targets(self):
+        for domain, model in (('ground', '9M38-SAM'), ('air', 'AIM-9M'), ('ground', '9M35 Kornet')):
+            with self.subTest(model=model):
+                self.assertEqual(self.domains(domain, model), self.NONE)
+
+    def test_munition_class_is_derived_when_the_registry_does_not_declare_it(self):
+        expected = (('air', 'GBU-12', 'guided_bomb'), ('air', 'Mk-82', 'bomb'), ('air', 'Hydra-70MK5', 'rocket'),
+                    ('air', 'GAU-8/A', 'gun'), ('air', 'AIM-9M', 'aam'), ('ground', '9M38-SAM', 'sam'),
+                    ('ground', '9M35 Kornet', 'atgm'), ('ship', 'Mk-46', 'torpedo'),
+                    ('air', 'AGM-65D', 'tactical'), ('air', 'Kh-55', 'cruise'))
+
+        for domain, model, munition in expected:
+            with self.subTest(model=model):
+                self.assertEqual(FC.munition_class(self.weapon(domain, model)), munition)
+
+    def test_every_registry_weapon_has_a_class_and_a_frozenset(self):
+        """Nessuna arma dei tre registri resta non classificata: la regola non ha buchi (BI-8 vale per `test:*`)."""
+        for domain in ('air', 'ground', 'ship'):
+            registry = {'air': AWD.AIR_WEAPONS, 'ground': GWD.GROUND_WEAPONS, 'ship': SWD.SHIP_WEAPONS}[domain]
+
+            for category, models in registry.items():
+                if not isinstance(models, dict) or category not in FC._KIND_BY_TYPE[domain]:
+                    continue
+
+                for model, data in models.items():
+                    if not isinstance(data, dict):
+                        continue
+
+                    with self.subTest(domain=domain, model=model):
+                        weapon = FC._Weapon(model, category, domain, data)
+                        self.assertIsNotNone(FC.munition_class(weapon))
+                        self.assertIsInstance(FC.intercept_domains_for(weapon), frozenset)
+
+    def test_undeclared_class_gives_none(self):
+        """Arma non classificabile (missile terrestre senza task Anti_Tank/Anti_Air): nessun vincolo (BI-8)."""
+        weapon = FC._Weapon('test:x', 'MISSILES', 'ground', {'task': ['Land_Attack']})
+        self.assertIsNone(FC.munition_class(weapon))
+        self.assertIsNone(FC.intercept_domains_for(weapon))
+        self.assertIsNone(FC.shot_spec_for(weapon, 0.5, 0.5).intercept_domains)
+
+    def test_ad_detectable_flag_and_default(self):
+        """Il flag del registro vince; assente vale il default per classe (AD_DETECTABLE_DEFAULT)."""
+        def asm(**data):
+            return FC._Weapon('test:asm', 'MISSILES_ASM', 'air', data)
+
+        self.assertEqual(FC.intercept_domains_for(asm(munition_class='anti_ship', ad_detectable=False)), self.NONE)
+        self.assertEqual(FC.intercept_domains_for(asm(munition_class='anti_ship')), self.NAVAL)
+        self.assertEqual(FC.intercept_domains_for(asm(munition_class='tactical')), self.NONE)
+        self.assertEqual(FC.intercept_domains_for(asm(munition_class='tactical', ad_detectable=True)), self.NAVAL)
+        self.assertEqual(FC.intercept_domains_for(asm(munition_class='arm')), self.NONE)
+        # il flag non tocca le classi senza criterio di dimensione (BI-12 (a))
+        self.assertEqual(FC.intercept_domains_for(asm(munition_class='cruise', ad_detectable=False)), self.BOTH)
+
+    def test_interceptable_is_unchanged(self):
+        """`interceptable` resta quello di prima (stessi valori dei test esistenti)."""
+        self.assertTrue(FC.shot_spec_for(self.weapon('ground', '9M38-SAM'), 0.5, 0.5).interceptable)
+        self.assertTrue(FC.shot_spec_for(self.weapon('air', 'AGM-65D'), 0.5, 0.5).interceptable)
+        self.assertTrue(FC.shot_spec_for(self.weapon('air', 'GBU-12'), 0.5, 0.5).interceptable)
+        self.assertFalse(FC.shot_spec_for(self.weapon('air', 'Mk-82'), 0.5, 0.5).interceptable)
+        self.assertFalse(FC.shot_spec_for(self.weapon('air', 'GAU-8/A'), 0.5, 0.5).interceptable)
+        self.assertFalse(FC.shot_spec_for(self.weapon('ground', 'AZP-23-23mm'), 0.5, 0.5).interceptable)
+
+
 if __name__ == '__main__':
     unittest.main()
