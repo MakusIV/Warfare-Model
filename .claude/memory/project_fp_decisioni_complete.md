@@ -1,6 +1,6 @@
 ---
 name: project-fp-decisioni-complete
-description: "FP (finestre per passaggio): FP-1..FP-10 TUTTE decise il 2026-11-08; elenco delle modifiche da riportare nella Proposta FP (da riscrivere con des-planner) e stato dei blocchi"
+description: "FP (finestre per passaggio): FP-1..FP-10 TUTTE decise il 2026-11-08; Proposta FP RISCRITTA, riletta da oc-reviewer (pronta per l'esecutore), commit c69ff954; blocchi 1-2 dopo BI e VA"
 metadata:
   type: project
 ---

@@ -1,12 +1,34 @@
 ---
 name: project-session-2026-11-07-summary
-description: "Sessione 2026-11-07/08 ProArt: Proposte FP/BI/VA, blocco 0 BI (dati 52 missili, D1-D6) e blocco 1 BI (codice) FATTI e mergiati; prossimo = blocco 2 BI (fire control + risolutore, compito pronto in .ai-run/compito_bi_blocco2.txt)"
+description: "Sessione 2026-11-07/08 ProArt: BI blocchi 0-2 FATTI, Proposta FP riscritta e riletta (pronta), Proposte BI/VA/FP allineate; BI blocco 3: decisioni P-1..P-7 prese ma Proposta BI a meta' (planner interrotto); prossimo = completare §5.4 BI, poi oc-developer"
 metadata:
   node_type: memory
   type: project
   originSessionId: 695ff177-5a7a-4644-9469-5c6efb8cb41e
   modified: 2026-11-07T15:19:23.951Z
 ---
+
+## STATO DI FATTO A FINE SESSIONE (2026-11-08 sera, ProArt, branch `analysis/dce-dcs-persistence`) — PIU' RECENTE, prevale sul resto
+- **Codice**: BI blocchi 0, 1, 2 fatti e mergiati (merge 4803424b; suite `Ran 4829 OK (skipped=7)`, confronto `UNCHANGED (1009)` + `compared 1029: 20` NEW S32). Nessun altro codice toccato oggi. VA e FP NON ancora eseguite.
+- **Proposta FP riscritta** (des-planner) con FP-1..FP-10 tutte decise + tre conferme dell'utente (P-1 = 44 AFTER_PASS + eventuali RINT_D non misurate; S33 `on`/`cas_on` con FP e D-5 accese e dwell ZSU 2 s [S], 13 test; FP-10 senza unione con FP spenta). **Rilettura incrociata oc-reviewer (GLM 5.3, Reka, 0,9183 $)**: verdetto "pronto per l'esecutore", 0 bloccanti; 1 importante + 2 minori, tutti riletti dal principale e CORRETTI. Righe di codice citate tutte esatte.
+- **Numeri attesi (base reale 4795 -> 4801 -> 4829)**: BI blocco 2 = B+34 (28 test, non 21); BI blocco 3 = B+49 [S] ~4844 (15 test), confronto `compared 1061: 52` [I]; VA B+72 [S] ~4867 e B+81 ~4876, `1093: 84`; FP blocco 1 B_FP+30 ~4906, blocco 2 B_FP+43 ~4919, finale `compared 1113: 104`. Le tre Proposte sono allineate (commit c69ff954); 53 riferimenti di riga della VA ricalcolati.
+- **BI blocco 3 (S35-ADTGT)**: le sonde del planner hanno mostrato contraddizioni (Burke V_I 240 km + L1 = nessuna intercettazione navale; asserzione 2 falsa). **Decisioni P-1..P-7 TUTTE PRESE** (dettaglio in [[project-bi-blocco3-punti-aperti]]): Rezky, sensore `sea` 20 km [S], asserzione 2 = meno AGM-65D lanciati, 15 test, configurazione S-b, per seme/totale, seed `S35-ADTGT-0..3`. **Il des-planner e' stato INTERROTTO a meta' (limite d'uso)**: la Proposta BI ha §5 e §5.0 riscritti a meta' (committata come WIP).
+- **L1 da rivedere DOPO** (decisione dell'utente 2026-11-08, e' una sua regola del 2026-09-28 Q2; l'utente la confondeva con R-INT): Proposta separata, S35 si rivede con la fotografia.
+- **Ricerche dwell passata 2**: bozze D1, D3, D4 (V4.1 Flash) e D2 (Flash, 0,0374 $) in `Analysis/Document/Bozze/` (committate). Verifica a campione: D1, D3, D4 = valori coincidenti con le pagine (unico dubbio: estremo 1,75 s Poe); D2: 5 su 8 confermati, NON verificati Buk (9S18 2,5-4,5 s settore / 4,5-18 s circolare), Tor "tre secondi" GlobalSecurity e 64N6E 12 s (GlobalSecurity risponde 403 al lettore: chiedere all'utente di incollare le frasi, o tenerli [S]). Costi totali dwell 0,157 $ (Baidu).
+- **Delega**: BI blocco 3 con **oc-developer** (scelta dell'utente), non des-developer. Comandi `oc` SEMPRE dalla root del repo (`cd ~/Sviluppo/Warfare-Model`); D2 era stata lanciata col modello predefinito Flash. Fornitore di GLM 5.3 = Reka da `prezzi_fornitori.py` dinamico (ammesso #1, quantizzazione 'unknown'; nessun errore osservato).
+- Costi in `Rapporti/Costi_Deleghe.md` (reviewer 0,9183 $ rispetto a 0,5 $ stimato).
+
+## ATTIVITA' DA CONCLUDERE (prossima sessione, in ordine)
+1. **Riprendere il des-planner** per completare BI §5.4/§5.0 con le decisioni P-1..P-7: compito in `.ai-run/compito_planner_BI_blocco3_decisioni.txt` (locale, NON versionato: se manca, rigenerarlo da [[project-bi-blocco3-punti-aperti]]); rileggere prima `git diff` del lavoro parziale; poi togliere la precondizione 5 di §5.0, aggiornare §5.4.1/§6.1/§8; rileggere il diff; commit.
+2. Creare il branch `ai/oc-bi-blocco3`, compito per **oc-developer** (V4 Pro 0813 high, ~120 passi: blocco solo, regole di fermata, suite e confronto lanciati dal principale con `verifica.sh`), verifica del principale (log, diff, codice nuovo), merge, memoria.
+
+## ATTIVITA' SUCCESSIVE (in ordine)
+3. BI blocco 4 (documenti/manuale: des-manual-writer + principale, §5.5).
+4. VA blocchi 1-2 (des-developer Sonnet high, branch dedicato), poi FP blocchi 1-2 (des-developer), sonda P-1 eseguita dal principale (~8-10 min), l'utente legge le esecuzioni cambiate; fotografia nuova SOLO dall'utente.
+5. Estensione dei dwell (DW-9): Proposta di des-planner dai valori D1-D4 (+D2) con analoghi [S]; le scelte spettano all'utente (S32 usa valori artificiali 30 s e 600 s da rivedere).
+6. Revisione di L1 (Proposta separata, dopo FP).
+7. Analisi mirata di TUTTI gli interruttori (censimento read-only con agente Opus high, poi discussione congiunta; ogni rimozione con fotografia nuova installata dall'utente, una per volta; [[feedback-interruttori-criterio]]); proposta di aggiornamento della regola in AGENTS.md (spetta all'utente).
+8. Pulizie: cancellare i branch gia' mergiati `ai/des-bi-blocco1` e `ai/des-bi-blocco2` (con ok utente); segnalare al manutentore dei registri le 22+ incoerenze della Proposta dati §7; verificare il fornitore Reka se si ripete una revisione lunga.
 
 ## Stato a fine sessione (2026-11-07, ProArt, branch `analysis/dce-dcs-persistence`) — AGGIORNATO in serata
 Nessun codice del motore toccato. Commit della giornata: `94b391c9` (3 Proposte + sonde + memoria), `26b0ad76` (3 revisioni oc-reviewer), `2e8d34e7` (correzioni minori di oc-planner, estratti sonde, costi), `c7ccfb1e` (agente `oc-researcher` + prova di ricerca web). Working tree pulito, NIENTE pushato. Nessun esecutore codice lanciato.
@@ -23,12 +45,12 @@ Nessun codice del motore toccato. Commit della giornata: `94b391c9` (3 Proposte 
 ## Ordine di esecuzione deciso
 BI -> VA -> ripresa di FP-5 (illustrata in dettaglio con esempi) -> blocchi FP -> estensione dei dwell (DW-9). Conteggi attesi (da riconciliare, vedi sotto): BI B+6/+27/+42, VA B+65/+74 (BI-planner) oppure B+23/B+32 con B=dopo BI (VA-planner); FP 4815/4829 sulla base 4795. Confronto: 1009 identiche + NEW (20 S32 + 32 S35 + 32 S34 + 40 S33).
 
-## STATO A FINE SESSIONE (2026-11-08, ProArt, branch `analysis/dce-dcs-persistence`, niente pushato)
+## STATO A FINE SESSIONE (2026-11-08, ProArt, branch `analysis/dce-dcs-persistence`, push fatto il 2026-11-08 sera con il commit di questa memoria)
 - Commit della sessione dopo c7ccfb1e/81f92846: `809cf357` (blocco 0 BI: Proposta dati + bozze di ricerca L1-L7/M1 + BI allineata + costi), `61df9437` (BI blocco 1 su `ai/des-bi-blocco1`, des-developer Sonnet high), `a74d7505` (merge del blocco 1), `c50fa60d` (memoria), piu' il commit di chiusura. Branch `ai/des-bi-blocco1` mergiato (si puo' cancellare); `ai/des-bi-blocco2` NON esiste piu' (era vuoto): ricrearlo dal commit di chiusura prima di lanciare.
 - **Decisioni dati prese** (dettaglio in [[project-bi-dati-decisioni]]): metro del Maverick = diametro <= 304,8 mm E massa <= 304 kg (lunghezza esclusa); Mistral tactical False; Kh-22N anti_ship; KD-63 cruise; Kh-29/Kh-58/Kh-31P True; ancora Harpoon 515,25 kg; grigie AGM-88, Kh-25MP/MPU, RB-05A/E False, Kormoran True. 32 True/20 False.
 - **BI blocco 1 FATTO e verificato**: suite `Ran 4801 OK (skipped=7)`, confronto `UNCHANGED (1009)`, `compared 1029 runs: 20 difference lines` (le 20 = NEW S32-DWELL: l'atteso corretto E' 1029/20, non 1009 puro). Costi ricerca: L1-L7 0,196 $, M1 0,371 $ (in Costi_Deleghe); costo del blocco 1 (des-developer) e del planner Opus non registrati (Pro).
 
-## PROSSIMI PASSI (in ordine)
+## (SUPERATO, di inizio giornata 2026-11-08) PROSSIMI PASSI
 1. **BI blocco 2** (fire control + risolutore, interruttore `BI_AD_TARGET_RULE` spento): compito gia' scritto in `.ai-run/compito_bi_blocco2.txt` (non versionato: se manca, rigenerarlo dal §5.3 della BI). Prima: ricreare il branch `ai/des-bi-blocco2` dal commit corrente, working tree pulito; poi des-developer Sonnet high (conferma utente; proposto). Atteso: suite ~4822, confronto `compared 1029: 20`, sonda B-1 (accendere la regola: cambiano ESATTAMENTE le 6 S19AD `tor_rear`). Poi verifica del principale (suite+confronto+sonda), merge.
 2. BI blocco 3 (scenario S35-ADTGT, +32 NEW) e blocco 4 (documenti, manuale); poi VA (blocchi 4860/4869), poi riprendere FP-5 (da illustrare in dettaglio con esempi) e FP-6..FP-10 una per volta, riscrivere il blocco 1 di FP (punti 8 e 10, precondizioni, esiti attesi) e poi i blocchi FP; infine estensione dwell (DW-9).
 3. Correggere `Rapporti/Sonde_Finestre_Passaggio/LEGGIMI.md` e `probe_switch_on.py` (P-1 con FP-3 (a): al piu' le 44 AFTER_PASS cambiano).

@@ -18,12 +18,20 @@ eseguita).
   D1-D6 di quel documento; metro del Maverick: diametro <= 304,8 mm **e** massa <= 304 kg, lunghezza esclusa; valori
   per il blocco 1 nel suo §10.2). Allineati qui §2.2, §2.3, §2.5, BI-2 e BI-7 (note), §5.0-§5.2 (test 5), §6.1, §7,
   §8; nessuna decisione BI-1..BI-12 cambiata.
+- **Blocchi 1 e 2 ESEGUITI e mergiati** (merge `a74d7505` e `4803424b`, `des-developer`; suite 4829).
 - **Blocco 3 (2026-11-08)**: riferimenti di §5.0, §5.4, §5.5 riverificati sul checkout dopo il merge `4803424b`; la
-  verifica ha trovato due attese contraddette dal codice e cinque parametri non fissati, raccolti in **§5.4.1
-  (P-1..P-7, APERTI)**: il blocco 3 non si esegue finche' l'utente non li decide.
-- **Esecutore previsto**: `des-developer` (Claude Sonnet, sforzo alto: risolutore, interruttore, registri). Alternativa:
-  `oc-developer`. L'esecutore segue §5 cosi' com'e'; se il codice reale non corrisponde (righe, firme, esiti) si ferma e
-  riferisce. Il blocco 0 (ricerca dati) **non** e' dell'esecutore: e' una ricerca con fonti (§5.1).
+  verifica aveva trovato due attese contraddette dal codice e cinque parametri non fissati (P-1..P-7). **L'utente li ha
+  decisi tutti il 2026-11-08** (§5.4.1): nave delle varianti navali = `FF 1135M Rezky` (P-1 (a)), sensore `sea`
+  dichiarato di test sull'A-10C (P-2 (a)), asserzione 2 = "meno AGM-65D lanciati da acceso" (P-3 (a)), 15 test (P-4
+  (b)), `land_cruise` = configurazione della sonda S-b (P-5 (a)), granularita' per seme/totale e asserzione 11 (P-6),
+  nomi dei seed (P-7). §5.4 e' riscritto di conseguenza con il **file di test completo** (§5.4.3), gia' eseguito
+  dall'analista fuori dal repo sul checkout attuale: 15 test OK, 32 chiavi della fotografia corrette [V]. **Il blocco 3 e'
+  eseguibile.**
+- **Esecutore previsto**: blocchi 1-2 `des-developer` (eseguiti); **blocco 3 `oc-developer`** (DeepSeek V4 Pro,
+  OpenCode; scelta dell'utente del 2026-11-08), sul branch `ai/oc-bi-blocco3`: il blocco 3 non tocca il motore, solo un
+  file di test nuovo e una riga (piu' la docstring) di `Scenario_Baseline`. L'esecutore segue §5 cosi' com'e'; se il
+  codice reale non corrisponde (righe, firme, esiti) si ferma e riferisce. Il blocco 0 (ricerca dati) **non** e'
+  dell'esecutore: e' una ricerca con fonti (§5.1).
 
 **Convenzioni**: **[V]** = verificato leggendo il codice (`file:riga`, checkout del 2026-11-07, HEAD `b20e39cf` piu' il
 working tree) o eseguendolo; **[I]** = ipotesi o conoscenza generale, **non** verificata nel repository ne' su fonti in
@@ -104,7 +112,7 @@ missili aerei non hanno nemmeno diametro o lunghezza. Il motore quindi fa fermar
 | Terrestre/navale (BI-5) | per **classe dell'intercettore** (`Ship` = navale, ogni altro = terrestre) | — |
 | Armi non a registro (BI-8) | comportamento precedente (`test:*`, `weapon=None`) | — |
 | Acceso (sonda B-1 dopo il blocco 2) | cambiano solo le esecuzioni in cui un colpo **escluso** e' stato fermato | **6** (S19AD `tor_rear`, semi 0-5) con BI-8 (a); **8** (piu' S2 `sead` 0 e 6) con BI-8 (b) |
-| Scenario (BI-10) | **S35-ADTGT** nuovo (S34 e' di VA): terrestre con Maverick, terrestre con cruise, navale con antinave, **navale con Maverick (caso "non fermato")**, interruttore spento/acceso: 4 x 2 x 4 semi | **+32 nuove** |
+| Scenario (BI-10) | **S35-ADTGT** nuovo (S34 e' di VA): terrestre con Maverick, terrestre con cruise, navale con antinave, **navale con Maverick (caso "non fermato")**, interruttore spento/acceso: 4 x 2 x 4 semi; nave delle varianti navali `FF 1135M Rezky` (P-1 del 2026-11-08, §5.4.1) | **+32 nuove** |
 | Ordine (BI-11) | prima questa Proposta, poi ripresa di FP-5 con esempi (superata: FP-5 decisa il 2026-11-08, (d); ordine attuale BI blocchi 3-4 -> VA blocchi 1-2 -> FP blocchi 1-2); ordine dei file con VA e FP in §6 | — |
 
 **Esito della sonda B-0** (§1.8, numeri letti dal log): 1029 esecuzioni, confronto invariato (0 DIFF); 397 colpi
@@ -114,8 +122,8 @@ colpi, Tor, S19AD `tor_rear`); gli altri sono armi della tabella di test (`test:
 
 **Dimensione stimata** [S] (aggiornata dopo le scelte): blocco 0 ricerca dati (nessun codice; eseguito); blocco 1 ~110 righe di
 dati nei registri (classe, flag, dimensioni di supporto dove trovate) + ~90 di test (6 test); blocco 2 ~120 righe di
-codice + ~320 di test (circa 21 test; eseguito: 28); blocco 3 ~380 righe di test (circa 15 test) + 3 righe della tabella della
-fotografia, **32 esecuzioni nuove**; blocco 4 documenti.
+codice + ~320 di test (circa 21 test; eseguito: 28); blocco 3 ~290 righe di test (**15 test**, file completo in §5.4.3)
++ 3 righe della tabella della fotografia e ~6 di docstring, **32 esecuzioni nuove**; blocco 4 documenti.
 
 ---
 
@@ -398,7 +406,7 @@ canna -> `gun`; siluri -> `torpedo`. Tutte non bersagli.
 | cannoni AA (Gepard, 2A38M, CIWS) come **intercettori** | intercettano missili e bombe guidate | intercettano solo le classi ammesse | la regola riguarda il colpo, non l'arma che intercetta |
 | cannoni AA contro **colpi** di cannone | no (`kind` gun) | no | — |
 | difese navali contro A2S | intercettano ogni missile | solo classi ammesse e `ad_detectable` | BI-6, BI-7 |
-| Maverick contro una nave (A-10C contro Arleigh Burke) | intercettabile | **mai** (flag fisso False, BI-6) | caso di prova "non fermato" di S35 |
+| Maverick contro una nave (A-10C contro Arleigh Burke) | intercettabile | **mai** (flag fisso False, BI-6) | caso di prova "non fermato" di S35 (in S35 la nave e' la `FF 1135M Rezky`, non il Burke: P-1, §5.4.1) |
 | ATGM (Kornet da BMP, Hellfire da elicottero) contro una forza con Tor | intercettabile | **escluso** | — |
 | AAM o SAM contro un aereo di un dominio con navi/veicoli `Anti_Missile` | intercettabile in teoria (difesa di dominio, `:3293-3301`) | **escluso** | B-0: non succede in nessuna esecuzione (§1.8) |
 | droni / munizioni circuitanti | non a registro come munizioni [V] | con R-BI-2 (dimensione) sarebbero bersagli | fuori perimetro |
@@ -802,6 +810,9 @@ scelta utente: raccomandata
 della Proposta VA (`Proposta_Allineamento_Volumi_DES_Pianificatore.md` §4.2) e S33 da FP; (ii) **quarta geometria**
 `naval_maverick_off/on` (A-10C con AGM-65D contro un Arleigh Burke: caso di prova "non fermato" della decisione BI-6).
 Totale **4 geometrie x 2 x 4 semi = 32 esecuzioni nuove** (§5.4).
+*Nota (2026-11-08)*: nelle due varianti navali la nave e' la `FF 1135M Rezky` e non l'Arleigh Burke (decisione P-1 (a),
+§5.4.1): con il V_I di 240 km del Burke la regola L1 vieta ogni intercettazione dei lanci da aereo; i nomi delle
+varianti non cambiano.
 
 ### BI-11 — Ordine dei lavori e FP-5
 
@@ -871,10 +882,12 @@ implementata (stessi test, righe ed esecuzioni).
 ## 5. Piano di revisione (decisioni dell'utente del 2026-11-07: BI-1 C+F, BI-2 (a), BI-3 (a), BI-4 (a), BI-5 (a), BI-6 (a) con Maverick fisso piccolo, BI-7 (a), BI-8 (a), BI-9 (a) W1, BI-10 (a) come S35, BI-11 (a), BI-12 (a))
 
 Tutte le decisioni sono prese e il blocco 0 (dati) e' eseguito e approvato (2026-11-07): il piano e' eseguibile dal
-blocco 1.
+blocco 1. Blocchi 1 e 2 eseguiti e mergiati il 2026-11-08; i punti P-1..P-7 del blocco 3 decisi dall'utente il
+2026-11-08 (§5.4.1): **il blocco 3 e' eseguibile** (esecutore `oc-developer`).
 
 ### 5.0 Precondizioni (l'esecutore le verifica e si ferma se mancano)
-1. Branch dedicato creato dalla sessione principale; `git status` pulito; nessun altro esecutore al lavoro su
+1. Branch dedicato creato dalla sessione principale (blocco 3: **`ai/oc-bi-blocco3`**, controllo con
+   `git branch --show-current`); `git status` pulito; nessun altro esecutore al lavoro su
    `Logic/Engagement_Resolver.py` o `Logic/Fire_Control.py` (§6).
 2. Il blocco 0 (dati) consegnato e approvato dall'utente (le decisioni BI-1..BI-12 sono registrate in §4): **fatto il
    2026-11-07**, `Proposta_Dati_Bersagli_Intercettabili.md` con le decisioni D1-D6 prese; l'esecutore controlla che il
@@ -890,8 +903,9 @@ blocco 1.
    (`Test/Scenario_Baseline.py:395-397`, chiusura `:398`) [V]; la suite di partenza da' `Ran 4829` `OK (skipped=7)` [V,
    `.ai-run/suite.log` del 2026-11-08 e `Rapporti/Rapporto_BI_blocco2_des-developer.md:41`]. Se uno di questi fatti non
    vale, fermarsi e riferire.
-5. **Solo blocco 3**: i punti P-1..P-7 di §5.4.1 sono stati decisi dall'utente e il testo di §5.4 e' stato aggiornato di
-   conseguenza. Finche' §5.4.1 dice "APERTI", il blocco 3 **non** si esegue.
+5. **Solo blocco 3**: esistono i simboli dei test e dei registri che il file nuovo importa o usa (elenco in §5.4.2,
+   "Cosa il file nuovo usa dal repo"); controllo con `grep -n`, nessuna modifica. Se uno manca o ha un'altra firma,
+   fermarsi e riferire.
 
 ### 5.1 Blocco 0 — ricerca dati (non codice; `oc-writer` o sessione principale con l'utente) — ESEGUITO
 
