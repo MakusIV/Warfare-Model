@@ -684,9 +684,8 @@ accesa in S33 `on`/`cas_on` (§2.9) non cambia ne' il numero delle esecuzioni ne
 ### 4.0.2 Coordinamento con BI e VA: colonna FP
 
 La tabella di coordinamento e' in BI §6.1 (`Proposta_Bersagli_Intercettabili_Difesa_Aerea.md:1127-1140`, riga `:1138`), che questo
-piano non modifica; la sua riga "scenari" riporta per la FP **"S33-PASSES (40)"**, valore della prima stesura di FP-8
-[V sul testo, 2026-11-08 sera]. Per l'esecutore della FP vale la colonna seguente; la riga di BI va corretta da chi
-aggiorna quella Proposta.
+piano non modifica; BI §6.1 e' gia' allineata alla colonna FP (commit `8c440dba`: riga "scenari" con S33-PASSES a 20
+esecuzioni e 13 test, righe FP blocco 1/2 della sequenza). Per l'esecutore della FP vale la colonna seguente.
 
 | Punto di contatto | FP (questo piano) |
 |---|---|
@@ -1183,7 +1182,9 @@ Classe nuova `TestDetectionPerPass(unittest.TestCase)` (logger mockato in `setUp
     gli stati.
 11. `test_without_legs_one_draw`: finestra `_window('b1', 'r1', range_a=1000.0, range_b=2000.0)` senza `legs`, con
     `pass_rng`: una `Detection` per direzione, `pass_rng.calls == 0`.
-12. `test_pass_rng_must_expose_random`: `pass_rng=object()` -> `TypeError`.
+12. `test_pass_rng_must_expose_random`: `ER.resolve_engagement(..., pass_rng=object())` -> `TypeError`: si chiama
+    `resolve_engagement`, non `_EngagementRun`, secondo lo schema di `TestDwellTimeInTheResolver._run` (che inoltra
+    `**kwargs` a `ER.resolve_engagement`), perche' la validazione di `pass_rng` e' in `resolve_engagement` (punto 11).
 13. `test_detection_time_in_pass` (FP-5 (d), funzione pura, esempio di §2.6): con `passes = [(200.0, 254.0), (380.0,
     434.0)]` e `times = [210.0, 390.0]`, `ER._detection_time_in_pass(passes, times, t)` vale 210.0 per t = 230.0, None
     per 300.0, 390.0 per 385.0, 390.0 per 400.0; l'esito "visto" (`x is not None and x <= t + ER.TIME_EPS`) e' True,
@@ -1337,8 +1338,8 @@ Funzioni del modulo:
   origin=CAS_TARGETS[prefix], prefix=prefix, sensors=VISUAL)` per `prefix` in `('ifvA', 'ifvB', 'ifvC')` e
   `F.Unit('vehicle', 'ZSU-57-2', 1, origin=ZSU_POSITION, prefix='ad')`; forza `Blue-CAS` identica a quella di
   `Test_Session_Scenarios_S32.build` (stessa riga `F.Unit('aircraft', 'A-10C Thunderbolt II', 4, origin=(-40_000.0,
-  0.0, 3_000.0), step=(0.0, 500.0), prefix='cas', loadout='Maverick/Gun CAS')`, `mil_category=F.AIR_UNIT`). `VISUAL`
-  e `MAVERICK` importati da `Test_Session_Scenarios_S19_Air_Defence` come in S32. Restituisce `(red, cas)`.
+  0.0, 3_000.0), step=(0.0, 500.0), prefix='cas', loadout='Maverick/Gun CAS')`, `mil_category=F.AIR_UNIT`). `DURATION`,
+  `IFV_IDS`, `VISUAL` e `MAVERICK` importati da `Test_Session_Scenarios_S19_Air_Defence` come in S32 (`:38-40`). Restituisce `(red, cas)`.
 - `run_variant(session_id, variant)` come quello di S32 (`:83-110`): geometria `'reentry'` = `build(with_ewr=False)`,
   rotta `REENTRY`, bersaglio GROUP `Red-Line` con `asset_ids=IFV_IDS`; geometria `'cas'` = `build_cas()`, rotta
   `CAS_ROUTE`, bersaglio GROUP `Red-Line` con `asset_ids=CAS_TARGET_IDS`; per entrambe `mission_type='CAS'`,

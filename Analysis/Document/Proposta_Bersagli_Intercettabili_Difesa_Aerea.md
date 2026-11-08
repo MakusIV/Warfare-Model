@@ -3,14 +3,17 @@
 **Stato: scelte utente registrate il 2026-11-07. TUTTE le decisioni BI-1..BI-12 prese** dall'utente il 2026-11-07
 (§4): tutte come raccomandato, tranne **BI-6 = (a) con il Maverick (famiglia AGM-65) fisso "piccolo"** (`ad_detectable`
 False contro ogni difesa, criterio esteso agli altri missili della stessa taglia) e **BI-9 confermata dopo la
-spiegazione di W1** (§3.2); **BI-11**: prima si esegue questa Proposta, poi si ripropone FP-5 con esempi; **BI-12 =
+spiegazione di W1** (§3.2); **BI-11**: prima si esegue questa Proposta, poi si ripropone FP-5 con esempi (superata: FP-5 decisa il 2026-11-08,
+opzione (d); §4, BI-11); **BI-12 =
 (a)**: il criterio di dimensione vale **solo per le difese navali**, per le terrestri contano solo le categorie
 (cruise/balistici) (§4.12, limite dichiarato [S]). Lo scenario nuovo e' rinominato **S35-ADTGT** (S34
 e' gia' riservato a `S34-BAND` della Proposta VA, §5.4). Sonda di sola lettura **B-0 eseguita** il 2026-11-07 sul
 ProArt (§1.8). Nessun file di codice o di test
 modificato; scritti solo questo documento, lo script e il LEGGIMI della sonda in
 `Analysis/Document/Rapporti/Sonde_Bersagli_Intercettabili/` e due ritocchi a
-`Proposta_Finestre_Per_Passaggio_Portata_Propria.md` (FP-4 decisa, FP-5 sospesa).
+`Proposta_Finestre_Per_Passaggio_Portata_Propria.md` (allora FP-4 decisa, FP-5 sospesa; dal 2026-11-08 tutte le
+decisioni FP-1..FP-10 sono prese, FP-5 = (d), e la Proposta FP e' riscritta e riletta, commit `8c440dba`, non ancora
+eseguita).
 - **Blocco 0 (ricerca dati) ESEGUITO e approvato il 2026-11-07**: `Proposta_Dati_Bersagli_Intercettabili.md` (decisioni
   D1-D6 di quel documento; metro del Maverick: diametro <= 304,8 mm **e** massa <= 304 kg, lunghezza esclusa; valori
   per il blocco 1 nel suo §10.2). Allineati qui §2.2, §2.3, §2.5, BI-2 e BI-7 (note), §5.0-§5.2 (test 5), §6.1, §7,
@@ -64,10 +67,10 @@ I missili che non rientrano in queste categorie **non** sono bersagli. Quindi:
 | L2 / L3 | priorita' di bersaglio e prelazione sul lanciatore di armi aria-superficie | `Logic/Engagement_Resolver.py:3106-3110`, `:2886` [V] |
 | R-INT | intercettazione solo con traccia del colpo e tempo di reagire; "lancio visto" se l'intercettore aveva gia' rilevato il lanciatore | `_in_time`, `Logic/Engagement_Resolver.py:3250-3274` [V] |
 | R1 / Hughes | saturazione per salva: i primi N colpi intercettabili sono fermati, il resto arriva al danno (modello a salve di Hughes) | `Logic/Engagement_Resolver.py:32-55`, `Block/Military.py:717-771` [V] |
-| FP / FP-5 | `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`; FP-5 = istante di rilevamento usato da R-INT (SOSPESA) | quel documento, §2.6 |
-| D-5 | Pd dipendente dalla permanenza nel volume, interruttore `D5_DWELL_TIME` (spento) | `Logic/Engagement_Resolver.py:519-525` [V] |
+| FP / FP-5 | `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`; FP-5 = istante di rilevamento usato da R-INT (allora SOSPESA; DECISA il 2026-11-08, opzione (d)) | quel documento, §2.6 |
+| D-5 | Pd dipendente dalla permanenza nel volume, interruttore `D5_DWELL_TIME` (spento) | `Logic/Engagement_Resolver.py:522-529` [V 2026-11-08, dopo il merge `4803424b`] |
 | VA | `Proposta_Allineamento_Volumi_DES_Pianificatore.md` (sfera del DES contro cilindro del pianificatore) | quel documento |
-| BI | questa Proposta: "bersagli intercettabili"; decisioni BI-1..BI-11, sonde B-0/B-1 | questo documento |
+| BI | questa Proposta: "bersagli intercettabili"; decisioni BI-1..BI-12, sonde B-0/B-1 | questo documento |
 
 **Ruoli** (usati in tutte le tabelle delle decisioni):
 
@@ -99,7 +102,7 @@ missili aerei non hanno nemmeno diametro o lunghezza. Il motore quindi fa fermar
 | Armi non a registro (BI-8) | comportamento precedente (`test:*`, `weapon=None`) | — |
 | Acceso (sonda B-1 dopo il blocco 2) | cambiano solo le esecuzioni in cui un colpo **escluso** e' stato fermato | **6** (S19AD `tor_rear`, semi 0-5) con BI-8 (a); **8** (piu' S2 `sead` 0 e 6) con BI-8 (b) |
 | Scenario (BI-10) | **S35-ADTGT** nuovo (S34 e' di VA): terrestre con Maverick, terrestre con cruise, navale con antinave, **navale con Maverick (caso "non fermato")**, interruttore spento/acceso: 4 x 2 x 4 semi | **+32 nuove** |
-| Ordine (BI-11) | prima questa Proposta, poi ripresa di FP-5 con esempi; ordine dei file con VA e FP in §6 | — |
+| Ordine (BI-11) | prima questa Proposta, poi ripresa di FP-5 con esempi (superata: FP-5 decisa il 2026-11-08, (d); ordine attuale BI blocchi 3-4 -> VA blocchi 1-2 -> FP blocchi 1-2); ordine dei file con VA e FP in §6 | — |
 
 **Esito della sonda B-0** (§1.8, numeri letti dal log): 1029 esecuzioni, confronto invariato (0 DIFF); 397 colpi
 fermati in **16** esecuzioni (S6 4, S16 4, S19AD 6, S2 2); l'unico missile **dei registri** fermato e' l'AGM-65D (36
@@ -108,7 +111,7 @@ colpi, Tor, S19AD `tor_rear`); gli altri sono armi della tabella di test (`test:
 
 **Dimensione stimata** [S] (aggiornata dopo le scelte): blocco 0 ricerca dati (nessun codice; eseguito); blocco 1 ~110 righe di
 dati nei registri (classe, flag, dimensioni di supporto dove trovate) + ~90 di test (6 test); blocco 2 ~120 righe di
-codice + ~320 di test (circa 21 test); blocco 3 ~380 righe di test (circa 15 test) + 3 righe della tabella della
+codice + ~320 di test (circa 21 test; eseguito: 28); blocco 3 ~380 righe di test (circa 15 test) + 3 righe della tabella della
 fotografia, **32 esecuzioni nuove**; blocco 4 documenti.
 
 ---
@@ -811,6 +814,10 @@ ripresa di FP-5 in `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`, ripropo
 dettaglio e con esempi, alla luce di quali colpi restano intercettabili. FP-5 resta SOSPESA fino ad allora. Ordine dei
 file rispetto a VA e FP: §6.
 
+*Nota a margine (2026-11-08): superata: FP-5 decisa il 2026-11-08 (opzione (d)), prima della fine di questa Proposta;
+non c'e' piu' una ripresa di FP-5. Ordine di esecuzione attuale: BI blocchi 3-4 -> VA blocchi 1-2 -> FP blocchi 1-2
+(BI blocchi 0-2 gia' eseguiti e mergiati), §6.1.*
+
 ### 4.12 BI-12 — Il criterio di dimensione vale anche per le difese terrestri? (NUOVA 2026-11-07, DECISA: (a))
 
 | Ruolo | Esempio |
@@ -1016,7 +1023,7 @@ Proposta dati §7, IR-21 (incoerenza di registro n. 21), da non correggere nel b
 - Nessuna costante tarata: le tre tabelle di 5.3.1 sono scelte di progetto [S] dichiarate nel commento.
 - Nomi stabili: nessuna unita' o variante della fotografia toccata in questo blocco.
 
-#### 5.3.5 Test del blocco 2 (circa 21)
+#### 5.3.5 Test del blocco 2 (circa 21; eseguito: 28)
 `Test/Test_Fire_Control.py` (circa 10, nuova classe `TestInterceptDomains`):
 1. AGM-65D (A-10C contro BMP-2) -> `intercept_domains == frozenset()` (tactical, flag fisso False);
 1bis. AGM-65D (A-10C contro un Arleigh Burke, uso A2S) -> `frozenset()`: il Maverick non e' bersaglio nemmeno delle
@@ -1045,7 +1052,7 @@ Proposta dati §7, IR-21 (incoerenza di registro n. 21), da non correggere nel b
 acceso, nessun `InterceptionEvent` da un Tor contro AGM-65D in una sessione minima; spento, almeno uno.
 
 #### 5.3.6 Esito atteso del blocco 2
-- Suite: base + circa 21 test, tutti OK (numero esatto dall'ESITO).
+- Suite: base + circa 21 test, tutti OK (numero esatto dall'ESITO). (Eseguito: 28; 4801 -> 4829.)
 - Confronto con la fotografia: **1009 identiche** (interruttore spento); le esecuzioni nuove gia' presenti fuori dalla
   fotografia (S32-DWELL, ed eventualmente S33) identiche a prima.
 - **Sonda B-1** (`probe_switch_on.py`, da scrivere dall'esecutore sul modello di
@@ -1095,7 +1102,8 @@ eseguito, il numero resta comunque S35 (nomi stabili, nessun riuso).
   Kh-29/Kh-58 (e ogni `tactical`/`arm`) non sono mai bersagli delle difese terrestri anche se di taglia simile al
   Kh-59, che lo e' perche' `cruise`.
 - `F4_Differenze_Scenari.md`: esito di B-1 e S35.
-- `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`: dopo il blocco 3, chi pianifica ripropone FP-5 (BI-11).
+- `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`: nessun intervento (voce superata: FP-5 decisa il 2026-11-08,
+  opzione (d), e Proposta FP gia' riscritta; non c'e' piu' una riproposta di FP-5 dopo il blocco 3).
 - `Piano_Implementazione_Missione.md` §5: riga di avanzamento.
 - `Proposta_Dati_Anti_Missile.md` e `Proposta_Regole_Allocazione_SAM.md`: nota di rimando (la regola 2 del 2026-09-28 e'
   ristretta dalla BI).
@@ -1106,7 +1114,7 @@ eseguito, il numero resta comunque S35 (nomi stabili, nessun riuso).
 
 | Proposta | Interazione | Ordine raccomandato |
 |---|---|---|
-| FP (finestre per passaggio) | FP-5 (istante di rilevamento per R-INT) perde il caso tipico: con R-BI accesa un A2G non e' piu' fermato da un SAM terrestre; R-INT resta per cruise/balistici e antinave (navali). L'opzione (d) di FP-5 (legata al passaggio) resta la coerente con FP-3 (a) ma diventa marginale. Il codice delle due regole e' disgiunto (FP: rilevamento e candidati; BI: filtro in `_on_resolve`); entrambe toccano `Logic/Engagement_Resolver.py` (conflitti di riga possibili, non di logica) | decisione BI-11: prima la BI, poi FP-5 riproposta; FP blocco 1 dopo la BI (§6.1) |
+| FP (finestre per passaggio) | FP-5 (istante di rilevamento per R-INT) perde il caso tipico: con R-BI accesa un A2G non e' piu' fermato da un SAM terrestre; R-INT resta per cruise/balistici e antinave (navali). L'opzione (d) di FP-5 (legata al passaggio) resta la coerente con FP-3 (a) ma diventa marginale. Il codice delle due regole e' disgiunto (FP: rilevamento e candidati; BI: filtro in `_on_resolve`); entrambe toccano `Logic/Engagement_Resolver.py` (conflitti di riga possibili, non di logica) | decisione BI-11: prima la BI, poi FP-5 riproposta (superata: FP-5 decisa il 2026-11-08, (d)); FP blocco 1 dopo la BI e la VA (§6.1) |
 | D-5 (dwell) | nessuna: la D-5 non tocca R-INT (`Logic/Engagement_Resolver.py:163`, "nessun dwell sul tracciamento dei colpi") | indipendente |
 | VA (sfera contro cilindro, decisioni prese) | VA cambia il volume d'ingaggio delle armi al lancio (fascia/tetto nel tempo, quote all'istante con `altitudes`), non L1 ne' R-INT; logica indipendente dalla BI, ma stessi file (`Engagement_Resolver.py`, `Fire_Control.py`, `ShotSpec`, `UNITS`) | **dopo la BI** (BI-11 e VA §2.8); conflitti di riga in §6.1 |
 | Regole SAM / Dati Anti_Missile | la BI restringe la regola 2 del 2026-09-28; D, F, L1-L3 invariate | documenti aggiornati al blocco 4 |
@@ -1120,18 +1128,22 @@ Stato delle altre Proposte [V sui documenti]: **VA** (`Proposta_Allineamento_Vol
 decisioni prese (VA-1 sfera ∩ fascia; VA-2 (d), filtro di quota ricalcolato alla quota dell'istante di tiro con la
 keyword `altitudes` della fire control, rilevata per introspezione, e rinvio VA-2.1 (i); VA-3 (b) tetto assoluto
 `max_target_z` per le armi d'aereo; VA-6 (a); VA-7 interruttore `VA_ENGAGEMENT_ALTITUDE_BAND`; scenario S34-BAND a 8
-varianti) e fissa gia' l'ordine **BI -> VA** (VA §2.8, precondizione 2 di VA §4.0); **FP** ha FP-5 sospesa (BI-11).
+varianti) e fissa gia' l'ordine **BI -> VA** (VA §2.8, precondizione 2 di VA §4.0); **FP** ha tutte le decisioni
+FP-1..FP-10 prese (FP-5 = (d), decisa il 2026-11-08: BI-11 superata) e la Proposta riscritta e riletta (commit
+`8c440dba`), non ancora eseguita.
 
-Punti di contatto [V sui piani scritti: VA §4.1.2-§4.1.4, §4.2, §6; FP §4.1-§4.2; nessuno dei tre e' eseguito]:
+Punti di contatto [V sui piani scritti: VA §4.1.2-§4.1.4, §4.2, §6; FP §4.1-§4.2; BI blocchi 0-2 eseguiti e mergiati
+(merge `4803424b`), BI blocchi 3-4, VA e FP non eseguiti; righe del codice ricontrollate il 2026-11-08 sul checkout
+dopo il merge `4803424b`]:
 
 | File / punto | BI | VA (volumi allineati) | FP (finestre per passaggio) | Come si compongono |
 |---|---|---|---|---|
-| `Logic/Engagement_Resolver.py`, interruttori dopo `D5_DWELL_TIME` (`:519-525`) | `BI_AD_TARGET_RULE` | `VA_ENGAGEMENT_ALTITUDE_BAND`, subito dopo quello della BI (VA §4.1.2 punto 1) | `FP_PER_PASS_DETECTION` | in coda, nell'ordine di esecuzione |
-| `ShotSpec` (`:587-650`), campi in coda | `intercept_domains` (dopo `stock_per_round`) | `min_altitude`, `max_altitude`, `max_target_z`, **in coda dopo `intercept_domains`** (VA §4.1.2 punto 2) | — | BI prima; validazioni nello stesso ordine |
+| `Logic/Engagement_Resolver.py`, interruttori dopo `D5_DWELL_TIME` (`:522-529`; `BI_AD_TARGET_RULE` gia' presente a `:531-535`) | `BI_AD_TARGET_RULE` | `VA_ENGAGEMENT_ALTITUDE_BAND`, subito dopo quello della BI (VA §4.1.2 punto 1) | `FP_PER_PASS_DETECTION` | in coda, nell'ordine di esecuzione |
+| `ShotSpec` (`:599-671`), campi in coda | `intercept_domains` (dopo `stock_per_round`) | `min_altitude`, `max_altitude`, `max_target_z`, **in coda dopo `intercept_domains`** (VA §4.1.2 punto 2) | — | BI prima; validazioni nello stesso ordine |
 | `_EngagementRun.__init__` | `self.ad_target_rule` | `self.altitude_band`, `self.fire_control_knows_altitudes` | `pass_rng` e passaggi | righe vicine, indipendenti |
-| `_on_resolve` (`:3291`, `:3350`) | filtro `_admissible` | — | — (FP-5 tocca `_detection_time_of` `:3187-3193` / `_in_time`) | nessun conflitto |
+| `_on_resolve` (`:3318`, filtro a `:3396`) | filtro `_admissible` | — | — (FP-5 tocca `_detection_time_of` `:3229-3235` / `_in_time`) | nessun conflitto |
 | `_call_fire_control`, `_fire_control`, `_schedule_next`, `_in_range_at`, `_range_entry`, introspezione | — | quote all'istante, rinvio, fascia/tetto nel tempo (**nuova schedulazione**) | `_detect_direction`, fine del candidato | VA e FP sulle stesse funzioni di schedulazione: FP dopo VA |
-| `Logic/Fire_Control.py` `shot_spec_for` (`:745-790`) | `intercept_domains=intercept_domains_for(weapon)` | tre argomenti di quota | — | stesso costruttore: argomenti in coda, BI prima |
+| `Logic/Fire_Control.py` `shot_spec_for` (`:819-865`) | `intercept_domains=intercept_domains_for(weapon)` | tre argomenti di quota | — | stesso costruttore: argomenti in coda, BI prima |
 | `Logic/Fire_Control.py` `make_registry_fire_control` (protocollo `altitudes`, chiave di memoizzazione con le quote dell'istante), `restrict_by_policy` (quattro varianti per introspezione), docstring "Quota" | — (la BI non li tocca: `intercept_domains` si calcola in `shot_spec_for`) | **si'** (VA §4.1.3 punti 1, 3, 4); `in_altitude_envelope`, `rank_weapons` invariati | — | solo VA; **correzione della stesura precedente**, che diceva "Fire_Control invariato per VA" |
 | `Logic/Fire_Control.py` costanti e funzioni nuove | `AD_TARGET_DOMAINS`, `AD_SIZE_GATED_NAVAL`, `AD_DETECTABLE_DEFAULT`, `munition_class`, `intercept_domains_for` | — | — | solo BI |
 | `Test/Scenario_Fixtures.py` | non modificato (BI-8 (a): `SHOTS` invariate) | il testo del piano VA usa `route_for` con la terza coordinata (`:584`) e lascia `SHOTS` senza quote (§4.1.4); **nessuna modifica esplicita** trovata nel piano [V sul testo; da ricontrollare se il piano VA cambia] | — | nessun conflitto atteso |
@@ -1142,26 +1154,26 @@ Punti di contatto [V sui piani scritti: VA §4.1.2-§4.1.4, §4.2, §6; FP §4.1
 I conflitti sono **di riga** (stesse zone di testo), non di logica: nessuna regola legge i campi delle altre (un colpo
 con `intercept_domains` e quote e' trattato da VA al lancio e dalla BI all'impatto).
 
-**Ordine** (BI-11 e VA §2.8): **BI blocchi 0-3 -> VA blocchi 1-2 -> ripresa di FP-5 -> FP blocchi 1-2 -> estensione
-dei dwell a SAM/AAA**. Mai due esecutori insieme su `Logic/Engagement_Resolver.py` o `Logic/Fire_Control.py`; il
-blocco 0 della BI (ricerca dati, senza codice) e' eseguito (2026-11-07). Ogni piano successivo rilegge le
-righe citate (precondizioni gia' scritte nei tre piani).
+**Ordine** (BI-11 e VA §2.8; FP-5 decisa il 2026-11-08, nessuna ripresa): **BI blocchi 3-4 -> VA blocchi 1-2 -> FP
+blocchi 1-2 -> estensione dei dwell a SAM/AAA**; BI blocchi 0-2 gia' eseguiti e mergiati (blocco 0 il 2026-11-07,
+blocchi 1-2 il 2026-11-08, merge `a74d7505` e `4803424b`). Mai due esecutori insieme su `Logic/Engagement_Resolver.py`
+o `Logic/Fire_Control.py`. Ogni piano successivo rilegge le righe citate (precondizioni gia' scritte nei tre piani).
 
 **Suite e confronto lungo la sequenza** (B = `Ran` della suite sul checkout di partenza, letto dall'ESITO, mai stimato):
 
 | Dopo | Suite | Confronto (oltre alle 1009 identiche, 0 DIFF) |
 |---|---|---|
-| base | `Ran B` | NEW: 20 S32-DWELL |
-| BI blocco 1 | `B + 6` | invariato |
-| BI blocco 2 | `B + 27` (circa 21 test) | invariato; sonda B-1 (interruttore BI acceso): cambiano solo le 6 S19AD `tor_rear` |
-| BI blocco 3 | `B + 42` (circa 15 test) | NEW: + 32 S35-ADTGT |
-| VA blocco 1 (base VA = `B + 42`) | `B + 65` (23 test, VA §4.1.7) | invariato (20 S32 + 32 S35 NEW) |
-| VA blocco 2 | `B + 74` (9 test, VA §4.2.4: `Ran B_VA + 32` complessivi) | NEW: + 32 S34-BAND |
+| base | `Ran B` (B = 4795 [V], `Rapporti/Rapporto_BI_blocco1_des-developer.md:43`) | NEW: 20 S32-DWELL |
+| BI blocco 1 | `B + 6` = 4801 [V] | invariato |
+| BI blocco 2 | `B + 34` = 4829 [V] (eseguito: 28 test, non i "circa 21" del piano; `Rapporti/Rapporto_BI_blocco2_des-developer.md:41`) | invariato; sonda B-1 (interruttore BI acceso): cambiano solo le 6 S19AD `tor_rear` [V] |
+| BI blocco 3 | `B + 49` [S] (circa 15 test; ~4844) | NEW: + 32 S35-ADTGT |
+| VA blocco 1 (base VA = `B + 49` [S]) | `B + 72` [S] (23 test, VA §4.1.7; ~4867) | invariato (20 S32 + 32 S35 NEW) |
+| VA blocco 2 | `B + 81` [S] (9 test, VA §4.2.4: `Ran B_VA + 32` complessivi; ~4876) | NEW: + 32 S34-BAND |
 | FP blocco 1 (base FP = `B_FP`, letta dall'ESITO dopo VA blocco 2) | `B_FP + 30` (30 test, FP §4.0.1) | invariato (20 S32 + 32 S35 + 32 S34 NEW) |
 | FP blocco 2 | `B_FP + 43` (13 test di S33, FP §4.0.1) | NEW: + 20 S33-PASSES (4 varianti x 5 semi); totale `compared 1113 runs: 104 difference lines` |
 
-I conteggi della BI non cambiano con l'ordine BI -> VA (la BI viene prima); quelli della VA partono da `B + 42`, quelli
-della FP da `B_FP`. Le
+I conteggi della BI non cambiano con l'ordine BI -> VA (la BI viene prima); quelli della VA partono da `B + 49` [S], quelli
+della FP da `B_FP` (valori ~4844, ~4867, ~4876 coerenti con FP §4.0.1). Le
 esecuzioni S35 non dipendono dall'interruttore VA (spento di default): restano identiche alla loro cattura dopo VA,
 come VA §2.8 si aspetta. Se l'utente invertisse l'ordine (VA prima), `intercept_domains` andrebbe in coda dopo i campi
 di VA, `shot_spec_for` e gli interruttori si comporrebbero all'inverso e le base di suite si scambierebbero: nessun
