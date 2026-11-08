@@ -1,6 +1,6 @@
 ---
 name: project-bi-blocco3-punti-aperti
-description: BI blocco 3 (S35-ADTGT) non eseguibile finche' non sono decisi P-1..P-7 (BI §5.4.1); P-1 decisa (Rezky); revisione di L1 rinviata
+description: BI blocco 3 (S35-ADTGT) FATTO e mergiato il 2026-11-08 sera (fa6bc1d8): suite 4844, confronto 1061:52; P-1..P-7 tutte decise (Rezky); revisione di L1 rinviata
 metadata:
   type: project
 ---
@@ -25,3 +25,6 @@ Il 2026-11-08 le sonde del planner (commit 551f774b) hanno mostrato che il blocc
 
 **Why:** evitare uno scenario su regola contestata; criterio utente sugli interruttori (vedi [[feedback-interruttori-criterio]]).
 **How to apply:** presentare un punto per volta (vedi [[feedback-presentazione-decisioni]]); dopo P-1..P-7 far aggiornare §5.4 al des-planner, committare, poi creare il branch e preparare il compito per oc-developer.
+
+
+**FATTO (2026-11-08 sera):** oc-developer (V4 Pro 0813, Baidu, 47 richieste, 0,1823 $) ha eseguito il blocco 3 sul branch `ai/oc-bi-blocco3`; verificato dal principale (file S35 identico al piano, suite `Ran 4844 OK (skipped=7)`, confronto `UNCHANGED (1009)` e `compared 1061 runs: 52 difference lines`, 32 chiavi S35 e 20 S32); merge `fa6bc1d8`. Il branch `ai/oc-bi-blocco3` si puo' cancellare con l'ok dell'utente. Prossimo: BI blocco 4 (documenti), poi VA 1-2, FP 1-2.

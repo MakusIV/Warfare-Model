@@ -18,7 +18,9 @@ metadata:
 - **Delega**: BI blocco 3 con **oc-developer** (scelta dell'utente), non des-developer. Comandi `oc` SEMPRE dalla root del repo (`cd ~/Sviluppo/Warfare-Model`); D2 era stata lanciata col modello predefinito Flash. Fornitore di GLM 5.3 = Reka da `prezzi_fornitori.py` dinamico (ammesso #1, quantizzazione 'unknown'; nessun errore osservato).
 - Costi in `Rapporti/Costi_Deleghe.md` (reviewer 0,9183 $ rispetto a 0,5 $ stimato).
 
-## ATTIVITA' DA CONCLUDERE (prossima sessione, in ordine)
+## AGGIORNAMENTO 2026-11-08 notte: BI BLOCCO 3 FATTO E MERGIATO (fa6bc1d8, oc-developer, suite 4844, confronto 1061:52; branch `ai/oc-bi-blocco3` da cancellare con ok utente). Le attivita' 1-2 qui sotto sono COMPLETATE; la prossima e' la 3 (BI blocco 4). Nuova base: suite 4844, confronto 1061:52.
+
+## ATTIVITA' DA CONCLUDERE (prossima sessione, in ordine) — vedi aggiornamento sopra
 1. **Riprendere il des-planner** per completare BI §5.4/§5.0 con le decisioni P-1..P-7: compito in `.ai-run/compito_planner_BI_blocco3_decisioni.txt` (locale, NON versionato: se manca, rigenerarlo da [[project-bi-blocco3-punti-aperti]]); rileggere prima `git diff` del lavoro parziale; poi togliere la precondizione 5 di §5.0, aggiornare §5.4.1/§6.1/§8; rileggere il diff; commit.
 2. Creare il branch `ai/oc-bi-blocco3`, compito per **oc-developer** (V4 Pro 0813 high, ~120 passi: blocco solo, regole di fermata, suite e confronto lanciati dal principale con `verifica.sh`), verifica del principale (log, diff, codice nuovo), merge, memoria.
 
