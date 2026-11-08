@@ -898,7 +898,7 @@ blocco 1. Blocchi 1 e 2 eseguiti e mergiati il 2026-11-08; i punti P-1..P-7 del 
    `intercept_domains`) [V], `:3333-3337` (conteggio dei colpi intercettabili) [V], `:3396-3397` (filtro con
    `_admissible`) [V]. Se sono slittate per l'esecuzione di FP o VA, cercare i punti per contenuto e riferire.
 4. **Solo blocco 3** (aggiunta del 2026-11-08): i simboli dei blocchi 1-2 su cui il blocco 3 poggia esistono con questi
-   nomi e firme (elenco con righe in §5.4, "Cosa il blocco 3 usa dai blocchi 1-2"); `Test/Test_Session_Scenarios_S33.py`,
+   nomi e firme (elenco con righe in §5.4.2, "Cosa il blocco 3 usa dai blocchi 1-2"); `Test/Test_Session_Scenarios_S33.py`,
    `_S34.py`, `_S35.py` **non** esistono [V]; la tupla `Scenario_Baseline.UNITS` termina con S32-DWELL
    (`Test/Scenario_Baseline.py:395-397`, chiusura `:398`) [V]; la suite di partenza da' `Ran 4829` `OK (skipped=7)` [V,
    `.ai-run/suite.log` del 2026-11-08 e `Rapporti/Rapporto_BI_blocco2_des-developer.md:41`]. Se uno di questi fatti non
@@ -1089,217 +1089,553 @@ acceso, nessun `InterceptionEvent` da un Tor contro AGM-65D in una sessione mini
   (`S19AD/S19-<0..5>/tor_rear`, §1.8), nessun'altra; in ciascuna, zero `InterceptionEvent` del Tor e piu' colpi al danno.
   Le 351 intercettazioni antinave di S6/S16 restano identiche. Una differenza fuori elenco = fermarsi e riferire.
 
-### 5.4 Blocco 3 — scenario S35-ADTGT
+### 5.4 Blocco 3 — scenario S35-ADTGT (esecutore `oc-developer`, branch `ai/oc-bi-blocco3`)
 
-**Riferimenti riverificati il 2026-11-08** sul checkout dopo il merge `4803424b` (blocchi 0-2 eseguiti), HEAD `c69ff954`:
-[V] = letto o eseguito in quella data. Le sonde citate come "S-a".."S-d" sono di sola lettura e sono descritte in
-§5.4.1. **Prima di eseguire leggere §5.4.1: con il codice attuale alcune attese del piano non sono ottenibili come
-scritte (P-1, P-3) e alcuni parametri non sono fissati (P-2, P-4..P-7). Il blocco 3 non si esegue finche' l'utente non
-li ha decisi** (precondizione 5 di §5.0).
+**Riferimenti riverificati il 2026-11-08** sul checkout dopo il merge `4803424b` (blocchi 0-2 eseguiti), HEAD `dd07fd16`
+(il codice del motore e dei test e' quello di `c69ff954`: i commit successivi toccano solo documenti e memoria):
+[V] = letto o eseguito in quella data. Le decisioni dell'utente sui punti P-1..P-7 sono in §5.4.1; la sonda **S-e**
+(file di test definitivo di §5.4.3 eseguito dall'analista **fuori dal repo**, da una cartella temporanea, sul checkout
+attuale) ne misura l'esito: **15 test OK, 32 sessioni (8 per seed), cattura simulata della fotografia con 32 chiavi
+corrette e nessun errore** [V].
+
+**Che cosa scrive il blocco 3** (e nient'altro):
+1. `Code/Dynamic_War_Manager/Source/Test/Test_Session_Scenarios_S35.py`, **nuovo**, con il contenuto **esatto** di
+   §5.4.3 (da copiare tale e quale: e' gia' stato eseguito, non va riprogettato);
+2. `Code/Dynamic_War_Manager/Source/Test/Scenario_Baseline.py`: una riga di commento e una tupla in coda a `UNITS` e
+   una sezione di docstring, testo esatto in §5.4.4;
+3. il rapporto `Analysis/Document/Rapporti/Rapporto_BI_blocco3_oc-developer.md` (modello `Rapporti/TEMPLATE.md`).
+
+Il blocco 3 **non** tocca il motore ne' i registri: nessun interruttore nuovo (usa `BI_AD_TARGET_RULE`, default `False`
+invariato), nessuna estrazione RNG aggiunta o riordinata, nessuna costante del motore. Unica costante nuova: il sensore
+`sea` di 20 km dell'A-10C, **VALORE DI TEST [S]** dichiarato nel test (P-2), non un dato. Il core resta indifferente al
+simulatore (nessun import dell'adapter DCS).
 
 Nome: **S35**, non S34: `S34-BAND` e `Test/Test_Session_Scenarios_S34.py` sono gia' nel piano della Proposta VA
 (`Proposta_Allineamento_Volumi_DES_Pianificatore.md` §4.2), S33-PASSES in quello della FP. Se uno dei due non verra'
 eseguito, il numero resta comunque S35 (nomi stabili, nessun riuso). Oggi nessuno dei tre file di test esiste [V].
 
-**Cosa il blocco 3 usa dai blocchi 1-2** (esistono con questi nomi e firme [V]; il blocco 3 non li modifica: scrive
-solo il file di test nuovo e la riga di `Scenario_Baseline`):
+#### 5.4.1 Decisioni del 2026-11-08 (ex punti aperti)
+
+Evidenza: sonde di sola lettura del 2026-11-08 sul ProArt, con il motore del checkout (script nella cartella temporanea
+della sessione, non nel repo; nessun file del repo modificato). Le sonde S-a..S-d sono quelle che hanno portato alle
+decisioni; la S-e misura il file definitivo.
+- **S-a** [V] (`land_tactical`, la chiamata di S19AD `:144`, session_id `S35-ADTGT-0..3`): spento 14 AGM-65D lanciati, 6
+  intercettazioni del Tor, 3 BMP-2 distrutti in ogni seed; acceso 8 AGM-65D, 0 intercettazioni, 3 BMP-2 distrutti in ogni
+  seed; perdite Blue spento 1/1/0/1, acceso 2/4/4/3; Tor distrutto in tutti gli 8 casi.
+- **S-b** [V] (`land_cruise`, seed `P-0`): 2 Su-34 'Anti-Ship' da (-150 km, 0, 6000 m), rotta fino a x = -60 km e
+  ritorno, missione Strike, `weapons=('Kh-59',)`, bersaglio un `Oil_Tank` (`category='Farp'`) in (0, 0) ristretto con
+  `Target.asset_ids` e ROE `only_designated`, Buk a 1 km dal deposito nella stessa forza: spento e acceso identici, 4
+  Kh-59 lanciati, 2 intercettazioni.
+- **S-c** [V] (navale con l'Arleigh Burke, nave a x = 60 km, seed `P-0`): F/A-18C 'Anti-Ship', missione Anti_Ship: 2
+  AGM-84A lanciati, **0 intercettazioni** spento e acceso (regola L1: V_I del Burke 240 km); A-10C, missione CAS:
+  **nessun** Maverick lanciato (anche con un sensore `sea` dichiarato di 20 km), la nave spara ESSM.
+- **S-d** [V] (navale con la `'FF 1135M Rezky'`, nave a x = 60 km, prefisso `ddg`, seed `P-0`): F/A-18C: 4 AGM-84A, 4
+  intercettazioni spento e acceso (identici); A-10C con sensore `sea` dichiarato di 20 km: spento 4 AGM-65D e 2
+  intercettazioni, acceso 2 AGM-65D e 0 intercettazioni, un colpo al danno sulla nave; A-10C senza sensore dichiarato:
+  nessun lancio.
+- **S-e** [V] (file definitivo di §5.4.3, seed `S35-ADTGT-0..3`, nave con prefisso `ff`): stessi numeri di S-a, S-b e
+  S-d **in ogni seed**; dettaglio e distanze di lancio nella tabella "Misure della sonda S-e" in §5.4.3.
+- V_I delle navi con un'arma `Anti_Missile` (`Mobile.air_defense_volume`, `Asset/Mobile.py:1396`: per le navi contano
+  solo le `MISSILES_SAM`) [V, sonda]: Arleigh Burke IIa e CG-65 240 km; Type 052C 200 km; Moskva, Piotr Velikiy,
+  Kuznetsov 150 km; FFG-46 74 km; Type 054A 70 km; CVN-70..75 50 km; Forrestal e Tarawa 19 km; Neustrashimy 15 km;
+  Type 052B e Type 071 13 km; Rezky, Grisha, Molniya 12 km.
+
+Decisioni:
+- **P-1 — Nave delle varianti navali. DECISA dall'utente il 2026-11-08: (a)** la `'FF 1135M Rezky'` per **entrambe**
+  le varianti navali (`naval_*` con AGM-84A e `naval_maverick_*`), al posto dell'Arleigh Burke; i nomi delle varianti
+  non cambiano. Fatti [V]: `Asset/Ship_Data.py:1095-1135` (modello `:1098`; armi `:1114-1120`: `MISSILES_SAM`
+  `SA-N-4-Gecko`, `CIWS` `AK-630`); `SA-N-4-Gecko` portata 12 km, quote 10-6000 m, task `['Anti_Air']`
+  (`Asset/Ship_Weapon_Data.py:1123-1137`) -> V_I raggio 12 000 m, fascia relativa 10-6000 m [V, sonda S-e:
+  `_interception_zone` = (12000.0, 10.0, 6000.0)]; `AK-630` task `['Anti_Missile', 'Anti_Air']`
+  (`Asset/Ship_Weapon_Data.py:1571-1585`): e' l'unico intercettore (regola D). Lanci misurati in S-e: AGM-84A a 49,9 e
+  23,3 km dalla nave, Maverick al primo lancio a 14,7 km (12,2 km nel seed 2), tutti **fuori** dai 12 km; il secondo
+  lancio di Maverick in `naval_maverick_off` parte da dentro (11,05 km; 8,6 km nel seed 2) e non e' intercettabile (L1):
+  le 2 intercettazioni sono quelle della prima salva. *Motivo*: unica scelta che rende possibili le asserzioni 6, 7 e 10
+  con lanci da aereo e una sola nave. *Scartate*: (b) due navi diverse (piu' parti mobili, nessun vantaggio misurato);
+  (c) tenere il Burke cambiando le attese (le varianti navali non mostrerebbero piu' la regola); (d) lancio sotto i 15 m
+  della base del V_I (artificioso). **L1 non cambia in questo blocco**: e' una decisione dell'utente del 2026-09-28
+  (`Proposta_Regole_Allocazione_SAM.md` §7.7 `:413`, Q2 `:417`) che l'utente rivedra' in una Proposta separata; se L1
+  cambiera', S35 (con S19AD) andra' rivisto insieme alla fotografia.
+- **P-2 — Sensore `sea` dell'A-10C. DECISA dall'utente il 2026-11-08: (a)** sensore dichiarato nello scenario,
+  `F.Unit(..., sensors={'sea': DECLARED_SEA_RANGE_M})` con `DECLARED_SEA_RANGE_M = 20_000.0`, come `VISUAL` di S19AD
+  (`Test/Test_Session_Scenarios_S19_Air_Defence.py:49`); costante dichiarata **VALORE DI TEST [S]** nel codice e nel
+  rapporto (non e' un dato dell'A-10C; il numero non entra nelle asserzioni). Fatti [V]: `declare_sensor`
+  (`Test/Scenario_Fixtures.py:271-303`) accetta i modi di `DETECTION_MODES = ('ground', 'air', 'sea')`
+  (`Asset/Mobile.py:82`); `Unit.sensors` `Test/Scenario_Fixtures.py:504`. *Motivo*: il registro dell'A-10C non ha
+  sensore marittimo (`detection_range('sea')` None) e senza sensore l'A-10C non lancia (S-d). *Scartata*: (b) un altro
+  aereo con Maverick e sensore marittimo a registro (non cercato; cambierebbe il lanciatore del caso BI-6).
+- **P-3 — Asserzione 2. DECISA dall'utente il 2026-11-08: (a)** "in `land_tactical_on` si lanciano **meno** AGM-65D che
+  in `land_tactical_off`, **per seme**" (S-a ed S-e: 14 -> 8 in ogni seed). *Motivo*: e' l'effetto diretto della regola
+  (nessun Maverick e' piu' fermato, ne servono meno); "piu' danni ai BMP" e' falsa (3 BMP-2 distrutti in tutti i casi).
+  *Scartate*: (b) BMP distrutti `_on` >= `_off` (vera ma vacua: uguaglianza); (c) perdite Blue `_on` >= `_off` (non
+  effetto diretto); (d) geometria nuova con meno attaccanti (da misurare). **Regola di fermata**: se in un seed
+  l'asserzione non regge, l'esecutore si ferma e riferisce i numeri per seed (Maverick lanciati spento/acceso), **senza**
+  cambiare l'asserzione.
+- **P-4 — Numero di test. DECISA dall'utente il 2026-11-08: (b)** 15 test = 12 asserzioni + 3 premesse non vacue (in
+  ogni variante interessata si lanciano AGM-65D, Kh-59, AGM-84A), sul modello di `test_mavericks_are_launched` di S19AD
+  (`:148-154`). `Ran` atteso della suite: 4829 + 15 = **4844** (B + 49 con B = 4795 di §6.1) [V sulla sonda S-e per i 15
+  test; il totale della suite si legge dall'ESITO]. Elenco dei 15 metodi in §5.4.3. *Motivo*: premesse esplicite (un
+  test "0 intercettazioni" e' vacuo se non parte nessun colpo), coerente con §6.1. *Scartate*: (a) 12 test senza
+  premesse; (c) numero libero all'esecutore.
+- **P-5 — Costruzione di `land_cruise`. DECISA dall'utente il 2026-11-08: (a)** la configurazione della sonda S-b,
+  scritta per intero in `build_land_cruise` (§5.4.3): forza `Red-Depot` (`F.make_force`, `GROUND_UNIT` di default) con
+  `Red-Depot/tank0` = `make_structure(..., (0, 0), category='Farp', asset_type='Oil_Tank')` e `Red-Depot/sam0` =
+  `make_vehicle(..., '9K37-Buk', (1000, 0))`; forza `Blue-STR` di 2 Su-34 `loadout='Anti-Ship'` (2 Kh-59 + 2 R-73,
+  `Asset/Aircraft_Loadouts.py:3417-3431`) da (-150 km, 0, 6000 m), passo (0, 500 m), prefisso `str`; rotta
+  `[(-60 km, 0), (-150 km, 0)]`; missione `Strike`, `weapons=('Kh-59',)`, bersaglio `Target(GROUP 'Red-Depot',
+  asset_ids=('Red-Depot/tank0',))`, ROE `only_designated`. Esito [V, S-b ed S-e]: 4 Kh-59 e 2 intercettazioni del Buk,
+  identici spento e acceso, in ogni seed; lancio a 90,8 km dal Buk (fuori dal V_I di 35 km). *Motivo*: configurazione
+  gia' misurata, nessuna scelta lasciata all'esecutore. *Scartata*: (b) costruzione libera entro i vincoli.
+- **P-6 — Per seme o in totale, e asserzione 11. DECISA dall'utente il 2026-11-08**: asserzioni 3 e 4 **per seme**;
+  asserzione 9 sul **totale** dei 4 semi; asserzione 11 = **(b)**: `outcome.interception_events == ()` nelle sole
+  varianti in cui tutte le salve offensive hanno domini vuoti (`land_tactical_on`, `naval_maverick_on`), per seme, come
+  `TestS19AdTargetRule` (`:275`). Le asserzioni 1 e 8 erano gia' "in ogni seme"; 5 e 7 confrontano per seme. Per le
+  asserzioni 6 e 10, rese possibili da P-1 e non coperte dal testo della decisione, il piano applica la stessa logica
+  (scelta di coerenza dell'analista, segnalata all'utente): **6 per seme** (come la 4: un missile ammesso fermato da una
+  difesa), **10 sul totale** (come la 9: stessa geometria Maverick-nave, e nel seed 2 il primo lancio e' a soli ~200 m
+  fuori dal V_I); entrambe reggono comunque in ogni seed [V, S-e]. **Regola di fermata**: se la 3 o la 4 non reggono in
+  un seed, fermarsi e riferire i numeri per seed. *Motivo*: le asserzioni "positive" sul caso ammesso valgono in ogni
+  seed misurato; il totale solo dove l'evento e' raro. *Scartata* per la 11: (a) spia sugli `EngagementResult` (fallisce
+  con gruppi di armi miste e aggiunge codice).
+- **P-7 — Nomi dei seed. DECISA dall'utente il 2026-11-08**: `SEEDS = [f'S35-ADTGT-{index}' for index in range(4)]`
+  (modello S32 `:45-46`), chiavi della fotografia `S35-ADTGT/S35-ADTGT-<i>/<variante>`. *Motivo*: nomi stabili gia'
+  usati dalle sonde S-a ed S-e. *Scartate*: nessuna alternativa proposta.
+
+#### 5.4.2 Riferimenti [V] e vincoli
+
+**Cosa il blocco 3 usa dai blocchi 1-2** (esistono con questi nomi e firme [V]; il blocco 3 non li modifica):
 - `Logic/Engagement_Resolver.py`: `BI_AD_TARGET_RULE = False` `:535` (commento `:531-534`); `AD_DOMAINS =
   frozenset({'land', 'naval'})` `:538`; `ShotSpec.intercept_domains: Optional[FrozenSet[str]] = None` `:635`
   (validazione `:668-671`); `_EngagementRun.__init__` copia l'interruttore in `self.ad_target_rule` `:1833`, quindi
   l'interruttore va sostituito **attorno all'intera sessione** (prima della costruzione del run), come fa
-  `TestS19AdTargetRule`; `_ad_domain(self, shadow) -> str` `:3189-3194`; `_admissible(self, shadow, salvo) -> bool`
-  `:3196-3202`; conteggio dei colpi intercettabili `:3333-3337`; filtro `:3396-3397`.
+  `TestS19AdTargetRule` e come fa `run_variant` di §5.4.3; `_ad_domain(self, shadow) -> str` `:3189-3194`;
+  `_admissible(self, shadow, salvo) -> bool` `:3196-3202`; `_may_intercept` (regola L1) `:3204-3227`; conteggio dei
+  colpi intercettabili `:3333-3337`; filtro `:3396-3397`.
 - `Logic/Fire_Control.py`: `AD_LAND, AD_NAVAL` `:293`, `AD_TARGET_DOMAINS` `:294`, `AD_SIZE_GATED_NAVAL` `:295`,
-  `AD_DETECTABLE_DEFAULT` `:297`; `munition_class(weapon: _Weapon) -> Optional[str]` `:761-796`;
-  `intercept_domains_for(weapon: _Weapon) -> Optional[FrozenSet[str]]` `:799-816`; `shot_spec_for` `:819-865` (passa
-  `intercept_domains` a `:865`).
+  `AD_DETECTABLE_DEFAULT` `:297`; `munition_class` `:761-796`; `intercept_domains_for` `:799-816`; `shot_spec_for`
+  `:819-865`; `make_registry_fire_control(altitude_filter=True, memoize=True)` `:881`.
 - Registri: AGM-65D `munition_class` `'tactical'`, `ad_detectable` False (`Asset/Aircraft_Weapon_Data.py:2546-2550`),
-  task `['Anti_Ship', 'Strike', 'SEAD']` `:2554`, portata 15 km; Kh-59 `'cruise'`, True (`:3477-3481`), task
-  `['Anti_Ship', 'Strike', 'SEAD']` `:3485`, portata 90 km e `max_speed` 310 m/s `:3490-3491`; AGM-84A `'anti_ship'`, True
-  (`:2256-2260`), task `['Anti_Ship']` `:2264`.
-- Domini prodotti dalla fire control dei registri [V, sonda]: AGM-65D `frozenset()`, Kh-59 `{'land', 'naval'}`, AGM-84A
-  `{'naval'}`; `time_of_flight` del Kh-59 = 0,5 x 90 000 / 310 = 145,2 s.
+  portata 15 km; Kh-59 `'cruise'`, True (`:3477-3481`), portata 90 km; AGM-84A `'anti_ship'`, True (`:2256-2260`). Domini
+  prodotti dalla fire control dei registri [V, sonda]: AGM-65D `frozenset()`, Kh-59 `{'land', 'naval'}`, AGM-84A
+  `{'naval'}`.
 
-**Modello di scenario da riusare** [V]:
-- S19AD, `Test/Test_Session_Scenarios_S19_Air_Defence.py`: import `:39-46` (`MissionRules, Target, TargetKind,
-  TargetProvenance`; `Engagement_Resolver as ER`; `make_registry_fire_control`; `Scenario_Fixtures as F`; `BOTH_HOLD` da
-  `Test_Session_Scenarios_S10_S18`); costanti `VISUAL`, `MAVERICK`, `DURATION = 1_800.0`, `OVERFLIGHT`, `TOR_REAR_X =
-  3_000.0`, `TOR_ZONE_M` `:49-61`, `IFV_IDS` `:68`; `build` `:71-78`; `run_variant(session_id, defence_model, defence_x,
-  defence_y, attackers, points, targets_ifv_only=False, runner=F.run)` `:81-99` (missione CAS, `weapons=(MAVERICK,)`,
-  bersaglio GROUP 'Red-Line'; con `targets_ifv_only` bersaglio ristretto con `Target.asset_ids` e ROE
-  `only_designated` `:87-90`); la variante `tor_rear` della fotografia e'
-  `run_variant(s, '9K331-Tor', TOR_REAR_X, 300.0, 4, OVERFLIGHT)` `:144`; `_interceptions(outcome, asset_id)`
-  `:118-119`; premessa non vacua `test_mavericks_are_launched` `:148-154`.
-- Interruttore acceso in una sessione: `TestS19AdTargetRule` `:253-275`:
-  `with patch.object(ER, 'BI_AD_TARGET_RULE', True): cls.on = run_variant('S19-0', ...)` `:265-266`; asserzione di zero
-  intercettazioni `self.assertEqual(outcome.interception_events, ())` `:275`. La classe NON e' in `Scenario_Baseline`.
-- Ciclo seed x varianti: S32, `Test/Test_Session_Scenarios_S32.py`: import `:30-40` (riusa costanti di S19AD `:39-40`);
-  `SEEDS = [f'S32-DWELL-{index}' ...]` `:45-46`; `VARIANT_SPEC`/`VARIANTS` `:48-55`; `run_variant` `:83-109`
-  (interruttore sostituito attorno all'intera esecuzione; spia su `ER.resolve_engagement` `:90-93`, `:105` per avere gli
-  `EngagementResult`); `setUpClass` `:131-140` (ciclo esterno sui seed, interno sulle varianti, stesso `session_id` per
-  le varianti di un seed). S32 sostituisce l'attributo su `ER_MODULE = sys.modules[ER.__name__]` `:43`, che e' lo stesso
-  oggetto modulo di `ER` (S19AD usa `ER` direttamente): entrambe le forme vanno bene.
-- `Test/Scenario_Fixtures.py`: `Unit(kind, model, count, origin, step, prefix, sensors, loadout)` `:484-505`
-  (`kind` 'vehicle' | 'aircraft' | 'ship'; `sensors` = sensore dichiarato di test, v. `declare_sensor` `:271-303`);
-  `build_force(force_id, side, units, *, mil_category=GROUND_UNIT, category=None)` `:508-536`; `make_force` `:410`,
-  `add_assets` `:425`, `make_vehicle` `:350`, `make_structure(block, asset_id, position, *, category=None,
-  asset_type=None)` `:468-481` (esempio di deposito: `Test/Test_Session_Scenarios_S23.py:467`); `AIR_UNIT` `:256`,
-  `NAVAL_UNIT` `:257`; `missions_for(force, points, *, mission_type, target, ..., weapons=(), rules=None, ...)`
-  `:710-715`; `run` `:944-950`; `run_with_salvos` `:953-974`; `losses_of` `:1108`; `interceptions_by` `:1148`.
-- `InterceptionEvent` (`Logic/Engagement_Resolver.py:772-802`): campi `time, asset_id, interceptions, force_id,
-  salvo_ids, weapon`; `weapon` e' l'arma AD **dell'intercettore**, non l'arma fermata; `salvo_ids` hanno senso solo
-  dentro l'`EngagementResult` che li ha prodotti (`salvos` e `interception_events`, `:1039-1048`) e indicano TUTTE le
-  salve del gruppo, non quella fermata (P-6).
-- Politica d'armi F7a (`Context/Context.py:662-683`): contro la classe `surface` (deposito) ammette armi con task
-  `CAS`/`Strike` (missione CAS), `Strike` (Strike) o `Pinpoint_Strike`/`Strike` (Pinpoint_Strike); contro `ship` le
-  stesse piu' `Anti_Ship` (missione Anti_Ship, che **non** ammette `surface` ne' `air_defence`). Quindi [V]: il Kh-59 sul
-  deposito richiede una missione CAS, Strike o Pinpoint_Strike; l'AGM-84A sulla nave richiede la missione `Anti_Ship`;
-  l'AGM-65D sulla nave e' ammesso con CAS (come S19AD), Strike o Anti_Ship.
+**Cosa il file nuovo usa dal repo** (precondizione 5 di §5.0; controllo con `grep -n`, righe [V] su HEAD `dd07fd16`):
+
+| Simbolo | Dove | Controllo |
+|---|---|---|
+| `MissionRules`, `Target`, `TargetKind`, `TargetProvenance` | `Command/Mission_Types.py:876`, `:455`, `:91`, `:101` | `grep -n "^class " .../Command/Mission_Types.py` |
+| `Engagement_Resolver as ER`, `ER.BI_AD_TARGET_RULE` | `Logic/Engagement_Resolver.py:535` | `grep -n "^BI_AD_TARGET_RULE" ...` |
+| `make_registry_fire_control` | `Logic/Fire_Control.py:881` | `grep -n "def make_registry_fire_control" ...` |
+| `F.LoggerSilencer`, `F.Unit`, `F.build_force`, `F.make_force`, `F.add_assets`, `F.make_structure`, `F.make_vehicle`, `F.group_target`, `F.missions_for`, `F.run`, `F.AIR_UNIT`, `F.NAVAL_UNIT` | `Test/Scenario_Fixtures.py:216`, `:484-505`, `:508-536`, `:410`, `:425`, `:468-481`, `:350`, `:623`, `:710-715`, `:944-950`, `:256`, `:257` | `grep -n "^def \|^class \|^AIR_UNIT\|^NAVAL_UNIT" .../Scenario_Fixtures.py` |
+| `BOTH_HOLD` | `Test/Test_Session_Scenarios_S10_S18.py:110` | `grep -n "^BOTH_HOLD" ...` |
+| `DURATION`, `MAVERICK`, `OVERFLIGHT`, `TOR_REAR_X`, `run_variant(session_id, defence_model, defence_x, defence_y, attackers, points, targets_ifv_only=False, runner=F.run)` | `Test/Test_Session_Scenarios_S19_Air_Defence.py:51`, `:50`, `:55`, `:60`, `:81-99` | `grep -n "^DURATION\|^MAVERICK\|^OVERFLIGHT\|^TOR_REAR_X\|^def run_variant" ...` |
+| modello `'FF 1135M Rezky'` | `Asset/Ship_Data.py:1098` | `grep -n "FF 1135M Rezky" .../Asset/Ship_Data.py` |
+| modelli `'Su-34'` (loadout `'Anti-Ship'`), `'F/A-18C Hornet'` (`'Anti-Ship'`), `'A-10C Thunderbolt II'` (`'Maverick/Gun CAS'`) | `Asset/Aircraft_Loadouts.py:3380` e `:3417`, `:673`, `:1674` | `grep -n '"Anti-Ship"\|"Maverick/Gun CAS"' .../Aircraft_Loadouts.py` |
+| modelli `'9K37-Buk'`, `'9K331-Tor'` | `Asset/Vehicle_Data.py:4472`, `:4297` | `grep -n "'9K37-Buk'\|'9K331-Tor'" .../Asset/Vehicle_Data.py` |
+
+Il file nuovo importa da S19AD solo costanti e la funzione `run_variant` (rinominata `s19_run_variant`), **non** il
+modulo ne' le sue classi: `unittest` non raccoglie due volte i test di S19AD.
 
 **Vincoli dalla fotografia** [V]:
 - `Scenario_Baseline.capture` registra OGNI `run_session` eseguita nel `setUpClass` dell'unita'
-  (`Test/Scenario_Baseline.py:603-614`, `:648-702`) e la nomina per **occorrenza del session_id** nell'unita'
-  (`_by_occurrence` `:227-232`, `:685-686`; oltre l'ottava occorrenza il nome diventa `#8`, `#9`, ...). Quindi: per ogni
-  seed **esattamente 8** sessioni con lo **stesso** `session_id`, nell'ordine dei nomi della riga `UNITS`; nessun'altra
-  `run_session` nel `setUpClass`. La replica per il determinismo (asserzione 12) va in un **metodo di test**: i metodi
-  delle classi di scenario non sono eseguiti dalla fotografia (`:23-25`).
+  (`Test/Scenario_Baseline.py:602-614` registratore, `:648-702` cattura) e la nomina per **occorrenza del session_id**
+  nell'unita' (`_by_occurrence` `:227-232`; oltre l'ottava occorrenza il nome diventa `#8`, `#9`, ...). Quindi: per ogni
+  seed **esattamente 8** sessioni con lo **stesso** `session_id`, nell'ordine dei nomi della riga `UNITS` (= ordine di
+  `VARIANT_SPEC`); nessun'altra `run_session` nel `setUpClass`. La replica per il determinismo (asserzione 12) sta in un
+  **metodo di test**: i metodi delle classi di scenario non sono eseguiti dalla fotografia (`:20-25`). Sonda S-e [V]:
+  `run_session` chiamata 8 volte per ciascuno dei 4 seed; cattura simulata (unita' S35 sola, in memoria) -> 32 chiavi
+  `S35-ADTGT/S35-ADTGT-<i>/<variante>`, nessuna `#`, `errors` vuoto.
 - `verifica.sh confronto` usa `--summary --quiet` (`tools/ai/verifica.sh:26-28`): le righe `NEW` non sono stampate ne' nel
   log ne' nell'ESITO; il totale `difference lines` conta una riga per esecuzione NEW (`Test/Scenario_Baseline.py:801`,
-  `:948`), quindi l'exit code del confronto e' **1** anche quando tutto e' come atteso.
+  `:948`), quindi l'exit code del confronto e' **1** anche quando tutto e' come atteso. Formato verificato sull'ultimo
+  confronto (`.ai-run/confronto.log` del 2026-11-08: `compared 1029 runs: 20 difference lines`; nella cattura
+  `grep -cE '^  "S32-DWELL/' .ai-run/confronto_capture.json` -> `20`) [V].
+- Politica d'armi F7a (`Context/Context.py:662-683`) [V]: il Kh-59 sul deposito richiede CAS, Strike o Pinpoint_Strike
+  (si usa Strike); l'AGM-84A sulla nave richiede `Anti_Ship`; l'AGM-65D sulla nave e' ammesso con CAS (come S19AD).
 
-**Scenario** (testo del piano; i rimandi P-n sono i punti di §5.4.1):
-- `Test/Test_Session_Scenarios_S35.py` nuovo, classe `TestS35AirDefenceTargets(F.LoggerSilencer, unittest.TestCase)`,
-  fire control dei registri (`make_registry_fire_control()`), 4 semi (nomi: P-7); variante -> (geometria, interruttore):
-  - `land_tactical_off` / `land_tactical_on`: geometria di S19AD `tor_rear` (4 A-10C, AGM-65D, 3 BMP-2, Tor arretrato):
-    la chiamata `run_variant(<seed>, '9K331-Tor', TOR_REAR_X, 300.0, 4, OVERFLIGHT)` di S19AD (`:144`), importata, con
-    l'interruttore sostituito attorno ad essa (`TestS19AdTargetRule` `:265-266`);
-  - `land_cruise_off` / `land_cruise_on`: 2 Su-34 con loadout che porta Kh-59 contro un deposito difeso da un Buk, lancio
-    fuori dai ~35 km del V_I. Fatti [V]: loadout esistenti con Kh-59 = Su-34 'Anti-Ship' (`Asset/Aircraft_Loadouts.py:3417-3431`,
-    2 Kh-59 + 2 R-73), Su-30 'Anti-Ship' (`:3322`), Tu-160 (`:3578`, bombardiere); nessuno porta **solo** Kh-59, quindi
-    arma designata `weapons=('Kh-59',)` come in S19AD; Buk = modello `'9K37-Buk'`, unica arma 9M38-SAM, 4 colpi, task
-    `Anti_Missile` (`Asset/Ground_Weapon_Data.py:2699-2713`), V_I di raggio 35 000 m e rilevamento aereo 85 km [V, sonda];
-    il Su-34 rileva a terra a 150 km [V, sonda]. Costruzione (posizione del Buk, tipo di deposito, missione,
-    restrizione del bersaglio): P-5;
-  - `naval_off` / `naval_on`: 2 F/A-18C (`'F/A-18C Hornet'`, loadout 'Anti-Ship', `Asset/Aircraft_Loadouts.py:673-704`,
-    2 AGM-84A + 2 AIM-9M, missione `Anti_Ship`) con AGM-84A contro un Arleigh Burke (`'USS Arleigh Burke IIa'`,
-    `Asset/Ship_Data.py:794`). **P-1: con il Burke nessuna intercettazione e' possibile (regola L1).**
-  - `naval_maverick_off` / `naval_maverick_on` (decisione BI-6): 2 A-10C con AGM-65D (loadout esistente
-    'Maverick/Gun CAS', `Asset/Aircraft_Loadouts.py:1674-1700`; il template dell'AGM-65D ha la riga `ship` con Pk > 0 [V]:
-    Ph x Pk|h = 0,8 contro il Burke, sonda; arma designata con la F7a come in S19AD, perche' il criterio Pk/costo
-    potrebbe preferire un'altra arma) contro lo stesso Arleigh Burke, lancio fuori dal V_I della nave: **caso di prova
-    "non fermato"**. **P-1 (L1) e P-2 (l'A-10C non ha sensore `sea`).**
-- Asserzioni (il piano diceva "circa 15"; l'elenco scritto ne contiene **12**, numerate qui senza cambiarne il
-  contenuto; quanti metodi di test: P-4):
-  1. `land_tactical_on`: 0 intercettazioni in ogni seme;
-  2. `land_tactical_on`: piu' danni ai BMP che in `_off` — **contraddetta dalla sonda S-a (P-3)**;
-  3. `land_tactical_off`: intercettazioni > 0 (come S19AD) (per seme o in totale: P-6);
-  4. `land_cruise_on`: intercettazioni > 0 (Kh-59 ammesso) (per seme o in totale: P-6);
-  5. `land_cruise_on`: intercettazioni uguali a `land_cruise_off` per seme;
-  6. `naval_on`: intercettazioni > 0 — **impossibile con il Burke (P-1)**;
-  7. `naval_on`: intercettazioni uguali a `naval_off` per seme (con il Burke: 0 = 0, vacua, P-1);
-  8. `naval_maverick_on`: **0** intercettazioni della nave sugli AGM-65D in ogni seme;
-  9. `naval_maverick_on`: almeno un colpo al danno sulla nave (per seme o in totale: P-6);
-  10. `naval_maverick_off`: intercettazioni > 0 (oggi la nave ferma il Maverick: e' la differenza che la variante deve
-      mostrare) — **impossibile con il Burke (P-1)**;
-  11. in ogni variante `_on` nessun `InterceptionEvent` su salve di armi con domini vuoti (come verificarlo: P-6);
-  12. determinismo per seme (replica in un metodo di test, v. vincoli sopra).
-- `Test/Scenario_Baseline.py`: riga in coda a `UNITS`, subito dopo S32-DWELL (`:395-397`) e prima della `)` di chiusura
-  (`:398`); oggi S33/S34 non ci sono [V] e, nell'ordine di §6.1, arriveranno dopo S35. Formato della tupla
-  `(nome, modulo, classe, metodi | None, funzione di nome di variante)` (`:263-265`; `None` = si esegue `setUpClass`),
-  preceduta da una riga di commento di sezione come le precedenti (`:395`):
-  `('S35-ADTGT', 'Test_Session_Scenarios_S35', 'TestS35AirDefenceTargets', None, _by_occurrence('land_tactical_off', 'land_tactical_on', 'land_cruise_off', 'land_cruise_on', 'naval_off', 'naval_on', 'naval_maverick_off', 'naval_maverick_on'))`.
-  Docstring del modulo: sezione nuova `## Bersagli intercettabili dopo la BI` dopo `## Permanenza nel volume dopo la D-5`
-  (`:176-181`) e prima di `## Uso` (`:183`), nello stile di quella sezione (interruttore spento, nessuna esecuzione
-  esistente cambia, unita' S35-ADTGT in coda, 8 varianti x 4 seed = 32 esecuzioni nuove, nessuna voce nuova nel
-  riassunto). Nomi stabili.
+#### 5.4.3 Il file di test (contenuto completo, da copiare)
 
-**Esito atteso e verifiche** (numeri da leggere nell'ESITO, mai stimati):
+Percorso: `Code/Dynamic_War_Manager/Source/Test/Test_Session_Scenarios_S35.py`. Contenuto esatto (274 righe; eseguito
+dall'analista nella sonda S-e: `Ran 15 tests ... OK`, ~9 s):
+
+```python
+"""Scenario S35 del motore di sessioni virtuali: quali colpi una difesa aerea puo' considerare bersagli (BI).
+
+Riproduzione di `Analysis/Document/Proposta_Bersagli_Intercettabili_Difesa_Aerea.md` (blocco 3, decisioni BI-1..BI-12
+del 2026-11-07 e P-1..P-7 del 2026-11-08). Con l'interruttore `Engagement_Resolver.BI_AD_TARGET_RULE` acceso un
+intercettore ferma un colpo solo se il suo dominio ('land' | 'naval') e' fra gli `intercept_domains` della ShotSpec
+(dichiarati dalla fire control dei registri); spento, nessun filtro, come prima. Esito QUALITATIVO (relazioni fra
+varianti), mai un numero calibrato.
+
+## S35-ADTGT (`TestS35AirDefenceTargets`)
+
+Quattro geometrie, ciascuna con l'interruttore spento (`_off`) e acceso (`_on`), 4 seed (nomi stabili nella fotografia,
+nell'ordine; stesso `session_id` per le 8 varianti di un seed). Fire control dei registri, `BOTH_HOLD`, 1800 s.
+
+  * `land_tactical`: 4 A-10C con AGM-65D contro 3 BMP-2 e un Tor arretrato (V_I 12 km), la variante `tor_rear` di
+    S19AD. Acceso: il Tor non ferma piu' i Maverick (classe 'tactical').
+  * `land_cruise`: 2 Su-34 'Anti-Ship' con Kh-59 designato (missione Strike) contro un deposito `Oil_Tank` e un Buk a
+    1 km (V_I 35 km). Il cruise resta bersaglio delle difese terrestri: acceso = spento.
+  * `naval`: 2 F/A-18C 'Anti-Ship' con AGM-84A (missione Anti_Ship) contro una FF 1135M Rezky (V_I 12 km, AK-630 con
+    task 'Anti_Missile'). L'antinave resta bersaglio delle difese navali: acceso = spento.
+  * `naval_maverick`: 2 A-10C con AGM-65D designato (missione CAS, sensore `sea` dichiarato di test) contro la stessa
+    Rezky. Acceso: la nave non ferma piu' i Maverick (`ad_detectable` fisso False).
+
+La Rezky e non l'Arleigh Burke (decisione P-1 del 2026-11-08): con il V_I di 240 km del Burke la regola L1 vieta ogni
+intercettazione dei lanci da aereo. Il sensore `sea` di 20 km dell'A-10C e' un VALORE DI TEST [S] (P-2), non un dato:
+senza, l'A-10C non rileva la nave e non lancia.
+"""
+
+import unittest
+from unittest.mock import patch
+
+from Code.Dynamic_War_Manager.Source.Command.Mission_Types import MissionRules, Target, TargetKind, TargetProvenance
+from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+from Code.Dynamic_War_Manager.Source.Logic.Fire_Control import make_registry_fire_control
+from Code.Dynamic_War_Manager.Source.Test import Scenario_Fixtures as F
+from Code.Dynamic_War_Manager.Source.Test.Test_Session_Scenarios_S10_S18 import BOTH_HOLD
+from Code.Dynamic_War_Manager.Source.Test.Test_Session_Scenarios_S19_Air_Defence import (
+    DURATION, MAVERICK, OVERFLIGHT, TOR_REAR_X, run_variant as s19_run_variant)
+
+SEEDS_PER_SCENARIO = 4
+SEEDS = [f'S35-ADTGT-{index}' for index in range(SEEDS_PER_SCENARIO)]
+# variante -> (geometria, interruttore BI_AD_TARGET_RULE); l'ordine e' quello dei nomi nella riga di Scenario_Baseline.
+VARIANT_SPEC = {
+    'land_tactical_off': ('land_tactical', False),
+    'land_tactical_on': ('land_tactical', True),
+    'land_cruise_off': ('land_cruise', False),
+    'land_cruise_on': ('land_cruise', True),
+    'naval_off': ('naval', False),
+    'naval_on': ('naval', True),
+    'naval_maverick_off': ('naval_maverick', False),
+    'naval_maverick_on': ('naval_maverick', True),
+}
+VARIANTS = tuple(VARIANT_SPEC)
+
+KH59 = 'Kh-59'
+HARPOON = 'AGM-84A'
+TOR = 'Red-Line/ad0'            # Tor di S19AD (`build`, prefisso 'ad')
+DEPOT_TANK = 'Red-Depot/tank0'
+BUK = 'Red-Depot/sam0'
+SHIP_MODEL = 'FF 1135M Rezky'   # V_I 12 km (SA-N-4), intercettore AK-630 (task 'Anti_Missile')
+SHIP = 'Red-Navy/ff0'
+SHIP_X = 60_000.0
+
+# Sensore marittimo DICHIARATO DI TEST dell'A-10C [m]: VALORE DI TEST [S], non un dato del registro (che non ne ha);
+# serve solo a far rilevare la nave entro la portata del Maverick (15 km). Non entra in nessuna asserzione.
+DECLARED_SEA_RANGE_M = 20_000.0
+
+# land_cruise: 2 Su-34 a 6000 m da x = -150 km, virata a x = -60 km e ritorno (lancio dei Kh-59 a ~90 km dal Buk,
+# fuori dai suoi 35 km).
+CRUISE_ORIGIN = (-150_000.0, 0.0, 6_000.0)
+CRUISE_POINTS = [(-60_000.0, 0.0), (-150_000.0, 0.0)]
+# naval / naval_maverick: partenza a x = -40 km, 3000 m, sorvolo della nave fino a x = +80 km.
+NAVAL_ORIGIN = (-40_000.0, 0.0, 3_000.0)
+NAVAL_POINTS = [(SHIP_X + 20_000.0, 0.0)]
+
+
+def build_land_cruise(session_id: str):
+    """`land_cruise`: Su-34 con Kh-59 contro un deposito difeso da un Buk della stessa forza.
+
+    Bersaglio ristretto al deposito (`Target.asset_ids`) con ROE `only_designated`: i Su-34 non attaccano il Buk.
+    Restituisce `(deposito, attaccanti, outcome)`.
+    """
+    depot = F.make_force('Red-Depot', 'Red')
+    F.add_assets(depot, [
+        F.make_structure(depot, DEPOT_TANK, (0.0, 0.0), category='Farp', asset_type='Oil_Tank'),
+        F.make_vehicle(depot, BUK, '9K37-Buk', (1_000.0, 0.0))])
+    strike = F.build_force('Blue-STR', 'Blue', [
+        F.Unit('aircraft', 'Su-34', 2, origin=CRUISE_ORIGIN, step=(0.0, 500.0), prefix='str',
+               loadout='Anti-Ship')], mil_category=F.AIR_UNIT)
+    target = Target(kind=TargetKind.GROUP, target_id='Red-Depot', asset_ids=(DEPOT_TANK,),
+                    provenance=TargetProvenance.OBSERVED, observed_at=0.0)
+    missions = F.missions_for(strike, CRUISE_POINTS, mission_type='Strike', target=target, weapons=(KH59,),
+                              rules=MissionRules(roe='only_designated'))
+    outcome = F.run(session_id, [strike], [depot], make_registry_fire_control(), duration=DURATION,
+                    missions=missions, thresholds=BOTH_HOLD)
+    return depot, strike, outcome
+
+
+def build_naval(session_id: str, weapon: str):
+    """`naval` (`weapon` = AGM-84A: 2 F/A-18C, missione Anti_Ship) o `naval_maverick` (`weapon` = AGM-65D: 2 A-10C
+    con sensore `sea` dichiarato di test, missione CAS, arma designata) contro la Rezky. Restituisce
+    `(nave, attaccanti, outcome)`."""
+    navy = F.build_force('Red-Navy', 'Red', [
+        F.Unit('ship', SHIP_MODEL, 1, origin=(SHIP_X, 0.0), prefix='ff')], mil_category=F.NAVAL_UNIT)
+
+    if weapon == HARPOON:
+        attackers = F.build_force('Blue-AS', 'Blue', [
+            F.Unit('aircraft', 'F/A-18C Hornet', 2, origin=NAVAL_ORIGIN, step=(0.0, 500.0), prefix='as',
+                   loadout='Anti-Ship')], mil_category=F.AIR_UNIT)
+        missions = F.missions_for(attackers, NAVAL_POINTS, mission_type='Anti_Ship',
+                                  target=F.group_target('Red-Navy'))
+    else:
+        attackers = F.build_force('Blue-CAS', 'Blue', [
+            F.Unit('aircraft', 'A-10C Thunderbolt II', 2, origin=NAVAL_ORIGIN, step=(0.0, 500.0), prefix='cas',
+                   loadout='Maverick/Gun CAS', sensors={'sea': DECLARED_SEA_RANGE_M})], mil_category=F.AIR_UNIT)
+        missions = F.missions_for(attackers, NAVAL_POINTS, mission_type='CAS', target=F.group_target('Red-Navy'),
+                                  weapons=(MAVERICK,))
+
+    outcome = F.run(session_id, [attackers], [navy], make_registry_fire_control(), duration=DURATION,
+                    missions=missions, thresholds=BOTH_HOLD)
+    return navy, attackers, outcome
+
+
+def run_variant(session_id: str, variant: str):
+    """Una sessione della variante: `(blocco difeso, attaccanti, outcome)`. L'interruttore e' sostituito attorno
+    all'intera esecuzione (il run lo copia alla costruzione, `_EngagementRun.__init__`)."""
+    geometry, switch = VARIANT_SPEC[variant]
+
+    with patch.object(ER, 'BI_AD_TARGET_RULE', switch):
+        if geometry == 'land_tactical':
+            return s19_run_variant(session_id, '9K331-Tor', TOR_REAR_X, 300.0, 4, OVERFLIGHT)
+
+        if geometry == 'land_cruise':
+            return build_land_cruise(session_id)
+
+        return build_naval(session_id, HARPOON if geometry == 'naval' else MAVERICK)
+
+
+def _interceptions(outcome, asset_id: str) -> int:
+    return sum(e.interceptions for e in outcome.interception_events if e.asset_id == asset_id)
+
+
+def _launched(outcome, weapon: str) -> int:
+    return sum(e.rounds for e in outcome.ammunition_events if e.weapon == weapon)
+
+
+def _events(outcome):
+    """Munizioni, danni e intercettazioni con i loro istanti: la storia confrontata fra varianti e repliche."""
+    return ([(e.time, e.asset_id, e.weapon, e.rounds) for e in outcome.ammunition_events],
+            [(e.time, e.target_id, e.source_id, e.weapon, e.outcome, e.health_after) for e in outcome.damage_events],
+            [(e.time, e.asset_id, e.interceptions, e.force_id, e.weapon) for e in outcome.interception_events])
+
+
+class TestS35AirDefenceTargets(F.LoggerSilencer, unittest.TestCase):
+    """S35-ADTGT: con la regola BI accesa una difesa ferma solo i colpi del proprio dominio."""
+
+    SEEDS = SEEDS
+    VARIANTS = VARIANTS
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.runs = {variant: [] for variant in cls.VARIANTS}
+
+        # Ciclo esterno sui seed, interno sulle varianti: stesso `session_id` per le 8 varianti di un seed
+        # (la fotografia numera le esecuzioni per occorrenza del session_id nell'unita'). Nessun'altra sessione qui.
+        for session_id in cls.SEEDS:
+            for variant in cls.VARIANTS:
+                cls.runs[variant].append(run_variant(session_id, variant))
+
+    def _outcomes(self, variant: str):
+        return [outcome for _, _, outcome in self.runs[variant]]
+
+    # ── premesse non vacue (P-4 (b)) ──
+
+    def test_premise_mavericks_are_launched(self):
+        """Premessa: gli AGM-65D sono lanciati in ogni variante che li usa (totale sui seed)."""
+        for variant in ('land_tactical_off', 'land_tactical_on', 'naval_maverick_off', 'naval_maverick_on'):
+            with self.subTest(variant=variant):
+                self.assertGreater(sum(_launched(o, MAVERICK) for o in self._outcomes(variant)), 0)
+
+    def test_premise_kh59_are_launched(self):
+        """Premessa: i Kh-59 sono lanciati in `land_cruise_off/_on` (totale sui seed)."""
+        for variant in ('land_cruise_off', 'land_cruise_on'):
+            with self.subTest(variant=variant):
+                self.assertGreater(sum(_launched(o, KH59) for o in self._outcomes(variant)), 0)
+
+    def test_premise_harpoons_are_launched(self):
+        """Premessa: gli AGM-84A sono lanciati in `naval_off/_on` (totale sui seed)."""
+        for variant in ('naval_off', 'naval_on'):
+            with self.subTest(variant=variant):
+                self.assertGreater(sum(_launched(o, HARPOON) for o in self._outcomes(variant)), 0)
+
+    # ── asserzioni 1-12 ──
+
+    def test_land_tactical_on_the_tor_never_intercepts(self):
+        """1. Acceso: il Tor (difesa terrestre) non ferma gli AGM-65D (classe 'tactical'), in ogni seed."""
+        for seed, outcome in zip(self.SEEDS, self._outcomes('land_tactical_on')):
+            with self.subTest(session=seed):
+                self.assertEqual(_interceptions(outcome, TOR), 0)
+
+    def test_land_tactical_on_launches_fewer_mavericks(self):
+        """2. Acceso si lanciano MENO AGM-65D che spento, per seed (nessuno e' piu' fermato: ne servono meno)."""
+        for seed, off, on in zip(self.SEEDS, self._outcomes('land_tactical_off'), self._outcomes('land_tactical_on')):
+            with self.subTest(session=seed):
+                self.assertLess(_launched(on, MAVERICK), _launched(off, MAVERICK))
+
+    def test_land_tactical_off_the_tor_intercepts(self):
+        """3. Spento: il Tor ferma AGM-65D (comportamento precedente, come S19AD `tor_rear`), in ogni seed."""
+        for seed, outcome in zip(self.SEEDS, self._outcomes('land_tactical_off')):
+            with self.subTest(session=seed):
+                self.assertGreater(_interceptions(outcome, TOR), 0)
+
+    def test_land_cruise_on_the_buk_intercepts_the_kh59(self):
+        """4. Acceso: il Buk ferma i Kh-59 (classe 'cruise', bersaglio di ogni difesa), in ogni seed."""
+        for seed, outcome in zip(self.SEEDS, self._outcomes('land_cruise_on')):
+            with self.subTest(session=seed):
+                self.assertGreater(_interceptions(outcome, BUK), 0)
+
+    def test_land_cruise_switch_changes_nothing(self):
+        """5. Il cruise e' ammesso in entrambi gli stati: stessa storia (munizioni, danni, intercettazioni),
+        per seed."""
+        for seed, off, on in zip(self.SEEDS, self._outcomes('land_cruise_off'), self._outcomes('land_cruise_on')):
+            with self.subTest(session=seed):
+                self.assertEqual(_events(on), _events(off))
+
+    def test_naval_on_the_ship_intercepts_the_harpoons(self):
+        """6. Acceso: la Rezky ferma gli AGM-84A (classe 'anti_ship', bersaglio navale), in ogni seed."""
+        for seed, outcome in zip(self.SEEDS, self._outcomes('naval_on')):
+            with self.subTest(session=seed):
+                self.assertGreater(_interceptions(outcome, SHIP), 0)
+
+    def test_naval_switch_changes_nothing(self):
+        """7. L'antinave e' ammesso in entrambi gli stati: stessa storia, per seed."""
+        for seed, off, on in zip(self.SEEDS, self._outcomes('naval_off'), self._outcomes('naval_on')):
+            with self.subTest(session=seed):
+                self.assertEqual(_events(on), _events(off))
+
+    def test_naval_maverick_on_the_ship_never_intercepts(self):
+        """8. Acceso: la nave non ferma gli AGM-65D (Maverick fisso `ad_detectable` False, BI-6), in ogni seed."""
+        for seed, outcome in zip(self.SEEDS, self._outcomes('naval_maverick_on')):
+            with self.subTest(session=seed):
+                self.assertEqual(_interceptions(outcome, SHIP), 0)
+
+    def test_naval_maverick_on_hits_reach_the_ship(self):
+        """9. Acceso: almeno un AGM-65D arriva al danno sulla nave (totale sui seed)."""
+        hits = sum(1 for outcome in self._outcomes('naval_maverick_on') for e in outcome.damage_events
+                   if e.target_id == SHIP and e.weapon == MAVERICK)
+        self.assertGreater(hits, 0)
+
+    def test_naval_maverick_off_the_ship_intercepts(self):
+        """10. Spento: la nave ferma AGM-65D (comportamento precedente: e' la differenza che la variante mostra),
+        totale sui seed."""
+        self.assertGreater(sum(_interceptions(o, SHIP) for o in self._outcomes('naval_maverick_off')), 0)
+
+    def test_on_variants_with_excluded_shots_have_no_interception_event(self):
+        """11. Nelle varianti accese in cui tutte le salve offensive hanno domini vuoti nessun InterceptionEvent
+        (come TestS19AdTargetRule), per seed."""
+        for variant in ('land_tactical_on', 'naval_maverick_on'):
+            for seed, outcome in zip(self.SEEDS, self._outcomes(variant)):
+                with self.subTest(variant=variant, session=seed):
+                    self.assertEqual(outcome.interception_events, ())
+
+    def test_runs_are_deterministic(self):
+        """12. Determinismo: ogni variante di ogni seed, rieseguita, ripete la stessa storia. In un metodo di test,
+        non in `setUpClass`: la fotografia esegue solo `setUpClass` e non deve vedere le repliche."""
+        for index, seed in enumerate(self.SEEDS):
+            for variant in self.VARIANTS:
+                with self.subTest(variant=variant, session=seed):
+                    _, _, replica = run_variant(seed, variant)
+                    self.assertEqual(_events(replica), _events(self.runs[variant][index][2]))
+
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+**I 15 test** (nomi dei metodi; "asserzione n" = numerazione storica del piano; misure [V] dalla sonda S-e):
+
+| # | Metodo | Asserzione | Atteso (corpo) | Granularita' | Misura S-e |
+|---|---|---|---|---|---|
+| 1 | `test_premise_mavericks_are_launched` | premessa | AGM-65D lanciati > 0 in `land_tactical_off`, `land_tactical_on`, `naval_maverick_off`, `naval_maverick_on` | totale per variante (subTest) | 56 / 32 / 16 / 8 |
+| 2 | `test_premise_kh59_are_launched` | premessa | Kh-59 lanciati > 0 in `land_cruise_off`, `land_cruise_on` | totale per variante | 16 / 16 |
+| 3 | `test_premise_harpoons_are_launched` | premessa | AGM-84A lanciati > 0 in `naval_off`, `naval_on` | totale per variante | 16 / 16 |
+| 4 | `test_land_tactical_on_the_tor_never_intercepts` | 1 | intercettazioni del Tor (`Red-Line/ad0`) == 0 in `land_tactical_on` | per seme | 0 in ogni seed |
+| 5 | `test_land_tactical_on_launches_fewer_mavericks` | 2 (P-3) | AGM-65D lanciati `_on` < `_off` | per seme | 8 < 14 in ogni seed |
+| 6 | `test_land_tactical_off_the_tor_intercepts` | 3 | intercettazioni del Tor > 0 in `land_tactical_off` | per seme | 6 in ogni seed |
+| 7 | `test_land_cruise_on_the_buk_intercepts_the_kh59` | 4 | intercettazioni del Buk (`Red-Depot/sam0`) > 0 in `land_cruise_on` | per seme | 2 in ogni seed |
+| 8 | `test_land_cruise_switch_changes_nothing` | 5 | `_events(on) == _events(off)` (munizioni, danni, intercettazioni con istanti) | per seme | identici |
+| 9 | `test_naval_on_the_ship_intercepts_the_harpoons` | 6 | intercettazioni della nave (`Red-Navy/ff0`) > 0 in `naval_on` | per seme | 4 in ogni seed (AK-630) |
+| 10 | `test_naval_switch_changes_nothing` | 7 | `_events(on) == _events(off)` per `naval` | per seme | identici |
+| 11 | `test_naval_maverick_on_the_ship_never_intercepts` | 8 | intercettazioni della nave == 0 in `naval_maverick_on` | per seme | 0 in ogni seed |
+| 12 | `test_naval_maverick_on_hits_reach_the_ship` | 9 | `DamageEvent` sulla nave con `weapon == 'AGM-65D'` > 0 in `naval_maverick_on` | totale sui 4 semi | 4 (1 per seed, esito `kill`) |
+| 13 | `test_naval_maverick_off_the_ship_intercepts` | 10 | intercettazioni della nave > 0 in `naval_maverick_off` | totale sui 4 semi | 8 (2 per seed) |
+| 14 | `test_on_variants_with_excluded_shots_have_no_interception_event` | 11 (P-6 (b)) | `outcome.interception_events == ()` in `land_tactical_on` e `naval_maverick_on` | per seme | `()` in ogni seed |
+| 15 | `test_runs_are_deterministic` | 12 | per ogni seed e variante, `run_variant` rieseguita da' gli stessi `_events` della corsa del `setUpClass` | per seme e variante | identici (32 repliche) |
+
+Totale: 3 premesse + 12 asserzioni = **15** metodi, coerente con P-4 e con la riga "BI blocco 3" di §6.1 (B + 49 =
+4795 + 49 = 4829 + 15 = **4844**).
+
+**Misure della sonda S-e** [V] (file di §5.4.3, seed `S35-ADTGT-0..3`; "per seed" = uguale nei 4 seed salvo dove
+indicato):
+
+| Variante | Lanciati (per seed) | Intercettazioni (per seed) | Altro |
+|---|---|---|---|
+| `land_tactical_off` | 14 AGM-65D | Tor 6 (9M331) | lanci a ~17,7 km dal Tor (V_I 12 km); 3 BMP-2 e Tor distrutti |
+| `land_tactical_on` | 8 AGM-65D | 0, `interception_events == ()` | 3 BMP-2 e Tor distrutti; il Tor spara 8 9M331 agli A-10C |
+| `land_cruise_off` / `_on` | 4 Kh-59 (2 per Su-34) | Buk 2 (9M38), identiche | lancio a 90,8 km dal Buk (V_I 35 km), t = 228,1 s |
+| `naval_off` / `_on` | 4 AGM-84A | Rezky 4 (AK-630), identiche | lanci a 49,9 e 23,3 km dalla nave (V_I 12 km) |
+| `naval_maverick_off` | 4 AGM-65D | Rezky 2 (AK-630) | 1o lancio a 14,7 km (seed 2: 12,2 km), fuori; 2o a 11,05 km (seed 2: 8,6 km), dentro: non intercettabile (L1); 1 `kill` sulla nave |
+| `naval_maverick_on` | 2 AGM-65D | 0, `interception_events == ()` | 1o lancio a 14,7 km (seed 2: 12,2 km); 1 `kill` sulla nave |
+
+Le distanze di lancio sono quelle del risolutore (`_may_intercept`: posizione del lanciatore e dell'intercettore a
+`t_launch`) e coincidono con la formula di S19AD (`launch_distances`, `:102-115`: x = x0 + v t sulla rotta rettilinea).
+Il vincolo della decisione P-1 (lancio dei Maverick oltre i 12 km) e' quindi rispettato **in ogni seed**, ma nel seed 2
+con un margine di ~200 m (§7).
+
+#### 5.4.4 `Test/Scenario_Baseline.py`: riga di `UNITS` e docstring (testo esatto)
+
+1. In `UNITS`, dopo la tupla di S32-DWELL (`:396-397`) e **prima** della `)` di chiusura (`:398`), queste quattro righe
+   (indentazione di 4 spazi come le precedenti; formato della tupla `:263-265`, `None` = si esegue `setUpClass`):
+
+```python
+    # ── S35 (BI: bersagli intercettabili dalle difese aeree, BI_AD_TARGET_RULE) — in coda, nomi stabili ──
+    ('S35-ADTGT', 'Test_Session_Scenarios_S35', 'TestS35AirDefenceTargets', None,
+     _by_occurrence('land_tactical_off', 'land_tactical_on', 'land_cruise_off', 'land_cruise_on',
+                    'naval_off', 'naval_on', 'naval_maverick_off', 'naval_maverick_on')),
+```
+
+2. Nella docstring del modulo, dopo la sezione `## Permanenza nel volume dopo la D-5` (`:176-181`) e prima di
+   `## Uso (dalla root del repo, con l'interprete della macchina)` (`:183`), una riga vuota e questa sezione (stile di
+   quella della D-5; nessun backslash, la docstring non e' raw):
+
+```text
+## Bersagli intercettabili dopo la BI
+
+La BI (`Engagement_Resolver.BI_AD_TARGET_RULE`, SPENTO; `ShotSpec.intercept_domains` dichiarati dalla fire control
+dei registri, `Proposta_Bersagli_Intercettabili_Difesa_Aerea.md`) non cambia le esecuzioni esistenti (interruttore
+spento). Aggiunge in coda l'unita' S35-ADTGT (8 varianti, 4 seed): 32 esecuzioni nuove; nessuna voce nuova nel
+riassunto.
+```
+
+Nomi stabili: unita' `S35-ADTGT`, classe `TestS35AirDefenceTargets`, varianti nell'ordine sopra, seed `S35-ADTGT-0..3`.
+Asset: `Red-Line/ad0` (Tor) e `Blue-CAS/cas0..3` da S19AD; `Red-Depot/tank0`, `Red-Depot/sam0`, `Blue-STR/str0..1`;
+`Red-Navy/ff0`, `Blue-AS/as0..1`, `Blue-CAS/cas0..1`.
+
+#### 5.4.5 Esito atteso, verifiche e regole di fermata
+
+Numeri da leggere nell'ESITO, mai stimati. `<python>` = l'interprete stampato da `verifica.sh` nell'ESITO (sul ProArt
+`.direnv/python-3.12/bin/python3`).
+- Compilazione: `<python> -c "import py_compile; py_compile.compile('Code/Dynamic_War_Manager/Source/Test/Test_Session_Scenarios_S35.py', doraise=True)"`
+  e lo stesso per `Scenario_Baseline.py`.
 - Test singolo, dalla root del repo: `<python> -m unittest Code.Dynamic_War_Manager.Source.Test.Test_Session_Scenarios_S35`
-  (`<python>` = l'interprete stampato da `verifica.sh` nell'ESITO; sul ProArt `.direnv/python-3.12/bin/python3`):
-  `Ran N`, `OK`.
-- Suite (`bash tools/ai/verifica.sh suite start`, poi `... suite wait` fino a `ESITO`): `Ran 4829 + N` (base 4829 [V];
-  N = metodi di test di S35, **15 [S]** se P-4 = (b): `Ran 4844` [S]), `OK (skipped=7)`.
+  -> `Ran 15 tests`, `OK` [V, sonda S-e].
+- Suite (`bash tools/ai/verifica.sh suite start`, poi `... suite wait` fino a `ESITO`): `Ran 4844 tests`,
+  `OK (skipped=7)` (base 4829 [V] + 15).
 - Confronto, solo dopo la fine della suite (`bash tools/ai/verifica.sh confronto start`, poi `... confronto wait`):
-  `UNCHANGED (1009)` e `compared 1061 runs: 52 difference lines` [I] (1029 + 32 esecuzioni; 20 NEW S32-DWELL + 32 NEW
-  S35-ADTGT = 52 righe, 0 DIFF), exit code **1** (atteso, v. vincoli). Poiche' 1009 + 52 = 1061, quei due numeri insieme
+  `UNCHANGED (1009)` e `compared 1061 runs: 52 difference lines` (1029 + 32 esecuzioni; 20 NEW S32-DWELL + 32 NEW
+  S35-ADTGT = 52 righe, 0 DIFF), exit code **1** (atteso, v. §5.4.2). Poiche' 1009 + 52 = 1061, quei due numeri insieme
   escludono ogni DIFF. Controllo delle chiavi nuove sulla cattura salvata, con comandi consentiti a `oc-developer`:
   `grep -cE '^  "S35-ADTGT/' .ai-run/confronto_capture.json` -> `32`;
-  `grep -E '^  "S35-ADTGT/' .ai-run/confronto_capture.json` -> solo chiavi `S35-ADTGT/<seed>/<variante>` con le 8
-  varianti per ciascuno dei 4 seed, nessuna `#8`; `grep -cE '^  "S32-DWELL/' .ai-run/confronto_capture.json` -> `20`.
-- **Fermarsi e riferire** (senza cambiare asserzioni, geometrie fissate o codice del motore) se: `UNCHANGED` diverso da
-  1009, `compared` diverso da 1061 o righe diverse da 52; una chiave S35 con `#` o un numero di chiavi S35 diverso da
-  32; un'asserzione su una variante `_off` fallisce perche' la variante non produce lanci o intercettazioni; un simbolo
-  dei blocchi 1-2 elencato sopra non esiste o ha una firma diversa.
-- Rischio: le geometrie vanno costruite e misurate dall'esecutore (entro i parametri che l'utente fissera' in §5.4.1);
-  se una variante non produce intercettazioni nemmeno `_off` (es. la nave non rileva in tempo, o il Maverick contro
-  nave e' scartato dalla fire control per Pk nulla contro la classe nave), riferire invece di cambiare le asserzioni.
+  `grep -E '^  "S35-ADTGT/' .ai-run/confronto_capture.json` -> solo chiavi `S35-ADTGT/S35-ADTGT-<i>/<variante>` con le 8
+  varianti per ciascuno dei 4 seed, nessuna `#`; `grep -cE '^  "S32-DWELL/' .ai-run/confronto_capture.json` -> `20`.
+- Esecuzioni identiche: le 1009 della fotografia (il blocco 3 non tocca il motore). Esecuzioni cambiate: nessuna.
+  Esecuzioni nuove: 20 S32-DWELL (gia' fuori dalla fotografia) e 32 S35-ADTGT. Nessuna fotografia nuova si installa.
+- Rapporto `Rapporti/Rapporto_BI_blocco3_oc-developer.md`: numeri letti dagli ESITI; la costante
+  `DECLARED_SEA_RANGE_M = 20 000 m` dichiarata **VALORE DI TEST [S]**; scelte minori (nessuna attesa).
 
-#### 5.4.1 Verifica del 2026-11-08: contraddizioni con il codice e punti da decidere — APERTI
-
-Sonde di sola lettura eseguite il 2026-11-08 sul ProArt con il motore del checkout (script nella cartella temporanea
-della sessione, non nel repo; nessun file del repo modificato). Valori [V] per le geometrie indicate, che **non** sono
-ancora quelle definitive dello scenario:
-- **S-a** (`land_tactical`, la chiamata di S19AD `:144`, session_id `S35-ADTGT-0..3`): spento 14 AGM-65D lanciati, 6
-  intercettazioni del Tor, 3 BMP-2 distrutti in ogni seed; acceso 8 AGM-65D, 0 intercettazioni, 3 BMP-2 distrutti in ogni
-  seed; perdite Blue spento 1/1/0/1, acceso 2/4/4/3; Tor distrutto in tutti gli 8 casi.
-- **S-b** (`land_cruise`, seed `P-0`): 2 Su-34 'Anti-Ship' da (-150 km, 0, 6000 m), rotta fino a x = -60 km e ritorno,
-  missione Strike, `weapons=('Kh-59',)`, bersaglio un `Oil_Tank` (`category='Farp'`) in (0, 0) ristretto con
-  `Target.asset_ids` e ROE `only_designated`, Buk a 1 km dal deposito nella stessa forza: spento e acceso identici, 4 Kh-59
-  lanciati, 2 intercettazioni.
-- **S-c** (navale con il Burke, nave a x = 60 km, seed `P-0`): F/A-18C 'Anti-Ship', missione Anti_Ship: 2 AGM-84A
-  lanciati, **0 intercettazioni** spento e acceso; A-10C, missione CAS: **nessun** Maverick lanciato (anche con un
-  sensore `sea` dichiarato di 20 km), la nave spara ESSM.
-- **S-d** (navale con la `'FF 1135M Rezky'`, `Asset/Ship_Data.py:1098`, V_I 12 km, intercettore AK-630, seed `P-0`):
-  F/A-18C: 4 AGM-84A, 4 intercettazioni spento e acceso (identici); A-10C con sensore `sea` dichiarato di 20 km: spento 4
-  AGM-65D e 2 intercettazioni, acceso 2 AGM-65D e 0 intercettazioni, un colpo al danno sulla nave; A-10C senza sensore
-  dichiarato: nessun lancio.
-- V_I delle navi con un'arma `Anti_Missile` (`Mobile.air_defense_volume`, solo le armi `MISSILES_SAM` con task `Anti_Air`
-  contano per il raggio) [V, sonda]: Arleigh Burke IIa e CG-65 240 km; Type 052C 200 km; Moskva, Piotr Velikiy, Kuznetsov
-  150 km; FFG-46 74 km; Type 054A 70 km; CVN-70..75 50 km; Forrestal e Tarawa 19 km; Neustrashimy 15 km; Type 052B e
-  Type 071 13 km; Rezky, Grisha, Molniya 12 km.
-
-Punti (nessuno risolto qui; le alternative sono per l'utente):
-- **P-1 (contraddizione, bloccante) — L1 e il V_I del Burke.** `_may_intercept` (`Logic/Engagement_Resolver.py:3204-3227`)
-  vieta l'intercettazione se il punto di lancio e' entro il raggio del V_I e nella fascia di quota (base 15 m per il
-  Burke). Con un V_I di 240 km ogni lancio di AGM-84A (portata 50 km) o di AGM-65D (15 km) da un aereo sopra i 15 m e'
-  dentro: asserzioni 6 e 10 impossibili, 7 e 8 vacue (S-c). Alternative: (a) una nave con V_I minore della distanza di
-  lancio, la stessa per le due varianti navali: per il Maverick serve un V_I sotto i 15 km (Rezky, Grisha, Molniya,
-  Type 052B, Type 071); S-d mostra che con la Rezky tutte e quattro le attese navali si ottengono; (b) due navi diverse
-  (per l'AGM-84A una con V_I sotto i ~50 km, es. Forrestal o Tarawa; per il Maverick una delle precedenti); (c) tenere il
-  Burke e cambiare le attese (0 intercettazioni spento e acceso: le varianti navali non mostrano piu' la regola, contro
-  lo scopo di BI-10); (d) lancio sotto la base del V_I (aereo sotto i 15 m): artificioso. Raccomandazione dell'analista:
-  (a), che non cambia i nomi delle varianti.
-- **P-2 — Sensore `sea` dell'A-10C.** `detection_range('sea')` dell'A-10C e' None nel registro [V, sonda]: senza un
-  sensore dichiarato di test non rileva la nave e non lancia (S-d). Alternative: (a) `F.Unit(..., sensors={'sea': <portata>})`
-  come `VISUAL` di S19AD, con la portata dichiarata come **valore di test** (20 km nella sonda, non un dato) — da
-  fissare; (b) un altro aereo con Maverick e sensore marittimo a registro [I, non cercato].
-- **P-3 (contraddizione) — asserzione 2.** Nella geometria `tor_rear` i 3 BMP-2 sono distrutti in tutti i seed sia
-  spento sia acceso (S-a): "piu' danni ai BMP" e' falsa. Le differenze osservate sono: Maverick lanciati 14 -> 8 (nessuno
-  piu' fermato) e piu' perdite Blue (il Tor spara agli aerei invece che ai missili). Alternative: (a) sostituirla con
-  "meno AGM-65D lanciati in `_on` che in `_off`, per seme"; (b) "BMP-2 distrutti in `_on` non meno che in `_off`" (>=);
-  (c) "perdite Blue in `_on` >= `_off`" (il caso d'origine di S19: la difesa conserva i missili per gli aerei; per seme
-  e' vera in S-a ma non e' un effetto diretto della regola); (d) meno attaccanti per non saturare i BMP: geometria nuova
-  da misurare. Nota: i numeri di S-a valgono solo con i session_id `S35-ADTGT-<i>`.
-- **P-4 — Numero di test.** Il piano dice "circa 15", l'elenco ha 12 asserzioni e nessun elenco di metodi. Alternative:
-  (a) un metodo per asserzione: 12 test, `Ran 4841`; (b) 12 + 3 premesse non vacue (in ogni variante si lanciano
-  AGM-65D, Kh-59, AGM-84A, come `test_mavericks_are_launched` di S19AD `:148-154`): 15 test, `Ran 4844`, coerente con
-  §6.1; (c) libero all'esecutore, numero letto dall'ESITO (le basi di VA e FP in §6.1 restano [S]).
-- **P-5 — Costruzione di `land_cruise`.** Non fissati: dove sta il Buk (nella stessa forza del deposito o in un'altra
-  forza dello stesso dominio di coordinamento), che `Structure` e' il deposito (`category`/`asset_type`), tipo di
-  missione (CAS, Strike o Pinpoint_Strike; non Anti_Ship, v. politica F7a sopra), restrizione del bersaglio (con
-  bersaglio GROUP intero i Su-34 possono attaccare anche il Buk, classe `air_defence` ammessa da Strike), quota e punto
-  di partenza (il lancio deve restare oltre 35 km dal Buk). Alternative: (a) fissare la configurazione della sonda S-b;
-  (b) lasciarla all'esecutore entro questi vincoli.
-- **P-6 — "Per seme" o "in totale", e asserzione 11.** "In ogni seme" e' scritto solo per le asserzioni 1 e 8; per 3, 4
-  e 9 il testo non lo dice (S19AD usa il totale, `:192`). L'asserzione 11 non e' verificabile dall'`InterceptionEvent`
-  (che non porta l'arma fermata e indica tutte le salve del gruppo, v. sopra). Alternative per la 11: (a) spia sugli
-  `EngagementResult` come S32 `:90-93` e controllo che ogni salva citata dai `salvo_ids` di un `InterceptionEvent` abbia
-  `spec.intercept_domains` None o non vuoto (fallisce se un gruppo mescola armi diverse); (b) nelle sole varianti in cui
-  tutte le salve offensive hanno domini vuoti (`land_tactical_on`, `naval_maverick_on`)
-  `outcome.interception_events == ()`, come `TestS19AdTargetRule` `:275` (coincide quasi con le asserzioni 1 e 8).
-- **P-7 — Nomi dei seed.** Il piano fissa i nomi delle varianti ma non i session_id, che entrano nelle chiavi stabili
-  della fotografia. Alternativa ovvia sul modello di S32 (`:46`): `SEEDS = [f'S35-ADTGT-{index}' for index in range(4)]`,
-  chiavi `S35-ADTGT/S35-ADTGT-<i>/<variante>` (quelli usati dalla sonda S-a).
+**Fermarsi e riferire** (senza cambiare asserzioni, geometrie, costanti o codice del motore; regola dei due fallimenti
+dell'agente):
+- un simbolo di §5.4.2 non esiste o ha un'altra firma (precondizioni 4-5 di §5.0);
+- la **asserzione 2** (test 5) fallisce in un seed: riferire per seed i Maverick lanciati spento/acceso (P-3);
+- la **3 o la 4** (test 6 e 7) falliscono in un seed: riferire per seed le intercettazioni del Tor/Buk (P-6);
+- un'asserzione su una variante `_off` fallisce perche' la variante non produce lanci o intercettazioni, o un test
+  qualunque fallisce: il file e' gia' stato eseguito con esito OK sul checkout `dd07fd16`, quindi un fallimento indica
+  un codice diverso da quello misurato (riferire `git log --oneline -5` e il messaggio);
+- `Ran` diverso da 4844 o `UNCHANGED` diverso da 1009, `compared` diverso da 1061 o righe diverse da 52; una chiave S35
+  con `#` o un numero di chiavi S35 diverso da 32.
 
 ### 5.5 Blocco 4 — documenti (sessione principale e `des-manual-writer`)
 (Righe dei documenti riverificate il 2026-11-08 [V].)
@@ -1312,7 +1648,9 @@ Punti (nessuno risolto qui; le alternative sono per l'utente):
   senza RCS (`:282`); **limite BI-12 (a) [S]**: il criterio di dimensione vale solo per le difese navali, quindi
   Kh-29/Kh-58 (e ogni `tactical`/`arm`) non sono mai bersagli delle difese terrestri anche se di taglia simile al
   Kh-59, che lo e' perche' `cruise`.
-- `F4_Differenze_Scenari.md`: esito di B-1 e S35 (con le scelte di §5.4.1).
+- `F4_Differenze_Scenari.md`: esito di B-1 e sezione S35-ADTGT (32 esecuzioni nuove; nave Rezky e sensore `sea` di test
+  dell'A-10C come costante stimata [S]; decisioni P-1..P-7 di §5.4.1; limite: S35 dipende da L1, da rivedere se L1
+  cambia).
 - `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`: nessun intervento (voce superata: FP-5 decisa il 2026-11-08,
   opzione (d), e Proposta FP gia' riscritta; non c'e' piu' una riproposta di FP-5 dopo il blocco 3).
 - `Piano_Implementazione_Missione.md` §5 (`:275`, "Stato di avanzamento e deviazioni dal piano"): riga di avanzamento.
@@ -1377,7 +1715,7 @@ o `Logic/Fire_Control.py`. Ogni piano successivo rilegge le righe citate (precon
 | base | `Ran B` (B = 4795 [V], `Rapporti/Rapporto_BI_blocco1_des-developer.md:43`) | NEW: 20 S32-DWELL |
 | BI blocco 1 | `B + 6` = 4801 [V] | invariato |
 | BI blocco 2 | `B + 34` = 4829 [V] (eseguito: 28 test, non i "circa 21" del piano; `Rapporti/Rapporto_BI_blocco2_des-developer.md:41`) | invariato; sonda B-1 (interruttore BI acceso): cambiano solo le 6 S19AD `tor_rear` [V] |
-| BI blocco 3 | `B + 49` [S] (circa 15 test, 15 se P-4 = (b) di §5.4.1; ~4844) | NEW: + 32 S35-ADTGT; `UNCHANGED (1009)`, `compared 1061 runs: 52 difference lines` [I] |
+| BI blocco 3 | `B + 49` = 4844 [S] (15 test, P-4 (b) di §5.4.1, elenco in §5.4.3; il modulo da solo: `Ran 15` OK [V, sonda S-e]) | NEW: + 32 S35-ADTGT; `UNCHANGED (1009)`, `compared 1061 runs: 52 difference lines` [S; chiavi e numero di sessioni V sulla cattura simulata S-e] |
 | VA blocco 1 (base VA = `B + 49` [S]) | `B + 72` [S] (23 test, VA §4.1.7; ~4867) | invariato (20 S32 + 32 S35 NEW) |
 | VA blocco 2 | `B + 81` [S] (9 test, VA §4.2.4: `Ran B_VA + 32` complessivi; ~4876) | NEW: + 32 S34-BAND |
 | FP blocco 1 (base FP = `B_FP`, letta dall'ESITO dopo VA blocco 2) | `B_FP + 30` (30 test, FP §4.0.1) | invariato (20 S32 + 32 S35 + 32 S34 NEW) |
@@ -1414,6 +1752,15 @@ altro effetto sulla logica.
 - **Difesa di dominio mista** (navi che difendono truppe a terra): dipende da BI-5.
 - **Armi `test:*`**: con BI-8 (a) gli scenari a tabella non vedono mai la regola.
 - **Conflitti di file** con FP e VA su `Logic/Engagement_Resolver.py` (§6).
+- **S35 dipende da L1** (regola dell'utente del 2026-09-28, `Proposta_Regole_Allocazione_SAM.md` §7.7 Q2): le varianti
+  navali funzionano solo perche' la Rezky ha un V_I di 12 km, minore della distanza di lancio. L1 non si tocca in questo
+  blocco; se l'utente la cambiera' (Proposta separata), S35 (come S19AD) andra' rivisto insieme alla fotografia.
+- **Margine stretto in `naval_maverick`**: nel seed `S35-ADTGT-2` il primo Maverick parte a ~12,2 km dalla nave, ~200 m
+  fuori dal V_I [V, sonda S-e]; una modifica futura che sposti di qualche secondo il lancio (VA, FP, rilevamento)
+  potrebbe portarlo dentro: in quel seed `naval_maverick_off` avrebbe 0 intercettazioni. Per questo l'asserzione 10 e'
+  sul totale dei semi (§5.4.1, P-6); le chiavi S35 cambierebbero comunque nella fotografia.
+- **Sensore `sea` dell'A-10C**: 20 km e' un VALORE DI TEST [S] (P-2), non un dato; le distanze di lancio dei Maverick
+  sulla nave dipendono da esso (portata del Maverick 15 km, rilevamento a 20 km).
 
 ## 8. Cosa non ho potuto verificare
 
@@ -1431,8 +1778,11 @@ altro effetto sulla logica.
 - Le geometrie di S35 non sono state costruite ne' misurate: le asserzioni di §5.4 sono attese qualitative [I]; in
   particolare che l'Arleigh Burke fermi oggi (interruttore spento) i Maverick di `naval_maverick_off`. **Aggiornamento
   del 2026-11-08**: sonde di sola lettura (§5.4.1, S-a..S-d) hanno smentito quest'ultima attesa (con il V_I di 240 km del
-  Burke la regola L1 vieta ogni intercettazione) e l'asserzione "piu' danni ai BMP"; le geometrie definitive restano da
-  fissare (P-1..P-7).
+  Burke la regola L1 vieta ogni intercettazione) e l'asserzione "piu' danni ai BMP". **Decisioni del 2026-11-08**
+  (P-1..P-7, §5.4.1): ora la nave delle varianti navali e' la `FF 1135M Rezky` (V_I 12 km), l'asserzione 2 e' "meno
+  Maverick lanciati da acceso", e le geometrie definitive sono **misurate** (sonda S-e, §5.4.3: 15 test OK, 32 chiavi
+  della fotografia corrette, in cattura simulata). Restano non verificati la suite completa e il confronto reale con
+  il file nel repo (li esegue l'esecutore).
 - Le dimensioni del Maverick, dell'Harpoon (salvo il diametro a registro), del Kh-29 e dei candidati "piccoli", e i
   nomi comuni Shturm/Ataka/Shrike: conoscenza generale [I], da verificare nel blocco 0. **Verificati nel blocco 0**
   (ancore e Kh-29 riletti dalla sessione principale; candidati "piccoli" e nomi comuni dalle bozze della ricerca).
