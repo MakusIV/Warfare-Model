@@ -4,7 +4,9 @@ Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-1
 
 ## Start here
 - [Dati BI (blocco 0): decisioni D1-D6 + voci grigie, TUTTE prese; blocco 1 fatto](project_bi_dati_decisioni.md) — metro Maverick 304,8 mm e 304 kg, lunghezza esclusa; 32 True/20 False
-- [Sessione 2026-11-07/08 ProArt — BI blocchi 0-2 FATTI, Proposta FP riscritta e riletta (pronta), BI blocco 3: P-1..P-7 decisi, Proposta BI a meta'](project_session_2026_11_07_summary.md) — RIPARTIRE DA QUI (da osboxes: sezione 'RIPRESA DA OSBOXES' in cima): BI blocco 4 (documenti), poi VA 1-2, FP 1-2, dwell, L1, interruttori; base suite 4844, confronto 1061:52
+- [Sessione 2026-11-10 osboxes: BI blocco 4 e VA blocco 1 FATTI (suite 4867, confronto 1061:52, 1,399 $); prossimo VA blocco 2 poi FP a blocchi piccoli](project_session_2026_11_07_summary.md) — vedi sezione 'AGGIORNAMENTO 2026-11-10' in cima al file
+- [Agenti oc: blocchi piu' piccoli e verifica parziale per blocco (prova su FP, 2026-11-10)](feedback_oc_blocchi_piccoli_verifica_parziale.md) — suite/confronto completi solo a fine task
+- [Sessione 2026-11-07/08 ProArt — BI blocchi 0-2 FATTI, Proposta FP riscritta e riletta (pronta), BI blocco 3: P-1..P-7 decisi, Proposta BI a meta'](project_session_2026_11_07_summary.md) — superata dalla riga 2026-11-10 qui sopra (BI blocco 4 e VA blocco 1 fatti); restano VA blocco 2, FP 1-2, dwell, L1, interruttori
 - [BI blocco 3 FATTO e mergiato (fa6bc1d8, suite 4844, confronto 1061:52); P-1..P-7 decise, L1 da rivedere dopo (2026-11-08)](project_bi_blocco3_punti_aperti.md) — Proposta BI §5.4 da completare con des-planner, poi oc-developer su `ai/oc-bi-blocco3`
 - [FP: decisioni FP-1..FP-10 TUTTE prese (2026-11-08); Proposta riscritta e riletta, pronta per l'esecutore](project_fp_decisioni_complete.md) — esecuzione dopo BI e VA (blocchi 1-2)
 - [Interruttori: si tengono solo se lo stato precedente e' un'alternativa valida, si eliminano se sostituiti; analisi mirata dopo FP (2026-11-08)](feedback_interruttori_criterio.md) — rimozione con nuova fotografia decisa dall'utente

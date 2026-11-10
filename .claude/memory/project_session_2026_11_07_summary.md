@@ -8,6 +8,12 @@ metadata:
   modified: 2026-11-07T15:19:23.951Z
 ---
 
+## AGGIORNAMENTO 2026-11-10 (osboxes) — PIU' RECENTE, prevale sul resto
+- **BI blocco 4 FATTO** (`d7813251`): manuale (05, 11a, 10) da des-manual-writer, F4/Piano/note Proposte SAM e Anti_Missile dalla principale. Aperti minori: diagramma nuovo di §4.24 senza numero D (manca nell'indice di `11_Atlante_Diagrammi.md`); commenti di testa dei registri (`Aircraft_Weapon_Data.py:2115`, `Ship_Weapon_Data.py:1239`) dicono ancora 'nessuno e' letto dal motore' (codice, da correggere).
+- **VA blocco 1 FATTO e mergiato** (`6070fd33`, branch `ai/oc-va-blocco1` da cancellare con ok utente), eseguito da **oc-developer** (V4 Pro 0813, StreamLake + 1 richiesta Novita, 129 richieste, **1,399 $**, costi in `Costi_Deleghe.md`). Verifica: suite `Ran 4867 OK (skipped=7)`, confronto `UNCHANGED (1009)`, `compared 1061: 52`. **Nuova base**: suite 4867. Prossimo: VA blocco 2 (S34-BAND, atteso `Ran 4876`, `compared 1093: 84`), poi FP blocchi 1-2 con oc-developer.
+- **Decisioni dell'utente 2026-11-10**: esecutori = oc-developer per VA e FP; per FP si provano **blocchi piu' piccoli** e, se meno costosi e con tempi di verifica accettabili, diventano criterio di default per i soli lavori oc; **verifica parziale per blocco** (moduli di test toccati + `Scenario_Baseline --compare --only REGEX` sugli scenari vicini) e suite+confronto completi solo a fine task: scritta nei compiti, AGENTS.md non toccato (spetta all'utente). Vedi [[feedback-oc-blocchi-piccoli-verifica-parziale]].
+- **osboxes**: `oc` da lanciare SEMPRE dalla root di Warfare-Model (errore dell'utente: lanciato da ai-multimodel); su osboxes serviva `git pull` in `~/Sviluppo/ai-multimodel` per il routing e il modello `-0813` (fatto). Ora il confronto dura ~19 min e la suite ~21.
+
 ## RIPRESA DA OSBOXES (fine sessione ProArt 2026-11-08, notte) — LEGGERE PER PRIMO
 - Tutto e' committato e pushato su `analysis/dce-dcs-persistence` (ultimo commit di questa sessione: vedi `git log`). Su osboxes: `git pull`, poi `pip install -r requirements.txt` nel venv (aggiunto `pymupdf4llm`, serve solo per convertire PDF in markdown).
 - **Base verificata**: suite `Ran 4844 OK (skipped=7)`, confronto `UNCHANGED (1009)` e `compared 1061 runs: 52 difference lines` (BI blocchi 0-3 mergiati; VA e FP NON eseguite). Su osboxes suite ~21 min e confronto ~17 min (piu' lenti del ProArt).
