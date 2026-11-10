@@ -187,6 +187,12 @@ dei registri, `Proposta_Bersagli_Intercettabili_Difesa_Aerea.md`) non cambia le 
 spento). Aggiunge in coda l'unita' S35-ADTGT (8 varianti, 4 seed): 32 esecuzioni nuove; nessuna voce nuova nel
 riassunto.
 
+## Quota nel volume d'ingaggio (VA)
+
+La quota nel volume d'ingaggio (`Engagement_Resolver.VA_ENGAGEMENT_ALTITUDE_BAND`, SPENTO;
+`Proposta_Allineamento_Volumi_DES_Pianificatore.md`) non cambia le esecuzioni esistenti (interruttore spento).
+Aggiunge in coda l'unita' S34-BAND (8 varianti, 4 seed): 32 esecuzioni nuove; nessuna voce nuova nel riassunto.
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -406,6 +412,10 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     ('S35-ADTGT', 'Test_Session_Scenarios_S35', 'TestS35AirDefenceTargets', None,
      _by_occurrence('land_tactical_off', 'land_tactical_on', 'land_cruise_off', 'land_cruise_on',
                     'naval_off', 'naval_on', 'naval_maverick_off', 'naval_maverick_on')),
+    # ── S34 (VA: quota nel volume d'ingaggio, Proposta_Allineamento_Volumi_DES_Pianificatore.md) — in coda ──
+    ('S34-BAND', 'Test_Session_Scenarios_S34', 'TestS34AltitudeBand', None,
+     _by_occurrence('level_off', 'level_on', 'climb_off', 'climb_on', 'descend_off', 'descend_on',
+                    'late_descend_off', 'late_descend_on')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per
