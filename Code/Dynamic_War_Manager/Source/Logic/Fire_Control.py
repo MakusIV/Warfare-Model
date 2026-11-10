@@ -91,6 +91,11 @@ Se la posizione del tiratore o del bersaglio non e' disponibile il filtro NON vi
 applicato (dichiarato: meglio un'arma forse fuori inviluppo che un asset reso inerme per
 mancanza di dato, stessa politica "None = non modellato" di munizioni e carburante).
 
+Il "la quota letta e' quindi quella di partenza" resta vero a VA SPENTO. Con
+`VA_ENGAGEMENT_ALTITUDE_BAND` acceso il risolutore passa le quote all'istante della decisione
+(`altitudes`), e copia nella `ShotSpec` la fascia (armi di superficie) o il tetto (armi d'aereo)
+che verifica poi nel tempo (`Engagement_Resolver.engagement_intervals`).
+
 ## Aerei a terra (F4c, decisione dell'utente 2026-10-11)
 
 Un aereo senza missione e' a terra: un bersaglio di SUPERFICIE passivo (v.
@@ -856,13 +861,25 @@ def shot_spec_for(weapon: _Weapon, accuracy: float, destroy_capacity: float, is_
         burst = GUN_BURST_ROUNDS if weapon.fire_rate >= AUTOMATIC_FIRE_RATE_RPM else 1
         cycle_time = burst * 60.0 / weapon.fire_rate
 
+    # VA: quota nel volume d'ingaggio, letta dal risolutore solo con Engagement_Resolver.VA_ENGAGEMENT_ALTITUDE_BAND
+    # acceso. Armi di superficie contro aerei: fascia RELATIVA al tiratore (min/max_altitude del registro). Armi d'aereo
+    # contro aerei: tetto ASSOLUTO (max_height del registro, km -> m); nessuna quota minima nel registro (VA-3 (b)).
+    min_altitude = max_altitude = max_target_z = None
+
+    if is_air and weapon.domain in ('ground', 'ship') and weapon.min_alt is not None and weapon.max_alt is not None:
+        min_altitude, max_altitude = weapon.min_alt, weapon.max_alt
+    elif is_air and weapon.domain == 'air':
+        max_target_z = weapon.max_height_m
+
     # A3: un colpo della salva di un'arma a raffica consuma GUN_BURST_ROUNDS colpi di scorta.
     return ShotSpec(accuracy=min(1.0, max(0.0, accuracy)),
                     destroy_capacity=min(1.0, max(0.0, destroy_capacity)),
                     rounds=SALVO_ROUNDS[kind], weapon=weapon.model,
                     time_of_flight=time_of_flight, interceptable=interceptable,
                     cycle_time=cycle_time, max_range=max_range, stock_per_round=burst,
-                    intercept_domains=intercept_domains_for(weapon))
+                    intercept_domains=intercept_domains_for(weapon),
+                    min_altitude=min_altitude, max_altitude=max_altitude,
+                    max_target_z=max_target_z)
 
 
 def _attack_speed_kmh(shooter_key: Tuple[str, str, Optional[str]]) -> Optional[float]:
@@ -884,7 +901,11 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
     Restituisce le ShotSpec di TUTTE le armi adatte in ordine di preferenza (v.
     `rank_weapons`), o None se nessuna e' adatta: il risolutore usa la prima con scorta.
     Accetta l'estensione `target_grounded` (F4c, default False): il bersaglio e' un aereo a
-    terra, classificato come bersaglio di superficie (v. "Aerei a terra").
+    terra, classificato come bersaglio di superficie (v. "Aerei a terra"). Accetta
+    l'estensione `altitudes` (VA, default None): quote [m] di tiratore e bersaglio all'istante
+    della decisione, passate dal risolutore con `VA_ENGAGEMENT_ALTITUDE_BAND` acceso; None =
+    posizione degli asset, come prima; un elemento None = quota ignota, nessun filtro per quel
+    confronto.
 
     Args:
         altitude_filter (bool): applica il filtro d'inviluppo di quota ai bersagli aerei.
@@ -910,7 +931,9 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
 
         return candidates_cache[key]
 
-    def fire_control(shooter, target, target_grounded: bool = False) -> Optional[Tuple[ShotSpec, ...]]:
+    def fire_control(shooter, target, target_grounded: bool = False,
+                     altitudes: Optional[Tuple[Optional[float], Optional[float]]] = None
+                     ) -> Optional[Tuple[ShotSpec, ...]]:
         shooter_key = _shooter_key(shooter)
 
         if shooter_key is None:
@@ -928,10 +951,20 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
 
         keys, dimension, is_air = t_key
         # Quote: per il filtro d'inviluppo contro gli aerei e, per un tiratore aereo, per la
-        # gittata delle bombe contro la superficie (B6).
+        # gittata delle bombe contro la superficie (B6). Con `altitudes` (VA acceso) sono le
+        # quote di tiratore e bersaglio all'istante della decisione, passate dal risolutore
+        # (None = posizione degli asset, come prima; un elemento None = quota ignota, nessun
+        # filtro per quel confronto). In entrambi i casi solo se is_air o bomber, come prima.
         bomber = not is_air and shooter_key[0] == 'Aircraft'
-        shooter_z = _z(shooter) if is_air or bomber else None
-        target_z = _z(target) if is_air or bomber else None
+
+        if altitudes is None:
+            shooter_z = _z(shooter) if is_air or bomber else None
+            target_z = _z(target) if is_air or bomber else None
+        elif is_air or bomber:
+            shooter_z, target_z = altitudes
+        else:
+            shooter_z = target_z = None
+
         cache_key = (shooter_key, keys, dimension, is_air, shooter_z, target_z)
 
         if memoize and cache_key in choice_cache:
@@ -1001,10 +1034,11 @@ class WeaponPolicy:
 def restrict_by_policy(fire_control: Callable, policy_of: Mapping[str, WeaponPolicy]) -> Callable:
     """Involucro puro: `fire_control` con le opzioni ristrette dalla politica d'armi del tiratore (F7a).
 
-    Stessa firma della base; dichiara il parametro `target_grounded` solo se la base lo accetta
-    (`Engagement_Resolver.accepts_target_grounded`), cosi' l'introspezione del risolutore resta la stessa, e
-    inoltra `target_grounded=True` solo quando il risolutore lo passa (la chiamata alla base e' quella che il
-    risolutore farebbe da solo).
+    Stessa firma della base; dichiara i parametri `target_grounded` e `altitudes` SOLO se la base
+    li accetta (`Engagement_Resolver.accepts_target_grounded`/`accepts_altitudes`), cosi'
+    l'introspezione del risolutore resta la stessa, e inoltra alla base SOLO le keyword ricevute
+    con valore diverso dal default (`target_grounded=True`, `altitudes` non None), cosi' la
+    chiamata alla base e' identica a quella che il risolutore farebbe da solo.
 
     * Tiratore senza politica (id di dominio non in `policy_of`): il risultato della base, lo STESSO oggetto.
     * Altrimenti le opzioni (None, una `ShotSpec` o una sequenza) sono filtrate con
@@ -1043,10 +1077,30 @@ def restrict_by_policy(fire_control: Callable, policy_of: Mapping[str, WeaponPol
 
         return kept or None
 
-    if ER.accepts_target_grounded(fire_control):
+    knows_grounded = ER.accepts_target_grounded(fire_control)
+    knows_altitudes = ER.accepts_altitudes(fire_control)
+
+    if knows_grounded and knows_altitudes:
+        def restricted(shooter, target, target_grounded: bool = False, altitudes=None):
+            kwargs = {}
+
+            if target_grounded:
+                kwargs['target_grounded'] = True
+
+            if altitudes is not None:
+                kwargs['altitudes'] = altitudes
+
+            return restrict(shooter, target, fire_control(shooter, target, **kwargs), target_grounded)
+    elif knows_grounded:
         def restricted(shooter, target, target_grounded: bool = False):
             if target_grounded:
                 return restrict(shooter, target, fire_control(shooter, target, target_grounded=True), True)
+
+            return restrict(shooter, target, fire_control(shooter, target), False)
+    elif knows_altitudes:
+        def restricted(shooter, target, altitudes=None):
+            if altitudes is not None:
+                return restrict(shooter, target, fire_control(shooter, target, altitudes=altitudes), False)
 
             return restrict(shooter, target, fire_control(shooter, target), False)
     else:

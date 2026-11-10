@@ -1022,5 +1022,101 @@ class TestInterceptDomains(_FireControlFixture, unittest.TestCase):
         self.assertFalse(FC.shot_spec_for(self.weapon('ground', 'AZP-23-23mm'), 0.5, 0.5).interceptable)
 
 
+class TestAltitudeBand(_FireControlFixture, unittest.TestCase):
+    """VA blocco 1 (Proposta_Allineamento_Volumi_DES_Pianificatore.md): fascia/tetto copiati nella
+    ShotSpec da `shot_spec_for`, e quota all'istante (`altitudes`) in `make_registry_fire_control`."""
+
+    @staticmethod
+    def weapon(domain, model):
+        """`_Weapon` del registro del dominio ('air' | 'ground' | 'ship') per il modello `model`."""
+        registry = {'air': AWD.AIR_WEAPONS, 'ground': GWD.GROUND_WEAPONS, 'ship': SWD.SHIP_WEAPONS}[domain]
+        category = next(c for c, models in registry.items() if isinstance(models, dict) and model in models)
+        return FC._Weapon(model, category, domain, registry[category][model])
+
+    @staticmethod
+    def names(specs):
+        return tuple(spec.weapon for spec in (specs or ()))
+
+    def test_shotspec_altitude_fields(self):
+        # SAM terrestre: fascia relativa letta dal registro (9M33-SAM), tetto None.
+        sam = self.weapon('ground', '9M33-SAM')
+        spec = FC.shot_spec_for(sam, 0.5, 0.5, is_air=True)
+        self.assertEqual(spec.min_altitude, GWD.GROUND_WEAPONS['MISSILES']['9M33-SAM']['min_altitude'])
+        self.assertEqual(spec.max_altitude, GWD.GROUND_WEAPONS['MISSILES']['9M33-SAM']['max_altitude'])
+        self.assertIsNone(spec.max_target_z)
+        # SAM navale: fascia letta dal registro navale (RIM-162-ESSM).
+        naval = self.weapon('ship', 'RIM-162-ESSM')
+        spec_naval = FC.shot_spec_for(naval, 0.5, 0.5, is_air=True)
+        self.assertEqual(spec_naval.min_altitude, SWD.SHIP_WEAPONS['MISSILES_SAM']['RIM-162-ESSM']['min_altitude'])
+        self.assertEqual(spec_naval.max_altitude, SWD.SHIP_WEAPONS['MISSILES_SAM']['RIM-162-ESSM']['max_altitude'])
+        self.assertIsNone(spec_naval.max_target_z)
+        # AAM: tetto assoluto dal registro (AIM-9M: max_height 18 km -> 18000 m), fascia None.
+        aam = self.weapon('air', 'AIM-9M')
+        spec_air = FC.shot_spec_for(aam, 0.5, 0.5, is_air=True)
+        self.assertEqual(spec_air.max_target_z, 18000.0)
+        self.assertIsNone(spec_air.min_altitude)
+        self.assertIsNone(spec_air.max_altitude)
+        # Arma terrestre contro un bersaglio di superficie: tre None.
+        spec_surface = FC.shot_spec_for(sam, 0.5, 0.5, is_air=False)
+        self.assertIsNone(spec_surface.min_altitude)
+        self.assertIsNone(spec_surface.max_altitude)
+        self.assertIsNone(spec_surface.max_target_z)
+
+    def test_registry_fire_control_altitudes(self):
+        """(i) altitudes=None come prima; (ii) quote all'istante; (iii) quote ignote; (iv) restrict_by_policy."""
+        osa = self.vehicle('9A33-Osa')
+        fc = FC.make_registry_fire_control()
+
+        # (i) altitudes=None = posizioni degli asset, come prima (stesso risultato).
+        ac_low = self.aircraft(A10, 3000.0)
+        self.assertEqual(self.names(fc(osa, ac_low)), self.names(fc(osa, ac_low, altitudes=None)))
+
+        # (ii) quote all'istante: 6000 m relativi -> nessun 9M33-SAM; 3000 -> 9M33-SAM.
+        ac_high = self.aircraft(A10, 6000.0)
+        self.assertNotIn('9M33-SAM', self.names(fc(osa, ac_high, altitudes=(0.0, 6000.0))))
+        self.assertIn('9M33-SAM', self.names(fc(osa, ac_high, altitudes=(0.0, 3000.0))))
+
+        # (iii) quote ignote: nessun filtro di quota (il 9M33-SAM resta candidato).
+        self.assertIn('9M33-SAM', self.names(fc(osa, ac_high, altitudes=(None, None))))
+
+        # (iv) le quattro varianti di `restrict_by_policy`: la keyword e' dichiarata e inoltrata
+        # solo se la base la dichiara.
+        calls = []
+
+        def base_both(shooter, target, target_grounded=False, altitudes=None):
+            calls.append((target_grounded, altitudes))
+            return None
+
+        wrapped = FC.restrict_by_policy(base_both, {})
+        self.assertTrue(ER.accepts_target_grounded(wrapped))
+        self.assertTrue(ER.accepts_altitudes(wrapped))
+        wrapped(object(), object())
+        wrapped(object(), object(), target_grounded=True)
+        wrapped(object(), object(), altitudes=(0.0, 1.0))
+        wrapped(object(), object(), target_grounded=True, altitudes=(0.0, 1.0))
+        self.assertEqual(calls, [(False, None), (True, None), (False, (0.0, 1.0)), (True, (0.0, 1.0))])
+
+        def base_plain(shooter, target):
+            return None
+
+        plain = FC.restrict_by_policy(base_plain, {})
+        self.assertFalse(ER.accepts_target_grounded(plain))
+        self.assertFalse(ER.accepts_altitudes(plain))
+
+        def base_alt(shooter, target, altitudes=None):
+            return None
+
+        only_alt = FC.restrict_by_policy(base_alt, {})
+        self.assertFalse(ER.accepts_target_grounded(only_alt))
+        self.assertTrue(ER.accepts_altitudes(only_alt))
+
+        def base_grounded(shooter, target, target_grounded=False):
+            return None
+
+        only_grounded = FC.restrict_by_policy(base_grounded, {})
+        self.assertTrue(ER.accepts_target_grounded(only_grounded))
+        self.assertFalse(ER.accepts_altitudes(only_grounded))
+
+
 if __name__ == '__main__':
     unittest.main()

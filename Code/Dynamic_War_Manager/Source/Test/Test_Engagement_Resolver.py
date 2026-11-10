@@ -2037,6 +2037,256 @@ class TestWeaponRange(unittest.TestCase):
                     ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5, max_range=value)
 
 
+class TestEngagementAltitude(unittest.TestCase):
+    """VA blocco 1 (Proposta_Allineamento_Volumi_DES_Pianificatore.md): sfera ∩ fascia nel tempo,
+    quota all'istante della decisione, tetto delle armi d'aereo e rinvio fuori fascia.
+
+    Geometria di base: b1 fermo nell'origine; r1 (Aircraft) si avvicina lungo x da 10 km a
+    100 m/s nella finestra [0, 100] s (dist orizzontale = 10000 - 100 t), rilevato a t = 0
+    (estrazione 0.0 -> raggio = portata del sensore, 20 km), latenza 2 s: primo istante utile
+    t = 2. L'interruttore e' sostituito con `patch.object(ER, 'VA_ENGAGEMENT_ALTITUDE_BAND', ...)`
+    attorno alla chiamata, come S35 per `BI_AD_TARGET_RULE`.
+    """
+
+    LEGS = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+            'r1': [Leg(0.0, 100.0, (10_000.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+
+    # Bersaglio in verticale sopra il tiratore, da 0 a 2000 m in 100 s (calcoli a mano, test 9).
+    VERT = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+            'r1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 2000.0))]}
+
+    @staticmethod
+    def _level_legs(z: float) -> dict:
+        """Bersaglio in avvicinamento orizzontale a quota costante `z` [m]."""
+        return {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                'r1': [Leg(0.0, 100.0, (10_000.0, 0.0, z), (0.0, 0.0, z))]}
+
+    def _run(self, fire_control, legs=LEGS, switch=True, window=None):
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        red = _Force('red', 'Red', [Aircraft('r1')])
+        windows = window or [ContactWindow('b1', 'r1', t_start=0.0, t_end=100.0, t_cpa=100.0,
+                                           distance_cpa=0.0, range_a=20_000.0, range_b=None)]
+        with patch(_ER_LOGGER):
+            with patch.object(ER, 'VA_ENGAGEMENT_ALTITUDE_BAND', switch):
+                return ER.resolve_engagement(blue, red, windows, fire_control, _ScriptedRng([0.0] * 10),
+                                             legs=legs, reaction_profile_for=_profiles({}, default=(2.0, 1.0)))
+
+    def test_shotspec_altitude_validation(self):
+        """min_altitude > max_altitude o un campo non numerico -> ValueError; default None accettati."""
+        with self.assertRaises(ValueError):
+            ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5, min_altitude=5.0, max_altitude=1.0)
+        for value in (True, '100'):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5, max_target_z=value)
+        spec = ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5)
+        self.assertIsNone(spec.min_altitude)
+        self.assertIsNone(spec.max_altitude)
+        self.assertIsNone(spec.max_target_z)
+        self.assertEqual(ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5,
+                                     min_altitude=-10.0, max_altitude=10.0, max_target_z=200.0).max_target_z,
+                         200.0)
+
+    def test_engagement_intervals_band(self):
+        """band=None coincide con la sfera di oggi; fascia relativa e tetto assoluto intersecati a mano."""
+        self.assertEqual(ER.engagement_intervals(self.LEGS['b1'], self.LEGS['r1'], 3000.0), [(70.0, 100.0)])
+        self.assertEqual(ER.engagement_intervals(self.LEGS['b1'], self.LEGS['r1'], 3000.0, band=None),
+                         [(70.0, 100.0)])
+        # Verticale sopra il tiratore, 0 -> 2000 m: sfera 1500 -> [(0, 75)]; fascia (500, 1500) -> [(25, 75)];
+        # tetto assoluto 1000 -> [(0, 50)].
+        self.assertEqual(ER.engagement_intervals(self.VERT['b1'], self.VERT['r1'], 1500.0), [(0.0, 75.0)])
+        self.assertEqual(ER.engagement_intervals(self.VERT['b1'], self.VERT['r1'], 1500.0,
+                                                 band=(500.0, 1500.0, None)), [(25.0, 75.0)])
+        self.assertEqual(ER.engagement_intervals(self.VERT['b1'], self.VERT['r1'], 1500.0,
+                                                 band=(None, None, 1000.0)), [(0.0, 50.0)])
+
+    def test_accepts_keyword(self):
+        """`altitudes` -> True per altitudes, False per target_grounded; `**kwargs` -> True per entrambe."""
+        def with_altitudes(shooter, target, altitudes=None):
+            return None
+
+        def with_kwargs(shooter, target, **kwargs):
+            return None
+
+        def plain(shooter, target):
+            return None
+
+        self.assertTrue(ER.accepts_keyword(with_altitudes, 'altitudes'))
+        self.assertFalse(ER.accepts_keyword(with_altitudes, 'target_grounded'))
+        self.assertTrue(ER.accepts_keyword(with_kwargs, 'altitudes'))
+        self.assertTrue(ER.accepts_keyword(with_kwargs, 'target_grounded'))
+        self.assertFalse(ER.accepts_keyword(plain, 'altitudes'))
+        self.assertFalse(ER.accepts_keyword(plain, 'target_grounded'))
+        self.assertTrue(ER.accepts_altitudes(with_altitudes))
+        self.assertFalse(ER.accepts_altitudes(plain))
+        self.assertTrue(ER.accepts_target_grounded(with_kwargs))
+        self.assertFalse(ER.accepts_target_grounded(plain))
+
+    def test_on_band_above_target_no_fire(self):
+        """Fascia relativa mai rispettata (bersaglio a 6000 m, tetto 5000): nessuna salva, candidato esaurito."""
+        def fc(shooter, target):
+            return _kill(max_range=15_000.0, max_altitude=5000.0)
+
+        result = self._run(fc, legs=self._level_legs(6000.0), switch=True)
+        self.assertEqual(result.salvos, ())
+
+    def test_on_entry_into_band_defers_launch(self):
+        """Bersaglio in discesa 8000 -> 0 in 100 s: il tiro parte all'ingresso in sfera ∩ fascia (t = 37.5)."""
+        def fc(shooter, target):
+            return _kill(max_range=15_000.0, max_altitude=5000.0)
+
+        legs = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                'r1': [Leg(0.0, 100.0, (0.0, 0.0, 8000.0), (0.0, 0.0, 0.0))]}
+        result = self._run(fc, legs=legs, switch=True)
+        self.assertEqual(len(result.salvos), 1)
+        self.assertAlmostEqual(result.salvos[0].t_launch, 37.5, places=6)
+
+    def test_off_band_ignored_three_args_and_no_altitudes(self):
+        """VA spento: fascia ignorata (salva come prima), engagement_intervals riceve 3 argomenti, nessuna quota."""
+        interval_calls = []
+        fc_calls = []
+
+        def fake_intervals(legs_shooter, legs_target, max_range):
+            interval_calls.append(max_range)
+            return [(0.0, 100.0)]
+
+        def fc(shooter, target, altitudes=None):
+            fc_calls.append(altitudes)
+            return _kill(max_range=15_000.0, min_altitude=1000.0)
+
+        with patch.object(ER, 'engagement_intervals', fake_intervals):
+            result = self._run(fc, switch=False)
+
+        self.assertAlmostEqual(result.salvos[0].t_launch, 2.0)
+        self.assertEqual(interval_calls, [15_000.0])
+        self.assertTrue(fc_calls)
+        self.assertTrue(all(altitudes is None for altitudes in fc_calls))
+
+    def test_on_fire_control_without_altitudes_uses_old_call(self):
+        """Una fire control che NON dichiara `altitudes` riceve la chiamata di sempre; esito = VA spento."""
+        calls = []
+
+        def fc(shooter, target):
+            calls.append('plain')
+            return _kill(max_range=15_000.0)
+
+        result = self._run(fc, switch=True)
+        self.assertEqual(calls, ['plain'])
+        self.assertAlmostEqual(result.salvos[0].t_launch, 2.0)
+
+    def test_on_altitudes_at_the_decision_instant(self):
+        """La fire control riceve le quote dei tratti all'istante della decisione, non le posizioni degli asset."""
+        received = []
+
+        def fc(shooter, target, altitudes=None):
+            received.append(altitudes)
+            return _kill(max_range=15_000.0)
+
+        legs = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                'r1': [Leg(0.0, 100.0, (10_000.0, 0.0, 0.0), (0.0, 0.0, 2000.0))]}
+        result = self._run(fc, legs=legs, switch=True)
+        self.assertTrue(result.salvos)
+        self.assertTrue(received)
+        self.assertEqual(received[0], (0.0, 40.0))
+
+    def test_on_absolute_ceiling(self):
+        """Tetto assoluto: sopra il tetto prima della sfera -> nessuna salva; sotto -> salva all'ingresso."""
+        def fc_ceiling(shooter, target):
+            return _kill(max_range=3000.0, max_target_z=500.0)
+
+        climb = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                 'r1': [Leg(0.0, 100.0, (10_000.0, 0.0, 0.0), (0.0, 0.0, 2000.0))]}
+        self.assertEqual(self._run(fc_ceiling, legs=climb, switch=True).salvos, ())
+        below = self._run(fc_ceiling, legs=self.LEGS, switch=True)
+        self.assertEqual(len(below.salvos), 1)
+        self.assertAlmostEqual(below.salvos[0].t_launch, 70.0, places=6)
+
+    def test_on_without_legs_fallback(self):
+        """Senza tratti: quote e fascia ignorate (ripiego di oggi), il tiro parte a t_cpa."""
+        received = []
+
+        def fc(shooter, target, altitudes=None):
+            received.append(altitudes)
+            return _kill(max_range=3000.0, min_altitude=1000.0)
+
+        near = [ContactWindow('b1', 'r1', t_start=0.0, t_end=100.0, t_cpa=40.0, distance_cpa=1000.0,
+                              range_a=20_000.0, range_b=None)]
+        result = self._run(fc, legs=None, switch=True, window=near)
+        self.assertAlmostEqual(result.salvos[0].t_launch, 40.0)
+        self.assertTrue(received)
+        self.assertTrue(all(altitudes is None for altitudes in received))
+
+    def test_on_in_range_at_deferral_is_not_now(self):
+        """`_in_range_at`: fuori fascia a t_fire ma in fascia dopo -> False, candidato non modificato."""
+
+        def fc(shooter, target, altitudes=None):
+            if altitudes is None or altitudes == (None, None):
+                return _miss(max_range=15_000.0, max_altitude=5000.0)
+            relative = altitudes[1] - altitudes[0]
+            return _miss(max_range=15_000.0, max_altitude=5000.0) if relative <= 5000.0 else None
+
+        legs = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                'r1': [Leg(0.0, 100.0, (0.0, 0.0, 8000.0), (0.0, 0.0, 0.0))]}
+
+        with patch(_ER_LOGGER):
+            with patch.object(ER, 'VA_ENGAGEMENT_ALTITUDE_BAND', True):
+                run = ER._EngagementRun((_Force('blue', 'Blue', [_Asset('b1')]),
+                                         _Force('red', 'Red', [Aircraft('r1')])),
+                                        [], fc, random.Random(0), legs, None, None, None, None,
+                                        0.0, DM.DERIVED)
+
+        candidate = ER._Candidate(t_ready=2.0, target_id='r1', t_end=100.0)
+        self.assertFalse(run._in_range_at(run.shadows['b1'], 0, candidate, 2.0))
+        self.assertFalse(candidate.exhausted)
+        self.assertIsNone(candidate.not_before)
+
+    def test_on_preferred_out_of_band_uses_second(self):
+        """La fire control all'istante scarta la preferita fuori fascia e la salva usa la seconda arma."""
+        received = []
+
+        def fc(shooter, target, altitudes=None):
+            received.append(altitudes)
+            relative = altitudes[1] - altitudes[0] if altitudes else None
+            if relative is not None and relative > 1000.0:
+                return _miss(weapon='second', max_range=15_000.0, max_altitude=5000.0)
+            return _miss(weapon='preferred', max_range=15_000.0, max_altitude=1000.0)
+
+        result = self._run(fc, legs=self._level_legs(3000.0), switch=True)
+        self.assertTrue(received)
+        self.assertEqual(result.salvos[0].spec.weapon, 'second')
+
+    def test_on_deferral(self):
+        """Rinvio VA-2.1: fuori fascia all'istante, entra in sfera ∩ fascia a t = 37.5 -> salva a 37.5."""
+        calls = []
+
+        def fc(shooter, target, altitudes=None):
+            calls.append(altitudes)
+            if altitudes is None or altitudes == (None, None):
+                return _kill(max_range=15_000.0, max_altitude=5000.0)
+            relative = altitudes[1] - altitudes[0]
+            return _kill(max_range=15_000.0, max_altitude=5000.0) if relative <= 5000.0 else None
+
+        legs = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                'r1': [Leg(0.0, 100.0, (0.0, 0.0, 8000.0), (0.0, 0.0, 0.0))]}
+        result = self._run(fc, legs=legs, switch=True)
+        self.assertEqual(len(result.salvos), 1)
+        self.assertGreater(result.salvos[0].t_launch, 2.0)
+        self.assertAlmostEqual(result.salvos[0].t_launch, 37.5, places=6)
+        # la fire control e' stata richiamata all'istante del rinvio con le quote di quell'istante.
+        self.assertIn((0.0, 5000.0), calls)
+
+    def test_on_deferral_impossible(self):
+        """Rinvio senza alcun ingresso in sfera ∩ fascia: candidato esaurito come oggi (nessuna salva)."""
+
+        def fc(shooter, target, altitudes=None):
+            if altitudes == (None, None):
+                return _miss(max_range=15_000.0, max_altitude=5000.0)
+            return None
+
+        result = self._run(fc, legs=self._level_legs(6000.0), switch=True)
+        self.assertEqual(result.salvos, ())
+
+
 # ── NON-MUTAZIONE E APPLICAZIONE, CON OGGETTI REALI ───────────────────────────
 
 class TestIntegrationWithRealObjects(unittest.TestCase):

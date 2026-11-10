@@ -140,6 +140,30 @@ LANCIO: la salva parte solo quando la distanza 3D tiratore-bersaglio e' <= max_r
   l'ordine delle estrazioni RNG e' invariato, e con `max_range=None` il percorso di codice
   e' identico a quello precedente.
 
+## Quota nel volume d'ingaggio (VA, 2026-11-xx)
+
+`Proposta_Allineamento_Volumi_DES_Pianificatore.md`, interruttore `VA_ENGAGEMENT_ALTITUDE_BAND` (SPENTO). Acceso:
+
+1. la fire control che dichiara la keyword `altitudes` (introspezione, come `target_grounded`)
+   riceve le quote di tiratore e bersaglio ALL'ISTANTE della decisione, ricavate dai tratti
+   (`position_on_legs`), invece di leggere la posizione di partenza degli asset (VA-2 (d));
+2. il controllo di portata vale nel tempo su SFERA (`max_range`) ∩ FASCIA della ShotSpec:
+   `min_altitude`/`max_altitude` RELATIVE al tiratore, `max_target_z` ASSOLUTA (VA-1, VA-3 (b));
+3. un bersaglio aereo fuori fascia all'istante della decisione non esaurisce il candidato se
+   un'arma adatta entrera' in sfera ∩ fascia piu' tardi nella finestra d'ingaggio: la decisione
+   e' rinviata a quell'istante (`_altitude_deferral`, VA-2.1 (i)).
+
+La regola e' UNA SOLA disuguaglianza (quella di `Fire_Control.in_altitude_envelope`) valutata
+in DUE istanti: la fire control la applica all'istante della decisione (sceglie l'arma), il
+risolutore la stessa sui tratti dall'istante della decisione in poi (sceglie l'istante di
+lancio), con gli STESSI dati di registro copiati nella `ShotSpec` (campi
+`min_altitude`/`max_altitude`/`max_target_z`). Ripiego senza tratti (chiamate dirette a
+`resolve_engagement` senza `legs`): nessuna quota all'istante, chiamata e controllo di prima
+(la fascia e' ignorata, come la portata). Allineamento per involucro col cilindro del
+pianificatore (VA-4 (a)): sfera ∩ fascia ⊆ cilindro, quindi "sicuro" per il pianificatore e'
+sicuro anche per il DES. Limite dichiarato: vale la prima arma con scorta (§5.2), senza
+ripiego per la portata. Nessuna estrazione nuova ne' spostata in nessuno dei due stati.
+
 ## Permanenza nel volume (D-5, 2026-11-06)
 
 `Proposta_Dwell_Time_Rilevamento.md`. Un sensore che scandisce (un radar EWR che ruota) offre al bersaglio
@@ -468,7 +492,9 @@ from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import (
     GROUNDED_DETECTION_MODE,
     TIME_EPS,
     GroundedSchedule,
+    altitude_intervals,
     detection_mode_for,
+    intersect_intervals,
     position_on_legs,
     range_intervals,
 )
@@ -533,6 +559,17 @@ D5_DWELL_TIME = False
 #     gli `intercept_domains` della ShotSpec (None = non dichiarato: nessun vincolo). Letto all'inizio di ogni run.
 #     Spento: nessun filtro, come prima. Nessuna estrazione in piu' ne' in ordine diverso in nessuno dei due stati.
 BI_AD_TARGET_RULE = False
+
+# Quota nel volume d'ingaggio (Proposta_Allineamento_Volumi_DES_Pianificatore.md, VA), interruttore dedicato:
+#   * `VA_ENGAGEMENT_ALTITUDE_BAND` (SPENTO). Acceso: (1) la fire control che dichiara la keyword `altitudes`
+#     (introspezione, come `target_grounded`) riceve le quote di tiratore e bersaglio ALL'ISTANTE della decisione,
+#     ricavate dai tratti, invece di leggere la posizione di partenza degli asset (VA-2 (d)); (2) il controllo di portata
+#     vale nel tempo su sfera (max_range) ∩ fascia della ShotSpec: `min_altitude`/`max_altitude` RELATIVE al tiratore,
+#     `max_target_z` ASSOLUTA (VA-1, VA-3 (b)); (3) un bersaglio aereo fuori fascia all'istante della decisione non
+#     esaurisce il candidato se un'arma adatta entrera' in sfera ∩ fascia piu' tardi nella finestra d'ingaggio: la
+#     decisione e' rinviata a quell'istante (VA-2.1 (i)). Spento: chiamate, chiavi e istanti di prima. Nessuna
+#     estrazione nuova ne' spostata in nessuno dei due stati.
+VA_ENGAGEMENT_ALTITUDE_BAND = False
 
 # Domini di difesa aerea ammessi in `ShotSpec.intercept_domains` ('land' = intercettore non navale, 'naval' = nave).
 AD_DOMAINS = frozenset({'land', 'naval'})
@@ -622,6 +659,11 @@ class ShotSpec:
             colpo un bersaglio (regola dell'utente del 2026-11-07, v. `BI_AD_TARGET_RULE`); None
             = non dichiarato, nessun vincolo. Lo legge il risolutore solo con l'interruttore
             acceso; lo decide chi conosce l'arma (la fire control), come `interceptable`.
+        min_altitude/max_altitude: fascia di quota del bersaglio RELATIVA al tiratore [m]
+            (armi di superficie: registro 'm AGL' = sopra il sito, senza terreno); max_target_z:
+            quota ASSOLUTA massima del bersaglio [m] (armi d'aereo: `max_height` del registro).
+            Usati dal controllo di portata solo con `VA_ENGAGEMENT_ALTITUDE_BAND` acceso
+            (v. "Quota nel volume d'ingaggio"); None = nessun limite.
     """
     accuracy: float
     destroy_capacity: float
@@ -633,6 +675,9 @@ class ShotSpec:
     max_range: Optional[float] = None
     stock_per_round: int = 1
     intercept_domains: Optional[FrozenSet[str]] = None
+    min_altitude: Optional[float] = None
+    max_altitude: Optional[float] = None
+    max_target_z: Optional[float] = None
 
     def __post_init__(self):
         for name in ('accuracy', 'destroy_capacity'):
@@ -669,6 +714,17 @@ class ShotSpec:
                                                    or not self.intercept_domains <= AD_DOMAINS):
             raise ValueError(f"intercept_domains must be None or a frozenset of {sorted(AD_DOMAINS)}, "
                              f"got {self.intercept_domains!r}")
+
+        for name in ('min_altitude', 'max_altitude', 'max_target_z'):
+            value = getattr(self, name)
+
+            if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))):
+                raise ValueError(f"{name} must be None or a number, got {value!r}")
+
+        if self.min_altitude is not None and self.max_altitude is not None \
+                and self.min_altitude > self.max_altitude:
+            raise ValueError(f"min_altitude ({self.min_altitude!r}) must not exceed "
+                             f"max_altitude ({self.max_altitude!r})")
 
 
 @dataclass(frozen=True)
@@ -1691,12 +1747,16 @@ def _can_disengage(force) -> bool:
 # Parametro keyword dell'estensione facoltativa del protocollo di fire control (F4c).
 TARGET_GROUNDED_KEYWORD = 'target_grounded'
 
+# Parametro keyword dell'estensione facoltativa del protocollo di fire control per la quota
+# all'istante della decisione (VA-2 (d), v. "Quota nel volume d'ingaggio").
+ALTITUDES_KEYWORD = 'altitudes'
 
-def accepts_target_grounded(fire_control: Callable) -> bool:
-    """True se la fire control accetta la keyword `target_grounded` (o `**kwargs`).
+
+def accepts_keyword(fire_control: Callable, name: str) -> bool:
+    """True se la fire control accetta la keyword `name` (o `**kwargs`); firma non leggibile -> False.
 
     Introspezione della firma (`inspect.signature`); una firma non leggibile (builtin, oggetti
-    C) vale False: la fire control riceve la chiamata di sempre (v. "Aerei a terra").
+    C) vale False: la fire control riceve la chiamata di sempre.
     """
     try:
         parameters = inspect.signature(fire_control).parameters.values()
@@ -1707,11 +1767,21 @@ def accepts_target_grounded(fire_control: Callable) -> bool:
         if parameter.kind is inspect.Parameter.VAR_KEYWORD:
             return True
 
-        if parameter.name == TARGET_GROUNDED_KEYWORD and parameter.kind in (
+        if parameter.name == name and parameter.kind in (
                 inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
             return True
 
     return False
+
+
+def accepts_target_grounded(fire_control: Callable) -> bool:
+    """True se la fire control accetta la keyword `target_grounded` (o `**kwargs`)."""
+    return accepts_keyword(fire_control, TARGET_GROUNDED_KEYWORD)
+
+
+def accepts_altitudes(fire_control: Callable) -> bool:
+    """True se la fire control accetta la keyword `altitudes` (o `**kwargs`)."""
+    return accepts_keyword(fire_control, ALTITUDES_KEYWORD)
 
 
 # ── PORTATA D'ARMA: INTERVALLI DI PERMANENZA (controllo di portata, 2026-09-24) ──
@@ -1728,14 +1798,37 @@ def accepts_target_grounded(fire_control: Callable) -> bool:
 IntervalList = List[Tuple[float, float]]
 
 
-def engagement_intervals(legs_shooter: Sequence, legs_target: Sequence, max_range: float) -> IntervalList:
-    """Intervalli [t_in, t_out] in cui il bersaglio e' nella SFERA di raggio `max_range` [m]
-    centrata sul tiratore (distanza 3D), dai tratti di rotta di entrambi.
+def engagement_intervals(legs_shooter: Sequence, legs_target: Sequence, max_range: float,
+                         band: Optional[Tuple[Optional[float], Optional[float], Optional[float]]] = None
+                         ) -> IntervalList:
+    """Intervalli [t_in, t_out] in cui il bersaglio e' nel volume d'ingaggio, dai tratti di rotta.
 
-    E' `Contact_Scheduler.range_intervals` (soluzione esatta di |dr + dv s| <= R su ogni
-    sottointervallo a velocita' relativa costante), la stessa geometria del rilevamento.
+    Senza `band`: la SFERA di raggio `max_range` [m] centrata sul tiratore (distanza 3D), come
+    prima (`Contact_Scheduler.range_intervals`, soluzione esatta di |dr + dv s| <= R su ogni
+    sottointervallo a velocita' relativa costante, la stessa geometria del rilevamento).
+
+    Con `band = (min_altitude, max_altitude, max_target_z)`: la sfera intersecata con la fascia
+    di quota (VA-1) e con il tetto assoluto (VA-3 (b)):
+    * `min_altitude`/`max_altitude` [m] RELATIVE al tiratore (armi di superficie);
+    * `max_target_z` [m] ASSOLUTA (armi d'aereo);
+    ciascun None = nessun limite da quel lato. L'intersezione usa
+    `Contact_Scheduler.altitude_intervals` e `intersect_intervals`.
     """
-    return range_intervals(legs_shooter, legs_target, max_range)
+    intervals = range_intervals(legs_shooter, legs_target, max_range)
+
+    if band is None:
+        return intervals
+
+    if band[0] is not None or band[1] is not None:
+        intervals = intersect_intervals(intervals,
+                                        altitude_intervals(legs_shooter, legs_target, band[0], band[1]))
+
+    if band[2] is not None:
+        intervals = intersect_intervals(intervals,
+                                        altitude_intervals(legs_shooter, legs_target, None, band[2],
+                                                           relative=False))
+
+    return intervals
 
 
 def engagement_intervals_without_legs(t_cpa: Optional[float], distance_cpa: Optional[float],
@@ -1855,9 +1948,14 @@ class _EngagementRun:
         self.now = float('-inf')
         self.in_flight: Dict[int, Salvo] = {}
         # Geometria "bersaglio entro la portata" (sostituibile, v. engagement_intervals) e
-        # intervalli gia' calcolati per (tiratore, bersaglio, max_range): v. _range_entry.
+        # intervalli gia' calcolati per (tiratore, bersaglio, max_range): v. _range_entry. Con VA
+        # acceso la chiave si allarga con la `band` (min_altitude, max_altitude, max_target_z).
         self.engagement_intervals = engagement_intervals
-        self.range_cache: Dict[Tuple[str, str, float], List[Tuple[float, float]]] = {}
+        self.range_cache: Dict[tuple, List[Tuple[float, float]]] = {}
+        # VA (VA_ENGAGEMENT_ALTITUDE_BAND, letto qui una volta: i test lo sostituiscono nel modulo): quota all'istante
+        # per la fire control, fascia nel controllo di portata, rinvio fuori fascia.
+        self.altitude_band = bool(VA_ENGAGEMENT_ALTITUDE_BAND)
+        self.fire_control_knows_altitudes: Optional[bool] = None
 
         self.queue: List = []
         self.sequence = 0
@@ -2560,6 +2658,14 @@ class _EngagementRun:
             choice = self._first_with_stock(shooter, self._fire_control(shooter, self.shadows[target_id], t_fire))
 
             if choice is None:
+                # VA-2.1: fuori fascia all'istante, ma un'arma entrera' in sfera ∩ fascia piu' tardi -> rinvio.
+                t_next, choice = self._altitude_deferral(shooter, candidates[index], t_fire)
+
+                if t_next is not None:
+                    candidates[index].not_before = t_next
+                    continue
+
+            if choice is None:
                 # ROE o arma inadatta (None), oppure nessuna delle armi adatte ha piu'
                 # scorta: questo bersaglio non verra' piu' ingaggiato da lui.
                 candidates[index].exhausted = True
@@ -2573,7 +2679,8 @@ class _EngagementRun:
                 # ma solo per questa coppia/finestra. Ingresso piu' tardi -> il candidato
                 # viene rimandato a quell'istante e la scelta si ripete: nel frattempo il
                 # tiratore puo' ingaggiare un altro bersaglio gia' in portata.
-                t_in_range = self._range_entry(shooter_id, candidates[index], spec.max_range, t_fire)
+                t_in_range = self._range_entry(shooter_id, candidates[index], spec.max_range, t_fire,
+                                               band=self._band_of(spec))
 
                 if t_in_range is None:
                     candidates[index].exhausted = True
@@ -2843,11 +2950,11 @@ class _EngagementRun:
 
         self._schedule_next(shooter_id, time)
 
-    def _fire_control(self, shooter: _Shadow, target: _Shadow, time: float):
+    def _fire_control(self, shooter: _Shadow, target: _Shadow, time: float, altitudes=None):
         """La fire control iniettata sulla coppia, ristretta dalle regole di bersaglio di missione del
         tiratore se ne ha (F7a, `apply_target_rules`); senza regole, la chiamata alla fire control e' quella
         di sempre (`_call_fire_control`)."""
-        result = self._call_fire_control(shooter, target, time)
+        result = self._call_fire_control(shooter, target, time, altitudes)
         rules = self.target_rules.get(shooter.id)
 
         if rules is None:
@@ -2858,33 +2965,57 @@ class _EngagementRun:
                                   validate_class(target.asset, 'Aircraft') and not self.grounded.at(target.id, time),
                                   rules.roe != ROE_PRIORITY_DESIGNATED or self._attack_over(shooter.id, rules, time))
 
-    def _call_fire_control(self, shooter: _Shadow, target: _Shadow, time: float):
-        """La fire control iniettata sulla coppia, con l'estensione `target_grounded` (F4c).
+    def _call_fire_control(self, shooter: _Shadow, target: _Shadow, time: float, altitudes=None):
+        """La fire control iniettata sulla coppia, con le estensioni `target_grounded` (F4c) e `altitudes` (VA).
 
         Bersaglio non a terra: `fire_control(shooter, target)`, la chiamata di sempre. Bersaglio
         a terra: `target_grounded=True` se la fire control dichiara il parametro (o `**kwargs`,
         `accepts_target_grounded`); altrimenti la chiamata di sempre e un warning una volta per
         run: quella fire control non conosce la postura e lo classifica come gli altri aerei.
 
+        Con VA acceso le quote sono quelle dei tratti all'istante `time` (della decisione):
+        `altitudes=(z_tiratore, z_bersaglio)` se la fire control dichiara `altitudes` e i tratti
+        ci sono, altrimenti la chiamata di sempre. `altitudes=(None, None)` = quote ignote: la
+        fire control non filtra per quota (politica gia' dichiarata in `Fire_Control`, "Quota").
+
         Dalla F5 lo stato e' quello all'istante `time` del LANCIO (la classificazione vale
         all'istante del lancio): un bersaglio che decolla mentre la salva e' in volo la riceve
         comunque, con l'arma scelta al lancio (payload congelato, R4), e il danno e' applicato
         all'impatto. Il tiro resta nella finestra del candidato, a stato costante.
         """
-        if not self.grounded.at(target.id, time):
+        if altitudes is None:
+            altitudes = self._altitudes_at(shooter.id, target.id, time)
+
+        if altitudes is None:
+            if not self.grounded.at(target.id, time):
+                return self.fire_control(shooter.asset, target.asset)
+
+            if self.fire_control_knows_grounded is None:
+                self.fire_control_knows_grounded = accepts_target_grounded(self.fire_control)
+
+                if not self.fire_control_knows_grounded:
+                    logger.warning("resolve_engagement: the fire control does not accept 'target_grounded': "
+                                   "aircraft on the ground are classified by it as any other aircraft")
+
+            if self.fire_control_knows_grounded:
+                return self.fire_control(shooter.asset, target.asset, target_grounded=True)
+
             return self.fire_control(shooter.asset, target.asset)
 
-        if self.fire_control_knows_grounded is None:
-            self.fire_control_knows_grounded = accepts_target_grounded(self.fire_control)
+        kwargs = {'altitudes': altitudes}
 
-            if not self.fire_control_knows_grounded:
-                logger.warning("resolve_engagement: the fire control does not accept 'target_grounded': "
-                               "aircraft on the ground are classified by it as any other aircraft")
+        if self.grounded.at(target.id, time):
+            if self.fire_control_knows_grounded is None:
+                self.fire_control_knows_grounded = accepts_target_grounded(self.fire_control)
 
-        if self.fire_control_knows_grounded:
-            return self.fire_control(shooter.asset, target.asset, target_grounded=True)
+                if not self.fire_control_knows_grounded:
+                    logger.warning("resolve_engagement: the fire control does not accept 'target_grounded': "
+                                   "aircraft on the ground are classified by it as any other aircraft")
 
-        return self.fire_control(shooter.asset, target.asset)
+            if self.fire_control_knows_grounded:
+                kwargs['target_grounded'] = True
+
+        return self.fire_control(shooter.asset, target.asset, **kwargs)
 
     def _is_launcher_against(self, asset_id: str, force_id: str) -> bool:
         """`asset_id` ha lanciato armi aria-superficie contro il dominio di `force_id` (L2)."""
@@ -2900,14 +3031,18 @@ class _EngagementRun:
                                                                     t_fire))
 
         if choice is None:
-            return False
+            # VA-2.1: un rinvio NON e' "a portata adesso"; nessuna mutazione del candidato qui.
+            _, choice = self._altitude_deferral(shooter, candidate, t_fire)
+
+            if choice is None:
+                return False
 
         spec, _ = choice
 
         if spec.max_range is None:
             return True
 
-        t_in_range = self._range_entry(shooter.id, candidate, spec.max_range, t_fire)
+        t_in_range = self._range_entry(shooter.id, candidate, spec.max_range, t_fire, band=self._band_of(spec))
         return t_in_range is not None and t_in_range <= t_fire + TIME_EPS
 
     def _register_launcher(self, time: float, launcher: "_Shadow", target_force_id: str) -> None:
@@ -3009,23 +3144,32 @@ class _EngagementRun:
         return None
 
     def _range_entry(self, shooter_id: str, candidate: _Candidate, max_range: float,
-                     t_from: float) -> Optional[float]:
+                     t_from: float,
+                     band: Optional[Tuple[Optional[float], Optional[float], Optional[float]]] = None
+                     ) -> Optional[float]:
         """Primo istante in [t_from, candidate.t_end] con il bersaglio entro la portata, o None.
 
         Solo SCELTA dell'istante: il "da quando a quando il bersaglio e' a portata" e'
         delegato a `self.engagement_intervals` (con i tratti di rotta) o a
         `engagement_intervals_without_legs` (senza), memoizzato per (tiratore, bersaglio,
-        portata). Sostituire la geometria (volumi d'ingaggio non sferici) non tocca questa
-        logica ne' la schedulazione.
+        portata) — con VA acceso anche per la `band` della ShotSpec. Sostituire la geometria
+        (volumi d'ingaggio non sferici) non tocca questa logica ne' la schedulazione.
         """
-        key = (shooter_id, candidate.target_id, float(max_range))
+        if band is None:
+            key = (shooter_id, candidate.target_id, float(max_range))
+        else:
+            key = (shooter_id, candidate.target_id, float(max_range), band)
 
         if key not in self.range_cache:
             legs_shooter = self.legs.get(shooter_id)
             legs_target = self.legs.get(candidate.target_id)
 
             if legs_shooter and legs_target:
-                intervals = self.engagement_intervals(legs_shooter, legs_target, float(max_range))
+                if band is None:
+                    intervals = self.engagement_intervals(legs_shooter, legs_target, float(max_range))
+                else:
+                    intervals = self.engagement_intervals(legs_shooter, legs_target, float(max_range),
+                                                          band=band)
             else:
                 intervals = engagement_intervals_without_legs(candidate.t_cpa, candidate.distance_cpa,
                                                               candidate.t_end, float(max_range))
@@ -3042,6 +3186,100 @@ class _EngagementRun:
             return entry if entry <= t_until else None
 
         return None
+
+    def _band_of(self, spec: ShotSpec) -> Optional[Tuple[Optional[float], Optional[float], Optional[float]]]:
+        """La fascia/tetto della ShotSpec, o None: a VA spento, o se i tre campi sono tutti None."""
+        if not self.altitude_band:
+            return None
+
+        if spec.min_altitude is None and spec.max_altitude is None and spec.max_target_z is None:
+            return None
+
+        return (spec.min_altitude, spec.max_altitude, spec.max_target_z)
+
+    def _altitudes_at(self, shooter_id: str, target_id: str,
+                      time: float) -> Optional[Tuple[float, float]]:
+        """(z_tiratore, z_bersaglio) all'istante `time`, dai tratti; None se non disponibili.
+
+        None a VA spento, se la fire control non dichiara `altitudes` (letto una volta,
+        `accepts_altitudes`), se manca uno dei due tratti o se `position_on_legs` non da' una
+        posizione; altrimenti le quote [m] interpolate sui tratti.
+        """
+        if not self.altitude_band:
+            return None
+
+        if self.fire_control_knows_altitudes is None:
+            self.fire_control_knows_altitudes = accepts_altitudes(self.fire_control)
+
+        if not self.fire_control_knows_altitudes:
+            return None
+
+        legs_shooter = self.legs.get(shooter_id)
+        legs_target = self.legs.get(target_id)
+
+        if not legs_shooter or not legs_target:
+            return None
+
+        p_shooter = position_on_legs(legs_shooter, time)
+        p_target = position_on_legs(legs_target, time)
+
+        if p_shooter is None or p_target is None:
+            return None
+
+        return (float(p_shooter[2]), float(p_target[2]))
+
+    def _altitude_deferral(self, shooter: _Shadow, candidate: _Candidate,
+                           t_fire: float) -> Tuple[Optional[float], Optional[Tuple[ShotSpec, int]]]:
+        """VA-2.1: la fire control, con le quote all'istante `t_fire`, non ha armi per il bersaglio aereo. Se con le
+        quote ignote (`altitudes=(None, None)`: nessun filtro di quota) qualche opzione con scorta entra in sfera ∩
+        fascia nella finestra d'ingaggio, restituisce `(istante, None)` col primo di questi ingressi (> t_fire: la
+        decisione si rinvia li') oppure `(None, (spec, colpi))` se l'ingresso e' gia' a `t_fire` (bordo della fascia:
+        stessa disuguaglianza, arrotondamento diverso); `(None, None)` altrimenti (candidato esaurito come oggi)."""
+        if self._altitudes_at(shooter.id, candidate.target_id, t_fire) is None:
+            return None, None
+
+        target = self.shadows[candidate.target_id]
+
+        if not validate_class(target.asset, 'Aircraft') or self.grounded.at(candidate.target_id, t_fire):
+            return None, None
+
+        result = self._fire_control(shooter, target, t_fire, altitudes=(None, None))
+        best_entry: Optional[float] = None
+        immediate: Optional[Tuple[ShotSpec, int]] = None
+
+        for spec in self._options(result):
+            stock = shooter.available(spec.weapon)
+
+            if stock is None:
+                rounds = spec.rounds
+            else:
+                rounds = min(spec.rounds, stock // spec.stock_per_round)
+
+            if rounds < 1:
+                continue
+
+            if spec.max_range is None:
+                continue
+
+            entry = self._range_entry(shooter.id, candidate, spec.max_range, t_fire,
+                                      band=self._band_of(spec))
+
+            if entry is None:
+                continue
+
+            if best_entry is None or entry < best_entry:
+                best_entry = entry
+
+            if immediate is None and entry <= t_fire + TIME_EPS:
+                immediate = (spec, rounds)
+
+        if best_entry is None:
+            return None, None
+
+        if best_entry > t_fire + TIME_EPS:
+            return best_entry, None
+
+        return None, immediate
 
     def _refire_interval(self, shooter_id: str, spec: ShotSpec) -> float:
         return spec.cycle_time if spec.cycle_time is not None else self._profile(shooter_id).refire_interval

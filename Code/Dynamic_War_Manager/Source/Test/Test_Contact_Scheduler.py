@@ -501,6 +501,100 @@ class TestRangeIntervals(unittest.TestCase):
         self.assertEqual(CS.range_intervals(legs_a, legs_b, 1000.0), [])
 
 
+class TestAltitudeIntervals(unittest.TestCase):
+    """`altitude_intervals`: fascia di quota (primitiva della Attivita' D, VA blocco 1)."""
+
+    @staticmethod
+    def _climbing_target(z0: float, z1: float) -> list:
+        """Un solo tratto: bersaglio che sale da `z0` a `z1` [m] in 100 s."""
+        return [CS.Leg(t_start=0.0, t_end=100.0, p_start=(0.0, 0.0, z0), p_end=(0.0, 0.0, z1))]
+
+    def test_linear_climb_through_the_band(self):
+        """Bersaglio 0 -> 2000 m in 100 s, tiratore fermo a z 0: fascia (500, 1500) -> [(25, 75)]."""
+        legs_a = CS.static_legs(Point3D(0, 0, 0), 0.0, 100.0)
+        legs_b = self._climbing_target(0.0, 2000.0)
+        intervals = CS.altitude_intervals(legs_a, legs_b, 500.0, 1500.0)
+        self.assertEqual(len(intervals), 1)
+        self.assertAlmostEqual(intervals[0][0], 25.0, places=6)
+        self.assertAlmostEqual(intervals[0][1], 75.0, places=6)
+
+    def test_constant_relative_altitude(self):
+        """Quota relativa costante 1000 m: fascia (500, 1500) -> tutto il tempo comune; (1200, 1500) -> []."""
+        legs_a = CS.static_legs(Point3D(0, 0, 0), 0.0, 100.0)
+        legs_b = [CS.Leg(t_start=0.0, t_end=100.0, p_start=(0.0, 0.0, 1000.0), p_end=(0.0, 1000.0, 1000.0))]
+        intervals = CS.altitude_intervals(legs_a, legs_b, 500.0, 1500.0)
+        self.assertEqual(len(intervals), 1)
+        self.assertAlmostEqual(intervals[0][0], 0.0, places=6)
+        self.assertAlmostEqual(intervals[0][1], 100.0, places=6)
+        self.assertEqual(CS.altitude_intervals(legs_a, legs_b, 1200.0, 1500.0), [])
+
+    def test_none_limits(self):
+        """Limiti None (un lato solo): (None, 1500) -> [(0, 75)]; (500, None) -> [(25, 100)]."""
+        legs_a = CS.static_legs(Point3D(0, 0, 0), 0.0, 100.0)
+        legs_b = self._climbing_target(0.0, 2000.0)
+        only_high = CS.altitude_intervals(legs_a, legs_b, None, 1500.0)
+        self.assertEqual(len(only_high), 1)
+        self.assertAlmostEqual(only_high[0][0], 0.0, places=6)
+        self.assertAlmostEqual(only_high[0][1], 75.0, places=6)
+        only_low = CS.altitude_intervals(legs_a, legs_b, 500.0, None)
+        self.assertEqual(len(only_low), 1)
+        self.assertAlmostEqual(only_low[0][0], 25.0, places=6)
+        self.assertAlmostEqual(only_low[0][1], 100.0, places=6)
+
+    def test_climb_then_descend_gives_two_intervals_and_bad_band_raises(self):
+        """Salita 0 -> 2000 (50 s) poi discesa 2000 -> 0 (50 s): due intervalli; z_min > z_max -> ValueError."""
+        legs_a = CS.static_legs(Point3D(0, 0, 0), 0.0, 100.0)
+        legs_b = [CS.Leg(t_start=0.0, t_end=50.0, p_start=(0.0, 0.0, 0.0), p_end=(0.0, 0.0, 2000.0)),
+                  CS.Leg(t_start=50.0, t_end=100.0, p_start=(0.0, 0.0, 2000.0), p_end=(0.0, 0.0, 0.0))]
+        intervals = CS.altitude_intervals(legs_a, legs_b, 500.0, 1500.0)
+        self.assertEqual(len(intervals), 2)
+        self.assertAlmostEqual(intervals[0][0], 12.5, places=6)
+        self.assertAlmostEqual(intervals[0][1], 37.5, places=6)
+        self.assertAlmostEqual(intervals[1][0], 62.5, places=6)
+        self.assertAlmostEqual(intervals[1][1], 87.5, places=6)
+
+        with self.assertRaises(ValueError):
+            CS.altitude_intervals(legs_a, legs_b, 1500.0, 500.0)
+
+    def test_relative_vs_absolute(self):
+        """relative=False conta la sola quota assoluta del bersaglio, anche col tiratore in salita."""
+        legs_a = [CS.Leg(t_start=0.0, t_end=100.0, p_start=(0.0, 0.0, 0.0), p_end=(0.0, 0.0, 1000.0))]
+        legs_b = [CS.Leg(t_start=0.0, t_end=100.0, p_start=(0.0, 0.0, 1000.0), p_end=(0.0, 0.0, 2000.0))]
+
+        # Quota relativa costante 1000 m (il tiratore sale con il bersaglio): stesso esito del caso costante.
+        relative = CS.altitude_intervals(legs_a, legs_b, 500.0, 1500.0)
+        self.assertEqual(len(relative), 1)
+        self.assertAlmostEqual(relative[0][0], 0.0, places=6)
+        self.assertAlmostEqual(relative[0][1], 100.0, places=6)
+
+        # Tetto assoluto 1500 sul bersaglio che sale 0 -> 2000, con relative=False: [(0, 75)].
+        legs_a2 = [CS.Leg(t_start=0.0, t_end=100.0, p_start=(0.0, 0.0, 0.0), p_end=(0.0, 0.0, 1000.0))]
+        legs_b2 = self._climbing_target(0.0, 2000.0)
+        absolute = CS.altitude_intervals(legs_a2, legs_b2, None, 1500.0, relative=False)
+        self.assertEqual(len(absolute), 1)
+        self.assertAlmostEqual(absolute[0][0], 0.0, places=6)
+        self.assertAlmostEqual(absolute[0][1], 75.0, places=6)
+
+
+class TestIntersectIntervals(unittest.TestCase):
+    """`intersect_intervals`: combinatore "intersezione" (primitiva della Attivita' D, VA blocco 1)."""
+
+    def test_partial_overlap_and_contact(self):
+        """[(0,10),(20,30)] ∩ [(5,25)] -> [(5,10),(20,25)]; contatto in 10 -> [(10,10)]; vuote -> []."""
+        first = [(0.0, 10.0), (20.0, 30.0)]
+        second = [(5.0, 25.0)]
+        self.assertEqual(CS.intersect_intervals(first, second), [(5.0, 10.0), (20.0, 25.0)])
+        self.assertEqual(CS.intersect_intervals([(0.0, 10.0)], [(10.0, 20.0)]), [(10.0, 10.0)])
+        self.assertEqual(CS.intersect_intervals([], [(0.0, 10.0)]), [])
+        self.assertEqual(CS.intersect_intervals([(0.0, 10.0)], []), [])
+
+    def test_full_cover_returns_the_other_list(self):
+        """L'intersezione con una lista che copre tutto da' l'altra lista invariata."""
+        first = [(0.0, 10.0), (20.0, 30.0)]
+        covering = [(float('-inf'), float('inf'))]
+        self.assertEqual(CS.intersect_intervals(first, covering), first)
+
+
 # ── B-bis. FINESTRE DI CONTATTO ───────────────────────────────────────────────
 
 class TestDetectionModeFor(unittest.TestCase):
