@@ -283,6 +283,74 @@ non si intercettano mai (Q2); il lanciatore deve essere già rilevato dal tirato
 traiettoria rettilinea, rilevamento per asset e non per forza (tutte semplificazioni ottimistiche per la
 difesa, dichiarate nella proposta §4).
 
+### Bersagli intercettabili dalle difese aeree (BI, 2026-11-07/08: commit `61df9437`, `0f275d55`, `8ac1b0f7`)
+
+Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabili_Difesa_Aerea.md` §7-§8 e da `Proposta_Dati_Bersagli_Intercettabili.md`; qui verificati sul codice il 2026-11-10 dove si può, e segnati come **non verificati** dove dipendono da fonti esterne o da misure già fatte dalla Proposta.
+
+- **La regola è spenta di default e nessun codice di produzione la accende.** `Engagement_Resolver.BI_AD_TARGET_RULE = False`
+  (`Logic/Engagement_Resolver.py:535`): con il default il motore si comporta come prima della BI (ogni missile e ogni bomba
+  guidata è un bersaglio per ogni intercettore `Anti_Missile`, salvo L1 e R-INT: un Tor ferma ancora i Maverick, come in S19AD
+  `tor_rear`). La accendono solo i test (`patch.object`), fra cui S35 (ricerca nei sorgenti il 2026-11-10: nessuna
+  occorrenza dell'interruttore fuori da `Engagement_Resolver`, `Fire_Control` e `Test/`). La regola dell'utente del 2026-09-28
+  sui «bersagli legittimi» (capitolo 4 §4.24) è quindi **ristretta solo quando l'interruttore è acceso**; accenderlo di
+  default sarebbe una decisione dell'utente (la Proposta BI non la prende) e cambierebbe sei esecuzioni della fotografia (S19AD `tor_rear`, sonda B-1 del blocco 2).
+- **Classificazione armi → classe: STIMATA [S], non tarata.** Le 52 voci dei `MISSILES_ASM` (44 aerei, 8 navali) hanno
+  `munition_class` e `ad_detectable` scritti con il commento `# STIMA [S]` e la fonte (fonti aperte, con livello di
+  confidenza, in `Proposta_Dati_Bersagli_Intercettabili.md`): **32 `True` e 20 `False`** (conteggio eseguendo i registri il
+  2026-11-10). Un errore di classe sposta interi scenari: un Kh-59 `tactical` invece di `cruise` cambierebbe `land_cruise` di
+  S35. Il **Mistral**, un MANPADS aria-aria presente fra gli `MISSILES_ASM` aerei, resta `tactical` con flag `False`
+  (anomalia del registro, decisione D2 (a) della Proposta dati); il **Kh-22N** resta `anti_ship` (D3.1 (a)). Sei voci in
+  **zona grigia** sono state approvate dall'utente una per una (AGM-88, Kh-25MP, Kh-25MPU, RB-05A, RB-05E `False`;
+  Kormoran, 340 mm contro i 343 mm dell'ancora, `True`). Il **default di classe** `AD_DETECTABLE_DEFAULT`
+  (`Logic/Fire_Control.py:297`) è una **stima [S]** (BI-7) ma sui registri veri **non è mai usato**: tutte le 52 voci
+  dichiarano il flag. Il **metro del Maverick** (diametro ≤ 304,8 mm **e** massa ≤ 304 kg → `False`; diametro ≥ 343 mm **e**
+  massa ≥ 515,25 kg → `True`; lunghezza esclusa) è una scelta di progetto [S], verificata solo da un test dei dati: **8 voci
+  non hanno la coppia diametro-massa** (RB-05E, RB-75T, 9M120-F, Kh-65, Kh-555, KD-63B, KD-20, YJ-18, lette nei registri il
+  2026-11-10) e sfuggono al controllo di coerenza.
+- **Nessun missile balistico a registro, nessun cruise lanciato da terra.** La parte «balistici» della regola
+  (`AD_TARGET_DOMAINS['ballistic']`, `Logic/Fire_Control.py:294`) è scritta ma **non è provabile in sessione** finché i
+  registri non avranno un'arma di quella classe.
+- **Dimensione binaria, nessuna RCS.** Il criterio di dimensione è un **flag** `ad_detectable` (`True`/`False`) per voce, non
+  una soglia: il motore non legge né `diameter_mm` né `mass_kg` (nessuna occorrenza fuori dai registri e dai test, ricerca del
+  2026-11-10), che sono dati di supporto. **Nessun registro ha un campo RCS** e nessuna è stata trovata per le 52 voci. Ne
+  discende che **R-INT** (capitolo 4 §4.26) continua a vedere ogni colpo ammesso come un aereo (stesso raggio di scoperta,
+  RCS non modellata): stima ottimistica per la difesa, come già dichiarato sopra per R-INT. Un'estensione futura sarebbe scalare
+  il raggio di scoperta del colpo con l'RCS (`Proposta_Intercettazione_Reazione.md`, decisione Q2 del 2026-09-30).
+- **Il criterio di dimensione vale solo per le difese navali (decisione BI-12 (a), scelta di progetto [S], incoerenza I-1
+  accettata dall'utente il 2026-11-07).** Per le difese terrestri contano solo le classi `cruise` e `ballistic`
+  (`AD_SIZE_GATED_NAVAL` = `anti_ship`, `arm`, `tactical`, solo dominio navale: `Logic/Fire_Control.py:295`, commento a
+  `:288-292`). Quindi **Kh-29L/T/TE e Kh-58** (e ogni missile `tactical` o `arm`) **non sono mai bersagli delle difese
+  terrestri**, anche se di taglia simile al **Kh-59**, che lo è invece perché `cruise` (decisione BI-2): lo stesso missile
+  può risultare «visibile» a una nave (flag `True`) e «invisibile» a un Buk. Il registro dà infatti `ad_detectable` `True` a
+  Kh-29L, Kh-29T, Kh-29TE e Kh-58 (lette nei registri il 2026-11-10; anche Kh-31P). L'alternativa (BI-12 (b): dimensione
+  anche per le terrestri, una riga in `intercept_domains_for`) è stata scartata dall'utente.
+- **Armi non a registro e bersagli a tabella.** Una `ShotSpec` senza `intercept_domains` (armi `test:*` di `SHOTS`, o una
+  classe di munizione non classificabile) non ha vincoli (decisione BI-8): gli scenari a tabella non vedono mai la regola, nemmeno
+  con l'interruttore acceso.
+- **Dominio dell'intercettore, non del bersaglio (BI-5).** `_ad_domain` (`Logic/Engagement_Resolver.py:3189`) classifica
+  per classe dell'intercettore (`Ship` → navale, ogni altro → terrestre): nella **difesa di dominio mista** (una nave che
+  difende truppe a terra, un Tor che difende un trasporto navale in porto) conta chi intercetta, non che cosa è attaccato.
+- **`capacity` non è filtrata per dominio.** Con la regola accesa il conteggio `SalvoResolution.interceptable_rounds` esclude
+  le salve a domini vuoti (`:3333-3337`), ma `capacity` (tetto di Hughes, capitolo 4 §4.5) resta la somma delle disponibilità di
+  **tutti** gli intercettori del dominio, anche di quelli che non possono fermare quel colpo.
+- **Tempo di volo dei cruise a lungo raggio** (limite **precedente**, reso più visibile dalla regola): `time_of_flight` =
+  `ENGAGEMENT_RANGE_FRACTION` (0,5, stima) × portata / velocità (`Logic/Fire_Control.py:233`, `:848`) dà per Kh-55 e Kh-101
+  circa 5200 e 11000 s (calcolo dai valori di registro, non eseguito tramite `shot_spec_for`: portata 2500 e 5500 km, velocità 240 e 250 m/s); la Proposta
+  dice che R-INT li vede sempre «in tempo» (**non riverificato qui**). Per questo S35 usa il Kh-59 (portata 90 km).
+- **S35 dipende da L1** (regola dell'utente del 2026-09-28, `Proposta_Regole_Allocazione_SAM.md` §7.7, Q2: i colpi lanciati
+  dentro il V_I dell'intercettore non si intercettano mai). Le varianti navali funzionano solo perché la **Rezky** ha un V_I di
+  12 km, minore della distanza di lancio (con l'Arleigh Burke, V_I di 240 km, L1 vieta ogni intercettazione di un lancio da
+  aereo: decisione P-1). **Se L1 cambia** (l'utente prevede di rivederla in una Proposta separata), S35 — come S19AD — va
+  rivisto insieme alla fotografia. **Margine stretto** in `naval_maverick`: nel seme `S35-ADTGT-2` il primo Maverick parte a
+  circa 12,2 km dalla nave, circa 200 m fuori dal V_I (misura della Proposta, sonda S-e, **non rifatta qui**): uno
+  spostamento di pochi secondi del lancio (VA, FP, rilevamento) potrebbe portarlo dentro; per questo l'asserzione 10 è sul
+  totale dei semi. Il sensore `sea` di 20 km dell'A-10C (`DECLARED_SEA_RANGE_M`, `Test/Test_Session_Scenarios_S35.py:65`) è un
+  **valore di test [S]**, non un dato del registro.
+- **Commenti di testa dei registri superati.** I commenti sopra `'MISSILES_ASM'` (`Asset/Aircraft_Weapon_Data.py:2115`,
+  `Asset/Ship_Weapon_Data.py:1239`) dicono ancora che nessuno dei quattro campi «è ancora letto dal motore»: dal blocco 2 il
+  motore legge `munition_class` e `ad_detectable` (`Logic/Fire_Control.py:761`, `:813`), non `diameter_mm` né `mass_kg`. È un
+  commento di codice, non è stato modificato dal manuale.
+
 ### Limiti della Missione a `fa5fbf1e` (fasi F0-F8 e G1-G5 fatte, F9 questo aggiornamento)
 
 Ciò che segue è **atteso** dal piano e non un difetto nascosto; v. §9.5 per la mappa fase per fase. (Questa sezione era
@@ -699,6 +767,7 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 | Fuoco su posizione (salva su area) | **Fatto** (F7b, `dcedc541`): `Logic/Area_Fire.py`, evento di sessione `AREA_FIRE_EVENT`, arma da `Fire_Control.area_fire_weapon` (capitolo 6 §6.23, capitolo 4 §4.34). Punti di aggancio per estenderlo: costanti STIMATE da tarare (`AREA_FIRE_*`), tiratori aerei (bombardamento di un punto), armi `missile`, intercettazione, effetti dottrinali sul colpito, fuoco amico. |
 | Alimentazione di morale e stima del nemico | Fornire `morale_for`/`enemy_estimate_for` a `run_session` da `Block.morale` corretto (decisione D9) e dalla ricognizione/C2 (capitolo 4 §4.21). |
 | Settori RWR, `ewr`, `confidence` | Consumo nel modulo rotte/evasione e in un futuro SEAD (`Asset/Aircraft_Rwr_Data.py`, capitolo 7 §7.10). |
+| Bersagli intercettabili dalle difese aeree (BI) | **Fatti** (blocchi 1-3, `61df9437`, `0f275d55`, `8ac1b0f7`): classi e flag nei `MISSILES_ASM`, `Fire_Control.munition_class`/`intercept_domains_for`, `ShotSpec.intercept_domains`, filtro `_admissible` dietro `BI_AD_TARGET_RULE` (spento), S35-ADTGT (capitolo 4 §4.24). Resta da fare: decidere se accendere l'interruttore di default (nuova fotografia), un'RCS o una soglia di dimensione al posto del flag, il criterio di dimensione anche per le difese terrestri (BI-12 (b): una riga in `intercept_domains_for`), un missile balistico a registro, la revisione di S35 se cambia L1. Limiti in §9.1 «Bersagli intercettabili dalle difese aeree». |
 | Legame C2 fra unità di difesa | Fase 0 della gerarchia C2: tracce condivise per R-INT (§4.26), assegnazione più rapida per L3 (§4.24). |
 | Re-scheduling dopo disingaggio | **Fatto per gli aerei dal G4b**, a livello di sessione (`Session_Simulator.replan`/`reschedule`, capitolo 6 §6.20): rientro forzato, bingo e esaurimento dopo un episodio con ricalcolo dei contatti (`schedule_contacts(only_assets=)`). Resta da fare: forze terrestri e navali (oggi passive sulla rotta), cambio di rotta *durante* un episodio, condizioni su eventi (`ON_EVENT`); il risolutore resta a stato ombra e non muta rotte. |
 | Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:195-230`, `Logic/Engagement_Resolver.py:1105-1152`). Dal 2026-11-04 serve anche a non sovrastimare il sensore **visivo** di ZSU-57-2 e M163-VADS di notte (§9.1 «Limiti dei sensori EWR e visivo»). |

@@ -2688,3 +2688,52 @@ Il test `TestS31VisualSensorRanges` e' unitario e non sta nella fotografia.
   salta i record `fixed_site`). Gli EWR nel registro sono 15 (lo score di categoria degli 8 mobili si sposta, nessun consumatore).
 - Limiti del blocco C: l'immobilita' non e' imposta dal motore (una missione che muovesse un sito lo farebbe muovere, la regola A lo esclude con un warning); torri e copertura angolare non
   modellate; il DES non ha orizzonte radar, quindi portate di 300-400 km valgono anche per bersagli radenti (costo di calcolo non misurato). Migrazione futura a `Structure` richiede codice.
+
+## BI — bersagli intercettabili dalle difese aeree (2026-11-08)
+
+Proposta `Proposta_Bersagli_Intercettabili_Difesa_Aerea.md`, regola dell'utente del 2026-11-07. Blocchi 1 e 2 eseguiti da `des-developer` (Sonnet high), blocco 3 da
+`oc-developer` (DeepSeek V4 Pro 0813 high); tutti verificati dalla sessione principale. Rapporti: `Rapporti/Rapporto_BI_blocco1_des-developer.md`,
+`Rapporto_BI_blocco2_des-developer.md`, `Rapporto_BI_blocco3_oc-developer.md`. Il blocco 0 (ricerca dati sui 52 missili aria-superficie) e' in `Proposta_Dati_Bersagli_Intercettabili.md`.
+
+| Blocco | Commit (merge) | Suite | Confronto con la fotografia |
+|---|---|---|---|
+| 1: flag `ad_detectable` e classi nei registri | `61df9437` (`a74d7505`) | 4801 OK (7 skipped) | `UNCHANGED (1009)`, `compared 1029 runs: 20 difference lines` (le 20 sono le S32-DWELL nuove) |
+| 2: fire control e risolutore, interruttore `BI_AD_TARGET_RULE` | `0f275d55` (`4803424b`) | 4829 OK (7 skipped) | `UNCHANGED (1009)`, `compared 1029: 20` |
+| 3: scenario S35-ADTGT | `8ac1b0f7` (`fa6bc1d8`) | 4844 OK (7 skipped) | `UNCHANGED (1009)`, `compared 1061 runs: 52 difference lines` |
+
+### Il cambio
+Un'arma autonoma lanciata contro la forza e' bersaglio di una difesa aerea solo se la sua classe lo ammette per il dominio della difesa (terrestre o navale): `Fire_Control.intercept_domains_for`
+calcola per ogni arma l'insieme dei domini in cui e' intercettabile e lo mette nel campo nuovo `ShotSpec.intercept_domains` (`None` = comportamento precedente). Il risolutore applica l'insieme solo con
+l'interruttore `Engagement_Resolver.BI_AD_TARGET_RULE` **acceso**; il default **False** riproduce il comportamento precedente, quindi le 1009 esecuzioni esistenti sono identiche. Regole di classe:
+missili cruise e balistici sono bersagli di tutte le difese; i missili antinave, tattici aria-superficie e antiradiazione lo sono solo delle difese navali e solo se il flag `ad_detectable` (dimensione compatibile, BI-7) e' vero
+(mai delle difese terrestri, BI-12 (a)); bombe e razzi non lo sono mai; il Maverick e' piccolo, quindi non rilevabile da nessuna difesa
+(`ad_detectable` falso fisso). Registri: 32 armi `True`, 20 `False`.
+
+### Differenze della fotografia
+Nessuna con l'interruttore spento. Sonda B-1 (interruttore acceso, blocco 2): cambiano ESATTAMENTE le 6 esecuzioni `S19AD/S19-0..5/tor_rear` (`InterceptionEvent` del Tor da 3 a 0, danni in aumento,
+i Maverick non sono piu' fermati); le 351 intercettazioni antinave di S6 e S16 restano identiche.
+
+### S35-ADTGT (32 esecuzioni nuove)
+Otto varianti x 4 semi (`S35-ADTGT-0..3`), 15 test in `Test_Session_Scenarios_S35.py` (12 asserzioni e 3 premesse non vacue). Chiavi `S35-ADTGT/S35-ADTGT-<i>/<variante>`.
+Varianti terrestri: `land_tactical` (A-10C con Maverick contro i BMP-2 di S19AD, Tor arretrato), `land_cruise` (2 Su-34 con Kh-59 contro un deposito con un Buk a 1 km, lancio a ~90 km, fuori dai 35 km del Buk),
+`_on`/`_off` per l'interruttore. Varianti navali: `naval` (F/A-18C con AGM-84A) e `naval_maverick` (A-10C con Maverick) contro la `FF 1135M Rezky`, `_on`/`_off`.
+Esiti misurati dall'esecutore, uguali in ogni seme: `land_tactical` spento 14 AGM-65D lanciati e 6 intercettazioni del Tor, acceso 8 e 0; `land_cruise` spento e acceso identici (4 Kh-59, 2 intercettazioni del
+Buk); AGM-84A fermati dalla nave in entrambi gli stati; Maverick contro la nave: intercettazioni a interruttore spento, nessuna da acceso.
+
+Decisioni P-1..P-7 del blocco 3 (`Proposta` §5.4.1): nave Rezky per entrambe le varianti navali (la Burke, con V_I di 240 km e la regola L1, non permetteva di mostrare la regola); sensore marittimo dichiarato
+dell'A-10C; asserzione 2 = meno AGM-65D lanciati con la regola accesa (non "piu' BMP distrutti", falsa: 3 distrutti sempre); 15 test; configurazione `land_cruise` della sonda S-b; asserzioni per seme o sul totale
+come in §5.4.1; nomi dei semi.
+
+### Costanti stimate
+- `DECLARED_SEA_RANGE_M = 20 000 m` nel file di S35: sensore `sea` dichiarato dell'A-10C, VALORE DI TEST [S], non un dato del registro (che non ha un sensore marittimo); non entra in nessuna asserzione.
+- Classificazione arma -> classe, tabelle `AD_TARGET_DOMAINS`, `AD_SIZE_GATED_NAVAL`, `AD_DETECTABLE_DEFAULT`: scelte di progetto STIMATE [S]; il default di `ad_detectable` (BI-7) e' una stima. Sui registri
+  veri i default non sono usati: ogni arma ha classe e flag espliciti, dalla ricerca del blocco 0 (con alcune voci "grigie" decise dall'utente).
+
+### Limiti noti
+- S35 (come S19AD) dipende da L1, la regola dell'utente del 2026-09-28 Q2 (i colpi lanciati dentro il V_I dell'intercettore non si intercettano mai): se L1 cambia (revisione prevista in una Proposta
+  separata) S35 va rivisto insieme alla fotografia.
+- Il criterio di dimensione vale solo per le difese navali (BI-12 (a), stima): Kh-29 e Kh-58 non sono mai bersagli delle difese terrestri anche se di taglia simile al Kh-59, che lo e' perche' `cruise`.
+- Nessun missile balistico nei registri; la dimensione e' un flag binario e R-INT non modella l'RCS del colpo.
+- L'interruttore `BI_AD_TARGET_RULE` e' spento di default: con le fotografie correnti la regola non agisce; si accende e si installa una fotografia nuova solo su decisione dell'utente (criterio sugli
+  interruttori: tenerlo solo se lo stato precedente e' un'alternativa valida).
+- Il pianificatore di rotta non modella l'intercettazione delle munizioni.

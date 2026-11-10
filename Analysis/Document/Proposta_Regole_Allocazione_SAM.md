@@ -412,6 +412,8 @@ ordinamento); (3) riproduzione aggiornata come test persistente; (4) L1 nel riso
 
 ### 7.7 Decisioni dell'utente (2026-09-28)
 
+> **Nota (2026-11-10, BI blocco 4)**: la regola dell'utente del 2026-09-28 "sono bersagli legittimi solo le armi autonome lanciate a distanza considerevole" (e la decisione Q6: missili, droni e bombe plananti) e' stata **ristretta** dalla regola del 2026-11-07 (`Proposta_Bersagli_Intercettabili_Difesa_Aerea.md`, eseguita e mergiata nei blocchi 1-3): una difesa aerea considera bersagli solo i missili balistici/cruise e quelli di dimensione compatibile (solo per le difese navali); bombe e razzi mai. La restrizione agisce con l'interruttore `Engagement_Resolver.BI_AD_TARGET_RULE` acceso (default spento: comportamento qui descritto). D, F, L1, L2 e L3 sono invariate.
+
 **APPROVATA**: D + F + L, con l'ordine di lavoro del §7.6.
 - **Q1**: zona valutata sul V_I del **singolo intercettore**.
 - **Q2**: i colpi lanciati dentro la zona **non si intercettano mai**.

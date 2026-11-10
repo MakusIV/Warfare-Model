@@ -7,6 +7,8 @@ asset intercetta un'arma autonoma solo con un'arma **dichiarata capace** (task `
 decisione Q6: un solo task per missili, bombe plananti e droni). Questo documento propone a quali armi
 assegnarlo.
 
+> **Nota (2026-11-10, BI blocco 4)**: l'assegnazione del task `Anti_Missile` qui descritta resta valida, ma quali colpi una difesa considera bersagli e' ora ristretto dalla regola del 2026-11-07 (`Proposta_Bersagli_Intercettabili_Difesa_Aerea.md`): le bombe guidate e plananti non sono piu' bersagli con l'interruttore `Engagement_Resolver.BI_AD_TARGET_RULE` acceso (default spento).
+
 Confidenza: **A** = fonte primaria o due fonti concordi; **M** = una fonte secondaria; **B** = stima o
 analogia.
 

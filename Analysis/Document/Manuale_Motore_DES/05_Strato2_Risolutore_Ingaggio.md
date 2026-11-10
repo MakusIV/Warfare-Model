@@ -83,6 +83,21 @@ indipendente dei riferimenti già scorretti prima dell'allineamento: ne è emers
 (a `a784a9e7` il metodo stava a `:2293`), riscritto in §4.4. Dove un riferimento riguarda una funzione rimossa (la
 vecchia `_capacity`, §4.5) il testo lo dice.
 
+**Aggiornamento BI (2026-11-07/08: bersagli intercettabili dalle difese aeree).** Il risolutore acquisisce un
+**filtro di ammissibilità** nell'allocazione delle intercettazioni, dietro un interruttore **spento di default**
+(`BI_AD_TARGET_RULE`): a interruttore spento gli esiti sono quelli di prima (stesse estrazioni, stessi eventi: le 1009
+esecuzioni della fotografia esistente restano identiche; il filtro viene chiamato ma risponde sempre «ammesso»), e anche
+acceso il filtro **non estrae nulla**.
+Il campo nuovo `ShotSpec.intercept_domains` lo dichiara la fire control (§4.4, §4.16); la regola è in §4.24.
+I riferimenti di riga **di questo aggiornamento** sono stati verificati sul codice il 2026-11-10; quelli del resto del
+capitolo, e le sezioni del capitolo 4 non nominate qui, restano al riferimento indicato nella loro sezione.
+
+| Meccanismo | Commit | Sezione |
+|---|---|---|
+| Dati dei 52 `MISSILES_ASM` (44 aerei, 8 navali): `munition_class`, `ad_detectable`, `diameter_mm`, `mass_kg` (stime [S], non tarate) | `61df9437` (blocco 1, merge `a74d7505`) | §4.24, capitolo 9 |
+| Fire control e risolutore: `munition_class`, `intercept_domains_for`, `ShotSpec.intercept_domains`, `_admissible`, interruttore `BI_AD_TARGET_RULE` | `0f275d55` (blocco 2, merge `4803424b`) | §4.4, §4.5, §4.24 |
+| Scenario S35-ADTGT (8 varianti x 4 semi, 15 test) | `8ac1b0f7` (blocco 3, merge `fa6bc1d8`) | §4.24, `F4_Differenze_Scenari.md` |
+
 ## 4.1 La catena, per ogni ingaggio
 
 Per due o più forze in contatto, la catena è (`:12-75`, docstring del modulo):
@@ -167,7 +182,7 @@ chiamante**, non implementata dal risolutore (`Logic/Engagement_Resolver.py:24-3
 ordine di preferenza: il risolutore prova le opzioni nell'ordine dato e sceglie la prima la cui
 arma ha ancora scorta (`_first_with_stock`, `:2822-2839`, v. §4.19); una `ShotSpec` singola resta
 un valore valido (sequenza di un elemento), quindi una `fire_control` scritta prima di questa
-data non cambia comportamento. `ShotSpec` (`:549-611`) trasporta:
+data non cambia comportamento. `ShotSpec` (`:600-672`, riverificato il 2026-11-10 dopo la BI) trasporta:
 
 | Campo | Significato |
 |---|---|
@@ -180,6 +195,7 @@ data non cambia comportamento. `ShotSpec` (`:549-611`) trasporta:
 | `cycle_time` | Intervallo fra due salve del tiratore; `None` = `refire_interval` del profilo di reazione. |
 | `max_range` | Portata massima dell'arma [m] (distanza 3D tiratore-bersaglio); `None` = nessun vincolo di portata (comportamento precedente al 2026-09-24, v. §4.17). |
 | `stock_per_round` | Unità di scorta consumate da UN colpo della salva (decisione A3, 2026-09-26, v. §4.19): 1 per missili/bombe/proietti singoli, i colpi di una raffica per le armi a tiro rapido (il cui "colpo" è una raffica, v. §4.16). |
+| `intercept_domains` | Dalla BI (2026-11-08): i domini di difesa aerea (`'land'` \| `'naval'`) che possono considerare il colpo un **bersaglio** (regola BI, §4.24). `frozenset` (anche **vuoto** = nessun dominio) oppure `None` = non dichiarato, nessun vincolo. Ultimo campo, default `None` (`:635`): ogni `ShotSpec` costruita prima (la tabella `SHOTS` di `Scenario_Fixtures`, `:802-817`, con le armi `test:*`, non lo valorizza) resta valida e non cambia comportamento. `__post_init__` solleva `ValueError` se non è `None` o un `frozenset` incluso in `AD_DOMAINS` (`:538`, `:668-671`): un `set` semplice è rifiutato. Lo valorizza la fire control (`intercept_domains_for`, §4.16), come `interceptable`; il risolutore lo legge **solo** con l'interruttore `BI_AD_TARGET_RULE` acceso. |
 
 **Estensione facoltativa del protocollo: `target_grounded` (F4c).** La firma storica è
 `fire_control(shooter, target)`. Se il bersaglio è un **aereo a terra** (§4.30) il risolutore chiama
@@ -246,6 +262,14 @@ prima, poi per id, v. §4.24); ogni intercettore può fermare i colpi di una sal
    `:3019-3042`, regola L1), e
 4. ha una traccia del colpo e il tempo di reagire prima dell'impatto (`_in_time`, `:3107-3131`,
    regola R-INT, §4.26).
+
+**Dalla BI (2026-11-08) c'è una condizione in più, valutata subito dopo (2) e prima di (3)**, ma **solo con
+`BI_AD_TARGET_RULE` acceso** (spento di default: la lista sopra è allora esattamente quella di prima): il dominio
+dell'intercettore (`'land'` | `'naval'`) deve essere fra gli `intercept_domains` della salva (`_admissible`,
+`Logic/Engagement_Resolver.py:3196-3202`, §4.24). Nella condizione del ciclo di allocazione l'ordine è
+`free <= 0 or not _admissible or not _may_intercept or not _in_time` (`:3396-3397`); con la regola accesa anche il
+conteggio di `SalvoResolution.interceptable_rounds` non include le salve a domini vuoti (`:3333-3337`), mentre
+`capacity` resta la somma delle disponibilità di **tutti** gli intercettori del dominio, non filtrata per dominio.
 
 I colpi fermati sono quindi `Σ_salve (colpi − residuo)`, mai più di `min(interceptable_rounds,
 capacity)`; coincide con quel minimo solo se nessun intercettore è escluso da (3) e (4) (v. il
@@ -561,6 +585,7 @@ classDiagram
         +float cycle_time
         +float max_range
         +int stock_per_round
+        +frozenset intercept_domains
     }
 
     class Detection {
@@ -735,7 +760,7 @@ sequenceDiagram
     Q->>Run: pop (t_resolve, RISOLUZIONE, force_id)
     Run->>Run: intercettori = domain_interceptors del dominio della forza colpita, e i canali gia' spesi nello stesso istante per altre forze del dominio si sottraggono
     Run->>Run: tetto capacity = somma delle disponibilita' (canali meno spesi, scorta) — §4.5
-    Run->>Run: per salva, per intercettore (ordine F): L1 _may_intercept e R-INT _in_time (§4.24, §4.26)
+    Run->>Run: per salva, per intercettore (ordine F): BI _admissible (solo con BI_AD_TARGET_RULE acceso), L1 _may_intercept e R-INT _in_time (§4.24, §4.26)
     Note over Run: colpi fermati per salva, nell'ordine (impatto, salva), con intercepted <= min(interceptable_rounds, capacity)
 
     loop per ogni colpo non intercettato
@@ -884,7 +909,7 @@ entrambi — **STIMA DICHIARATA**: si assume l'ingaggio a metà portata
 calcola il risolutore, dopo); altrimenti `DEFAULT_TIME_OF_FLIGHT_S` per categoria (`:234`, ordini
 di grandezza non tarati).
 
-### Campi derivati della `ShotSpec` (`:111-145`, `shot_spec_for`, `:745-790`)
+### Campi derivati della `ShotSpec` (`:111-150`, `shot_spec_for`, `:819-865`; righe riverificate il 2026-11-10 dopo la BI)
 
 - `weapon`: nome del modello d'arma — dal 2026-09-26 anche la chiave della scorta consumata (v.
   §4.19).
@@ -898,7 +923,16 @@ di grandezza non tarati).
   portata solo le tre bombe senza dati di rilascio (KGBU-2AO/2PTAB/96r, D4 — chiusa il 2026-09-28: oggi nessuna) e i
   casi senza posizione nota di tiratore o bersaglio.
 - `interceptable`: `True` per missili e bombe guidate (`type == 'Guided bombs'`); `False` per
-  proiettili, razzi non guidati, bombe a caduta libera e siluri.
+  proiettili, razzi non guidati, bombe a caduta libera e siluri (calcolo in `shot_spec_for`, `:837-842`,
+  **invariato** dalla BI: `interceptable` dice se il colpo è un'arma intercettabile in generale, `intercept_domains`
+  da **chi** può considerarlo un bersaglio).
+- `intercept_domains` (BI, 2026-11-08; regola dell'utente del 2026-11-07, §4.24): `intercept_domains_for(weapon)`
+  (`:799-816`), valorizzato **sempre** (è un dato dell'arma, come `interceptable`: nessuna cache della fire control dipende
+  dall'interruttore). `None` se la classe di munizione dell'arma non è nota (`munition_class`, `:761-796`); altrimenti i
+  domini `'land'` e/o `'naval'` della classe (`AD_TARGET_DOMAINS`, `:294`) più il dominio navale per le classi
+  `anti_ship`, `arm`, `tactical` (`AD_SIZE_GATED_NAVAL`, `:295`) se il flag `ad_detectable` del registro (o il suo
+  default di classe, `AD_DETECTABLE_DEFAULT`, `:297`, **STIMA** [S]) è vero. Una classe nota dà sempre un `frozenset`, anche
+  vuoto. Tabella completa in §4.24.
 - `rounds`/`cycle_time`: per le armi a tiro rapido (`fire_rate >= AUTOMATIC_FIRE_RATE_RPM = 200`
   colpi/min) un colpo della `ShotSpec` è una **raffica** di `GUN_BURST_ROUNDS = 50` colpi; per le
   armi a tiro singolo un colpo è un proietto; per missili/bombe/razzi/siluri `rounds =
@@ -1619,7 +1653,11 @@ da dove fosse partito né chi l'avesse lanciato (proposta §1, §7.2). Le regole
 dall'utente (§7.1): (1) la difesa aerea dà la **massima priorità, di tempo e di numero di armi**,
 all'aereo che ha lanciato un'arma aria-superficie, se è entro il suo raggio d'intercettazione; (2) sono
 bersagli legittimi **solo** le armi autonome lanciate a distanza considerevole dalla zona, e solo se il
-sistema che intercetta è in grado di colpirle.
+sistema che intercetta è in grado di colpirle. **La regola (2) è stata ristretta dalla BI** (2026-11-07/08, v. «Regola
+BI» sotto): quali colpi contano come «armi autonome» lo decide la classe della munizione. La restrizione vale **solo con
+l'interruttore `BI_AD_TARGET_RULE` acceso**; con il default (`False`) il comportamento è quello descritto dalle regole
+di questa sezione senza alcun filtro di classe: **ogni** missile e ogni bomba guidata (`ShotSpec.interceptable`) è un
+bersaglio per ogni intercettore della regola D, salvo L1 e R-INT.
 
 ### Regola D — capacità dichiarata, per arma (`Anti_Missile`)
 
@@ -1700,6 +1738,115 @@ parità d'istante (§4.11), preso **alla fine** di quel tempo con i lanciatori n
 stesura si ridecideva subito e due lanciatori simultanei finivano entrambi sotto il fuoco delle
 stesse difese invece di essere ripartiti (proposta §7.10).
 
+### Regola BI — quali colpi una difesa aerea considera bersagli (2026-11-07/08, commit `61df9437`, `0f275d55`, `8ac1b0f7`)
+
+Documenti: `Analysis/Document/Proposta_Bersagli_Intercettabili_Difesa_Aerea.md` (regole R-BI, decisioni BI-1..BI-12 del
+2026-11-07 e P-1..P-7 del 2026-11-08) e, per i dati dei missili, `Proposta_Dati_Bersagli_Intercettabili.md` (decisioni
+D1-D6). Righe di codice riverificate il 2026-11-10.
+
+**La regola dell'utente (2026-11-07, riportata nella sostanza).** Una difesa antiaerea (SAM o AAA) può considerare un
+**missile** bersaglio solo se (1) appartiene alle categorie dei missili **balistici** e/o **cruise**, chiunque li lanci, e/o
+(2) le sue **dimensioni** sono tali da essere rilevato dai sensori della difesa (traccia radar comparabile a quella di un
+aereo, di un cruise o di un balistico). Ne discende che: tutti i missili aria-superficie dei cacciabombardieri sono
+**esclusi** dalle difese **terrestri**; i missili aria-nave sono bersagli dei sistemi **navali** se le dimensioni sono
+compatibili; **tutte le bombe e tutti i razzi** sono esclusi da difese terrestri e navali. Questo **restringe** la regola
+(2) del 2026-09-28 (sopra), che dichiarava legittimi «le armi autonome lanciate a distanza considerevole»: prima della BI
+era «arma autonoma» ogni missile e ogni bomba guidata (`kind == 'missile'` o bombe `Guided bombs`,
+`Logic/Fire_Control.py:837-842`). **Lo è solo con l'interruttore acceso**: `BI_AD_TARGET_RULE = False`
+(`Logic/Engagement_Resolver.py:535`) riproduce il comportamento precedente (è il default, e nessun codice di produzione lo
+accende: solo i test, con `patch.object`; `S35` lo fa dentro la propria `run_variant`). Il valore è letto **una volta per run**,
+in `_EngagementRun.__init__` (`self.ad_target_rule`, `:1833`).
+
+**Chi decide che cosa (decisione BI-9).** La **fire control**, che conosce l'arma, dichiara in `ShotSpec.intercept_domains`
+quali domini possono considerare il colpo un bersaglio; il **risolutore** si limita a filtrare l'intercettore per dominio.
+Il core non conosce né classi né dimensioni.
+
+1. **Classe di munizione** (`munition_class(weapon)`, `Logic/Fire_Control.py:761-796`). Dichiarata nel registro
+   (`data['munition_class']`, stringa) per i **52 `MISSILES_ASM`** (44 aerei in `Asset/Aircraft_Weapon_Data.py`, 8 navali in
+   `Asset/Ship_Weapon_Data.py`): 10 `cruise` (i 9 aerei Kh-55, Kh-101, Kh-555, Kh-65, KD-20, KD-63, KD-63B, Kh-59, Kh-59M e il
+   Tomahawk), 17 `anti_ship` (10 aerei e 7 navali), 7 `arm`, 18 `tactical` (conteggi letti eseguendo i registri il
+   2026-11-10). Per le altre armi la classe è **derivata** da categoria e task, senza dato nuovo: bombe → `guided_bomb`
+   (`type == 'Guided bombs'`) o `bomb`; razzi, cannoni, siluri → `rocket`, `gun`, `torpedo`; missili `MISSILES_AAM` → `aam`;
+   missili terrestri con task `Anti_Tank` → `atgm`; missili con task `Anti_Air` (terrestri) o `MISSILES_SAM` (navali) →
+   `sam`; altrimenti `None`.
+2. **Dimensione** (`ad_detectable`, `True`/`False`, nei soli `MISSILES_ASM`): **flag binario** dichiarato nel registro,
+   **32 `True` e 20 `False`** (24 `True` e 20 `False` fra gli aerei, 8 `True` fra i navali). Nessun diametro, massa o RCS
+   viene letto dal motore: `diameter_mm` e `mass_kg` sono dati di supporto scritti nei registri per documentare il metro
+   di scelta (diametro ≤ 304,8 mm **e** massa ≤ 304 kg = `False`; diametro ≥ 343 mm **e** massa ≥ 515,25 kg = `True`; la
+   lunghezza è esclusa) e sono verificati solo dai test dei dati. Il **Maverick** (AGM-65D, AGM-65K, RB-75T) è `False` per
+   decisione dell'utente (BI-6), contro ogni difesa. Classi e flag sono **stime di progetto [S]** su fonti aperte, non dati
+   tarati (capitolo 9, «Bersagli intercettabili»).
+3. **Domini** (`intercept_domains_for(weapon)`, `:799-816`): `None` se la classe è ignota (arma non a registro o non
+   classificabile: nessun vincolo, comportamento precedente, BI-8); altrimenti l'insieme di `AD_TARGET_DOMAINS` per la
+   classe (`:294`: `ballistic` e `cruise` → `{'land', 'naval'}`, nessuna altra classe), più `'naval'` se la classe è in
+   `AD_SIZE_GATED_NAVAL` (`:295`: `anti_ship`, `arm`, `tactical`) **e** il flag `ad_detectable` del registro è vero (se il
+   registro non lo dichiara, vale `AD_DETECTABLE_DEFAULT`, `:297`: `True` per `cruise`, `ballistic`, `anti_ship`, `False` per
+   `arm` e `tactical`, **stima [S]**; sui registri veri il default non è mai usato: tutte le 52 voci dichiarano il flag).
+   Una classe nota dà **sempre** un `frozenset`, anche vuoto. `shot_spec_for` lo passa a `ShotSpec` (`:865`).
+
+| Classe | Domini che possono fermarla | Voci a registro | Nota |
+|---|---|---|---|
+| `ballistic` | terrestre e navale | nessuna | previsto dalla regola; nessun missile balistico nei registri |
+| `cruise` | terrestre e navale | 10 | `ad_detectable` è dichiarato `True` ma **non è letto** (la classe non è in `AD_SIZE_GATED_NAVAL`); include il Kh-59, portato anche da Su-30/Su-34 (decisione BI-2) |
+| `anti_ship` | navale se `ad_detectable` | 17 | non bersaglio delle difese terrestri |
+| `arm` | navale se `ad_detectable` | 7 | missili antiradar, mai bersagli delle terrestri (BI-3) |
+| `tactical` | navale se `ad_detectable` | 18 | Maverick `False`: mai bersaglio, contro nessuna difesa |
+| `aam`, `sam`, `atgm`, `guided_bomb`, `bomb`, `rocket`, `gun`, `torpedo` | nessuno (`frozenset` vuoto) | derivate | piccoli, non balistici né cruise; «tutte le bombe e tutti i razzi» (BI-4) |
+
+*Diagramma — dall'arma ai domini che ne possono intercettare il colpo (`munition_class` e `intercept_domains_for`, §4.24; non numerato nell'atlante).*
+
+```mermaid
+flowchart TD
+    W["arma del registro"] --> C{"munition_class dichiarata<br/>nel registro?"}
+    C -->|si| K["classe dichiarata<br/>(52 MISSILES_ASM)"]
+    C -->|no| DER{"classe derivabile da<br/>categoria e task?"}
+    DER -->|no| NONE["intercept_domains = None<br/>nessun vincolo (BI-8)"]
+    DER -->|si| D["classe derivata<br/>bomb, rocket, gun, torpedo, aam, atgm, sam"]
+    K --> T["domini = AD_TARGET_DOMAINS della classe<br/>(ballistic e cruise: land e naval, le altre: vuoto)"]
+    D --> T
+    T --> S{"classe in AD_SIZE_GATED_NAVAL<br/>e ad_detectable vero?"}
+    S -->|si| N["si aggiunge naval"]
+    S -->|no| OUT["frozenset dei domini, anche vuoto"]
+    N --> OUT
+```
+
+4. **Filtro nel risolutore.** `_ad_domain(shadow)` (`Logic/Engagement_Resolver.py:3189`, decisione BI-5) classifica
+   l'**intercettore**: `'naval'` se è una nave (`validate_class(shadow.asset, 'Ship')`), altrimenti `'land'`; il valore è
+   memoizzato per id in `ad_domain_cache` (`:1834`). `_admissible(shadow, salvo)` (`:3196-3202`) è vero se l'interruttore è
+   spento o se `salvo.spec.intercept_domains is None`; altrimenti solo se il dominio dell'intercettore è fra quelli della
+   salva. È chiamata nel ciclo di allocazione di `_on_resolve` **dopo** il controllo di canali e scorta e **prima** di L1 e
+   R-INT (`:3396-3397`): per una coppia (salva, intercettore) esclusa L1 e R-INT non sono nemmeno valutate (nessun effetto
+   sugli esiti: né l'una né l'altra estrae). Nessuna estrazione, in entrambi gli stati dell'interruttore: cambia **chi** ferma
+   un colpo, e dove cambia cambia il numero di colpi che arrivano al danno (e quindi le estrazioni di danno successive, come
+   per L1 e R-INT).
+
+**Che cosa non cambia.** La regola D (chi può intercettare), L1 e R-INT (meccanismo), la saturazione di Hughes, le scorte
+(un missile antiaereo non speso su un colpo escluso resta per le salve offensive), L2 e L3 (non leggono `interceptable`).
+Cambia il conteggio `SalvoResolution.interceptable_rounds`, che con la regola accesa non include le salve a domini vuoti
+(`:3333-3337`); `capacity` resta invece la somma delle disponibilità di tutti gli intercettori, non filtrata per dominio.
+
+**Effetti tipici (interruttore acceso).** Un Tor (terrestre) non ferma più i Maverick (`tactical`): era il caso di S19AD
+`tor_rear` (la sonda B-1 del blocco 2 ha verificato che, accendendo l'interruttore, cambiano **esattamente** le sei esecuzioni
+`S19AD/S19-0..5/tor_rear`, senza alcuna intercettazione del Tor e con più eventi di danno). Un Buk ferma ancora i Kh-59
+(`cruise`). Una nave ferma gli antinave `ad_detectable` (AGM-84A) ma non i Maverick. AAM, SAM, ATGM e bombe guidate non sono mai
+bersagli, per nessun dominio. **Il criterio di dimensione vale solo per le difese navali** (decisione
+BI-12 (a), scelta di progetto [S]): per le terrestri contano solo le classi `cruise` e `ballistic`, quindi un Kh-29 o un Kh-58
+(`tactical`/`arm`, con `ad_detectable` vero) può essere fermato da una nave ma mai da un Buk, anche se di taglia simile al
+Kh-59 (che lo è perché `cruise`): limite dichiarato nel capitolo 9 e nel commento sopra le costanti `AD_*`
+(`Logic/Fire_Control.py:288-292`).
+
+**Verifica: lo scenario S35-ADTGT** (`Test/Test_Session_Scenarios_S35.py`, classe `TestS35AirDefenceTargets`, 15 test: 12
+asserzioni e 3 premesse non vacue; 8 varianti x 4 semi `S35-ADTGT-0..3` = 32 esecuzioni nuove nella fotografia; dettaglio in
+`F4_Differenze_Scenari.md`). Quattro geometrie, ciascuna con interruttore spento (`_off`) e acceso (`_on`), fire control dei
+registri: `land_tactical` (4 A-10C con AGM-65D contro 3 BMP-2 e un Tor arretrato: acceso 0 intercettazioni del Tor e meno
+Maverick lanciati, per seme), `land_cruise` (2 Su-34 con Kh-59 contro un deposito difeso da un Buk: acceso = spento), `naval`
+(2 F/A-18C con AGM-84A contro la fregata `FF 1135M Rezky`: acceso = spento) e `naval_maverick` (2 A-10C con AGM-65D contro la
+stessa nave: acceso, nessuna intercettazione della nave; spento, la nave ferma Maverick). Due scelte di costruzione da
+conoscere (decisioni P-1 e P-2 del 2026-11-08): la nave è la **Rezky** (V_I di 12 km) e non l'Arleigh Burke, perché con il V_I
+di 240 km del Burke la regola L1 vieta ogni intercettazione di un lancio da aereo; e il sensore `sea` di 20 km dell'A-10C
+(`DECLARED_SEA_RANGE_M`, `Test/Test_Session_Scenarios_S35.py:65`) è un **valore di test [S]**, non un dato del registro (che
+non ha un sensore marittimo per l'A-10C). S35 **dipende da L1** (v. capitolo 9).
+
 ### Verifica: lo scenario S19AD
 
 `Test/Test_Session_Scenarios_S19_Air_Defence.py` (commit `aedd7fa5`, capitolo 8 §8.6): 3 BMP-2 con una
@@ -1717,7 +1864,7 @@ lancio da dentro) è coperto da test unitari a geometria controllata
 fretta di unità indipendenti, qui ogni tiratore usa il proprio profilo di reazione (da riprendere
 con la Fase 0 della gerarchia C2).
 
-*Diagramma D24 — allocazione delle intercettazioni per salva: ordine F, regola L1 e regola R-INT (§4.5, §4.24); dalla F4b++ gli intercettori sono quelli del dominio della forza colpita (§4.29).*
+*Diagramma D24 — allocazione delle intercettazioni per salva: ordine F, filtro BI (`_admissible`, solo con `BI_AD_TARGET_RULE` acceso), regola L1 e regola R-INT (§4.5, §4.24); dalla F4b++ gli intercettori sono quelli del dominio della forza colpita (§4.29).*
 
 ```mermaid
 flowchart TD
@@ -1726,7 +1873,9 @@ flowchart TD
     I -->|si| L["per ogni intercettore del dominio<br/>della forza colpita, nell'ordine F"]
     L --> F{"canali (meno quelli spesi nello stesso istante<br/>per altre forze del dominio) e scorta liberi?"}
     F -->|no| L
-    F -->|si| G{"L1: lancio fuori dal V_I<br/>dell'intercettore?"}
+    F -->|si| B{"BI: dominio dell'intercettore<br/>fra gli intercept_domains di s?<br/>(sempre si se interruttore spento<br/>o domini non dichiarati)"}
+    B -->|no| L
+    B -->|si| G{"L1: lancio fuori dal V_I<br/>dell'intercettore?"}
     G -->|no, lancio da dentro| L
     G -->|si| T{"R-INT: traccia del colpo<br/>e tempo di reagire?"}
     T -->|no| L

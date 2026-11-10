@@ -340,15 +340,15 @@ Le colonne «Tipo», «Simbolo», «Firma» e «Riga» sono l'uscita di `inventa
 
 La fire control sceglie **con che cosa** spara un tiratore. Il risolutore la riceve come funzione iniettata `fire_control(shooter, target) -> ShotSpec | sequenza | None`; questo modulo ne fornisce una che legge i registri
 d'arma (`make_registry_fire_control`), un involucro che la ristringe con la politica d'armi di missione (`restrict_by_policy`, F7a) e due funzioni per il fuoco su posizione (`area_fire_weapon`, `area_fire_pk`, F7b). Il modulo ha
-**tre tipi** (`_Weapon` `:355`, classe con `__slots__` e non dataclass; `WeaponPolicy` `:882` e `AreaWeapon` `:993`, `dataclass(frozen=True)`), **27 funzioni** di primo livello e, dentro `make_registry_fire_control`,
+**tre tipi** (`_Weapon` `:355`, classe con `__slots__` e non dataclass; `WeaponPolicy` `:882` e `AreaWeapon` `:993`, `dataclass(frozen=True)`), **29 funzioni** di primo livello (27 a f009eb43, più `munition_class` e `intercept_domains_for` della BI) e, dentro `make_registry_fire_control`,
 **tre funzioni locali** che non sono nella tabella dell'inventario perché non sono di primo livello: `candidates` `:829`, `fire_control` `:838` (la callable che il risolutore chiama), e dentro `restrict_by_policy` `restrict` `:949`
 e `restricted` `:972`/`:978` (due definizioni alternative a seconda di `ER.accepts_target_grounded`).
 
 Importa i sette registri di dati (`Aircraft_Data`, `Aircraft_Loadouts`, `Aircraft_Weapon_Data`, `Ground_Weapon_Data`, `Ship_Data`, `Ship_Weapon_Data`, `Vehicle_Data`, `:198-204`), `Context.Context`, il risolutore (`ER`, per
 `accepts_target_grounded`, e `ShotSpec`) e `Weapon_Delivery.bomb_engagement_estimate` (`:208`). Costanti del modulo: `AIR_ONLY_TASKS` `:219`, `FALLBACK_DIMENSION` `:224`, `ENGAGEMENT_RANGE_FRACTION` `:228`, `DEFAULT_TIME_OF_FLIGHT_S` `:234`,
 `SALVO_ROUNDS` `:240`, `AUTOMATIC_FIRE_RATE_RPM` `:245`, `GUN_BURST_ROUNDS` `:250`, `WEAPON_COST_EXPONENT` `:273`, `SPEED_OF_SOUND_MS` `:278`, `KNOT_MS` `:281`, `PARKED_TYPE_BY_AIR_TYPE` `:287`, `PARKED_FALLBACK_TYPE` `:299`,
-`AREA_FIRE_TASKS` `:989`. **Stime dichiarate dal codice** (i commenti sopra le costanti le chiamano «STIMA non tarata»): `FALLBACK_DIMENSION`, `ENGAGEMENT_RANGE_FRACTION`, `DEFAULT_TIME_OF_FLIGHT_S`, `SALVO_ROUNDS`,
-`AUTOMATIC_FIRE_RATE_RPM`, `GUN_BURST_ROUNDS`, `WEAPON_COST_EXPONENT`; `SPEED_OF_SOUND_MS` e `KNOT_MS` sono invece definizioni fisiche. Questo capitolo non le ricalibra: le riporta come sono.
+`AREA_FIRE_TASKS` `:989`; dalla BI `AD_LAND`/`AD_NAVAL` `:293`, `AD_TARGET_DOMAINS` `:294`, `AD_SIZE_GATED_NAVAL` `:295`, `AD_DETECTABLE_DEFAULT` `:297` (righe riverificate il 2026-11-10; le altre righe di questo capitolo sono a f009eb43). **Stime dichiarate dal codice** (i commenti sopra le costanti le chiamano «STIMA non tarata»): `FALLBACK_DIMENSION`, `ENGAGEMENT_RANGE_FRACTION`, `DEFAULT_TIME_OF_FLIGHT_S`, `SALVO_ROUNDS`,
+`AUTOMATIC_FIRE_RATE_RPM`, `GUN_BURST_ROUNDS`, `WEAPON_COST_EXPONENT`, e dalla BI `AD_DETECTABLE_DEFAULT` (commento «STIMA [S]», BI-7); `AD_TARGET_DOMAINS` e `AD_SIZE_GATED_NAVAL` sono **scelte di progetto [S]** (regola dell'utente del 2026-11-07, decisione BI-12 (a)), non dati tarati; `SPEED_OF_SOUND_MS` e `KNOT_MS` sono invece definizioni fisiche. Questo capitolo non le ricalibra: le riporta come sono.
 
 ### Tipi (D71)
 
@@ -397,6 +397,7 @@ classDiagram
         +float max_range
         +float time_of_flight
         +int stock_per_round
+        +frozenset intercept_domains
     }
 
     Weapon ..> ShotSpec : shot_spec_for
@@ -405,7 +406,7 @@ classDiagram
 ```
 
 Note a D71: i campi di `Weapon` sono gli `__slots__` di `_Weapon` (`:358`); `efficiency` è una `@property` (`:379`) che restituisce il sotto-dizionario `data['efficiency']` o `{}`. Nel diagramma il nome privato compare senza il trattino basso
-iniziale (`Weapon` = `_Weapon`, `:355`) per non dipendere da come il renderer tratta i nomi che cominciano con `_`; lo stereotipo porta il nome vero. `ShotSpec` è del risolutore (D4 mostra tutti i suoi nove campi; qui sono quattro,
+iniziale (`Weapon` = `_Weapon`, `:355`) per non dipendere da come il renderer tratta i nomi che cominciano con `_`; lo stereotipo porta il nome vero. `ShotSpec` è del risolutore (D4 mostra tutti i suoi dieci campi, `intercept_domains` dalla BI; qui sono cinque,
 quelli che questo modulo legge o imposta). `AreaWeapon.entry` è il record `_Weapon` scelto (campo con `repr=False`, `compare=False`, `:1010`), che `area_fire_pk` usa per leggere le righe d'efficacia del template. `WeaponPolicy.rules` diventa un
 `MappingProxyType` in `__post_init__` (`:897`). Rimando a **D47** (i tipi nuovi della F7 e chi li consuma), che resta.
 
@@ -418,7 +419,7 @@ flowchart TD
     FAB["fabbrica<br/>make_registry_fire_control<br/>(e le funzioni locali candidates, fire_control)"]
     ARM["armi candidate<br/>_Weapon, _shooter_key, _candidate_weapons,<br/>_range_m, _air_range_m, _speed_ms,<br/>_number, _positive"]
     BER["bersaglio<br/>target_key, target_class, air_target_class_of,<br/>parked_target_class, _z"]
-    SCE["filtri, ordine, ShotSpec<br/>rank_weapons, select_weapon, shot_spec_for,<br/>in_altitude_envelope, _surface_capable,<br/>_cell, preference_score, _attack_speed_kmh"]
+    SCE["filtri, ordine, ShotSpec<br/>rank_weapons, select_weapon, shot_spec_for,<br/>munition_class, intercept_domains_for,<br/>in_altitude_envelope, _surface_capable,<br/>_cell, preference_score, _attack_speed_kmh"]
     POL["politica d'armi<br/>WeaponPolicy, restrict_by_policy,<br/>weapon_category, weapon_tasks, _asset_id"]
     POS["fuoco su posizione<br/>AreaWeapon, area_fire_weapon,<br/>area_fire_pk"]
     ER["Engagement_Resolver<br/>ShotSpec, accepts_target_grounded"]
@@ -442,7 +443,7 @@ flowchart TD
     SCE --> WD
 ```
 
-Lettura: `SCE --> ER` perché `shot_spec_for` costruisce una `ShotSpec`; `SCE --> WD` perché `shot_spec_for` chiama `bomb_engagement_estimate` per le bombe contro la superficie (`:761`); `POL --> ER` perché `restrict_by_policy`
+Lettura: `SCE --> ER` perché `shot_spec_for` costruisce una `ShotSpec` (dalla BI con `intercept_domains`, calcolato da `intercept_domains_for` → `munition_class`, funzioni dello stesso gruppo, `Fire_Control.py:799`, `:761`); `SCE --> WD` perché `shot_spec_for` chiama `bomb_engagement_estimate` per le bombe contro la superficie (`:761`); `POL --> ER` perché `restrict_by_policy`
 chiama `ER.accepts_target_grounded` (`:971`); `BER --> REG` perché `air_target_class_of` legge `Aircraft_Data._registry`. Chi chiama il modulo, nel core: `Session_Simulator` → `restrict_by_policy` (`:2277`) e `weapon_category`
 (`_winchester_weapons`, `:1780`, `:1787`); `Mission_Adapter` → `WeaponPolicy` (`weapon_policies`, `:1918`); `Area_Fire` → `area_fire_weapon` (`plan_shot`, `:213`) e `area_fire_pk` (`resolve_area_fire`, `:285`). **Nessun chiamante nel core**
 per `make_registry_fire_control` (la fire control è un argomento di `run_session`: la costruisce il chiamante) e per `select_weapon` (solo test). Rimando a **D10** (la selezione come flowchart di regola) e a **D58** (import).
@@ -479,6 +480,7 @@ sequenceDiagram
         opt bomba contro superficie con quota di rilascio
             SP->>WD: bomb_engagement_estimate(weapon.data, quota di rilascio, velocita di attacco)
         end
+        SP->>SP: intercept_domains_for(arma), classe di munizione e ad_detectable (BI)
         SP-->>FCL: ShotSpec
     end
     FCL-->>RUN: tupla di ShotSpec, oppure None se nessuna arma e adatta
@@ -487,7 +489,7 @@ sequenceDiagram
 Righe: `fire_control` locale `:838`; `_shooter_key` `:839`; `candidates` `:829` (cache `candidates_cache`); `target_key` `:849`; quote `:858-859` (solo se `is_air or bomber`, `bomber = not is_air and shooter_key[0] == 'Aircraft'`);
 cache `:862-863`; `rank_weapons` `:865`; `_attack_speed_kmh` `:867` (solo se `release_altitude` è noto); `shot_spec_for` per ogni scelta `:868`; salvataggio in cache `:872`. Dentro `rank_weapons` (`:698`): `_surface_capable` solo per bersagli non
 aerei, `_cell` per la riga di efficacia, scarto se Pk ≤ 0, `in_altitude_envelope` solo per bersagli aerei con `altitude_filter`, ordine per `preference_score` (col costo solo se **tutte** le armi adatte lo hanno, `use_cost`), poi Pk, nome del modello,
-tipo d'arma. La risposta è la stessa per la stessa chiave `(shooter_key, keys, dimension, is_air, shooter_z, target_z)`: la memoizzazione non cambia il risultato (docstring). Il risolutore sceglie poi la prima opzione con scorta: v. **D13** e **D83**.
+tipo d'arma. La risposta è la stessa per la stessa chiave `(shooter_key, keys, dimension, is_air, shooter_z, target_z)`: la memoizzazione non cambia il risultato (docstring). Il risolutore sceglie poi la prima opzione con scorta: v. **D13** e **D83**. Dalla BI `shot_spec_for` calcola anche `intercept_domains` con `intercept_domains_for` (`Fire_Control.py:799`, `:865`), che usa `munition_class` (`:761`) e legge `munition_class` e `ad_detectable` dal registro dell'arma: nessuna chiamata a `Weapon_Delivery` e nessun accesso nuovo al bersaglio. Le righe di questo paragrafo sono quelle di f009eb43 e non sono state ricalcolate dopo la BI.
 
 ### La sequenza dell'involucro di politica (D74)
 
@@ -603,7 +605,9 @@ Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella 
 | filtri, ordine, ShotSpec | funzione | `preference_score` | `preference_score(pk, cost, use_cost)` | `:686` | Punteggio di preferenza di un'arma (decisione A5, v. `WEAPON_COST_EXPONENT`). | `rank_weapons` |
 | filtri, ordine, ShotSpec | funzione | `rank_weapons` | `rank_weapons(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)` | `:698` | Tutte le armi adatte, in ordine di preferenza: tuple (arma, accuracy, destroy_capacity). | `make_registry_fire_control`, `select_weapon` |
 | filtri, ordine, ShotSpec | funzione | `select_weapon` | `select_weapon(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)` | `:737` | L'arma preferita fra quelle adatte (la prima di `rank_weapons`), o None. | nessun chiamante nel core (solo test) |
-| filtri, ordine, ShotSpec | funzione | `shot_spec_for` | `shot_spec_for(weapon, accuracy, destroy_capacity, is_air, release_altitude_m, attack_speed_kmh)` | `:745` | `ShotSpec` della scelta, con i campi derivati del docstring del modulo. | `area_fire_weapon`, `make_registry_fire_control` |
+| filtri, ordine, ShotSpec | funzione | `munition_class` | `munition_class(weapon)` | `:761` | Classe di munizione dell'arma (BI): dichiarata nel registro (`MISSILES_ASM`) o derivata da categoria e task; `None` se non classificabile. | `intercept_domains_for` |
+| filtri, ordine, ShotSpec | funzione | `intercept_domains_for` | `intercept_domains_for(weapon)` | `:799` | Domini di difesa aerea (`land`, `naval`) che possono considerare il colpo un bersaglio (BI): dalla classe e, per i navali, dal flag `ad_detectable`; `None` se la classe è ignota. | `shot_spec_for` |
+| filtri, ordine, ShotSpec | funzione | `shot_spec_for` | `shot_spec_for(weapon, accuracy, destroy_capacity, is_air, release_altitude_m, attack_speed_kmh)` | `:819` | `ShotSpec` della scelta, con i campi derivati del docstring del modulo (dalla BI anche `intercept_domains`). | `area_fire_weapon`, `make_registry_fire_control` |
 | filtri, ordine, ShotSpec | funzione | `_attack_speed_kmh` | `_attack_speed_kmh(shooter_key)` | `:793` | Velocità `attack` [km/h] del loadout assegnato a un aereo, None se non disponibile. | `make_registry_fire_control` |
 | fabbrica | funzione | `make_registry_fire_control` | `make_registry_fire_control(altitude_filter, memoize)` | `:806` | Fabbrica della fire control `(shooter, target, target_grounded)`: tupla ordinata di `ShotSpec` o None; cache opzionali. | nessun chiamante nel core: la fire control è un argomento di `run_session` |
 | politica d'armi | funzione | `restrict_by_policy` | `restrict_by_policy(fire_control, policy_of)` | `:926` | Involucro puro: `fire_control` con le opzioni ristrette dalla politica d'armi del tiratore (F7a). | `SS:run_session` |
@@ -821,8 +825,8 @@ dell'altro lato. Import locali: `Meteo_Analysis` `:1179`, `Region.BlockCategory`
 
 ### I metodi di `_EngagementRun` per ruolo (D79, D80)
 
-I 72 metodi della run (più la classe, `:1642`) sono divisi in 12 gruppi di ruolo, con il codice `R1`-`R12` usato anche nella tabella di fondo. Conteggi: R1 costruzione 8; R2 rilevamento 6; R3 coda ed esito 5; R4 scelta del tiro 8; R5 dottrina di tiro 6;
-R6 lanciatori L2/L3 4; R7 regole di bersaglio F7a 11; R8 lancio e impatto 2; R9 intercettazione 7; R10 risoluzione della salva 1; R11 disingaggio e rottura 10; R12 fine di attività 4 (totale 72). Le frecce sono chiamate a nome di metodo (`self._x(...)`) fra gruppi;
+I 72 metodi della run a f009eb43 (più la classe, `:1642`; la BI ne aggiunge due, v. sotto) sono divisi in 12 gruppi di ruolo, con il codice `R1`-`R12` usato anche nella tabella di fondo. Conteggi: R1 costruzione 8; R2 rilevamento 6; R3 coda ed esito 5; R4 scelta del tiro 8; R5 dottrina di tiro 6;
+R6 lanciatori L2/L3 4; R7 regole di bersaglio F7a 11; R8 lancio e impatto 2; R9 intercettazione 9 (7 a f009eb43, più `_ad_domain` e `_admissible` della BI); R10 risoluzione della salva 1; R11 disingaggio e rottura 10; R12 fine di attività 4 (totale 72 a f009eb43, 74 con i due metodi della BI; i metodi aggiunti da altri lavori dopo f009eb43 non sono ancora riportati in questo atlante). Le frecce sono chiamate a nome di metodo (`self._x(...)`) fra gruppi;
 i gruppi che accodano un evento chiamano tutti `_push` (R3): quegli archi non sono disegnati. Il raggruppamento è mio (i metodi non sono raggruppati nel codice), ma segue le intestazioni di sezione del file («fase 1: rilevamento», «coda eventi», «fase 2: scelta del bersaglio e lancio»,
 «dottrina di tiro», «fase 3: impatto, saturazione, danno», «fase 4: disingaggio», «soglia di rottura stocastica»).
 
@@ -865,7 +869,7 @@ un lanciatore è ingaggiabile; `R8 --> R4` è `_on_launch` che richiama `_schedu
 flowchart TD
     R3["R3 dispatch<br/>run"]
     R10["R10 risoluzione<br/>_on_resolve"]
-    R9["R9 intercettazione<br/>_may_intercept, _in_time, _interception_zone,<br/>_round_track_time, _air_detection_range,<br/>_detection_time_of, _position_at"]
+    R9["R9 intercettazione<br/>_admissible, _ad_domain, _may_intercept, _in_time, _interception_zone,<br/>_round_track_time, _air_detection_range,<br/>_detection_time_of, _position_at"]
     R11["R11 disingaggio e rottura<br/>_check_doctrine, _breakpoint, _perceived_ratio,<br/>_air_threat, _surface_weight, _unanswered_fraction,<br/>_morale_of, _enemy_estimate_of, _stationary, _is_enemy"]
     R12["R12 fine di attivita<br/>_check_activity, _end_activity,<br/>_activity_end_time, _targets_destroyed_at"]
     R7["R7 regole di bersaglio F7a<br/>_is_deferred, _is_designated, _is_hostile,<br/>_attack_over, _attack_pass_time, _designated_destroyed,<br/>_designated_first, _react_to_hostile,<br/>_schedule_phase_wakes, _wake_after_destruction, _on_wake"]
@@ -891,7 +895,7 @@ flowchart TD
     R1 --> R11
 ```
 
-Lettura: `R10 --> R9` sono `_may_intercept` (regola L1) e `_in_time` (regola R-INT) chiamate per ogni coppia (salva, intercettore); `R10 --> R11` è `_check_doctrine`, che chiama `_breakpoint` → `_perceived_ratio` e `_unanswered_fraction`; `R10 --> R7` è
+Lettura: `R10 --> R9` sono `_admissible` (filtro BI, che a sua volta usa `_ad_domain`; solo con `BI_AD_TARGET_RULE` acceso, altrimenti risponde sempre «ammesso»), `_may_intercept` (regola L1) e `_in_time` (regola R-INT) chiamate per ogni coppia (salva, intercettore); `R10 --> R11` è `_check_doctrine`, che chiama `_breakpoint` → `_perceived_ratio` e `_unanswered_fraction`; `R10 --> R7` è
 `_wake_after_destruction` (solo con `target_rules`); `R10 --> R12` è `_check_activity` (solo con `activity_criteria`); `R7 --> R9` è `_position_at` usato da `_is_designated`; `R1 --> R11` sono le chiamate di `_init_breakpoints` a `_morale_of`, `_enemy_estimate_of`, `_stationary`
 (il gruppo R1 contiene `_init_breakpoints` per costruzione, ma la sua logica è del gruppo R11). `R4 --> R7` e `R7 --> R4`: `_schedule_next` e `_fire_control` consultano `_is_deferred`, `_is_designated`, `_is_hostile`, `_attack_over`; `_on_wake` richiama `_schedule_next`.
 Rimando a **D22** (soglia di rottura B(t)), **D23** (peso di un nemico percepito), **D24** (allocazione delle intercettazioni), **D27** (regola R-INT), **D37** (fine di attività), **D43-D45** (regole di bersaglio di missione).
@@ -1153,7 +1157,7 @@ intercettazioni, fra scheduling e lancio, hanno consumato la stessa voce. Il lan
 ```mermaid
 sequenceDiagram
     participant RUN as _on_resolve
-    participant IC as _may_intercept e _in_time
+    participant IC as _admissible, _may_intercept e _in_time
     participant SH as _Shadow
     participant DM as Damage_Model
     participant DOC as _check_doctrine
@@ -1168,8 +1172,9 @@ sequenceDiagram
     RUN->>RUN: capacity = somma delle disponibilita
     loop per ogni salva intercettabile
         loop per ogni intercettore, finche restano colpi
-            RUN->>IC: _may_intercept(shadow, salvo), regola L1
-            RUN->>IC: _in_time(shadow, salvo), regola R-INT, solo se il precedente e vero
+            RUN->>IC: _admissible(shadow, salvo), filtro BI (sempre vero se la regola e spenta)
+            RUN->>IC: _may_intercept(shadow, salvo), regola L1, solo se il precedente e vero
+            RUN->>IC: _in_time(shadow, salvo), regola R-INT, solo se i precedenti sono veri
             RUN->>RUN: take = min(free, left), used e left aggiornati
         end
     end
@@ -1206,7 +1211,7 @@ sequenceDiagram
 ```
 
 Lettura: **Blocco 1** (`:3157-3239`). I canali sono per evento-salva e per dominio: quelli già spesi dalle *altre* forze dello stesso dominio nello stesso istante si sottraggono (`:3161-3170`), le disponibilità si calcolano solo per intercettori operativi e non a terra (`:3186-3189`). Le salve si scorrono nell'ordine `(t_impact, salvo_id)`
-e gli intercettori nell'ordine della regola F (`:3195-3215`); `_in_time` è chiamata solo se `_may_intercept` è vera (corto circuito di `or`, `:3207`). Né `_may_intercept` né `_in_time` fanno estrazioni (docstring di `_in_time`, `:3115`): il flusso dell'`rng` non cambia. Le intercettazioni consumano la scorta
+e gli intercettori nell'ordine della regola F (`:3195-3215`); dalla BI la condizione del ciclo è `free <= 0 or not _admissible or not _may_intercept or not _in_time` (`Engagement_Resolver.py:3396-3397`, corto circuito di `or`): `_may_intercept` è chiamata solo se `_admissible` è vera e `_in_time` solo se lo sono entrambe (riga riverificata il 2026-11-10; le altre righe di questo paragrafo sono a f009eb43). Anche `_admissible` non fa estrazioni. Né `_may_intercept` né `_in_time` (e dalla BI nemmeno `_admissible`) fanno estrazioni (docstring di `_in_time`, `:3115`): il flusso dell'`rng` non cambia. Le intercettazioni consumano la scorta
 dell'intercettore **prima** del danno (`:3236`), e generano un `InterceptionEvent` per arma (`:3237-3239`). **Blocco 2** (`:3241-3264`): per ogni colpo non fermato su un bersaglio già distrutto si conta `wasted` senza estrarre (payload congelato); altrimenti `_draw()` è valutata come argomento di `build_damage_event`
 (`:3253-3255`), quindi **una estrazione per colpo che arriva su un bersaglio vivo**, nell'ordine salve, colpi. Se il colpo mette fuori combattimento un asset operativo, `loss_shooters` ricorda chi (`:3262-3264`; serve a `_unanswered_fraction`). **Blocco 3** (`:3266-3301`): `shock = perdite / impegnati`, `erosion = (impegnati - operativi dopo) / impegnati`
 (`:3267-3269`); `_check_doctrine` (`:3305`) riceve le frazioni dell'intera forza, oppure, se alcuni impegnati sono aerei a terra, quelle calcolate sui soli combattenti e `withdrawable=bool(fighting_after)` (`:3286-3301`). Dentro `_check_doctrine`: l'annientamento prevale su un disingaggio già deciso (`:3321-3329`);
@@ -1305,8 +1310,8 @@ Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella 
 
 | Gruppo | Tipo | Simbolo | Firma | Riga | Che cosa fa | Chiamata da |
 |---|---|---|---|---|---|---|
-| T | classe | `ShotSpec` | `ShotSpec`; campi: accuracy, destroy_capacity, rounds, weapon, time_of_flight, interceptable, cycle_time, max_range, stock_per_round | `:550` | Che cosa spara un tiratore contro un bersaglio (accuracy e destroy_capacity, colpi, arma, volo, portata, unità di scorta per colpo): è la risposta della fire control. | `FCO:shot_spec_for` (costruttore); letta da `_first_with_stock`, `_options`, `_refire_interval` |
-| T | metodo | `ShotSpec.__post_init__` | `__post_init__(self)` | `:582` | Valida i campi (tipi e intervalli) e solleva `TypeError`/`ValueError`. | implicito alla costruzione |
+| T | classe | `ShotSpec` | `ShotSpec`; campi: accuracy, destroy_capacity, rounds, weapon, time_of_flight, interceptable, cycle_time, max_range, stock_per_round, intercept_domains | `:600` | Che cosa spara un tiratore contro un bersaglio (accuracy e destroy_capacity, colpi, arma, volo, portata, unità di scorta per colpo, domini di difesa aerea che possono fermarne il colpo, BI): è la risposta della fire control. | `FCO:shot_spec_for` (costruttore); letta da `_first_with_stock`, `_options`, `_refire_interval` |
+| T | metodo | `ShotSpec.__post_init__` | `__post_init__(self)` | `:637` | Valida i campi (tipi e intervalli; `intercept_domains` deve essere `None` o un `frozenset` incluso in `AD_DOMAINS`) e solleva `TypeError`/`ValueError`. | implicito alla costruzione |
 | T | classe | `Detection` | `Detection`; campi: observer_id, target_id, sensor_range, distance_cpa, probability, draw, detected, time | `:615` | Esito di un'estrazione di rilevamento (una per finestra e direzione). | `_detect_direction` (costruttore) |
 | T | classe | `Salvo` | `Salvo`; campi: salvo_id, t_launch, t_impact, shooter_id, target_id, target_force_id, rounds, spec | `:632` | Una salva lanciata, a payload congelato. | `_on_launch` (costruttore) |
 | T | classe | `SalvoResolution` | `SalvoResolution`; campi: time, force_id, salvo_ids, rounds, interceptable_rounds, capacity, intercepted, wasted, losses, shock, erosion | `:654` | Un evento-salva risolto contro una forza: unità di saturazione e di shock. | `_on_resolve` (costruttore) |
@@ -1390,6 +1395,8 @@ Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella 
 | R8 | metodo | `_EngagementRun._on_impact` | `_on_impact(self, time, force_id, salvo)` | `:2974` | Raggruppa le salve che atterrano sulla forza entro la finestra e accoda la risoluzione. | `run` |
 | R9 | metodo | `_EngagementRun._position_at` | `_position_at(self, shadow, t)` | `:2984` | Posizione `(x, y, z)` a `t`, dai tratti di rotta o dalla posizione dell'asset; `None` se ignota. | `_is_designated`, `_may_intercept`, `_round_track_time` |
 | R9 | metodo | `_EngagementRun._interception_zone` | `_interception_zone(self, shadow)` | `:2999` | Zona d'intercettazione V_I come (raggio, quota base, quota tetto) relativi; memoizzata. | `_may_intercept` |
+| R9 | metodo | `_EngagementRun._ad_domain` | `_ad_domain(self, shadow)` | `:3189` | Dominio di difesa aerea dell'intercettore (BI-5): `naval` per una nave (`Ship`), altrimenti `land`; memoizzato in `ad_domain_cache`. | `_admissible` |
+| R9 | metodo | `_EngagementRun._admissible` | `_admissible(self, shadow, salvo)` | `:3196` | Filtro BI: vero se `BI_AD_TARGET_RULE` è spento o la `ShotSpec` non dichiara i domini; altrimenti solo se il dominio dell'intercettore è fra gli `intercept_domains` della salva. Nessuna estrazione. | `_on_resolve` |
 | R9 | metodo | `_EngagementRun._may_intercept` | `_may_intercept(self, shadow, salvo)` | `:3019` | Regola L1: il punto di lancio della salva è fuori dal V_I dell'intercettore. | `_on_resolve` |
 | R9 | metodo | `_EngagementRun._detection_time_of` | `_detection_time_of(self, observer_id, target_id)` | `:3044` | Istante in cui l'osservatore ha rilevato il bersaglio, `None` se mai. | `_in_time` |
 | R9 | metodo | `_EngagementRun._air_detection_range` | `_air_detection_range(self, shadow)` | `:3052` | Raggio di rilevamento aereo dell'intercettore [m]; memoizzato. | `_round_track_time` |
