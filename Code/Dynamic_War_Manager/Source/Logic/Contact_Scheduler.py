@@ -952,6 +952,90 @@ def _merge_intervals(intervals: Sequence[Tuple[float, float]]) -> List[Tuple[flo
     return merged
 
 
+def altitude_intervals(legs_a: Sequence[Leg], legs_b: Sequence[Leg], z_min: Optional[float],
+                       z_max: Optional[float], relative: bool = True) -> List[Tuple[float, float]]:
+    """Intervalli in cui la quota di B e' in [z_min, z_max] (None = nessun limite da quel lato): RELATIVA ad A
+    (z_b - z_a) se `relative`, ASSOLUTA (z_b) altrimenti; i tratti di A servono comunque a delimitare il tempo comune.
+    Primitiva "fascia di quota" della Attivita' D (Piano_Lavori_2026_09_24.md): stessi sottointervalli a velocita'
+    costante di `range_intervals` (`_breakpoints`), sui quali la quota e' lineare nel tempo, quindi ogni sottointervallo
+    da' al piu' un intervallo; fusi con `_merge_intervals`.
+
+    Raises:
+        ValueError: z_min > z_max (entrambi dati).
+    """
+    if z_min is not None and z_max is not None and z_min > z_max:
+        raise ValueError(f"z_min ({z_min!r}) must not exceed z_max ({z_max!r})")
+
+    overlap = _overlap(legs_a, legs_b)
+
+    if overlap is None:
+        return []
+
+    lo, hi = overlap
+    breakpoints = _breakpoints(legs_a, legs_b, lo, hi)
+    low = float('-inf') if z_min is None else z_min
+    high = float('inf') if z_max is None else z_max
+    found: List[Tuple[float, float]] = []
+
+    def dz(t: float) -> float:
+        z_b = position_on_legs(legs_b, t)[2]
+        z_a = position_on_legs(legs_a, t)[2] if relative else 0.0
+        return z_b - z_a
+
+    if len(breakpoints) == 1:
+        # Sovrapposizione istantanea: i due esistono insieme per un solo istante.
+        t = breakpoints[0]
+        d = dz(t)
+        return [(t, t)] if low <= d <= high else []
+
+    for u, v in zip(breakpoints, breakpoints[1:]):
+        d0 = dz(u)
+        d1 = dz(v)
+
+        if v - u <= TIME_EPS or d1 == d0:
+            # Quota costante sul sottointervallo: dentro o fuori la fascia per tutta la durata.
+            if low <= d0 <= high:
+                found.append((u, v))
+            continue
+
+        slope = (d1 - d0) / (v - u)
+        t_low = u + (low - d0) / slope
+        t_high = u + (high - d0) / slope
+        s1 = max(min(t_low, t_high), u)
+        s2 = min(max(t_low, t_high), v)
+
+        if s2 >= s1:
+            found.append((s1, s2))
+
+    return _merge_intervals(found)
+
+
+def intersect_intervals(first: Sequence[Tuple[float, float]],
+                        second: Sequence[Tuple[float, float]]) -> List[Tuple[float, float]]:
+    """Intersezione di due liste ORDINATE di intervalli disgiunti (combinatore "intersezione" della Attivita' D).
+    Due intervalli che si toccano entro TIME_EPS danno un intervallo di durata nulla."""
+    i = 0
+    j = 0
+    result: List[Tuple[float, float]] = []
+
+    while i < len(first) and j < len(second):
+        a0, a1 = first[i]
+        b0, b1 = second[j]
+        lo = max(a0, b0)
+        hi = min(a1, b1)
+
+        if hi >= lo - TIME_EPS:
+            result.append((lo, max(lo, hi)))
+
+        if a1 <= b1:
+            i += 1
+
+        if b1 <= a1:
+            j += 1
+
+    return _merge_intervals(result)
+
+
 # ── B-bis. DAL RAGGIO DI RILEVAMENTO ALLE FINESTRE DI CONTATTO ────────────────
 
 def detection_mode_for(asset) -> Optional[str]:
