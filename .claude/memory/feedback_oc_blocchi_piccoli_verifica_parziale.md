@@ -17,3 +17,4 @@ Per i lavori affidati ad agenti OpenCode si prova a dividere in blocchi piu' pic
 - **Permessi dell'agente oc-developer**: puo' lanciare solo `python3 -m unittest`, `py_compile` e `verifica.sh suite|confronto`; `Scenario_Baseline --compare --only` e' RESPINTO. Il confronto parziale lo esegue il principale dopo il commit (S32 = 8 s). Non scriverlo nei compiti come passo dell'agente.
 - Cattura di base per la verifica IDENTICAL: `.ai-run/fp_base_capture.json` (1093 esecuzioni, locale, ProArt 2026-11-11).
 - Dipendenza scoperta: `_exposure_time` (FP-6) e il punto 8-bis chiamano `_own_intervals` (punto 7): va in 1A; il test 20 va in 1B.
+- **1B**: 65 richieste, **0,4472 $**, contesto medio ~73k; un ciclo, nessuna fermata. Totale 1A+1B = 0,7392 $ (restano 1C, 1D, blocco 2). `git stash list` e' vietato all'agente (deny): lo controlla il principale.
