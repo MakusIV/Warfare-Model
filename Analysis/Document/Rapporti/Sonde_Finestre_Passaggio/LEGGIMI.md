@@ -2,9 +2,9 @@
 
 Script di sola lettura scritti da `des-planner` il 2026-11-06; `probe_switch_on.py` (P-1) riscritto il 2026-11-08 con le
 decisioni FP-1..FP-10 tutte prese (attesa confermata dall'utente la sera del 2026-11-08: solo testo, nessun cambio
-di logica). **P-0 eseguita il 2026-11-07 sul ProArt** (esito sotto e in `esito_p0.txt`); **P-1 non
-ancora eseguita**: si esegue solo dopo il blocco 1 del piano (serve l'interruttore `FP_PER_PASS_DETECTION`), dalla
-sessione principale, non dall'esecutore.
+di logica). **P-0 eseguita il 2026-11-07 sul ProArt** (esito sotto e in `esito_p0.txt`); **P-1 eseguita il 2026-11-11 sul ProArt**
+dalla sessione principale dopo il blocco 2 (esito in `esito_p1.txt`: 44 esecuzioni cambiate = esattamente le 44 `AFTER_PASS`
+di P-0, 0 `RINT_D`, 0 passaggi di durata zero su 34116, 0 cambiate fra le nuove S32/S34/S35).
 Nessuno dei due installa una fotografia o scrive nel repository: l'uscita va nella cartella indicata (usare
 `.ai-run/`, fuori dal versionamento). **Mai in parallelo con suite o confronto** (`tools/ai/verifica.sh`).
 

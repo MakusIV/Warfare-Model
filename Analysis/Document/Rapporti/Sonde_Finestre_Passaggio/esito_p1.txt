@@ -1,0 +1,182 @@
+# Estratto versionato dell'esito della sonda P-1 (log completo in .ai-run/sonde_passaggi/p1/, fuori dal versionamento)
+# Eseguita il 2026-11-11 sul ProArt, dalla sessione principale, sul merge del blocco 2 della FP (suite 4919, confronto 1113:104).
+# Regola accesa in memoria (FP_PER_PASS_DETECTION = True); D-5 spenta in tutta la fotografia. Confronto con la fotografia installata.
+compared 1113 runs: 1060 difference lines (505.3 s)
+RUNS 1113 (in fotografia 1009, nuove 104)
+RUNS_WITH_ZERO_PASSES 0 (in fotografia 0)
+RUNS_WITH_RINT_D 0 (in fotografia 0)
+ZERO_PASSES {"passes": 34116, "passes_zero": 0, "passes_zero_clipped": 0, "rint_checks": 407, "rint_seen_changed": 0}
+
+# Esecuzioni della fotografia cambiate (DIFF): 44 = ESATTAMENTE le 44 AFTER_PASS di P-0 (insiemi identici, controllato con diff); 0 RINT_D; 0 passaggi di durata zero;
+# esecuzioni nuove S32/S34/S35: 0 cambiate (contro .ai-run/fp_base_capture.json); S33: 20 NEW (varianti fissate dalla stessa unita').
+
+# Riepilogo per esecuzione (Scenario_Baseline --summary, cattura di base contro cattura con regola accesa, solo le CHANGED):
+CHANGED S13/S13-2
+    Blue-Strike.outcome: disengaged/disengaged -> disengaged/held
+    Blue-Strike:Strike.mission_outcome: disengaged@536.0 lost=1 -> held lost=0
+    Blue-Strike.destroyed: 2 -> 1
+    Red-FARP.rounds: 8 -> 6
+    damage_events: 17 -> 15
+CHANGED S13/S13-4
+    Blue-Strike.outcome: disengaged/disengaged -> disengaged/held
+    Blue-Strike:Strike.mission_outcome: disengaged@546.0 lost=2 -> held lost=1
+    Red-FARP.rounds: 9 -> 5
+    damage_events: 17 -> 13
+CHANGED S14/S14-4
+    Blue-Bombers.outcome: disengaged/disengaged -> disengaged/held
+    Blue-Bombers:Strike.mission_outcome: disengaged@701.0 lost=1 -> held lost=0
+    Blue-Bombers.destroyed: 2 -> 1
+    Red-Plant.rounds: 8 -> 6
+    damage_events: 16 -> 14
+CHANGED S21/S21-3/control
+    Blue-Strike.outcome: disengaged/disengaged -> disengaged/held
+    Blue-Strike:Strike.mission_outcome: disengaged@241.9 lost=1 -> held lost=0
+    Blue-Strike.destroyed: 1 -> 0
+    Red-Airbase.rounds: 17 -> 14
+    damage_events: 17 -> 14
+CHANGED S21/S21-3/parked
+    Blue-Strike.outcome: disengaged/disengaged -> disengaged/held
+    Blue-Strike:Strike.mission_outcome: disengaged@216.9 lost=1 -> held lost=0
+    Blue-Strike.destroyed: 2 -> 1
+    Red-Airbase.rounds: 12 -> 4
+    damage_events: 18 -> 10
+CHANGED S21/S21-5/control
+    Blue-Strike.outcome: disengaged/disengaged -> disengaged/held
+    Blue-Strike:Strike.mission_outcome: disengaged@239.4 lost=2 -> held lost=1
+    Blue-Strike.destroyed: 2 -> 1
+    Blue-Strike.fuel_used: 0.6057 -> 0.5204
+    Red-Airbase.rounds: 20 -> 15
+    damage_events: 18 -> 15
+CHANGED S21/S21-5/parked
+    Blue-Strike:Strike.mission_outcome: held lost=1 -> held lost=0
+    Blue-Strike.destroyed: 1 -> 0
+    Red-Airbase.rounds: 7 -> 6
+    damage_events: 14 -> 13
+CHANGED S21/S21-7/control
+    Blue-Strike.outcome: disengaged/destroyed -> disengaged/disengaged
+    Blue-Strike:Strike.mission_outcome: destroyed@216.9 lost=2 -> disengaged@221.9 lost=1
+    Blue-Strike.destroyed: 3 -> 2
+    Blue-Strike.fuel_used: 0.6757 -> 0.5904
+    Red-Airbase.rounds: 13 -> 12
+CHANGED S21/S21-7/parked
+    Blue-Strike.outcome: disengaged/disengaged -> disengaged/held
+    Blue-Strike:Strike.mission_outcome: disengaged@201.9 lost=1 -> held lost=0
+    Blue-Strike.destroyed: 3 -> 2
+    Red-Airbase.rounds: 8 -> 7
+    damage_events: 14 -> 13
+CHANGED S24-ORBIT/S24-ORBIT-0/full
+    Red-CAP.rounds: 6 -> 5
+CHANGED S26-BINGO/S26-BINGO-0/engagement_fuel_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-0/none
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-0/switch_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-0/transfer_continue
+    Blue-Flight.movement_end: 1200.0 -> 1163.3
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-1/engagement_fuel_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-1/none
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-1/switch_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-1/transfer_continue
+    Blue-Flight.movement_end: 1200.0 -> 1163.3
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-2/engagement_fuel_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-2/none
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-2/switch_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-2/transfer_continue
+    Blue-Flight.movement_end: 1200.0 -> 1163.3
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-3/engagement_fuel_off
+    Red-Site.rounds: 27 -> 23
+    damage_events: 27 -> 23
+CHANGED S26-BINGO/S26-BINGO-3/none
+    Red-Site.rounds: 27 -> 23
+    damage_events: 27 -> 23
+CHANGED S26-BINGO/S26-BINGO-3/switch_off
+    Red-Site.rounds: 27 -> 23
+    damage_events: 27 -> 23
+CHANGED S26-BINGO/S26-BINGO-3/transfer_continue
+    Blue-Flight.movement_end: 1200.0 -> 1163.3
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-4/engagement_fuel_off
+    Red-Site.rounds: 27 -> 24
+    damage_events: 27 -> 24
+CHANGED S26-BINGO/S26-BINGO-4/none
+    Red-Site.rounds: 27 -> 24
+    damage_events: 27 -> 24
+CHANGED S26-BINGO/S26-BINGO-4/switch_off
+    Red-Site.rounds: 27 -> 24
+    damage_events: 27 -> 24
+CHANGED S26-BINGO/S26-BINGO-4/transfer_continue
+    Blue-Flight.movement_end: 1200.0 -> 1163.3
+    Red-Site.rounds: 25 -> 21
+    damage_events: 25 -> 21
+CHANGED S26-BINGO/S26-BINGO-5/engagement_fuel_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-5/none
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-5/switch_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-5/transfer_continue
+    Blue-Flight.movement_end: 1200.0 -> 1163.3
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-6/engagement_fuel_off
+    Red-Site.rounds: 26 -> 23
+    damage_events: 26 -> 23
+CHANGED S26-BINGO/S26-BINGO-6/none
+    Red-Site.rounds: 26 -> 23
+    damage_events: 26 -> 23
+CHANGED S26-BINGO/S26-BINGO-6/switch_off
+    Red-Site.rounds: 26 -> 23
+    damage_events: 26 -> 23
+CHANGED S26-BINGO/S26-BINGO-6/transfer_continue
+    Blue-Flight.movement_end: 1200.0 -> 1169.3
+    Red-Site.rounds: 25 -> 22
+    damage_events: 25 -> 22
+CHANGED S26-BINGO/S26-BINGO-7/engagement_fuel_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-7/none
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-7/switch_off
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S26-BINGO/S26-BINGO-7/transfer_continue
+    Blue-Flight.movement_end: 1200.0 -> 1164.7
+    Red-Site.rounds: 28 -> 24
+    damage_events: 28 -> 24
+CHANGED S28-CLASS/S28-CLASS-2/self_defence
+    Blue-Strike.outcome: destroyed -> held
+    Blue-Strike.destroyed: 1 -> 0
+    Red-CAP.rounds: 4 -> 2
+    damage_events: 10 -> 8
+CHANGED S28-CLASS/S28-CLASS-2/self_defence_off
+    Blue-Strike.outcome: destroyed -> held
+    Blue-Strike.destroyed: 1 -> 0
+    Red-CAP.rounds: 4 -> 2
+    damage_events: 10 -> 8
