@@ -50,7 +50,8 @@ attraverso l'RNG di sessione passato dal chiamante.
    anche avere una traccia del colpo e il tempo di reagire prima dell'impatto: se aveva gia'
    rilevato il lanciatore vede il lancio e reagisce in VAL+COM+ATT, altrimenti scopre il colpo
    quando entra nel suo raggio di rilevamento aereo (traiettoria rettilinea, deterministico:
-   nessuna estrazione) e reagisce in RIV+VAL+COM+ATT. Rilevamento per asset; tempo di volo
+   nessuna estrazione) e reagisce in RIV+VAL+COM+ATT. Con il rilevamento per passaggio acceso (FP-5 (d)) 'aveva
+   gia' rilevato il lanciatore' vale solo per un rilevamento nel passaggio che contiene il lancio. Rilevamento per asset; tempo di volo
    dell'intercettore e RCS del colpo non modellati. Un colpo con tempo di volo nullo non si
    intercetta mai.
    Con `BI_AD_TARGET_RULE` acceso (SPENTO di default, Proposta_Bersagli_Intercettabili_Difesa_Aerea.md)
@@ -192,6 +193,34 @@ inversa esatta.
   ogni stato dell'interruttore; cambia solo la soglia, come per `detection_factor`.
 * **Limiti** (Proposta §5.2): solo riduzione (nessun cumulo di scansioni su permanenze lunghe); un solo sensore
   per asset (quello della portata massima); nessun dwell sul tracciamento dei colpi (R-INT).
+
+## Rilevamento per passaggio nella portata propria (FP, interruttore FP_PER_PASS_DETECTION, temporaneo)
+
+`Proposta_Finestre_Per_Passaggio_Portata_Propria.md`. Regola dell'utente: un'occasione di rilevamento per OGNI
+passaggio del bersaglio nel volume PROPRIO dell'osservatore dentro una finestra di contatto, mai la somma (prima:
+una sola estrazione per finestra e direzione, con la distanza minima dell'intera finestra). I passaggi si calcolano
+dai tratti delle rotte (`_own_passes`, su `_own_intervals` di VA-6 (a)):
+
+* **Ordine delle estrazioni (FP-2 = O3)**: il primo passaggio estrae dallo stream `rng` dell'ingaggio, nella
+  posizione dell'estrazione unica di prima; i passaggi dal secondo in poi estraggono da un flusso separato
+  `pass_rng` (iniettato dal chiamante). Spento (`pass_rng` None) il rilevamento e' quello di prima.
+* **Distanza per passaggio (FP-4 = (a))**: il CPA del passaggio (unito, FP-10).
+* **Finestra d'ingaggio per passaggio (FP-3 = (a))**: il candidato al tiro dell'osservatore con la portata minore
+  vale fino alla fine del passaggio (all'uscita dal volume proprio la traccia e' persa), anche con un passaggio
+  solo; le salve gia' lanciate non cambiano.
+* **Istante di rilevamento per R-INT (FP-5 = (d))**: il lancio e' "visto" solo se l'intercettore ha rilevato il
+  lanciatore in un rilevamento nel passaggio che contiene il lancio (nessun passaggio che lo contiene = non visto).
+* **Interazione con la D-5 (FP-6 = (a))**: con la D-5 accesa la permanenza e' quella di UN passaggio, mai la
+  somma, in ogni stato di questo interruttore; con FP acceso, quella del proprio passaggio (unito, FP-10).
+* **Passaggi ravvicinati (FP-10 = (c))**: passaggi separati da un'uscita <= dwell del sensore osservatore si
+  UNISCONO (una estrazione, CPA e permanenza del passaggio unito), solo con FP e D-5 accese e il dwell dichiarato.
+
+Ripiego senza tratti (chiamate dirette a `resolve_engagement` senza `legs`): i passaggi non si calcolano,
+un'estrazione per finestra e direzione come prima (incluso FP-5 (d), che resta l'ultimo rilevamento in lista).
+
+Temporaneo (criterio dell'utente del 2026-11-08: la regola sostituisce una soluzione superata). Si elimina, con il
+ramo "spento", in un blocco di pulizia dedicato dopo: la sonda P-1, la lettura delle esecuzioni cambiate da parte
+dell'utente e una fotografia nuova installata dall'utente. Fino ad allora il default resta spento.
 
 ## Scorta per arma (decisione A1/A3, 2026-09-26)
 
@@ -443,7 +472,9 @@ eventi finisce sempre e solo quando la coda si svuota.
 - **L'ordine delle estrazioni fa parte del contratto**: prima tutte le estrazioni di
   rilevamento, nell'ordine canonico delle finestre `(t_start, id_a, id_b, t_end)` e per
   ognuna la direzione a->b poi b->a; poi un'estrazione per colpo non intercettato, nell'
-  ordine degli eventi (invariato dalla D-5). Coda eventi con tie-break deterministico `(t, tipo, id, sequenza)`,
+  ordine degli eventi (invariato dalla D-5 e dal rilevamento per passaggio: con `pass_rng` i passaggi dal
+  secondo in poi estraggono da quello stream separato, nell'ordine canonico seguito dall'indice del passaggio,
+  e lo stream `rng` resta identico). Coda eventi con tie-break deterministico `(t, tipo, id, sequenza)`,
   tipi nell'ordine LANCIO < IMPATTO < RISOLUZIONE: a parita' di istante tutti i lanci
   leggono lo stato *prima* dei danni (risoluzione simultanea, §4.4 del documento).
 - **Mai eccezioni per dati mancanti** (forza senza asset utilizzabili, asset senza salute
