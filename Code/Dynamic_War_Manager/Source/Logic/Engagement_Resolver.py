@@ -496,6 +496,8 @@ from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import (
     TIME_EPS,
     GroundedSchedule,
     altitude_intervals,
+    clamp_legs,
+    closest_point_of_approach,
     detection_mode_for,
     intersect_intervals,
     position_on_legs,
@@ -1927,7 +1929,7 @@ class _EngagementRun:
                  reaction_profile_for, detection_factor, salvo_window, provenance,
                  breakpoint_rng=None, morale_for=None, enemy_estimate_for=None, fire_doctrine=None,
                  rwr_catalogue=None, coordination_of=None, grounded=None, activity_criteria=None,
-                 target_rules=None, dwell_time_for=None):
+                 target_rules=None, dwell_time_for=None, pass_rng=None):
         self.fire_control = fire_control
         # Regole di bersaglio di missione (F7a, v. docstring del modulo): per asset tiratore, e ostili noti
         # (asset che hanno lanciato almeno una salva contro il dominio di coordinamento, per dominio).
@@ -1997,6 +1999,12 @@ class _EngagementRun:
         self.detection_factor = detection_factor
         # D-5: lettore (osservatore, bersaglio, modo) -> periodo di rivisita [s] | None; None = legge non applicata.
         self.dwell_time_for = dwell_time_for
+        # FP (FP_PER_PASS_DETECTION): stream separato dei passaggi dal secondo in poi; None = un'estrazione per finestra
+        # e direzione, comportamento precedente. Passaggi `(start, end)` (uniti, FP-10) per (osservatore, bersaglio) e
+        # istanti di rilevamento per coppia, per la regola R-INT legata al passaggio (FP-5 (d), `_detection_time_of`).
+        self.pass_rng = pass_rng
+        self.own_passes_of: Dict[Tuple[str, str], List[Tuple[float, float]]] = {}
+        self.detection_times_of: Optional[Dict[Tuple[str, str], List[float]]] = None
         self.salvo_window = float(salvo_window)
         self.provenance = provenance
         self.contacts = list(contacts or [])
@@ -2290,17 +2298,43 @@ class _EngagementRun:
         if self.detection_factor is not None:
             factor = _check_factor(self.detection_factor(observer.asset, target.asset))
 
-        exposure = dwell = None
+        exposure = None
+        # D-5 (D5_DWELL_TIME, v. docstring del modulo): periodo di rivisita del sensore; None senza lettore (interruttore
+        # spento) o senza dato. Nessuna estrazione: numero e ordine delle estrazioni restano quelli di prima.
+        dwell = self._dwell_of(window, observer, target)
+        candidate_end = window.t_end
+        pass_exposure = None
 
-        if self.dwell_time_for is not None:
-            # D-5 (D5_DWELL_TIME, v. docstring del modulo): permanenza nel volume proprio. Nessuna estrazione qui:
-            # numero e ordine delle estrazioni restano quelli di prima.
-            mode = GROUNDED_DETECTION_MODE if self._grounded_in(target.id, window) else detection_mode_for(target.asset)
-            dwell = _check_dwell(self.dwell_time_for(observer.asset, target.asset, mode))
+        if self.pass_rng is not None:
+            # FP (FP_PER_PASS_DETECTION, v. docstring del modulo): passaggi del bersaglio nel volume proprio dentro la
+            # finestra, uniti se separati da un'uscita <= dwell (FP-10). Con >= 2 passaggi un'estrazione per passaggio;
+            # con 0 o 1 passaggio, o senza tratti, l'estrazione di prima.
+            passes = self._own_passes(window, observer.id, target.id, own_range, dwell)
 
-            if dwell is not None:
-                exposure = self._exposure_time(window, observer.id, target.id, own_range, other_range)
-                factor = factor * dwell_factor(exposure, dwell)
+            if passes is not None:
+                # FP-5 (d): passaggi della coppia, per la regola R-INT (`_detection_time_of`).
+                self.own_passes_of.setdefault((observer.id, target.id), []).extend(
+                    (start, end) for _, _, start, end in passes)
+
+            if passes is not None and len(passes) >= 2:
+                self._detect_passes(window, observer, target, own_range, factor, dwell, passes)
+                return
+
+            if passes:
+                _, hi, start, end = passes[0]
+                # D-5 con FP: permanenza dell'unico passaggio (unito, FP-10), come in `_detect_passes`.
+                pass_exposure = max(0.0, min(end, window.t_end) - start)
+
+                # FP-3 (a): all'uscita dal volume proprio la traccia e' persa. Per l'osservatore con la portata MINORE il
+                # candidato al tiro vale fino alla fine del passaggio (ritagliata alla finestra). Portata maggiore o
+                # uguale (il passaggio coincide con la finestra) o senza tratti: fine della finestra, come prima.
+                if other_range is not None and other_range > 0 and own_range < other_range:
+                    candidate_end = hi
+
+        if dwell is not None:
+            exposure = self._exposure_time(window, observer.id, target.id, own_range, other_range) \
+                if pass_exposure is None else pass_exposure
+            factor = factor * dwell_factor(exposure, dwell)
 
         draw = self._draw()
         distance = max(float(window.distance_cpa), 0.0)
@@ -2324,9 +2358,9 @@ class _EngagementRun:
 
             t_ready = time + self._profile(observer.id).total
 
-            if t_ready <= window.t_end + TIME_EPS:
+            if t_ready <= candidate_end + TIME_EPS:
                 self.candidates.setdefault(observer.id, []).append(
-                    _Candidate(t_ready=t_ready, target_id=target.id, t_end=window.t_end,
+                    _Candidate(t_ready=t_ready, target_id=target.id, t_end=candidate_end,
                                t_cpa=float(window.t_cpa), distance_cpa=distance))
 
         self.detections.append(Detection(observer_id=observer.id, target_id=target.id,
@@ -2466,14 +2500,123 @@ class _EngagementRun:
 
         return range_intervals(legs_observer, legs_target, own_range if radius is None else radius)
 
+    def _dwell_of(self, window, observer: _Shadow, target: _Shadow) -> Optional[float]:
+        """Periodo di rivisita [s] del sensore dell'osservatore contro il bersaglio (D-5, v. "Permanenza nel volume"):
+        None senza lettore (`dwell_time_for` None, cioe' D5_DWELL_TIME spento in sessione) o se il sensore non lo
+        dichiara. Usato dalla legge di permanenza e dall'unione dei passaggi (FP-10). Nessuna estrazione."""
+        if self.dwell_time_for is None:
+            return None
+
+        mode = GROUNDED_DETECTION_MODE if self._grounded_in(target.id, window) else detection_mode_for(target.asset)
+
+        return _check_dwell(self.dwell_time_for(observer.asset, target.asset, mode))
+
+    def _own_passes(self, window, observer_id: str, target_id: str, own_range: float,
+                    dwell: Optional[float] = None) -> Optional[List[Tuple[float, float, float, float]]]:
+        """Passaggi del bersaglio nel volume PROPRIO dell'osservatore dentro la finestra (FP), in ordine di tempo.
+
+        Gli intervalli di `_own_intervals` (portata propria) separati da un'uscita <= `dwell` si UNISCONO prima di
+        tutto (FP-10 (c), `_join_passes`; `dwell` None = nessuna unione oltre TIME_EPS). Ogni passaggio e'
+        `(lo, hi, start, end)`: `(start, end)` e' un passaggio (unito) che tocca la finestra (stesso criterio di
+        `_exposure_time`), `[lo, hi]` lo stesso ritagliato alla finestra. None senza i tratti di entrambi (chiamate
+        dirette): il chiamante usa l'estrazione unica di prima. Nessuna estrazione.
+        """
+        intervals = self._own_intervals(observer_id, target_id, own_range)
+
+        if intervals is None:
+            return None
+
+        passes = []
+
+        for start, end in _join_passes(intervals, dwell):
+            if end >= window.t_start - TIME_EPS and start <= window.t_end + TIME_EPS:
+                lo = max(float(start), float(window.t_start))
+                passes.append((lo, max(lo, min(float(end), float(window.t_end))), float(start), float(end)))
+
+        return passes
+
+    def _pass_cpa(self, window, observer_id: str, target_id: str, lo: float, hi: float) -> Tuple[float, float]:
+        """`(t_cpa, distanza)` del massimo avvicinamento dentro il passaggio `[lo, hi]` (FP-4; passaggio unito compreso).
+        Ripiego (non atteso: il passaggio viene dagli stessi tratti) il CPA della finestra, con un log."""
+        cpa = closest_point_of_approach(clamp_legs(self.legs[observer_id], lo, hi),
+                                        clamp_legs(self.legs[target_id], lo, hi))
+
+        if cpa is None:
+            logger.debug(f"_pass_cpa: no CPA for {observer_id!r}->{target_id!r} in [{lo}, {hi}], window CPA used")
+            return float(window.t_cpa), max(float(window.distance_cpa), 0.0)
+
+        return float(cpa.time), max(float(cpa.distance), 0.0)
+
+    def _pass_detection_time(self, observer_id: str, target_id: str, own_range: float, lo: float, hi: float,
+                             radius: float, t_cpa: float) -> float:
+        """Istante del rilevamento dentro il passaggio `[lo, hi]`: primo istante in cui la distanza scende sotto il
+        raggio estratto (come `_detection_time`, ma nel passaggio); ripiego il CPA del passaggio."""
+        for start, end in self._own_intervals(observer_id, target_id, own_range, radius) or ():
+            if end >= lo - TIME_EPS and start <= hi + TIME_EPS:
+                return max(float(start), lo)
+
+        return t_cpa
+
+    def _detect_passes(self, window, observer: _Shadow, target: _Shadow, own_range: float, factor: float,
+                       dwell: Optional[float], passes: List[Tuple[float, float, float, float]]) -> None:
+        """Un'estrazione per passaggio nel volume proprio (FP, >= 2 passaggi dopo l'unione FP-10). Il primo estrae
+        dallo stream dell'ingaggio nella posizione dell'estrazione unica di prima; dal secondo in poi da `pass_rng`,
+        nell'ordine (finestra canonica, a->b poi b->a, passaggio). Ogni passaggio ha la sua distanza minima (FP-4), la
+        sua permanenza D-5 (FP-6; `dwell` None = legge non applicata) e un candidato al tiro valido fino alla FINE del
+        passaggio (FP-3 (a): all'uscita dal volume proprio la traccia e' persa, al rientro serve un nuovo
+        rilevamento). Due o piu' passaggi capitano solo all'osservatore con la portata minore (per l'altro il
+        passaggio coincide con la finestra)."""
+        count = len(passes)
+
+        for index, (lo, hi, start, end) in enumerate(passes):
+            pass_factor = factor
+            exposure = None
+
+            if dwell is not None:
+                # Permanenza del PROPRIO passaggio (unito: dall'inizio del primo intervallo alla fine dell'ultimo), non
+                # tagliata all'inizio della finestra (DW-4); mai la somma.
+                exposure = max(0.0, min(end, window.t_end) - start)
+                pass_factor = factor * dwell_factor(exposure, dwell)
+
+            draw = self._draw() if index == 0 else self._draw(self.pass_rng)
+            t_cpa, distance = self._pass_cpa(window, observer.id, target.id, lo, hi)
+            probability = detection_probability(distance, own_range, pass_factor) if distance <= own_range else 0.0
+            detected = draw < probability
+            time = None
+
+            if detected:
+                radius = detection_radius(draw, own_range, pass_factor)
+                time = self._pass_detection_time(observer.id, target.id, own_range, lo, hi, radius, t_cpa)
+                self._perceive(observer.force_id, target.id, time)
+                identified = self.identified_by.setdefault(self.domain_of[observer.force_id], {})
+                identified[target.id] = min(identified.get(target.id, time), time)
+
+                if not self._grounded_in(target.id, window) \
+                        and ADE.rwr_perception(target.asset, observer.asset) == ADE.PERCEIVED_AT_DETECTION:
+                    self._perceive_rwr(target, observer, time)
+
+                t_ready = time + self._profile(observer.id).total
+
+                # FP-3 (a): fine del passaggio (gia' ritagliata alla finestra: hi <= window.t_end).
+                if t_ready <= hi + TIME_EPS:
+                    self.candidates.setdefault(observer.id, []).append(
+                        _Candidate(t_ready=t_ready, target_id=target.id, t_end=hi, t_cpa=t_cpa,
+                                   distance_cpa=distance))
+
+            self.detections.append(Detection(observer_id=observer.id, target_id=target.id,
+                                             sensor_range=float(own_range), distance_cpa=distance,
+                                             probability=probability, draw=draw, detected=detected, time=time,
+                                             exposure_s=exposure, dwell_time_s=dwell, pass_index=index,
+                                             pass_count=count, pass_start=lo, pass_end=hi))
+
     # ── coda eventi ───────────────────────────────────────────────────────────
 
     def _push(self, time: float, kind: int, key: str, payload) -> None:
         self.sequence += 1
         heapq.heappush(self.queue, (time, kind, key, self.sequence, payload))
 
-    def _draw(self) -> float:
-        value = self.rng.random()
+    def _draw(self, rng=None) -> float:
+        value = (self.rng if rng is None else rng).random()
 
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0.0 <= value < 1.0:
             raise ValueError(f"rng.random() must return a float in [0, 1), got {value!r}")
@@ -4154,7 +4297,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                        grounded: Optional[Iterable[str]] = None,
                        activity_criteria: Optional[Mapping[str, ActivityCriteria]] = None,
                        target_rules: Optional[Mapping[str, TargetRules]] = None,
-                       dwell_time_for: Optional[Callable] = None
+                       dwell_time_for: Optional[Callable] = None,
+                       pass_rng=None
                        ) -> Optional[EngagementResult]:
     """Risolve un ingaggio fra due o piu' forze, in un'unica timeline. Non muta alcun asset.
 
@@ -4236,6 +4380,14 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
         dwell_time_for: (observer, target, mode) -> float | None, periodo di rivisita [s] del sensore
             dell'osservatore (D-5, v. "Permanenza nel volume"); None (default) = legge di sola distanza. In
             sessione lo passa Session_Simulator (registry_dwell_time) solo con D5_DWELL_TIME acceso.
+        pass_rng: flusso casuale SEPARATO (oggetto con `.random()`) per il rilevamento per passaggio (FP, v.
+            "Rilevamento per passaggio"): se dato, una direzione con >= 2 passaggi nel volume proprio dentro una
+            finestra ha un'estrazione per passaggio, la prima dallo stream `rng` nella posizione di prima, le altre
+            da questo; il candidato al tiro dell'osservatore con la portata minore vale fino alla fine del
+            passaggio, anche con un passaggio solo (FP-3 (a)); R-INT vede il lancio solo con un rilevamento nel
+            passaggio che lo contiene (FP-5 (d)); con `dwell_time_for` i passaggi separati da un'uscita <= dwell si
+            uniscono (FP-10). None (default) = un'estrazione per finestra e direzione, comportamento precedente. In
+            sessione lo passa Session_Simulator (`pass_event_id`) solo con FP_PER_PASS_DETECTION acceso.
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset
@@ -4273,6 +4425,9 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
     if dwell_time_for is not None and not callable(dwell_time_for):
         raise TypeError("dwell_time_for must be callable")
 
+    if pass_rng is not None and not callable(getattr(pass_rng, 'random', None)):
+        raise TypeError("pass_rng must expose a random() method returning a float in [0, 1)")
+
     if activity_criteria is not None:
         if not isinstance(activity_criteria, abc.Mapping):
             raise TypeError(f"activity_criteria must be a mapping asset_id -> ActivityCriteria, "
@@ -4299,7 +4454,7 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                          fire_doctrine=fire_doctrine, rwr_catalogue=rwr_catalogue,
                          coordination_of=coordination_of, grounded=grounded,
                          activity_criteria=activity_criteria, target_rules=target_rules,
-                         dwell_time_for=dwell_time_for)
+                         dwell_time_for=dwell_time_for, pass_rng=pass_rng)
 
     if not run.usable:
         return None
