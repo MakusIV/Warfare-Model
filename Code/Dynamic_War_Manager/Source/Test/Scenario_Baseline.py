@@ -193,6 +193,14 @@ La quota nel volume d'ingaggio (`Engagement_Resolver.VA_ENGAGEMENT_ALTITUDE_BAND
 `Proposta_Allineamento_Volumi_DES_Pianificatore.md`) non cambia le esecuzioni esistenti (interruttore spento).
 Aggiunge in coda l'unita' S34-BAND (8 varianti, 4 seed): 32 esecuzioni nuove; nessuna voce nuova nel riassunto.
 
+## Rilevamento per passaggio dopo la FP
+
+Il rilevamento per passaggio nella portata propria (`Engagement_Resolver.FP_PER_PASS_DETECTION`, SPENTO, temporaneo;
+`Proposta_Finestre_Per_Passaggio_Portata_Propria.md`) non cambia le esecuzioni esistenti (interruttore spento).
+Aggiunge in coda l'unita' S33-PASSES (4 varianti: rientro e CAS, ciascuna con tutto spento e con FP e D-5 accese,
+dwell della ZSU 2 s, stima; 5 seed): 20 esecuzioni nuove; nessuna voce nuova nel riassunto (i `Detection` non sono
+registrati).
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -416,6 +424,9 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     ('S34-BAND', 'Test_Session_Scenarios_S34', 'TestS34AltitudeBand', None,
      _by_occurrence('level_off', 'level_on', 'climb_off', 'climb_on', 'descend_off', 'descend_on',
                     'late_descend_off', 'late_descend_on')),
+    # ── S33 (FP: un'occasione di rilevamento per passaggio nel volume proprio) — in coda, nomi stabili ──
+    ('S33-PASSES', 'Test_Session_Scenarios_S33', 'TestS33DetectionPerPass', None,
+     _by_occurrence('off', 'on', 'cas_off', 'cas_on')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per
