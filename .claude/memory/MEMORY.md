@@ -3,6 +3,7 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
+- [FP in corso su ai/oc-fp (2026-11-11): 1A FATTO (c1f39787, 0,292 $, verificato); prossimo 1B, poi 1C, 1D, blocco 2](project_session_2026_11_07_summary.md) — sezione AGGIORNAMENTO 2026-11-11 in cima; confronto parziale lo fa il principale (permessi agente)
 - [Dati BI (blocco 0): decisioni D1-D6 + voci grigie, TUTTE prese; blocco 1 fatto](project_bi_dati_decisioni.md) — metro Maverick 304,8 mm e 304 kg, lunghezza esclusa; 32 True/20 False
 - [Sessione 2026-11-10 osboxes: BI blocco 4 e VA blocco 1 FATTI (suite 4867, confronto 1061:52, 1,399 $); prossimo VA blocco 2 poi FP a blocchi piccoli](project_session_2026_11_07_summary.md) — vedi sezione 'AGGIORNAMENTO 2026-11-10' in cima al file
 - [Agenti oc: blocchi piu' piccoli e verifica parziale per blocco (prova su FP, 2026-11-10)](feedback_oc_blocchi_piccoli_verifica_parziale.md) — suite/confronto completi solo a fine task
