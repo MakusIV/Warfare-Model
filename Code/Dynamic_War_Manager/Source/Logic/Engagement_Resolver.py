@@ -3699,13 +3699,31 @@ class _EngagementRun:
 
         return self.may_intercept_cache[key]
 
-    def _detection_time_of(self, observer_id: str, target_id: str) -> Optional[float]:
-        """Istante in cui `observer_id` ha rilevato `target_id` (None = mai rilevato)."""
+    def _detection_time_of(self, observer_id: str, target_id: str, at: Optional[float] = None) -> Optional[float]:
+        """Istante in cui `observer_id` ha rilevato `target_id` (None = mai rilevato), per la regola R-INT.
+
+        Rilevamento per passaggio spento (`pass_rng` None), `at` None o passaggi della coppia non calcolati (senza
+        tratti): l'ULTIMO rilevamento in ordine di lista, come prima. Acceso (FP-5 (d),
+        Proposta_Finestre_Per_Passaggio_Portata_Propria.md): il rilevamento NEL passaggio dell'osservatore che contiene
+        `at` (`_detection_time_in_pass`); None se nessun passaggio lo contiene. Nessuna estrazione.
+        """
         if self.detected_at is None:
             self.detected_at = {(d.observer_id, d.target_id): d.time
                                 for d in self.detections if d.detected and d.time is not None}
 
-        return self.detected_at.get((observer_id, target_id))
+        key = (observer_id, target_id)
+
+        if self.pass_rng is None or at is None or key not in self.own_passes_of:
+            return self.detected_at.get(key)
+
+        if self.detection_times_of is None:
+            self.detection_times_of = {}
+
+            for d in self.detections:
+                if d.detected and d.time is not None:
+                    self.detection_times_of.setdefault((d.observer_id, d.target_id), []).append(float(d.time))
+
+        return _detection_time_in_pass(self.own_passes_of[key], self.detection_times_of.get(key, ()), at)
 
     def _air_detection_range(self, shadow: "_Shadow") -> Optional[float]:
         """Raggio di rilevamento aereo dell'intercettore [m], memoizzato. None = non modellato."""
@@ -3768,8 +3786,9 @@ class _EngagementRun:
         t_traccia + tau <= t_impact.
 
         Lancio osservato (l'intercettore aveva gia' rilevato il lanciatore all'istante del lancio):
-        t_traccia = t_launch, tau = refire_interval (VAL+COM+ATT). Altrimenti il colpo e' una
-        traccia nuova, scoperta dalla geometria (`_round_track_time`): tau = total
+        t_traccia = t_launch, tau = refire_interval (VAL+COM+ATT). Con il rilevamento per passaggio (FP-5 (d))
+        il lancio e' osservato solo se il rilevamento e' nel passaggio del lanciatore che contiene il lancio.
+        Altrimenti il colpo e' una traccia nuova, scoperta dalla geometria (`_round_track_time`): tau = total
         (RIV+VAL+COM+ATT). Rilevamento per asset (nessun quadro condiviso fino alla Fase 0 C2) e
         deterministico (nessuna estrazione: il flusso RNG non cambia).
         """
@@ -3777,7 +3796,7 @@ class _EngagementRun:
 
         if key not in self.in_time_cache:
             profile = self._profile(shadow.id)
-            seen = self._detection_time_of(shadow.id, salvo.shooter_id)
+            seen = self._detection_time_of(shadow.id, salvo.shooter_id, salvo.t_launch)
 
             if seen is not None and seen <= salvo.t_launch + TIME_EPS:
                 t_track, tau = salvo.t_launch, profile.refire_interval

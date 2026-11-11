@@ -4409,6 +4409,70 @@ class TestDetectionPerPass(unittest.TestCase):
                                  dwell=139.0, fire=fire, profiles=profiles)
         self.assertEqual([s for s in separate.salvos if s.shooter_id == 'b1'], [])
 
+    # ── sotto-blocco 1C: la regola R-INT con il rilevamento nel passaggio (FP-5 (d)) ──
+
+    def _rint_intercepted(self, x, t_out, pass_rng):
+        """`TestInterceptionReaction._run` adattato a FP-5 (d): salva di b1 a t = 2 s (5 colpi,
+        TOF 3 s, impatto a 5 s), intercettore r2 fermo nell'origine (3 canali). `x` = posizione
+        finale di b1 su 100 s (velocita' 1000 m/s per x = 100 km, 500 m/s per 50 km); `t_out` =
+        fine del passaggio di r2 su b1 (portata 1500 m)."""
+        spec = _miss(rounds=5, interceptable=True, time_of_flight=3.0)
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        r2 = _TrackingInterceptor('r2', (0.0, 0.0, 0.0), 50_000.0)
+        red = _Force('red', 'Red', [_Asset('r1'), r2], interceptors=[(r2, 3)])
+        legs = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (x, 0.0, 0.0))],
+                'r1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                'r2': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+        windows = [ContactWindow('b1', 'r1', t_start=0.0, t_end=2.9, t_cpa=0.0, distance_cpa=0.0,
+                                 range_a=50_000.0, range_b=None),
+                   ContactWindow('r2', 'b1', t_start=0.0, t_end=t_out, t_cpa=0.0, distance_cpa=0.0,
+                                 range_a=1_500.0, range_b=None)]
+        profiles = _profiles({'b1': (2.0, 1.0)}, default=(5.0, 1.0))
+
+        def fire(shooter, target):
+            return spec if shooter.id == 'b1' else None
+
+        result = ER.resolve_engagement(blue, red, windows, fire, _ScriptedRng([0.0] * 20),
+                                       legs=legs, reaction_profile_for=profiles, pass_rng=pass_rng)
+        return result.resolutions[0].intercepted
+
+    def test_rint_launch_seen_only_inside_its_pass(self):
+        self.assertEqual(self._rint_intercepted(100_000.0, 1.5, None), 3)
+        self.assertEqual(self._rint_intercepted(100_000.0, 1.5, _ScriptedRng([])), 0)
+        self.assertEqual(self._rint_intercepted(50_000.0, 3.0, None), 3)
+        self.assertEqual(self._rint_intercepted(50_000.0, 3.0, _ScriptedRng([])), 3)
+
+    def test_rint_without_passes_keeps_the_previous_rule(self):
+        def run_for(pass_rng):
+            blue = _Force('blue', 'Blue', [_Asset('l')])
+            red = _Force('red', 'Red', [_Asset('i')])
+            windows = [_window('i', 'l', t_start=0.0, t_end=100.0, range_a=1000.0, range_b=None),
+                       _window('i', 'l', t_start=200.0, t_end=300.0, range_a=1000.0, range_b=None)]
+            run = ER._EngagementRun((blue, red), windows, lambda s, t: None, _ScriptedRng([0.0, 0.0]),
+                                    None, None, None, _profiles({}), None, 0.0, DM.DERIVED,
+                                    pass_rng=pass_rng)
+            run.run()
+            return run
+
+        pass_rng = _ScriptedRng([])
+        on = run_for(pass_rng)
+        off = run_for(None)
+
+        self.assertEqual(on._detection_time_of('i', 'l', 50.0), 200.0)
+        self.assertEqual(on._detection_time_of('i', 'l', 50.0), off._detection_time_of('i', 'l', 50.0))
+        self.assertEqual(pass_rng.calls, 0)
+
+    def test_launch_in_a_joined_gap_is_inside_the_pass(self):
+        joined = self._run_direct(_ScriptedRng([0.0, 0.99]), pass_rng=_ScriptedRng([0.99]), dwell=140.0)
+        joined.run()
+        self.assertEqual(joined._detection_time_of('b1', 'r1', 200.0), 50.0)
+        self.assertEqual(joined._detection_time_of('b1', 'r1', 100.0), 50.0)
+
+        apart = self._run_direct(_ScriptedRng([0.0, 0.99]), pass_rng=_ScriptedRng([0.99]), dwell=139.0)
+        apart.run()
+        self.assertIsNone(apart._detection_time_of('b1', 'r1', 200.0))
+        self.assertEqual(apart._detection_time_of('b1', 'r1', 100.0), 50.0)
+
 
 class TestDwellTimeInTheResolver(unittest.TestCase):
     """`resolve_engagement(dwell_time_for=...)`: la Pd e' ridotta dalla permanenza, le estrazioni non cambiano."""
