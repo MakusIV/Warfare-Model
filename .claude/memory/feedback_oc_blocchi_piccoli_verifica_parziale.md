@@ -18,3 +18,4 @@ Per i lavori affidati ad agenti OpenCode si prova a dividere in blocchi piu' pic
 - Cattura di base per la verifica IDENTICAL: `.ai-run/fp_base_capture.json` (1093 esecuzioni, locale, ProArt 2026-11-11).
 - Dipendenza scoperta: `_exposure_time` (FP-6) e il punto 8-bis chiamano `_own_intervals` (punto 7): va in 1A; il test 20 va in 1B.
 - **1B**: 65 richieste, **0,4472 $**, contesto medio ~73k; un ciclo, nessuna fermata. Totale 1A+1B = 0,7392 $ (restano 1C, 1D, blocco 2). `git stash list` e' vietato all'agente (deny): lo controlla il principale.
+- **1C**: 44 richieste, **0,2807 $**, contesto medio ~58k; un ciclo. Totale 1A+1B+1C = 1,0199 $ (restano 1D e blocco 2). Lezione: non scrivere/committare nel repo (neanche memoria) mentre l'agente lavora: il 2026-11-11 ho committato memoria durante il 1C (ordine dei commit ok, nessun danno, ma contro la regola).
