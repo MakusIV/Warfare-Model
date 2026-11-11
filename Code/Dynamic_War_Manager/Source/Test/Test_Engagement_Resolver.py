@@ -25,6 +25,7 @@ Strategia di setup
 
 import dataclasses
 import random
+import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -3983,6 +3984,496 @@ class TestDwellFactor(unittest.TestCase):
         self.assertIs(ER.D5_DWELL_TIME, False)
 
 
+class TestDetectionPerPass(unittest.TestCase):
+    """Rilevamento per passaggio nella portata propria (Proposta_Finestre_Per_Passaggio_Portata_Propria.md, FP).
+
+    Sotto-blocco 1A: l'interruttore spento di default, le funzioni pure `_join_passes` e `_detection_time_in_pass`;
+    gli altri test (1B/1C/1D) arrivano nei sotto-blocchi successivi, e vi si appoggiano i metodi `_own_*` qui non
+    testati direttamente perche' inerti con l'interruttore spento.
+    """
+
+    # Geometria comune dei test 2-12, 18-20, 24-30 (e dei test 14/23 in TestDwellTimeInTheResolver):
+    # osservatore `b1` fermo in (0, 0, 0); bersaglio `r1` con tre tratti. Passaggi di `b1` (portata 5 km): [50, 150]
+    # (CPA 0 m a 100 s) e [290, 370] (CPA 3000 m a 330 s), uscita fra i due 140 s; `r1` (20 km) ha un solo
+    # passaggio [0, 430].
+    B1_LEGS = [Leg(0.0, 430.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]
+    R1_LEGS = [Leg(0.0, 200.0, (-10000.0, 0.0, 0.0), (10000.0, 0.0, 0.0)),
+               Leg(200.0, 230.0, (10000.0, 0.0, 0.0), (10000.0, 3000.0, 0.0)),
+               Leg(230.0, 430.0, (10000.0, 3000.0, 0.0), (-10000.0, 3000.0, 0.0))]
+    LEGS = {'b1': B1_LEGS, 'r1': R1_LEGS}
+    WINDOW = ContactWindow('b1', 'r1', t_start=0.0, t_end=430.0, t_cpa=100.0, distance_cpa=0.0,
+                           range_a=5000.0, range_b=20000.0, t_mutual_start=50.0, t_mutual_end=150.0)
+
+    def setUp(self):
+        self._log = patch(_ER_LOGGER, MagicMock())
+        self._log.start()
+        self.addCleanup(self._log.stop)
+
+    def test_switch_is_off_by_default(self):
+        self.assertIs(ER.FP_PER_PASS_DETECTION, False)
+
+    def test_detection_time_in_pass(self):
+        passes = [(200.0, 254.0), (380.0, 434.0)]
+        ordered = [210.0, 390.0]
+        shuffled = [390.0, 210.0]
+
+        expected = {230.0: 210.0, 300.0: None, 385.0: 390.0, 400.0: 390.0}
+        seen = {230.0: True, 300.0: False, 385.0: False, 400.0: True}
+
+        for times in (ordered, shuffled):
+            for at in (230.0, 300.0, 385.0, 400.0):
+                with self.subTest(times=times, at=at):
+                    result = ER._detection_time_in_pass(passes, times, at)
+                    self.assertEqual(result, expected[at])
+                    self.assertIs(result is not None and result <= at + ER.TIME_EPS, seen[at])
+
+        self.assertIsNone(ER._detection_time_in_pass([], ordered, 230.0))
+
+    def test_join_passes_boundary(self):
+        base = [(0.0, 10.0), (12.0, 20.0), (30.0, 40.0)]
+
+        self.assertEqual(ER._join_passes(base, 2.0), [(0.0, 20.0), (30.0, 40.0)])
+        self.assertEqual(ER._join_passes(base, 1.999), base)
+        self.assertEqual(ER._join_passes(base, None), base)
+
+        inside = [(0.0, 10.0), (12.0 + 5e-10, 20.0)]
+        self.assertEqual(ER._join_passes(inside, 2.0), [(0.0, 20.0)])
+
+        outside = [(0.0, 10.0), (12.0 + 2e-9, 20.0)]
+        self.assertEqual(ER._join_passes(outside, 2.0), outside)
+
+        self.assertEqual(ER._join_passes([], 2.0), [])
+
+    # ── sotto-blocco 1B: il nucleo dei passaggi ────────────────────────────────
+
+    def _forces(self):
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        red = _Force('red', 'Red', [_Asset('r1')])
+        return blue, red
+
+    def _run_direct(self, rng, *, pass_rng=None, dwell=None, fire=None, legs=None, profiles=None,
+                    detection_factor=None, window=None):
+        """Costruisce un `_EngagementRun` diretto sulla geometria comune (schema del piano §4.1.5)."""
+        blue, red = self._forces()
+
+        reader = dwell if callable(dwell) else (None if dwell is None else lambda observer, target, mode: dwell)
+
+        return ER._EngagementRun(
+            (blue, red),
+            [window if window is not None else self.WINDOW],
+            fire if fire is not None else (lambda s, t: None),
+            rng,
+            legs if legs is not None else self.LEGS,
+            None,
+            None,
+            profiles if profiles is not None else _profiles({}),
+            detection_factor,
+            0.0,
+            DM.DERIVED,
+            dwell_time_for=reader,
+            pass_rng=pass_rng,
+        )
+
+    def _resolve(self, rng, *, pass_rng=None, dwell=None, fire=None, legs=None, profiles=None,
+                 detection_factor=None, window=None):
+        return self._run_direct(rng, pass_rng=pass_rng, dwell=dwell, fire=fire, legs=legs,
+                                profiles=profiles, detection_factor=detection_factor, window=window).run()
+
+    def test_without_pass_rng_one_draw_per_window(self):
+        rng = _ScriptedRng([0.3, 0.6])
+        result = self._resolve(rng)
+
+        b1 = [d for d in result.detections if d.observer_id == 'b1']
+
+        self.assertEqual(len(b1), 1)
+
+        for detection in b1:
+            self.assertIsNone(detection.pass_index)
+            self.assertIsNone(detection.pass_count)
+            self.assertIsNone(detection.pass_start)
+            self.assertIsNone(detection.pass_end)
+
+        self.assertEqual(rng.calls, 2)
+
+    def test_with_pass_rng_one_draw_per_pass(self):
+        result = self._resolve(_ScriptedRng([0.3, 0.6]), pass_rng=_ScriptedRng([0.7]))
+        b1 = [d for d in result.detections if d.observer_id == 'b1']
+
+        self.assertEqual([d.pass_index for d in b1], [0, 1])
+        self.assertEqual([d.pass_count for d in b1], [2, 2])
+        self.assertAlmostEqual(b1[0].pass_start, 50.0, places=6)
+        self.assertAlmostEqual(b1[0].pass_end, 150.0, places=6)
+        self.assertAlmostEqual(b1[1].pass_start, 290.0, places=6)
+        self.assertAlmostEqual(b1[1].pass_end, 370.0, places=6)
+
+        r1 = [d for d in result.detections if d.observer_id == 'r1']
+
+        self.assertEqual(len(r1), 1)
+
+        for detection in r1:
+            self.assertIsNone(detection.pass_index)
+            self.assertIsNone(detection.pass_count)
+            self.assertIsNone(detection.pass_start)
+            self.assertIsNone(detection.pass_end)
+
+    def test_the_engagement_stream_is_unchanged(self):
+        off = self._resolve(_ScriptedRng([0.3, 0.6]))
+        on_rng = _ScriptedRng([0.3, 0.6])
+        pass_rng = _ScriptedRng([0.7])
+        on = self._resolve(on_rng, pass_rng=pass_rng)
+
+        self.assertEqual(on_rng.calls, 2)
+        b1_on = next(d for d in on.detections if d.observer_id == 'b1' and d.pass_index == 0)
+        b1_off = next(d for d in off.detections if d.observer_id == 'b1')
+
+        self.assertEqual(b1_on.draw, b1_off.draw)
+        self.assertEqual(b1_on.draw, 0.3)
+        self.assertEqual(pass_rng.calls, 1)
+
+    def test_each_pass_uses_its_own_cpa(self):
+        result = self._resolve(_ScriptedRng([0.3, 0.6]), pass_rng=_ScriptedRng([0.7]))
+        b1 = [d for d in result.detections if d.observer_id == 'b1']
+
+        self.assertAlmostEqual(b1[0].distance_cpa, 0.0, places=6)
+        self.assertAlmostEqual(b1[1].distance_cpa, 3000.0, places=6)
+        self.assertAlmostEqual(b1[0].probability, 1.0, places=9)
+        self.assertAlmostEqual(b1[1].probability, 0.9352, places=9)
+
+    def test_detection_time_is_inside_its_pass(self):
+        result = self._resolve(_ScriptedRng([0.0, 0.9]), pass_rng=_ScriptedRng([0.0]))
+        b1 = [d for d in result.detections if d.observer_id == 'b1']
+
+        self.assertAlmostEqual(b1[0].time, 50.0, places=6)
+        self.assertAlmostEqual(b1[1].time, 290.0, places=6)
+
+    def test_the_second_pass_is_a_new_occasion(self):
+        fire = lambda s, t: _kill() if s.id == 'b1' else None
+        profiles = _profiles({'b1': (10.0, 1.0)})
+
+        off = self._resolve(_ScriptedRng([0.95, 0.99]), detection_factor=lambda o, t: 0.9,
+                            fire=fire, profiles=profiles)
+        self.assertEqual([s for s in off.salvos if s.shooter_id == 'b1'], [])
+
+        on = self._resolve(_ScriptedRng([0.95, 0.99]), pass_rng=_ScriptedRng([0.1]),
+                           detection_factor=lambda o, t: 0.9, fire=fire, profiles=profiles)
+        b1 = [s for s in on.salvos if s.shooter_id == 'b1']
+
+        self.assertEqual(len(b1), 1)
+        self.assertAlmostEqual(b1[0].t_launch, 300.0, places=6)
+
+    def test_a_pass_candidate_ends_with_its_pass(self):
+        fire = lambda s, t: _kill() if s.id == 'b1' else None
+        profiles = _profiles({'b1': (120.0, 1.0)})
+
+        off = self._resolve(_ScriptedRng([0.0, 0.99]), fire=fire, profiles=profiles)
+        b1 = [s for s in off.salvos if s.shooter_id == 'b1']
+
+        self.assertEqual(len(b1), 1)
+        self.assertAlmostEqual(b1[0].t_launch, 170.0, places=6)
+
+        on = self._resolve(_ScriptedRng([0.0, 0.99]), pass_rng=_ScriptedRng([0.99]),
+                           fire=fire, profiles=profiles)
+        self.assertEqual([s for s in on.salvos if s.shooter_id == 'b1'], [])
+
+    def test_dwell_exposure_is_per_pass(self):
+        result = self._resolve(_ScriptedRng([0.3, 0.6]), pass_rng=_ScriptedRng([0.7]),
+                               dwell=lambda o, t, m: 125.0)
+        b1 = [d for d in result.detections if d.observer_id == 'b1']
+
+        self.assertEqual([d.pass_count for d in b1], [2, 2])
+        self.assertAlmostEqual(b1[0].exposure_s, 100.0, places=6)
+        self.assertAlmostEqual(b1[1].exposure_s, 80.0, places=6)
+        self.assertAlmostEqual(b1[0].probability, 0.8, places=9)
+        self.assertAlmostEqual(b1[1].probability, 0.64 * 0.9352, places=9)
+        self.assertEqual(b1[0].dwell_time_s, 125.0)
+        self.assertEqual(b1[1].dwell_time_s, 125.0)
+
+    @staticmethod
+    def _detection_key(detection):
+        return (detection.observer_id, detection.target_id, detection.probability, detection.draw,
+                detection.detected, detection.time, detection.exposure_s, detection.dwell_time_s)
+
+    def test_single_pass_direction_is_unchanged(self):
+        legs = {'b1': self.B1_LEGS,
+                'r1': [Leg(0.0, 200.0, (-10000.0, 0.0, 0.0), (10000.0, 0.0, 0.0))]}
+        window = ContactWindow('b1', 'r1', t_start=0.0, t_end=200.0, t_cpa=100.0, distance_cpa=0.0,
+                               range_a=5000.0, range_b=20000.0, t_mutual_start=50.0, t_mutual_end=150.0)
+
+        # Senza dwell: detections identiche, pass_rng mai estratto.
+        off = self._resolve(_ScriptedRng([0.3, 0.6]), legs=legs, window=window)
+        pass_rng = _ScriptedRng([])
+        on = self._resolve(_ScriptedRng([0.3, 0.6]), pass_rng=pass_rng, legs=legs, window=window)
+
+        self.assertEqual([self._detection_key(d) for d in off.detections],
+                         [self._detection_key(d) for d in on.detections])
+        self.assertEqual(pass_rng.calls, 0)
+
+        # Con dwell 400 s: stesse uguaglianze, permanenze 100 (b1) e 200 (r1) in entrambi gli stati.
+        off = self._resolve(_ScriptedRng([0.3, 0.6]), legs=legs, window=window, dwell=lambda o, t, m: 400.0)
+        pass_rng = _ScriptedRng([])
+        on = self._resolve(_ScriptedRng([0.3, 0.6]), pass_rng=pass_rng, legs=legs, window=window,
+                           dwell=lambda o, t, m: 400.0)
+
+        self.assertEqual([self._detection_key(d) for d in off.detections],
+                         [self._detection_key(d) for d in on.detections])
+        self.assertEqual(pass_rng.calls, 0)
+
+        by_off = {d.observer_id: d for d in off.detections}
+        by_on = {d.observer_id: d for d in on.detections}
+
+        self.assertAlmostEqual(by_off['b1'].exposure_s, 100.0, places=6)
+        self.assertAlmostEqual(by_off['r1'].exposure_s, 200.0, places=6)
+        self.assertAlmostEqual(by_on['b1'].exposure_s, 100.0, places=6)
+        self.assertAlmostEqual(by_on['r1'].exposure_s, 200.0, places=6)
+
+    def test_without_legs_one_draw(self):
+        window = _window('b1', 'r1', range_a=1000.0, range_b=2000.0)
+        pass_rng = _ScriptedRng([])
+        result = self._resolve(_ScriptedRng([0.3, 0.6]), pass_rng=pass_rng, legs={}, window=window)
+
+        self.assertEqual(len(result.detections), 2)
+        self.assertEqual(pass_rng.calls, 0)
+
+    def test_pass_rng_must_expose_random(self):
+        blue, red = self._forces()
+
+        with self.assertRaises(TypeError):
+            ER.resolve_engagement(blue, red, [self.WINDOW], lambda s, t: None,
+                                  _ScriptedRng([0.3, 0.6]), legs=self.LEGS, pass_rng=object())
+
+    def test_single_pass_candidate_ends_with_the_pass(self):
+        legs = {'b1': self.B1_LEGS,
+                'r1': [Leg(0.0, 200.0, (-10000.0, 0.0, 0.0), (10000.0, 0.0, 0.0))]}
+        window = ContactWindow('b1', 'r1', t_start=0.0, t_end=200.0, t_cpa=100.0, distance_cpa=0.0,
+                               range_a=5000.0, range_b=20000.0, t_mutual_start=50.0, t_mutual_end=150.0)
+        fire = lambda s, t: _kill() if s.id == 'b1' else None
+
+        # Profilo di b1 (120, 1): senza pass_rng il candidato vale fino a 200; con pass_rng il passaggio e' [50, 150].
+        slow = _profiles({'b1': (120.0, 1.0)})
+        off = self._resolve(_ScriptedRng([0.0, 0.99]), legs=legs, window=window, fire=fire, profiles=slow)
+        b1 = [s for s in off.salvos if s.shooter_id == 'b1']
+
+        self.assertEqual(len(b1), 1)
+        self.assertAlmostEqual(b1[0].t_launch, 170.0, places=6)
+
+        on_rng = _ScriptedRng([])
+        on = self._resolve(_ScriptedRng([0.0, 0.99]), pass_rng=on_rng, legs=legs, window=window,
+                           fire=fire, profiles=slow)
+        self.assertEqual([s for s in on.salvos if s.shooter_id == 'b1'], [])
+        self.assertEqual(on_rng.calls, 0)
+
+        # Profilo di b1 (10, 1): una salva a 60 in entrambi gli stati.
+        fast = _profiles({'b1': (10.0, 1.0)})
+        off_fast = self._resolve(_ScriptedRng([0.0, 0.99]), legs=legs, window=window, fire=fire, profiles=fast)
+        on_fast_rng = _ScriptedRng([])
+        on_fast = self._resolve(_ScriptedRng([0.0, 0.99]), pass_rng=on_fast_rng, legs=legs, window=window,
+                                fire=fire, profiles=fast)
+
+        self.assertAlmostEqual([s for s in off_fast.salvos if s.shooter_id == 'b1'][0].t_launch, 60.0, places=6)
+        self.assertAlmostEqual([s for s in on_fast.salvos if s.shooter_id == 'b1'][0].t_launch, 60.0, places=6)
+        self.assertEqual(on_fast_rng.calls, 0)
+
+    def test_larger_range_observer_candidate_ends_with_the_window(self):
+        legs = {'b1': self.B1_LEGS,
+                'r1': [Leg(0.0, 200.0, (-10000.0, 0.0, 0.0), (10000.0, 0.0, 0.0))]}
+        window = ContactWindow('b1', 'r1', t_start=0.0, t_end=200.0, t_cpa=100.0, distance_cpa=0.0,
+                               range_a=5000.0, range_b=20000.0, t_mutual_start=50.0, t_mutual_end=150.0)
+        fire = lambda s, t: _kill() if s.id == 'r1' else None
+        profiles = _profiles({'r1': (180.0, 1.0)})
+
+        off = self._resolve(_ScriptedRng([0.99, 0.0]), legs=legs, window=window, fire=fire, profiles=profiles)
+        r1 = [s for s in off.salvos if s.shooter_id == 'r1']
+
+        self.assertEqual(len(r1), 1)
+        self.assertAlmostEqual(r1[0].t_launch, 180.0, places=6)
+
+        on_rng = _ScriptedRng([])
+        on = self._resolve(_ScriptedRng([0.99, 0.0]), pass_rng=on_rng, legs=legs, window=window,
+                           fire=fire, profiles=profiles)
+        r1_on = [s for s in on.salvos if s.shooter_id == 'r1']
+
+        self.assertEqual(len(r1_on), 1)
+        self.assertAlmostEqual(r1_on[0].t_launch, 180.0, places=6)
+        self.assertEqual(on_rng.calls, 0)
+
+    def test_own_intervals_is_the_single_volume_call(self):
+        run = self._run_direct(_ScriptedRng([0.3, 0.6]))
+
+        self.assertEqual(run._own_intervals('b1', 'r1', 5000.0),
+                         CS.range_intervals(self.B1_LEGS, self.R1_LEGS, 5000.0))
+        self.assertEqual(run._own_intervals('b1', 'r1', 5000.0, radius=3000.0),
+                         CS.range_intervals(self.B1_LEGS, self.R1_LEGS, 3000.0))
+
+        bare = self._run_direct(_ScriptedRng([0.3, 0.6]), legs={})
+        self.assertIsNone(bare._own_intervals('b1', 'r1', 5000.0))
+
+        original = ER._EngagementRun._own_intervals
+        callers = []
+
+        def spy(inner, observer_id, target_id, own_range, radius=None):
+            callers.append(sys._getframe(1).f_code.co_name)
+            return original(inner, observer_id, target_id, own_range, radius)
+
+        ref_with = self._resolve(_ScriptedRng([0.3, 0.6]), pass_rng=_ScriptedRng([0.7]), dwell=125.0)
+        ref_without = self._resolve(_ScriptedRng([0.3, 0.6]), dwell=400.0)
+
+        with patch.object(ER._EngagementRun, '_own_intervals', spy):
+            callers.clear()
+            with_pass = self._resolve(_ScriptedRng([0.3, 0.6]), pass_rng=_ScriptedRng([0.7]), dwell=125.0)
+            self.assertIn('_own_passes', callers)
+            self.assertIn('_pass_detection_time', callers)
+            self.assertIn('_detection_time', callers)
+
+            callers.clear()
+            without_pass = self._resolve(_ScriptedRng([0.3, 0.6]), dwell=400.0)
+            self.assertIn('_exposure_time', callers)
+            self.assertIn('_detection_time', callers)
+            self.assertNotIn('_own_passes', callers)
+            self.assertNotIn('_pass_detection_time', callers)
+
+        self.assertEqual(with_pass.detections, ref_with.detections)
+        self.assertEqual(without_pass.detections, ref_without.detections)
+
+    def test_passes_join_when_the_gap_is_within_the_dwell(self):
+        run = self._run_direct(_ScriptedRng([0.3, 0.6]), pass_rng=_ScriptedRng([0.7]), dwell=140.0)
+
+        passes = run._own_passes(self.WINDOW, 'b1', 'r1', 5000.0, 140.0)
+
+        self.assertEqual(len(passes), 1)
+
+        for got, want in zip(passes[0], (50.0, 370.0, 50.0, 370.0)):
+            self.assertAlmostEqual(got, want, places=6)
+
+        t_cpa, distance = run._pass_cpa(self.WINDOW, 'b1', 'r1', 50.0, 370.0)
+
+        self.assertAlmostEqual(t_cpa, 100.0, places=6)
+        self.assertAlmostEqual(distance, 0.0, places=6)
+
+        result = run.run()
+        b1 = [d for d in result.detections if d.observer_id == 'b1']
+
+        self.assertEqual(len(b1), 1)
+        self.assertIsNone(b1[0].pass_index)
+        self.assertAlmostEqual(b1[0].exposure_s, 320.0, places=6)
+        self.assertEqual(b1[0].dwell_time_s, 140.0)
+        self.assertAlmostEqual(b1[0].probability, 1.0, places=6)
+        self.assertEqual(run.rng.calls, 2)
+        self.assertEqual(run.pass_rng.calls, 0)
+
+    def test_passes_stay_apart_when_the_gap_exceeds_the_dwell(self):
+        run = self._run_direct(_ScriptedRng([0.3, 0.6]), pass_rng=_ScriptedRng([0.7]), dwell=139.0)
+        result = run.run()
+        b1 = [d for d in result.detections if d.observer_id == 'b1']
+
+        self.assertEqual([d.pass_index for d in b1], [0, 1])
+        self.assertAlmostEqual(b1[0].exposure_s, 100.0, places=6)
+        self.assertAlmostEqual(b1[1].exposure_s, 80.0, places=6)
+        self.assertEqual(b1[0].dwell_time_s, 139.0)
+        self.assertEqual(b1[1].dwell_time_s, 139.0)
+        self.assertEqual(run.pass_rng.calls, 1)
+
+    def test_passes_stay_apart_without_a_declared_dwell(self):
+        run = self._run_direct(_ScriptedRng([0.3, 0.6]), pass_rng=_ScriptedRng([0.7]),
+                               dwell=lambda o, t, m: None)
+        result = run.run()
+        b1 = [d for d in result.detections if d.observer_id == 'b1']
+
+        self.assertEqual([d.pass_index for d in b1], [0, 1])
+
+        for detection in b1:
+            self.assertIsNone(detection.exposure_s)
+            self.assertIsNone(detection.dwell_time_s)
+
+    def test_passes_stay_apart_with_the_dwell_law_off(self):
+        run = self._run_direct(_ScriptedRng([0.3, 0.6]), pass_rng=_ScriptedRng([0.7]))
+        result = run.run()
+        b1 = [d for d in result.detections if d.observer_id == 'b1']
+
+        self.assertEqual([d.pass_index for d in b1], [0, 1])
+
+        for detection in b1:
+            self.assertIsNone(detection.exposure_s)
+
+    def test_joined_pass_keeps_the_candidate_across_the_gap(self):
+        fire = lambda s, t: _kill() if s.id == 'b1' else None
+        profiles = _profiles({'b1': (120.0, 1.0)})
+
+        joined = self._resolve(_ScriptedRng([0.0, 0.99]), pass_rng=_ScriptedRng([0.99]),
+                               dwell=140.0, fire=fire, profiles=profiles)
+        b1 = [s for s in joined.salvos if s.shooter_id == 'b1']
+
+        self.assertEqual(len(b1), 1)
+        self.assertAlmostEqual(b1[0].t_launch, 170.0, places=6)
+
+        separate = self._resolve(_ScriptedRng([0.0, 0.99]), pass_rng=_ScriptedRng([0.99]),
+                                 dwell=139.0, fire=fire, profiles=profiles)
+        self.assertEqual([s for s in separate.salvos if s.shooter_id == 'b1'], [])
+
+    # ── sotto-blocco 1C: la regola R-INT con il rilevamento nel passaggio (FP-5 (d)) ──
+
+    def _rint_intercepted(self, x, t_out, pass_rng):
+        """`TestInterceptionReaction._run` adattato a FP-5 (d): salva di b1 a t = 2 s (5 colpi,
+        TOF 3 s, impatto a 5 s), intercettore r2 fermo nell'origine (3 canali). `x` = posizione
+        finale di b1 su 100 s (velocita' 1000 m/s per x = 100 km, 500 m/s per 50 km); `t_out` =
+        fine del passaggio di r2 su b1 (portata 1500 m)."""
+        spec = _miss(rounds=5, interceptable=True, time_of_flight=3.0)
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        r2 = _TrackingInterceptor('r2', (0.0, 0.0, 0.0), 50_000.0)
+        red = _Force('red', 'Red', [_Asset('r1'), r2], interceptors=[(r2, 3)])
+        legs = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (x, 0.0, 0.0))],
+                'r1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                'r2': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+        windows = [ContactWindow('b1', 'r1', t_start=0.0, t_end=2.9, t_cpa=0.0, distance_cpa=0.0,
+                                 range_a=50_000.0, range_b=None),
+                   ContactWindow('r2', 'b1', t_start=0.0, t_end=t_out, t_cpa=0.0, distance_cpa=0.0,
+                                 range_a=1_500.0, range_b=None)]
+        profiles = _profiles({'b1': (2.0, 1.0)}, default=(5.0, 1.0))
+
+        def fire(shooter, target):
+            return spec if shooter.id == 'b1' else None
+
+        result = ER.resolve_engagement(blue, red, windows, fire, _ScriptedRng([0.0] * 20),
+                                       legs=legs, reaction_profile_for=profiles, pass_rng=pass_rng)
+        return result.resolutions[0].intercepted
+
+    def test_rint_launch_seen_only_inside_its_pass(self):
+        self.assertEqual(self._rint_intercepted(100_000.0, 1.5, None), 3)
+        self.assertEqual(self._rint_intercepted(100_000.0, 1.5, _ScriptedRng([])), 0)
+        self.assertEqual(self._rint_intercepted(50_000.0, 3.0, None), 3)
+        self.assertEqual(self._rint_intercepted(50_000.0, 3.0, _ScriptedRng([])), 3)
+
+    def test_rint_without_passes_keeps_the_previous_rule(self):
+        def run_for(pass_rng):
+            blue = _Force('blue', 'Blue', [_Asset('l')])
+            red = _Force('red', 'Red', [_Asset('i')])
+            windows = [_window('i', 'l', t_start=0.0, t_end=100.0, range_a=1000.0, range_b=None),
+                       _window('i', 'l', t_start=200.0, t_end=300.0, range_a=1000.0, range_b=None)]
+            run = ER._EngagementRun((blue, red), windows, lambda s, t: None, _ScriptedRng([0.0, 0.0]),
+                                    None, None, None, _profiles({}), None, 0.0, DM.DERIVED,
+                                    pass_rng=pass_rng)
+            run.run()
+            return run
+
+        pass_rng = _ScriptedRng([])
+        on = run_for(pass_rng)
+        off = run_for(None)
+
+        self.assertEqual(on._detection_time_of('i', 'l', 50.0), 200.0)
+        self.assertEqual(on._detection_time_of('i', 'l', 50.0), off._detection_time_of('i', 'l', 50.0))
+        self.assertEqual(pass_rng.calls, 0)
+
+    def test_launch_in_a_joined_gap_is_inside_the_pass(self):
+        joined = self._run_direct(_ScriptedRng([0.0, 0.99]), pass_rng=_ScriptedRng([0.99]), dwell=140.0)
+        joined.run()
+        self.assertEqual(joined._detection_time_of('b1', 'r1', 200.0), 50.0)
+        self.assertEqual(joined._detection_time_of('b1', 'r1', 100.0), 50.0)
+
+        apart = self._run_direct(_ScriptedRng([0.0, 0.99]), pass_rng=_ScriptedRng([0.99]), dwell=139.0)
+        apart.run()
+        self.assertIsNone(apart._detection_time_of('b1', 'r1', 200.0))
+        self.assertEqual(apart._detection_time_of('b1', 'r1', 100.0), 50.0)
+
+
 class TestDwellTimeInTheResolver(unittest.TestCase):
     """`resolve_engagement(dwell_time_for=...)`: la Pd e' ridotta dalla permanenza, le estrazioni non cambiano."""
 
@@ -4135,6 +4626,34 @@ class TestDwellTimeInTheResolver(unittest.TestCase):
         self.assertIsNone(ER.registry_dwell_time(_WithDwell(), object(), 'ground'))
         self.assertIsNone(ER.registry_dwell_time(object(), object(), 'air'))
         self.assertIsNone(ER.registry_dwell_time(_WithDwell(), object(), None))
+
+    def test_exposure_is_the_pass_containing_the_cpa(self):
+        """FP-6 (interruttore spento): la permanenza e' il passaggio che contiene `t_cpa` = 100 (100 s), non la somma
+        dei due passaggi (180 s)."""
+        result = self._run([TestDetectionPerPass.WINDOW], _ScriptedRng([0.5, 0.5]), dwell=400.0,
+                           legs=TestDetectionPerPass.LEGS, fire=lambda s, t: None)
+
+        detection = next(d for d in result.detections if d.observer_id == 'b1')
+
+        self.assertAlmostEqual(detection.exposure_s, 100.0, places=6)
+        self.assertAlmostEqual(detection.probability, 0.25, places=6)
+
+    def test_exposure_falls_back_to_the_longest_pass(self):
+        """FP-6 (interruttore spento, rilievo della revisione): `t_cpa` = 200 cade fra i due passaggi [60, 140] (80 s)
+        e [280, 380] (100 s): la permanenza e' il piu' lungo (100 s), non il primo ne' la somma (180 s)."""
+        legs = {'b1': TestDetectionPerPass.B1_LEGS,
+                'r1': [Leg(0.0, 200.0, (-10000.0, 3000.0, 0.0), (10000.0, 3000.0, 0.0)),
+                       Leg(200.0, 230.0, (10000.0, 3000.0, 0.0), (10000.0, 0.0, 0.0)),
+                       Leg(230.0, 430.0, (10000.0, 0.0, 0.0), (-10000.0, 0.0, 0.0))]}
+        window = ContactWindow('b1', 'r1', t_start=0.0, t_end=430.0, t_cpa=200.0, distance_cpa=0.0,
+                               range_a=5000.0, range_b=20000.0, t_mutual_start=60.0, t_mutual_end=140.0)
+
+        result = self._run([window], _ScriptedRng([0.5, 0.5]), dwell=400.0, legs=legs, fire=lambda s, t: None)
+
+        detection = next(d for d in result.detections if d.observer_id == 'b1')
+
+        self.assertAlmostEqual(detection.exposure_s, 100.0, places=6)
+        self.assertAlmostEqual(detection.probability, 0.25, places=6)
 
 
 # ── BERSAGLI INTERCETTABILI DALLA DIFESA AEREA (BI_AD_TARGET_RULE, 2026-11-07) ─────────────────────────────────────────

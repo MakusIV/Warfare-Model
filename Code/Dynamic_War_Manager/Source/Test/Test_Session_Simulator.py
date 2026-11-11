@@ -266,6 +266,48 @@ class TestDwellTimeSwitch(_Base):
             self.assertIs(kwargs['dwell_time_for'], ER.registry_dwell_time)
 
 
+class TestPerPassDetectionSwitch(_Base):
+    """FP: `Session_Simulator.engage` passa `pass_rng` al risolutore solo con FP_PER_PASS_DETECTION acceso."""
+
+    def _resolver_calls(self):
+        original = ER.resolve_engagement
+        calls = []
+
+        def spy(*args, **kwargs):
+            calls.append(kwargs)
+            return original(*args, **kwargs)
+
+        with patch.object(ER, 'resolve_engagement', side_effect=spy):
+            self._run()
+
+        return calls
+
+    def test_switch_off_passes_no_pass_rng(self):
+        calls = self._resolver_calls()
+
+        self.assertTrue(calls)
+
+        for kwargs in calls:
+            self.assertNotIn('pass_rng', kwargs)
+
+    def test_switch_on_passes_the_pass_stream(self):
+        with patch.object(ER, 'FP_PER_PASS_DETECTION', True):
+            calls = self._resolver_calls()
+
+        self.assertTrue(calls)
+
+        for kwargs in calls:
+            self.assertTrue(callable(kwargs['pass_rng'].random))
+
+    def test_pass_event_id_is_distinct_and_order_free(self):
+        self.assertEqual(SS.pass_event_id('a', 'b'), SS.pass_event_id('b', 'a'))
+        self.assertNotEqual(SS.pass_event_id('a', 'b'), SS.engagement_event_id('a', 'b'))
+        self.assertNotEqual(SS.pass_event_id('a', 'b'), SS.temper_event_id('a', 'b'))
+
+        with self.assertRaises(ValueError):
+            SS.pass_event_id('a')
+
+
 # ── SCENARIO END-TO-END ───────────────────────────────────────────────────────
 
 class TestEndToEnd(_Base):
