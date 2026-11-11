@@ -3,7 +3,8 @@
 Indice compatto (2026-10-23). Descrizioni estese e sessioni precedenti al 2026-10-13: [archivio_indice_dettagliato.md](archivio_indice_dettagliato.md).
 
 ## Start here
-- [FP in corso su ai/oc-fp (2026-11-11): FP ESEGUITA (blocchi 1A-1D + 2, 1,58 $, suite 4919, confronto 1113:104); P-1 ESEGUITA (44 cambiate = le 44 AFTER_PASS, 0 RINT_D); prossimo: l'utente legge le cambiate e decide l'accensione](project_session_2026_11_07_summary.md) — sezione AGGIORNAMENTO 2026-11-11 in cima; confronto parziale lo fa il principale (permessi agente)
+- [RIPRESA DA OSBOXES (2026-11-11, fine sessione ProArt): FP eseguita e mergiata (suite 4919, confronto 1113:104), P-1 fatta (44 cambiate = 44 AFTER_PASS); prossimo: decisione dell'utente sull'accensione di FP_PER_PASS_DETECTION](project_session_2026_11_07_summary.md) — LEGGERE PER PRIMO: sezione 'RIPRESA DA OSBOXES (fine sessione ProArt 2026-11-11)' con stato, costi (1,58 $), lezioni e prossime azioni
+- [FP (2026-11-11), dettaglio: FP ESEGUITA (blocchi 1A-1D + 2, 1,58 $, suite 4919, confronto 1113:104); P-1 ESEGUITA (44 cambiate = le 44 AFTER_PASS, 0 RINT_D); prossimo: l'utente legge le cambiate e decide l'accensione](project_session_2026_11_07_summary.md) — sezione AGGIORNAMENTO 2026-11-11 in cima; confronto parziale lo fa il principale (permessi agente)
 - [Dati BI (blocco 0): decisioni D1-D6 + voci grigie, TUTTE prese; blocco 1 fatto](project_bi_dati_decisioni.md) — metro Maverick 304,8 mm e 304 kg, lunghezza esclusa; 32 True/20 False
 - [Sessione 2026-11-10 osboxes: BI blocco 4 e VA blocco 1 FATTI (suite 4867, confronto 1061:52, 1,399 $); prossimo VA blocco 2 poi FP a blocchi piccoli](project_session_2026_11_07_summary.md) — vedi sezione 'AGGIORNAMENTO 2026-11-10' in cima al file
 - [Agenti oc: blocchi piu' piccoli e verifica parziale per blocco (prova su FP, 2026-11-10)](feedback_oc_blocchi_piccoli_verifica_parziale.md) — suite/confronto completi solo a fine task
