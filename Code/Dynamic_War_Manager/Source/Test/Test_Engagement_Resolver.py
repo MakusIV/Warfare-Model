@@ -3983,6 +3983,67 @@ class TestDwellFactor(unittest.TestCase):
         self.assertIs(ER.D5_DWELL_TIME, False)
 
 
+class TestDetectionPerPass(unittest.TestCase):
+    """Rilevamento per passaggio nella portata propria (Proposta_Finestre_Per_Passaggio_Portata_Propria.md, FP).
+
+    Sotto-blocco 1A: l'interruttore spento di default, le funzioni pure `_join_passes` e `_detection_time_in_pass`;
+    gli altri test (1B/1C/1D) arrivano nei sotto-blocchi successivi, e vi si appoggiano i metodi `_own_*` qui non
+    testati direttamente perche' inerti con l'interruttore spento.
+    """
+
+    # Geometria comune dei test 2-12, 18-20, 24-30 (e dei test 14/23 in TestDwellTimeInTheResolver):
+    # osservatore `b1` fermo in (0, 0, 0); bersaglio `r1` con tre tratti. Passaggi di `b1` (portata 5 km): [50, 150]
+    # (CPA 0 m a 100 s) e [290, 370] (CPA 3000 m a 330 s), uscita fra i due 140 s; `r1` (20 km) ha un solo
+    # passaggio [0, 430].
+    B1_LEGS = [Leg(0.0, 430.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]
+    R1_LEGS = [Leg(0.0, 200.0, (-10000.0, 0.0, 0.0), (10000.0, 0.0, 0.0)),
+               Leg(200.0, 230.0, (10000.0, 0.0, 0.0), (10000.0, 3000.0, 0.0)),
+               Leg(230.0, 430.0, (10000.0, 3000.0, 0.0), (-10000.0, 3000.0, 0.0))]
+    LEGS = {'b1': B1_LEGS, 'r1': R1_LEGS}
+    WINDOW = ContactWindow('b1', 'r1', t_start=0.0, t_end=430.0, t_cpa=100.0, distance_cpa=0.0,
+                           range_a=5000.0, range_b=20000.0, t_mutual_start=50.0, t_mutual_end=150.0)
+
+    def setUp(self):
+        self._log = patch(_ER_LOGGER, MagicMock())
+        self._log.start()
+        self.addCleanup(self._log.stop)
+
+    def test_switch_is_off_by_default(self):
+        self.assertIs(ER.FP_PER_PASS_DETECTION, False)
+
+    def test_detection_time_in_pass(self):
+        passes = [(200.0, 254.0), (380.0, 434.0)]
+        ordered = [210.0, 390.0]
+        shuffled = [390.0, 210.0]
+
+        expected = {230.0: 210.0, 300.0: None, 385.0: 390.0, 400.0: 390.0}
+        seen = {230.0: True, 300.0: False, 385.0: False, 400.0: True}
+
+        for times in (ordered, shuffled):
+            for at in (230.0, 300.0, 385.0, 400.0):
+                with self.subTest(times=times, at=at):
+                    result = ER._detection_time_in_pass(passes, times, at)
+                    self.assertEqual(result, expected[at])
+                    self.assertIs(result is not None and result <= at + ER.TIME_EPS, seen[at])
+
+        self.assertIsNone(ER._detection_time_in_pass([], ordered, 230.0))
+
+    def test_join_passes_boundary(self):
+        base = [(0.0, 10.0), (12.0, 20.0), (30.0, 40.0)]
+
+        self.assertEqual(ER._join_passes(base, 2.0), [(0.0, 20.0), (30.0, 40.0)])
+        self.assertEqual(ER._join_passes(base, 1.999), base)
+        self.assertEqual(ER._join_passes(base, None), base)
+
+        inside = [(0.0, 10.0), (12.0 + 5e-10, 20.0)]
+        self.assertEqual(ER._join_passes(inside, 2.0), [(0.0, 20.0)])
+
+        outside = [(0.0, 10.0), (12.0 + 2e-9, 20.0)]
+        self.assertEqual(ER._join_passes(outside, 2.0), outside)
+
+        self.assertEqual(ER._join_passes([], 2.0), [])
+
+
 class TestDwellTimeInTheResolver(unittest.TestCase):
     """`resolve_engagement(dwell_time_for=...)`: la Pd e' ridotta dalla permanenza, le estrazioni non cambiano."""
 
@@ -4135,6 +4196,34 @@ class TestDwellTimeInTheResolver(unittest.TestCase):
         self.assertIsNone(ER.registry_dwell_time(_WithDwell(), object(), 'ground'))
         self.assertIsNone(ER.registry_dwell_time(object(), object(), 'air'))
         self.assertIsNone(ER.registry_dwell_time(_WithDwell(), object(), None))
+
+    def test_exposure_is_the_pass_containing_the_cpa(self):
+        """FP-6 (interruttore spento): la permanenza e' il passaggio che contiene `t_cpa` = 100 (100 s), non la somma
+        dei due passaggi (180 s)."""
+        result = self._run([TestDetectionPerPass.WINDOW], _ScriptedRng([0.5, 0.5]), dwell=400.0,
+                           legs=TestDetectionPerPass.LEGS, fire=lambda s, t: None)
+
+        detection = next(d for d in result.detections if d.observer_id == 'b1')
+
+        self.assertAlmostEqual(detection.exposure_s, 100.0, places=6)
+        self.assertAlmostEqual(detection.probability, 0.25, places=6)
+
+    def test_exposure_falls_back_to_the_longest_pass(self):
+        """FP-6 (interruttore spento, rilievo della revisione): `t_cpa` = 200 cade fra i due passaggi [60, 140] (80 s)
+        e [280, 380] (100 s): la permanenza e' il piu' lungo (100 s), non il primo ne' la somma (180 s)."""
+        legs = {'b1': TestDetectionPerPass.B1_LEGS,
+                'r1': [Leg(0.0, 200.0, (-10000.0, 3000.0, 0.0), (10000.0, 3000.0, 0.0)),
+                       Leg(200.0, 230.0, (10000.0, 3000.0, 0.0), (10000.0, 0.0, 0.0)),
+                       Leg(230.0, 430.0, (10000.0, 0.0, 0.0), (-10000.0, 0.0, 0.0))]}
+        window = ContactWindow('b1', 'r1', t_start=0.0, t_end=430.0, t_cpa=200.0, distance_cpa=0.0,
+                               range_a=5000.0, range_b=20000.0, t_mutual_start=60.0, t_mutual_end=140.0)
+
+        result = self._run([window], _ScriptedRng([0.5, 0.5]), dwell=400.0, legs=legs, fire=lambda s, t: None)
+
+        detection = next(d for d in result.detections if d.observer_id == 'b1')
+
+        self.assertAlmostEqual(detection.exposure_s, 100.0, places=6)
+        self.assertAlmostEqual(detection.probability, 0.25, places=6)
 
 
 # ── BERSAGLI INTERCETTABILI DALLA DIFESA AEREA (BI_AD_TARGET_RULE, 2026-11-07) ─────────────────────────────────────────

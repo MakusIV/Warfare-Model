@@ -178,8 +178,11 @@ progetto [S] con giustificazione geometrica, nessuna costante. Si riduce esattam
 permanenza >= periodo o per periodo non dichiarato (None); e' un fattore, quindi `detection_radius` resta la sua
 inversa esatta.
 
-* **Permanenza**: `_exposure_time`, dai tratti delle rotte (somma degli intervalli in portata PROPRIA che toccano
-  la finestra). NON e' tagliata all'inizio della finestra: l'intervallo che la contiene conta dal suo inizio
+* **Permanenza**: `_exposure_time`, dai tratti delle rotte (il passaggio in portata PROPRIA (intervallo che
+  tocca la finestra) che contiene il CPA della finestra, in subordine il piu' lungo; mai la somma (FP-6,
+  Proposta_Finestre_Per_Passaggio_Portata_Propria.md); con il rilevamento per passaggio acceso, la permanenza
+  del proprio passaggio, unito se separato da uscite <= dwell (FP-10)). NON e' tagliata all'inizio della finestra:
+  l'intervallo che la contiene conta dal suo inizio
   vero, cosi' lo spezzare una finestra (decollo/atterraggio, ritaglio) non riduce la Pd per un artefatto. Senza
   tratti (chiamate dirette): tutta la finestra se la portata propria e' la maggiore, altrimenti l'intervallo
   reciproco, altrimenti 0.
@@ -571,6 +574,23 @@ BI_AD_TARGET_RULE = False
 #     estrazione nuova ne' spostata in nessuno dei due stati.
 VA_ENGAGEMENT_ALTITUDE_BAND = False
 
+# Rilevamento per passaggio nella portata propria (Proposta_Finestre_Per_Passaggio_Portata_Propria.md, FP),
+# interruttore dedicato e TEMPORANEO:
+#   * `FP_PER_PASS_DETECTION` (SPENTO): un'occasione di rilevamento per OGNI passaggio del bersaglio nel volume PROPRIO
+#     dell'osservatore dentro una finestra di contatto (prima: una sola estrazione per finestra e direzione, con la
+#     distanza minima dell'intera finestra). Lo legge Session_Simulator, che passa al risolutore lo stream separato
+#     `pass_rng` solo se acceso. Acceso: lo stream `rng` non cambia (stesse estrazioni, stesso ordine); le estrazioni
+#     dei passaggi dal secondo in poi vengono da `pass_rng`; il candidato al tiro dell'osservatore con la portata
+#     minore vale fino alla fine del passaggio (traccia persa all'uscita); R-INT "vede il lancio" solo con un
+#     rilevamento nel passaggio che contiene il lancio; con la D-5 accesa i passaggi separati da un'uscita non piu'
+#     lunga del dwell del sensore si uniscono. Spento: chiamata e rilevamento di prima (la permanenza D-5 di un solo
+#     passaggio, mai la somma, vale in ogni stato: e' dentro D5_DWELL_TIME). Nessuna estrazione nello stream `rng` in
+#     piu' ne' in ordine diverso in nessuno dei due stati.
+#   TEMPORANEO (criterio dell'utente del 2026-11-08: la regola sostituisce una soluzione superata). Si elimina, con il
+#   ramo "spento", in un blocco di pulizia dopo: la sonda P-1, la lettura delle esecuzioni cambiate da parte
+#   dell'utente e una fotografia nuova installata dall'utente.
+FP_PER_PASS_DETECTION = False
+
 # Domini di difesa aerea ammessi in `ShotSpec.intercept_domains` ('land' = intercettore non navale, 'naval' = nave).
 AD_DOMAINS = frozenset({'land', 'naval'})
 
@@ -729,7 +749,7 @@ class ShotSpec:
 
 @dataclass(frozen=True)
 class Detection:
-    """Esito di un'estrazione di rilevamento (una per finestra e direzione).
+    """Esito di un'estrazione di rilevamento (una per finestra e direzione; con il rilevamento per passaggio, FP, una per passaggio).
 
     `time` e' l'istante del rilevamento (None se non rilevato); `probability` e' la Pd
     al massimo avvicinamento, `draw` il numero estratto. `exposure_s` e `dwell_time_s` (D-5) sono
@@ -746,6 +766,10 @@ class Detection:
     time: Optional[float] = None
     exposure_s: Optional[float] = None      # permanenza [s] usata dalla legge D-5; None = legge non applicata
     dwell_time_s: Optional[float] = None    # periodo di rivisita [s] dell'osservatore; None = legge non applicata
+    pass_index: Optional[int] = None       # FP: indice del passaggio (0 = primo); None = estrazione unica della direzione
+    pass_count: Optional[int] = None       # FP: passaggi della direzione nella finestra; None = estrazione unica
+    pass_start: Optional[float] = None     # FP: inizio del passaggio [s], ritagliato alla finestra
+    pass_end: Optional[float] = None       # FP: fine del passaggio [s], ritagliata alla finestra
 
 
 @dataclass(frozen=True)
@@ -1274,6 +1298,50 @@ def registry_dwell_time(observer, target, mode: Optional[str]) -> Optional[float
         return None
 
     return reader(mode)
+
+
+def _join_passes(intervals: Sequence[Tuple[float, float]],
+                 max_gap: Optional[float]) -> List[Tuple[float, float]]:
+    """Unione dei passaggi ravvicinati (FP-10 (c), Proposta_Finestre_Per_Passaggio_Portata_Propria.md).
+
+    `intervals`: intervalli ORDINATI e disgiunti (uscita di `range_intervals`). Due intervalli consecutivi separati da
+    un'uscita `inizio_successivo - fine_precedente <= max_gap` (con la tolleranza TIME_EPS: l'uguaglianza unisce)
+    diventano un passaggio solo, dall'inizio del primo alla fine dell'ultimo: il tracciamento e' predittivo, una
+    perdita di segnale non piu' lunga del periodo di aggiornamento del sensore (dwell) non interrompe la traccia.
+    `max_gap` None = nessuna unione (sensore senza dwell dichiarato, o legge D-5 non applicata). Nessuna estrazione,
+    nessuna costante nuova.
+    """
+    if max_gap is None or not intervals:
+        return [(float(start), float(end)) for start, end in intervals]
+
+    joined = [(float(intervals[0][0]), float(intervals[0][1]))]
+
+    for start, end in intervals[1:]:
+        if float(start) - joined[-1][1] <= max_gap + TIME_EPS:
+            joined[-1] = (joined[-1][0], max(joined[-1][1], float(end)))
+        else:
+            joined.append((float(start), float(end)))
+
+    return joined
+
+
+def _detection_time_in_pass(passes: Sequence[Tuple[float, float]], times: Sequence[float],
+                            at: float) -> Optional[float]:
+    """Regola R-INT con il rilevamento per passaggio (FP-5 (d), Proposta_Finestre_Per_Passaggio_Portata_Propria.md).
+
+    `passes`: passaggi `(start, end)` del lanciatore nel volume proprio dell'intercettore (dopo l'unione FP-10);
+    `times`: istanti dei rilevamenti dell'intercettore sul lanciatore. Restituisce il PRIMO istante di rilevamento
+    dentro il primo passaggio (in ordine di tempo) che contiene `at` (estremi entro TIME_EPS); None se nessun
+    passaggio contiene `at` o se in quel passaggio non c'e' rilevamento. Il lancio a `at` e' "visto" se il risultato
+    non e' None ed e' <= at (+ TIME_EPS): lo decide il chiamante (`_in_time`). Nessuna estrazione.
+    """
+    for start, end in sorted(passes):
+        if start - TIME_EPS <= at <= end + TIME_EPS:
+            inside = [time for time in times if start - TIME_EPS <= time <= end + TIME_EPS]
+
+            return min(inside) if inside else None
+
+    return None
 
 
 # ── DEGRADAZIONE AMBIENTALE DELLA Pd (meteo/notte, da Logic/Meteo_Analysis) ────
@@ -2328,7 +2396,7 @@ class _EngagementRun:
         legs_target = self.legs.get(target_id)
 
         if legs_observer and legs_target and radius is not None:
-            for start, end in range_intervals(legs_observer, legs_target, radius):
+            for start, end in self._own_intervals(observer_id, target_id, own_range, radius):
                 if end >= window.t_start - TIME_EPS and start <= window.t_end + TIME_EPS:
                     return max(start, window.t_start)
 
@@ -2346,8 +2414,10 @@ class _EngagementRun:
                        other_range: Optional[float]) -> float:
         """Permanenza [s] del bersaglio nel volume dell'osservatore, per la legge di permanenza (D-5).
 
-        Con i tratti di entrambe le rotte: somma, sugli intervalli di `range_intervals` con la portata propria
-        che toccano la finestra, di `min(end, t_end) - start`. NON si taglia all'inizio della finestra
+        Con i tratti di entrambe le rotte: la permanenza del passaggio (intervallo di `range_intervals` con la
+        portata propria che tocca la finestra) che contiene `t_cpa`, in mancanza del piu' lungo, `min(end, t_end) -
+        start`; MAI la somma dei passaggi (regola dell'utente del 2026-11-06, FP-6). Nessuna unione dei passaggi
+        (FP-10 vale solo con il rilevamento per passaggio). NON si taglia all'inizio della finestra
         (`t_start`): l'intervallo che la contiene conta dal suo inizio vero (il sensore guardava gia'), altrimenti
         lo spezzare una finestra (decollo/atterraggio, ritaglio G4a) ridurrebbe la Pd per un artefatto di
         calcolo. Senza tratti (chiamate dirette): `t_end - t_start` se la portata propria e' la maggiore (o
@@ -2358,13 +2428,18 @@ class _EngagementRun:
         legs_target = self.legs.get(target_id)
 
         if legs_observer and legs_target:
-            exposure = 0.0
+            touching = [(start, end) for start, end in self._own_intervals(observer_id, target_id, own_range)
+                        if end >= window.t_start - TIME_EPS and start <= window.t_end + TIME_EPS]
 
-            for start, end in range_intervals(legs_observer, legs_target, own_range):
-                if end >= window.t_start - TIME_EPS and start <= window.t_end + TIME_EPS:
-                    exposure += max(0.0, min(end, window.t_end) - start)
+            if not touching:
+                return 0.0
 
-            return exposure
+            # FP-6 (Proposta_Finestre_Per_Passaggio_Portata_Propria.md): UN passaggio, mai la somma. Quello che contiene
+            # il massimo avvicinamento della finestra (la distanza della Pd); in mancanza il piu' lungo (il primo a pari).
+            longest = max(touching, key=lambda item: min(item[1], window.t_end) - item[0])
+            start, end = next(((s, e) for s, e in touching if s - TIME_EPS <= window.t_cpa <= e + TIME_EPS), longest)
+
+            return max(0.0, min(end, window.t_end) - start)
 
         if other_range is None or own_range >= other_range:
             return max(0.0, float(window.t_end) - float(window.t_start))
@@ -2373,6 +2448,23 @@ class _EngagementRun:
             return max(0.0, float(window.t_mutual_end) - float(window.t_mutual_start))
 
         return 0.0
+
+    def _own_intervals(self, observer_id: str, target_id: str, own_range: float,
+                       radius: Optional[float] = None) -> Optional[List[Tuple[float, float]]]:
+        """Intervalli in cui il bersaglio e' nel volume di rilevamento PROPRIO dell'osservatore: oggi la sfera di
+        raggio `own_range`, o di raggio `radius` (raggio estratto, per l'istante di rilevamento) se dato. None senza
+        i tratti di entrambi. UNICO punto di chiamata del volume proprio nel risolutore (decisione VA-6 (a),
+        Proposta_Allineamento_Volumi_DES_Pianificatore.md §2.3): un volume di rilevamento diverso dalla sfera si
+        sostituisce qui, senza toccare la logica dei passaggi; dovra' restare contenuto nella sfera di raggio
+        `own_range` (le finestre dello scheduler sono costruite su quella) e ridursi per omotetia di fattore
+        `radius / own_range` al posto del raggio estratto. Nessuna estrazione."""
+        legs_observer = self.legs.get(observer_id)
+        legs_target = self.legs.get(target_id)
+
+        if not (legs_observer and legs_target):
+            return None
+
+        return range_intervals(legs_observer, legs_target, own_range if radius is None else radius)
 
     # ── coda eventi ───────────────────────────────────────────────────────────
 
