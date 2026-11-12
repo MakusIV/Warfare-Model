@@ -195,12 +195,12 @@ Aggiunge in coda l'unita' S34-BAND (8 varianti, 4 seed): 32 esecuzioni nuove; ne
 
 ## Rilevamento per passaggio dopo la FP
 
-Il rilevamento per passaggio nella portata propria (`Engagement_Resolver.FP_PER_PASS_DETECTION`, ACCESO dal 2026-11-12, temporaneo;
-`Proposta_Finestre_Per_Passaggio_Portata_Propria.md`) ha cambiato 44 esecuzioni della fotografia precedente (le AFTER_PASS di P-0); la fotografia di 1113 esecuzioni installata il
-2026-11-12 le include con la regola accesa.
-Aggiunge in coda l'unita' S33-PASSES (4 varianti: rientro e CAS, ciascuna con tutto spento e con FP e D-5 accese,
-dwell della ZSU 2 s, stima; 5 seed): 20 esecuzioni nuove; nessuna voce nuova nel riassunto (i `Detection` non sono
-registrati).
+Il rilevamento per passaggio nella portata propria (`Engagement_Resolver.FP_PER_PASS_DETECTION`, ACCESO dal
+2026-11-12) e' una regola senza interruttore dal blocco di pulizia (`Proposta_FP_Pulizia_Interruttore.md`); la
+fotografia di 1113 del 2026-11-12 la include gia'.
+Aggiunge in coda l'unita' S33-PASSES (2 varianti: rientro e CAS, FP e D-5 accese, dwell della ZSU 2 s, stima;
+5 seed): 10 esecuzioni nuove; le 10 `off`/`cas_off` sono tolte e risultano `MISSING` finche' l'utente non installa la
+fotografia nuova; nessuna voce nuova nel riassunto (i `Detection` non sono registrati).
 
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
@@ -425,9 +425,10 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     ('S34-BAND', 'Test_Session_Scenarios_S34', 'TestS34AltitudeBand', None,
      _by_occurrence('level_off', 'level_on', 'climb_off', 'climb_on', 'descend_off', 'descend_on',
                     'late_descend_off', 'late_descend_on')),
-    # ── S33 (FP: un'occasione di rilevamento per passaggio nel volume proprio) — in coda, nomi stabili ──
+    # ── S33 (FP: un'occasione di rilevamento per passaggio nel volume proprio; dal blocco di pulizia FP solo le
+    # varianti accese) — in coda, nomi stabili ──
     ('S33-PASSES', 'Test_Session_Scenarios_S33', 'TestS33DetectionPerPass', None,
-     _by_occurrence('off', 'on', 'cas_off', 'cas_on')),
+     _by_occurrence('on', 'cas_on')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per
