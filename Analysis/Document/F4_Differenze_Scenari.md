@@ -2737,3 +2737,36 @@ come in §5.4.1; nomi dei semi.
 - L'interruttore `BI_AD_TARGET_RULE` e' spento di default: con le fotografie correnti la regola non agisce; si accende e si installa una fotografia nuova solo su decisione dell'utente (criterio sugli
   interruttori: tenerlo solo se lo stato precedente e' un'alternativa valida).
 - Il pianificatore di rotta non modella l'intercettazione delle munizioni.
+
+## FP — rilevamento per passaggio nella portata propria (interruttore ACCESO il 2026-11-12)
+
+Proposta: `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`; sonde in `Rapporti/Sonde_Finestre_Passaggio/` (`esito_p1.txt`).
+`Engagement_Resolver.FP_PER_PASS_DETECTION = True` per decisione dell'utente dopo la sonda P-1.
+
+### Differenze della fotografia (rispetto a quella installata fino al 2026-11-11, regola precedente)
+Il 2026-11-12 l'utente ha fatto installare la fotografia nuova (1113 esecuzioni, FP accesa): le differenze sotto sono quelle fra la vecchia e la nuova.
+**44 esecuzioni cambiate su 1009** (965 identiche), esattamente le `AFTER_PASS` di P-0, tutte per FP-3 (a): l'osservatore con la
+portata minore (SAM/AAA) smette di sparare all'uscita del bersaglio dal proprio volume invece che alla fine della finestra di
+contatto (calcolata sulla portata maggiore). 153 salve della difesa in meno, mai in aumento. Nessuna cambiata per i passaggi
+multipli (0 direzioni con piu' passaggi nella fotografia), per FP-5 (d) (0 decisioni R-INT cambiate su 407), ne' per FP-6/FP-10 (D-5 spenta).
+
+| Scenario | Esecuzioni | Effetto |
+|---|---|---|
+| S13 | `S13-2`, `S13-4` | salve della difesa 8->6 e 9->5; `disengaged` -> `held`, un aereo perso in meno |
+| S14 | `S14-4` | salve 8->6; `disengaged` -> `held`, un aereo perso in meno |
+| S21 | `S21-3/{control,parked}`, `S21-5/{control,parked}`, `S21-7/{control,parked}` | salve in calo (per esempio 12->4, 17->14); quasi sempre un aereo Blue perso in meno; in `S21-7/control` `destroyed` -> `disengaged` |
+| S24-ORBIT | `S24-ORBIT-0/full` | una salva in meno (6->5) |
+| S26-BINGO | 32 (4 varianti x 8 semi) | salve e danni 28->24 (27->23 in un seme); in `transfer_continue` la fine del movimento passa da 1200 s a ~1163-1169 s |
+| S28-CLASS | `S28-CLASS-2/self_defence`, `self_defence_off` | salve 4->2; `destroyed` -> `held` |
+
+Esempio tracciato (`S21-3/parked`): lo Shilka (volume 20 km) spara a `str0` fino a 214,9 s (12 salve) con la regola precedente, anche se
+`str0` e' uscita dal suo volume a 176,9 s; con la FP si ferma a 174,9 s (4 salve) e `str0` si salva. Gli scenari che cambiano hanno fire control
+di prova senza inviluppo d'arma (S13, S14, S21) o tiro dichiarato (S26): con un'arma reale la portata limitava gia' il tiro.
+
+### S33-PASSES (20 esecuzioni nuove)
+ZSU-57-2 (volume visivo 6 km) contro 4 A-10C; varianti `off`/`cas_off` (FP e D-5 spente) e `on`/`cas_on` (FP e D-5 accese, dwell ZSU 2 s [S]).
+Rientro (due passaggi a ~230 s e ~410 s) e CAS (due passaggi, pausa ~104 s). Con la FP: 8 estrazioni della ZSU per esecuzione invece di 4;
+salve della ZSU `reentry` 18 (spento) contro 20 (acceso) su 5 semi, `cas` 30 e 30; A-10C persi uguali nei due stati. Non prova FP-5, l'unione FP-10 ne' g < 1 (test unitari).
+
+### Stato
+Interruttore temporaneo: la fotografia nuova e' installata (2026-11-12); resta da fare il blocco di pulizia che lo elimina (Proposta §4.3 punto 3).

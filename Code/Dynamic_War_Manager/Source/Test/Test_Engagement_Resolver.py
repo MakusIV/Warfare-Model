@@ -4009,8 +4009,9 @@ class TestDetectionPerPass(unittest.TestCase):
         self._log.start()
         self.addCleanup(self._log.stop)
 
-    def test_switch_is_off_by_default(self):
-        self.assertIs(ER.FP_PER_PASS_DETECTION, False)
+    def test_switch_is_on_by_default(self):
+        # Acceso dall'utente il 2026-11-12 dopo la sonda P-1 (Proposta_Finestre_Per_Passaggio_Portata_Propria.md).
+        self.assertIs(ER.FP_PER_PASS_DETECTION, True)
 
     def test_detection_time_in_pass(self):
         passes = [(200.0, 254.0), (380.0, 434.0)]

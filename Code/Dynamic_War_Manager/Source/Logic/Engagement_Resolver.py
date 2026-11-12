@@ -609,7 +609,7 @@ VA_ENGAGEMENT_ALTITUDE_BAND = False
 
 # Rilevamento per passaggio nella portata propria (Proposta_Finestre_Per_Passaggio_Portata_Propria.md, FP),
 # interruttore dedicato e TEMPORANEO:
-#   * `FP_PER_PASS_DETECTION` (SPENTO): un'occasione di rilevamento per OGNI passaggio del bersaglio nel volume PROPRIO
+#   * `FP_PER_PASS_DETECTION` (ACCESO dal 2026-11-12, decisione dell'utente dopo la sonda P-1): un'occasione di rilevamento per OGNI passaggio del bersaglio nel volume PROPRIO
 #     dell'osservatore dentro una finestra di contatto (prima: una sola estrazione per finestra e direzione, con la
 #     distanza minima dell'intera finestra). Lo legge Session_Simulator, che passa al risolutore lo stream separato
 #     `pass_rng` solo se acceso. Acceso: lo stream `rng` non cambia (stesse estrazioni, stesso ordine); le estrazioni
@@ -619,10 +619,11 @@ VA_ENGAGEMENT_ALTITUDE_BAND = False
 #     lunga del dwell del sensore si uniscono. Spento: chiamata e rilevamento di prima (la permanenza D-5 di un solo
 #     passaggio, mai la somma, vale in ogni stato: e' dentro D5_DWELL_TIME). Nessuna estrazione nello stream `rng` in
 #     piu' ne' in ordine diverso in nessuno dei due stati.
-#   TEMPORANEO (criterio dell'utente del 2026-11-08: la regola sostituisce una soluzione superata). Si elimina, con il
-#   ramo "spento", in un blocco di pulizia dopo: la sonda P-1, la lettura delle esecuzioni cambiate da parte
-#   dell'utente e una fotografia nuova installata dall'utente.
-FP_PER_PASS_DETECTION = False
+#   TEMPORANEO (criterio dell'utente del 2026-11-08: la regola sostituisce una soluzione superata). Sonda P-1 eseguita
+#   (44 esecuzioni della fotografia cambiate = le 44 AFTER_PASS) e interruttore acceso dall'utente il 2026-11-12. Si
+#   elimina, con il ramo "spento", in un blocco di pulizia dopo la fotografia nuova installata dall'utente (finche'
+#   la fotografia e' quella vecchia, il confronto mostra le 44 cambiate).
+FP_PER_PASS_DETECTION = True
 
 # Domini di difesa aerea ammessi in `ShotSpec.intercept_domains` ('land' = intercettore non navale, 'naval' = nave).
 AD_DOMAINS = frozenset({'land', 'naval'})

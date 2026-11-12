@@ -195,8 +195,9 @@ Aggiunge in coda l'unita' S34-BAND (8 varianti, 4 seed): 32 esecuzioni nuove; ne
 
 ## Rilevamento per passaggio dopo la FP
 
-Il rilevamento per passaggio nella portata propria (`Engagement_Resolver.FP_PER_PASS_DETECTION`, SPENTO, temporaneo;
-`Proposta_Finestre_Per_Passaggio_Portata_Propria.md`) non cambia le esecuzioni esistenti (interruttore spento).
+Il rilevamento per passaggio nella portata propria (`Engagement_Resolver.FP_PER_PASS_DETECTION`, ACCESO dal 2026-11-12, temporaneo;
+`Proposta_Finestre_Per_Passaggio_Portata_Propria.md`) ha cambiato 44 esecuzioni della fotografia precedente (le AFTER_PASS di P-0); la fotografia di 1113 esecuzioni installata il
+2026-11-12 le include con la regola accesa.
 Aggiunge in coda l'unita' S33-PASSES (4 varianti: rientro e CAS, ciascuna con tutto spento e con FP e D-5 accese,
 dwell della ZSU 2 s, stima; 5 seed): 20 esecuzioni nuove; nessuna voce nuova nel riassunto (i `Detection` non sono
 registrati).

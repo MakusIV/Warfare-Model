@@ -505,12 +505,16 @@ class TestS26Bingo(F.LoggerSilencer, unittest.TestCase):
 
     def test_transfer_continue_runs_dry_after_the_engagement(self):
         """'transfer_continue' (trasferimento sotto la soglia del G2 che alla partenza CONTINUA): se Red spara, il
-        consumo d'ingaggio consuma la riserva e il residuo non basta piu' per la rotta. G4b: l'episodio dura oltre
-        la fine della rotta, la decisione e' alla fine dei tratti dell'aereo con residuo zero (esaurito in
-        ingaggio): regole della F6-A dal punto finale, nessuna base in planata, perso con l'equipaggio recuperato
-        (DESTROYED, FUEL_EXHAUSTED a fine rotta), missione DESTROYED. Se Red non spara, la rotta e' completata con
-        carburante positivo."""
+        consumo d'ingaggio consuma la riserva e il residuo non basta piu' per la rotta. G4b: la decisione e' alla fine
+        dei tratti dell'aereo con residuo zero (esaurito in ingaggio): regole della F6-A dal punto finale, nessuna
+        base in planata, perso con l'equipaggio recuperato (DESTROYED, FUEL_EXHAUSTED), missione DESTROYED. Con la
+        FP accesa (dal 2026-11-12, `Engagement_Resolver.FP_PER_PASS_DETECTION`) Red perde la traccia all'uscita
+        dell'aereo dal proprio sensore (x = 300 km, t = 1160 s): l'episodio finisce poco dopo, prima della fine della
+        rotta (1200 s; con la regola precedente durava fino all'ultimo impatto, ~1211 s), e l'aereo e' perso a
+        quell'istante (1160 s <= fine <= fine rotta). Se Red non spara, la rotta e' completata con carburante
+        positivo."""
         t_route = (FLIGHT_END[0] - FLIGHT_START[0]) / AIR_SPEED
+        t_exit = (SITE_POSITION[0] + SITE_SENSOR_RANGE - FLIGHT_START[0]) / AIR_SPEED   # uscita dal sensore di Red-Site
 
         for outcome, legs, _, jet in self.runs['transfer_continue']:
             mission = self._mission(outcome, 'transfer_continue')
@@ -524,8 +528,9 @@ class TestS26Bingo(F.LoggerSilencer, unittest.TestCase):
             self.assertEqual(mission.status, MissionStatus.DESTROYED)
             self.assertEqual((asset.state, asset.end_reason, asset.crew_recovered),
                              (AssetState.DESTROYED, AssetEndReason.FUEL_EXHAUSTED, True))
-            self.assertAlmostEqual(asset.end_time, t_route, delta=1e-6)
-            self.assertAlmostEqual(legs[self.JET][-1].t_end, t_route, delta=1e-6)
+            self.assertGreaterEqual(asset.end_time, t_exit - 1e-6)
+            self.assertLessEqual(asset.end_time, t_route + 1e-6)
+            self.assertAlmostEqual(legs[self.JET][-1].t_end, asset.end_time, delta=1e-6)
             self.assertEqual(jet.fuel, 0.0)
             self.assertTrue(jet.is_destroyed())
             self.assertEqual(outcome.postures[self.JET], MA.DESTROYED_POSTURE)

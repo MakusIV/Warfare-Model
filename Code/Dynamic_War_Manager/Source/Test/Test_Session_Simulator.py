@@ -283,7 +283,8 @@ class TestPerPassDetectionSwitch(_Base):
         return calls
 
     def test_switch_off_passes_no_pass_rng(self):
-        calls = self._resolver_calls()
+        with patch.object(ER, 'FP_PER_PASS_DETECTION', False):
+            calls = self._resolver_calls()
 
         self.assertTrue(calls)
 
@@ -1036,7 +1037,9 @@ class TestMissionAsEngagementUnit(_Base):
         mission_id di Session_Rng resta None (un ingaggio e' fra piu' forze, v. docstring)."""
         original = SessionOrder.rng
 
-        with patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
+        # Solo gli stream dell'ingaggio e della tempra: lo stream dei passaggi (FP) ha un suo test.
+        with patch.object(ER, 'FP_PER_PASS_DETECTION', False), \
+                patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
             self._run('S-rng')
 
         keys = {tuple(json.loads(call.kwargs['event_id'])) for call in spy.call_args_list}
@@ -2324,7 +2327,9 @@ class TestEngagementEpisodes(_Base):
         """Stesso insieme di forze: stesso event_id, `counter` 0 e 1, per l'ingaggio e per la tempra (tempra nuova)."""
         original = SessionOrder.rng
 
-        with patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
+        # Solo gli stream dell'ingaggio e della tempra: lo stream dei passaggi (FP) ha un suo test.
+        with patch.object(ER, 'FP_PER_PASS_DETECTION', False), \
+                patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
             outcome, _, _ = self._patrol()
 
         keys = [(tuple(json.loads(call.kwargs['event_id'])), call.kwargs['counter']) for call in spy.call_args_list]

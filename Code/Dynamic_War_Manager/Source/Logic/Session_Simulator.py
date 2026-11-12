@@ -733,7 +733,7 @@ passa a `resolve_engagement` il lettore `dwell_time_for=Engagement_Resolver.regi
 permanenza nel volume per i sensori con `dwell_time_s`); spento, la chiamata e' quella di prima.
 
 ## Rilevamento per passaggio (FP)
-Interruttore del risolutore, temporaneo: `Engagement_Resolver.FP_PER_PASS_DETECTION` (SPENTO). Acceso,
+Interruttore del risolutore, temporaneo: `Engagement_Resolver.FP_PER_PASS_DETECTION` (ACCESO dal 2026-11-12). Acceso,
 `engage` passa a `resolve_engagement` lo stream separato `pass_rng = order.rng(mission_id=None,
 event_id=pass_event_id(*forze), counter=ordinale dell'episodio)`; spento, la chiamata e' quella di prima.
 

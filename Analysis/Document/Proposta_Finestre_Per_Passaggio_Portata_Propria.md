@@ -1516,8 +1516,22 @@ registrati).
    `AFTER_PASS` in S32 per P-0, nessun intercettore `Anti_Missile`), S35/S34 informative. S33 fissa da se' i due
    interruttori in ogni variante (`patch.object` in `run_variant`, §4.2.1): l'accensione globale di P-1 non la cambia,
    e nella cattura di base non c'e' (righe NEW).
-2. Decisione dell'utente sull'accensione, sui numeri di P-1 e sulle esecuzioni di S33 (`off` contro `on`). Una
-   fotografia nuova la installa **solo l'utente** (AGENTS.md).
+   **Esito di P-1 (2026-11-11, ProArt; estratto in `Rapporti/Sonde_Finestre_Passaggio/esito_p1.txt`)**: `compared 1113
+   runs: 1060 difference lines`; **44 esecuzioni della fotografia cambiate = esattamente le 44 `AFTER_PASS` di P-0**
+   (insiemi identici); `RINT_D` 0 (0 decisioni R-INT cambiate su 407); `ZERO_PASSES` 0 su 34116 passaggi; 0 cambiate
+   fra le nuove S32/S34/S35; S33 20 NEW. Effetto (solo FP-3 (a)): in tutte e 44 la difesa spara meno (153 salve in meno,
+   mai in aumento); in 11 cambiano esito o perdite a favore dell'attaccante (S13-2, S13-4, S14-4, 6 di S21, 2 di
+   S28-CLASS-2); S26-BINGO (32) e S24-ORBIT: solo salve e danni (S26 `transfer_continue`: l'istante di fine movimento
+   passa da 1200 s a ~1163-1169 s, perche' l'episodio con Red-Site finisce all'uscita dal sensore). Le attese sono
+   confermate (nessuna cambiata fuori da `AFTER_PASS`/`RINT_D`).
+2. **Decisione dell'utente (2026-11-12): `FP_PER_PASS_DETECTION` ACCESO** (default `True`) dopo la lettura dei numeri di
+   P-1 e delle esecuzioni cambiate. Verifica dopo l'accensione (osboxes): suite `Ran 4919` (un solo test da aggiornare in
+   `Test_Session_Scenarios_S26`, `test_transfer_continue_runs_dry_after_the_engagement`: l'istante di perdita non e' piu'
+   la fine rotta ma la fine dell'episodio, fra l'uscita dal sensore a 1160 s e la fine rotta a 1200 s; altri 3 test che
+   assumevano il default spento sono ora espliciti), confronto `UNCHANGED (965)` + 44 `CHANGED` (le stesse 44 di P-1) e
+   `compared 1113 runs: 1060 difference lines`. **Fotografia nuova installata il 2026-11-12 su richiesta dell'utente**
+   (`Test/baseline/scenario_baseline.json`, **1113 esecuzioni**, 0 errori di unita', catturata con la regola accesa in 1186 s;
+   rispetto alla precedente differisce esattamente per le 44 cambiate di P-1 e per le 104 nuove di S32-S35).
 3. **Blocco di pulizia** (dopo i punti 1-2 e la fotografia nuova; descritto in breve, da pianificare a parte): elimina
    `FP_PER_PASS_DETECTION` e i rami `pass_rng is None` (in `_detect_direction` i passaggi si calcolano sempre; in
    `_detection_time_of` resta solo FP-5 (d) con il ripiego senza tratti; `Session_Simulator` passa sempre `pass_rng`);
