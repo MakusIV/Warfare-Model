@@ -3988,7 +3988,7 @@ class TestDetectionPerPass(unittest.TestCase):
     """Rilevamento per passaggio (FP, senza interruttore dal blocco di pulizia): funzioni pure, passaggi, stream,
     FP-3 (a), FP-5 (d), FP-10."""
 
-    # Geometria comune dei test 2-12, 18-20, 24-30 (e dei test 14/23 in TestDwellTimeInTheResolver):
+    # Geometria comune dei test 2-12, 18-20, 24-30 (e di `test_exposure_without_a_pass_is_zero` in TestDwellTimeInTheResolver):
     # osservatore `b1` fermo in (0, 0, 0); bersaglio `r1` con tre tratti. Passaggi di `b1` (portata 5 km): [50, 150]
     # (CPA 0 m a 100 s) e [290, 370] (CPA 3000 m a 330 s), uscita fra i due 140 s; `r1` (20 km) ha un solo
     # passaggio [0, 430].

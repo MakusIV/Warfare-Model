@@ -83,7 +83,7 @@ def run_variant(session_id: str, variant: str):
     """Una sessione della variante: `(outcome, [EngagementResult, ...], [(engagement_rng, pass_rng), ...])`.
 
     La D-5 e' sostituita con True attorno all'intera esecuzione (costruzione delle forze compresa); la FP e' sempre
-    attiva (`FP_PER_PASS_DETECTION`, default True) e il dwell della ZSU e' dichiarato in ogni variante. I risultati
+    attiva (rilevamento per passaggio, regola senza interruttore) e il dwell della ZSU e' dichiarato in ogni variante. I risultati
     d'ingaggio sono catturati con una spia che chiama l'originale e salva PRIMA dell'esecuzione una copia dello stream
     d'ingaggio (`args[4]`) e dello stream dei passaggi (`pass_rng`, sempre presente). `results` e `streams` sono
     allineati: le sole coppie con risultato non None.

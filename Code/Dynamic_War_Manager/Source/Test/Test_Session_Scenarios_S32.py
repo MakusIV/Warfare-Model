@@ -5,7 +5,8 @@ STRUTTURALE (relazioni fra varianti), mai un numero calibrato. Nel codice (`Anal
 Proposta_Dwell_Time_Rilevamento.md`, blocco A): con l'interruttore `Engagement_Resolver.D5_DWELL_TIME` acceso,
 `Session_Simulator` passa al risolutore il lettore `registry_dwell_time`; per un osservatore che dichiara un periodo di
 rivisita (`dwell_time_s` del sensore) la Pd e' moltiplicata per `min(1, permanenza / dwell)` (`dwell_factor`), dove la
-permanenza e' il tempo del bersaglio nella portata propria dell'osservatore (`_EngagementRun._exposure_time`). Spento,
+permanenza e' il tempo del bersaglio nella portata propria dell'osservatore (la permanenza del passaggio, calcolata
+dai tratti in `_EngagementRun._detect_direction`). Spento,
 la legge e' quella di sola distanza di prima.
 
 ## S32-DWELL (`TestS32DwellTime`)

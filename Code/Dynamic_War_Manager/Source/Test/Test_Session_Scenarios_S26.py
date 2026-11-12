@@ -507,8 +507,8 @@ class TestS26Bingo(F.LoggerSilencer, unittest.TestCase):
         """'transfer_continue' (trasferimento sotto la soglia del G2 che alla partenza CONTINUA): se Red spara, il
         consumo d'ingaggio consuma la riserva e il residuo non basta piu' per la rotta. G4b: la decisione e' alla fine
         dei tratti dell'aereo con residuo zero (esaurito in ingaggio): regole della F6-A dal punto finale, nessuna
-        base in planata, perso con l'equipaggio recuperato (DESTROYED, FUEL_EXHAUSTED), missione DESTROYED. Con la
-        FP accesa (dal 2026-11-12, `Engagement_Resolver.FP_PER_PASS_DETECTION`) Red perde la traccia all'uscita
+        base in planata, perso con l'equipaggio recuperato (DESTROYED, FUEL_EXHAUSTED), missione DESTROYED. Con il
+        rilevamento per passaggio (FP, dal 2026-11-12; Proposta_Finestre_Per_Passaggio_Portata_Propria.md) Red perde la traccia all'uscita
         dell'aereo dal proprio sensore (x = 300 km, t = 1160 s): l'episodio finisce poco dopo, prima della fine della
         rotta (1200 s; con la regola precedente durava fino all'ultimo impatto, ~1211 s), e l'aereo e' perso a
         quell'istante (1160 s <= fine <= fine rotta). Se Red non spara, la rotta e' completata con carburante

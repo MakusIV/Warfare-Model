@@ -195,7 +195,7 @@ Aggiunge in coda l'unita' S34-BAND (8 varianti, 4 seed): 32 esecuzioni nuove; ne
 
 ## Rilevamento per passaggio dopo la FP
 
-Il rilevamento per passaggio nella portata propria (`Engagement_Resolver.FP_PER_PASS_DETECTION`, ACCESO dal
+Il rilevamento per passaggio nella portata propria (ACCESO dal
 2026-11-12) e' una regola senza interruttore dal blocco di pulizia (`Proposta_FP_Pulizia_Interruttore.md`); la
 fotografia di 1113 del 2026-11-12 la include gia'.
 Aggiunge in coda l'unita' S33-PASSES (2 varianti: rientro e CAS, FP e D-5 accese, dwell della ZSU 2 s, stima;
