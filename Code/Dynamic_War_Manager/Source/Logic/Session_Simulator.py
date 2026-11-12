@@ -733,9 +733,10 @@ passa a `resolve_engagement` il lettore `dwell_time_for=Engagement_Resolver.regi
 permanenza nel volume per i sensori con `dwell_time_s`); spento, la chiamata e' quella di prima.
 
 ## Rilevamento per passaggio (FP)
-Interruttore del risolutore, temporaneo: `Engagement_Resolver.FP_PER_PASS_DETECTION` (ACCESO dal 2026-11-12). Acceso,
-`engage` passa a `resolve_engagement` lo stream separato `pass_rng = order.rng(mission_id=None,
-event_id=pass_event_id(*forze), counter=ordinale dell'episodio)`; spento, la chiamata e' quella di prima.
+`engage` passa sempre a `resolve_engagement` lo stream separato `pass_rng = order.rng(mission_id=None,
+event_id=pass_event_id(*forze), counter=ordinale dell'episodio)`, da cui il risolutore estrae i passaggi dal
+secondo in poi di una direzione con piu' passaggi nel volume proprio. Regola senza interruttore dal blocco di
+pulizia (Proposta_FP_Pulizia_Interruttore.md).
 
 ## Cosa NON fa
 - Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`.
@@ -801,8 +802,8 @@ ENGAGEMENT_EVENT_TAG = 'engagement'
 # Tag dell'event_id del flusso casuale SEPARATO della tempra delle forze (soglia di rottura
 # stocastica, 2026-09-29): stesse forze, flusso diverso da quello di rilevamento e danno.
 TEMPER_EVENT_TAG = 'temper'
-# Tag dell'event_id del flusso casuale SEPARATO dei passaggi di rilevamento dal secondo in poi (FP,
-# Engagement_Resolver.FP_PER_PASS_DETECTION): stesse forze, flusso diverso da quelli dell'ingaggio e della tempra.
+# Tag dell'event_id del flusso casuale SEPARATO dei passaggi di rilevamento dal secondo in poi (FP, v.
+# Engagement_Resolver "Rilevamento per passaggio"): stesse forze, flusso diverso da quelli dell'ingaggio e della tempra.
 PASS_EVENT_TAG = 'detection_pass'
 
 # Regimi di consumo (Mobile.FUEL_REGIMES).
@@ -2791,10 +2792,10 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             # D-5: Pd dipendente dalla permanenza (v. Engagement_Resolver.D5_DWELL_TIME). Spento: chiamata di prima.
             extra['dwell_time_for'] = ER.registry_dwell_time
 
-        if ER.FP_PER_PASS_DETECTION:
-            # FP: un'occasione di rilevamento per passaggio nel volume proprio (v. Engagement_Resolver.FP_PER_PASS_DETECTION),
-            # stream separato con lo stesso `counter` dell'episodio. Spento: chiamata di prima.
-            extra['pass_rng'] = order.rng(mission_id=None, event_id=pass_event_id(*force_ids), counter=counter)
+        # FP: un'occasione di rilevamento per passaggio nel volume proprio (v. Engagement_Resolver,
+        # "Rilevamento per passaggio"): stream separato dei passaggi dal secondo in poi, con lo stesso
+        # `counter` dell'episodio.
+        extra['pass_rng'] = order.rng(mission_id=None, event_id=pass_event_id(*force_ids), counter=counter)
 
         result = ER.resolve_engagement(component[0], component[1], group, fire_control,
                                        order.rng(mission_id=None, event_id=event_id, counter=counter),

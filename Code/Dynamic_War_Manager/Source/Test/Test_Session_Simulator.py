@@ -266,8 +266,8 @@ class TestDwellTimeSwitch(_Base):
             self.assertIs(kwargs['dwell_time_for'], ER.registry_dwell_time)
 
 
-class TestPerPassDetectionSwitch(_Base):
-    """FP: `Session_Simulator.engage` passa `pass_rng` al risolutore solo con FP_PER_PASS_DETECTION acceso."""
+class TestPerPassDetectionStream(_Base):
+    """FP: `Session_Simulator.engage` passa sempre lo stream `pass_rng` al risolutore."""
 
     def _resolver_calls(self):
         original = ER.resolve_engagement
@@ -282,18 +282,8 @@ class TestPerPassDetectionSwitch(_Base):
 
         return calls
 
-    def test_switch_off_passes_no_pass_rng(self):
-        with patch.object(ER, 'FP_PER_PASS_DETECTION', False):
-            calls = self._resolver_calls()
-
-        self.assertTrue(calls)
-
-        for kwargs in calls:
-            self.assertNotIn('pass_rng', kwargs)
-
-    def test_switch_on_passes_the_pass_stream(self):
-        with patch.object(ER, 'FP_PER_PASS_DETECTION', True):
-            calls = self._resolver_calls()
+    def test_engage_always_passes_the_pass_stream(self):
+        calls = self._resolver_calls()
 
         self.assertTrue(calls)
 
@@ -449,8 +439,9 @@ class TestSeedDiscipline(_Base):
                             self._run('S-beta')[0].damage_events)
 
     def test_engagement_uses_the_documented_stream(self):
-        """Ripetere a mano l'ingaggio del fronte est con order.rng(None, event_id, 0), e la
-        tempra delle forze con il flusso separato order.rng(None, temper_event_id, 0).
+        """Ripetere a mano l'ingaggio del fronte est con order.rng(None, event_id, 0), la
+        tempra delle forze con il flusso separato order.rng(None, temper_event_id, 0) e lo stream dei
+        passaggi order.rng(None, pass_event_id, 0).
 
         Dalla F4b la forza blu e' la vista della missione 'M-south' e il suo id entra nell'event_id."""
         outcome, _, _ = self._run('S-gamma')
@@ -466,6 +457,7 @@ class TestSeedDiscipline(_Base):
             south, red3[1], windows, _fire,
             order.rng(mission_id=None, event_id=SS.engagement_event_id('M-south', red3[1].id)),
             legs=legs, reaction_profile_for=_profile,
+            pass_rng=order.rng(mission_id=None, event_id=SS.pass_event_id('M-south', red3[1].id)),
             breakpoint_rng=order.rng(mission_id=None, event_id=SS.temper_event_id('M-south', red3[1].id)))
         self.assertIn(manual.forces, outcome.engagement_outcomes)
         self.assertTrue(set(manual.damage_events) <= set(outcome.damage_events))
@@ -1033,18 +1025,17 @@ class TestMissionAsEngagementUnit(_Base):
                 _air_mission(ids[1], blue_north, self._north_route(), [('bn2', 500.0)], target_block='Red-East'))
 
     def test_rng_streams_are_keyed_by_mission_ids(self):
-        """Ogni stream d'ingaggio (e di tempra) ha nell'event_id gli id delle MISSIONI; lo slot
+        """Ogni stream d'ingaggio (di tempra e dei passaggi) ha nell'event_id gli id delle MISSIONI; lo slot
         mission_id di Session_Rng resta None (un ingaggio e' fra piu' forze, v. docstring)."""
         original = SessionOrder.rng
 
-        # Solo gli stream dell'ingaggio e della tempra: lo stream dei passaggi (FP) ha un suo test.
-        with patch.object(ER, 'FP_PER_PASS_DETECTION', False), \
-                patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
+        with patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
             self._run('S-rng')
 
         keys = {tuple(json.loads(call.kwargs['event_id'])) for call in spy.call_args_list}
         self.assertEqual(keys, {('engagement', 'M-north', 'Red-East'), ('engagement', 'M-south', 'Red-West'),
-                                ('temper', 'M-north', 'Red-East'), ('temper', 'M-south', 'Red-West')})
+                                ('temper', 'M-north', 'Red-East'), ('temper', 'M-south', 'Red-West'),
+                                ('detection_pass', 'M-north', 'Red-East'), ('detection_pass', 'M-south', 'Red-West')})
         self.assertTrue(all(call.kwargs['mission_id'] is None for call in spy.call_args_list))
 
     def test_renaming_a_mission_changes_its_stream_only(self):
@@ -2324,16 +2315,15 @@ class TestEngagementEpisodes(_Base):
         self.assertEqual(len(outcome.engagement_outcomes), 1)
 
     def test_same_forces_counter_is_the_ordinal(self):
-        """Stesso insieme di forze: stesso event_id, `counter` 0 e 1, per l'ingaggio e per la tempra (tempra nuova)."""
+        """Stesso insieme di forze: stesso event_id, `counter` 0 e 1, per l'ingaggio, la tempra e i passaggi."""
         original = SessionOrder.rng
 
-        # Solo gli stream dell'ingaggio e della tempra: lo stream dei passaggi (FP) ha un suo test.
-        with patch.object(ER, 'FP_PER_PASS_DETECTION', False), \
-                patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
+        with patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
             outcome, _, _ = self._patrol()
 
         keys = [(tuple(json.loads(call.kwargs['event_id'])), call.kwargs['counter']) for call in spy.call_args_list]
-        self.assertEqual(keys, [(('engagement', 'M-b1', 'Red'), 0), (('temper', 'M-b1', 'Red'), 0),
+        self.assertEqual(keys, [(('detection_pass', 'M-b1', 'Red'), 0), (('engagement', 'M-b1', 'Red'), 0),
+                                (('temper', 'M-b1', 'Red'), 0), (('detection_pass', 'M-b1', 'Red'), 1),
                                 (('engagement', 'M-b1', 'Red'), 1), (('temper', 'M-b1', 'Red'), 1)])
         first, second = outcome.outcomes_of('M-b1')
         self.assertNotEqual(first.temper, second.temper)
