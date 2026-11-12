@@ -1303,7 +1303,10 @@ class TestS17HierarchicalScaleSweep(F.LoggerSilencer, unittest.TestCase):
 
     SCALE = (('Company', 1), ('Battallion', 2), ('Regiment', 3), ('Brigade', 4), ('Division', 6))
     SEEDS = _seeds('S17', 3)
-    MAX_SECONDS = 60.0
+    # STIMA, non un dato tarato: soglia larga per intercettare solo regressioni d'ordine di grandezza.
+    # 60 s dava falsi rossi sulla VM osboxes sotto carico (Division 61,8 s contro 33-39 s misurati con
+    # FP accesa); 120 s lascia circa 2x di margine sulla VM e circa 3x sul ProArt (2026-11-12).
+    MAX_SECONDS = 120.0
 
     @staticmethod
     def _build(mil_category, k):
