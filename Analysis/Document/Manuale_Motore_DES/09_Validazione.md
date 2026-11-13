@@ -29,9 +29,9 @@ sessione principale con `tools/ai/verifica.sh`, e **non sono stati rieseguiti** 
 (`TestSpeedEval.test_all_vehicles_speed_eval_positive` in `Test_Vehicle_Data.py`, che salta i record `fixed_site`: §8.13). I numeri sono quelli del rapporto `Rapporti/Rapporto_sensori_C_des-developer.md` (§6: `Ran 4757 tests in 1231.551s`, `OK (skipped=7)`, `compared 1009 runs: IDENTICAL (957.6 s)`, `grep -cE '^(CHANGED|NEW)'` = 0)
 e della verifica della sessione principale, **riportati come dichiarati e NON rieseguiti** per questo aggiornamento. Nessuno scenario e nessuna unità della fotografia sono nuovi o cambiati.
 
-**Aggiornamento 2026-11-13 (D-5, BI, VA, FP: quattro scenari nuovi, S32-S35; codice `a389cadb`, fotografia `3b5edf49`): suite `Ran 4914` test, `OK (skipped=7)`; confronto con la fotografia: `UNCHANGED (1103)`, 0 cambiate; fotografia di non regressione installata: 1103 esecuzioni** (conteggio fatto per questo aggiornamento sul file `Test/baseline/scenario_baseline.json`: 1103 chiavi in `runs`, `errors` vuoto;
-per unità: S32-DWELL 20, S33-PASSES 10, S34-BAND 32, S35-ADTGT 32; 1009 + 94 = 1103). I numeri di suite e confronto sono quelli dichiarati da `Proposta_FP_Pulizia_Interruttore.md` (§4.7-§4.8, attesi e poi verificati dalla sessione principale), da `F4_Differenze_Scenari.md` (sezioni BI e FP) e dai messaggi dei commit di verifica (`git log`), **riportati come dichiarati e NON rieseguiti** per questo
-aggiornamento. Il passo da 4757 a 4914 test e da 1009 a 1103 esecuzioni è in §8.14 (cronologia) e nella tabella di §8.7 (righe D-5, BI, VA, FP). **Cambia solo la «forma» della suite**: i quattro scenari nuovi sono in coda alla tabella `UNITS` di `Scenario_Baseline` (nomi stabili) e **nessun scenario preesistente cambia con gli interruttori spenti**; la FP, accesa il 2026-11-12, cambiò **44** esecuzioni di S13, S14, S21, S24-ORBIT,
+**Aggiornamento 2026-11-13 (D-5, BI, VA, FP: quattro scenari nuovi, S32-S35; codice finale `a389cadb`, mergiato in `f46e3982`; fotografia `3b5edf49`): suite `Ran 4914` test, `OK (skipped=7)`; confronto con la fotografia: `UNCHANGED (1103)`, 0 cambiate; fotografia di non regressione installata: 1103 esecuzioni** (conteggio fatto per questo aggiornamento sul file `Test/baseline/scenario_baseline.json`: 1103 chiavi in `runs`, `errors` vuoto;
+per unità: S32-DWELL 20, S33-PASSES 10, S34-BAND 32, S35-ADTGT 32; 1009 + 94 = 1103). I numeri di suite e confronto sono quelli dichiarati da `Proposta_FP_Pulizia_Interruttore.md` (§4.7-§4.8: valori *attesi*), dal messaggio del merge `f46e3982` (che li dà come **verificati dalla sessione principale su osboxes**: `Ran 4914`, `OK (skipped=7)`; `UNCHANGED (1103)`, 0 `CHANGED`, `compared 1103 runs: 10 difference lines` = le 10 `MISSING` di S33), da `F4_Differenze_Scenari.md` (sezioni BI e FP) e dagli altri messaggi dei commit di verifica (`git log`), **riportati come dichiarati e NON rieseguiti** per questo
+aggiornamento. Il totale 4914 = 4919 − 5: la pulizia toglie 2 test da `Test_Engagement_Resolver` (373 → 371 eseguiti), 2 da `Test_Session_Scenarios_S33` (13 → 11: tolte le varianti `off` e `cas_off`) e 1 da `Test_Session_Simulator` (170 → 169) — ripartizione ricavata da `Proposta_FP_Pulizia_Interruttore.md` §4.7 e dal rapporto della pulizia, **non** ricontata sul codice precedente. Il passo da 4757 a 4914 test e da 1009 a 1103 esecuzioni è in §8.14 (cronologia) e nella tabella di §8.7 (righe D-5, BI, VA, FP). **Cambia solo la «forma» della suite**: i quattro scenari nuovi sono in coda alla tabella `UNITS` di `Scenario_Baseline` (nomi stabili) e **nessun scenario preesistente cambia con gli interruttori spenti**; la FP, accesa il 2026-11-12, cambiò **44** esecuzioni di S13, S14, S21, S24-ORBIT,
 S26-BINGO e S28-CLASS (fotografia di 1113, F4), tutte per FP-3 (a) e tutte già nella fotografia di oggi.
 
 **Aggiornamento rispetto alla stesura iniziale**: le estensioni successive alla Fase 7 (selezione
@@ -80,7 +80,7 @@ id sempre esplicito — `Asset.__init__` genererebbe altrimenti un suffisso casu
 (`make_force`, `add_assets`, `build_force`); infrastrutture reali (`make_infrastructure`,
 `make_structure`: `Production`/`Storage`/`Transport`/`Urban`, costruibili solo dal 2026-09-23 dopo
 la correzione di 5 bug preesistenti nei loro costruttori, v. §8.4); rotte
-(`straight_route`, `route_for`, `routes_for`, `:514-575`); **missioni** (`missions_for`, `:675-755`, dal
+(`straight_route`, `route_for`, `routes_for`, `:549-617`); **missioni** (`missions_for`, `:710-792`, dal
 2026-10-05, v. sotto); un `fire_control` di riferimento (`make_fire_control`, §8.2);
 esecuzione (`run(...)`, `Scenario.run(session_id)`, `combined_arms_scenario()`); letture
 dell'esito (`losses_of`, `damage_by_source`, ...).
@@ -99,7 +99,7 @@ in difesa, tiro invariato; un *aereo* senza missione è a terra, ruolo `'parked'
   velocità diverse e diventavano **due missioni dello stesso blocco**); **dalla F4a vale la regola A**
   (capitolo 6 §6.10): `missions_for` riunisce gli asset che differiscono *solo* per velocità in una missione la
   cui rotta di riferimento ha, tratto per tratto, la velocità **minima** fra quelle dei suoi asset
-  (`_slowest_reference`, `Test/Scenario_Fixtures.py:648-662`). Gli offset di formazione sono quelli di F3 (la
+  (`_slowest_reference`, `Test/Scenario_Fixtures.py:683-699`). Gli offset di formazione sono quelli di F3 (la
   velocità non entra nell'offset): la geometria non cambia, cambia solo la velocità degli asset più veloci, che
   procedono al passo del più lento. Chi vuole velocità diverse chiama `missions_for` più volte con `only=`
   (missioni separate). Restano divisi in più missioni i blocchi con tipi di missione diversi (S7, S18, S19) o
@@ -114,20 +114,20 @@ in difesa, tiro invariato; un *aereo* senza missione è a terra, ruolo `'parked'
   fasi F5-F6.
 
 Anche `Scenario` ha ora `missions` al posto di `routes` (`routes` resta come proprietà di sola lettura
-derivata, `:970-974`) e `run(...)` accetta `missions=` (`:909-915`).
+derivata, `:1006-1009`) e `run(...)` accetta `missions=` (`:944-951`).
 
 **Aggiunte della F4** (`Test/Scenario_Fixtures.py`):
 
-- **ruolo `'parked'`** (`PARKED_ROLE`, `:817`; `role_of(asset, roles, grounded=False)`, `:820`): un aereo a terra
+- **ruolo `'parked'`** (`PARKED_ROLE`, `:852`; `role_of(asset, roles, grounded=False)`, `:855`): un aereo a terra
   è un bersaglio di superficie come `'structure'` (lo colpiscono `'ground'`, `'artillery'`, `'air'`, `'strike'`;
   mai `'sam'`, `'aaa'`, `'fighter'`, `'sead'`) e non spara mai. `make_fire_control` dichiara il parametro
-  `target_grounded` (`:868`), quindi `role_of` lo classifica `'parked'` solo quando il risolutore glielo dice
+  `target_grounded` (`:922`, nella funzione interna `fire_control`), quindi `role_of` lo classifica `'parked'` solo quando il risolutore glielo dice
   (capitolo 4 §4.4, §4.30);
-- **letture dell'esito per forze d'ingaggio**: `force_outcome(outcome, force_id)` (`:1036`) accetta un `mission_id`
+- **letture dell'esito per forze d'ingaggio**: `force_outcome(outcome, force_id)` (`:1071`) accetta un `mission_id`
   o l'id di un blocco con **una sola** forza d'ingaggio che ha combattuto, e solleva `ValueError` per un blocco con
   più missioni in combattimento (l'esito del blocco non è unico: chiedere quello della missione);
-  `engagement_blocks(outcome)` (`:1057`) restituisce per ogni ingaggio i **blocchi** coinvolti (dal `block_id`
-  degli esiti, con gli stessi valori attesi di prima della F4b) e `engagement_forces(outcome)` (`:1068`) gli id
+  `engagement_blocks(outcome)` (`:1092`) restituisce per ogni ingaggio i **blocchi** coinvolti (dal `block_id`
+  degli esiti, con gli stessi valori attesi di prima della F4b) e `engagement_forces(outcome)` (`:1103`) gli id
   delle forze d'ingaggio (missioni). Le verifiche di struttura "quali blocchi combattono nello stesso ingaggio"
   leggono i blocchi, quelle sugli id di forza le missioni.
 
@@ -139,7 +139,7 @@ Con i soli registri, due forze terrestri **non si vedono mai**: è un dato manca
 del motore (`Mobile.detection_range` lo dichiara esplicitamente), ma oggi nessun chiamante di
 produzione lo compensa. Per gli scenari si usa quindi un sensore dichiarato di test
 (`declare_sensor`), un'iniezione esplicita e visibile in ogni scenario — non un'alterazione
-silenziosa dei registri.
+silenziosa dei registri. **Dalla D-5** lo stesso vale per il periodo di rivisita: `declare_dwell(asset, {modo: secondi})` (`:306`) dichiara sull'istanza un `dwell_time_s` **di test** (non un dato: nessun tiratore del registro ha dati di scansione) e delega al registro per gli altri modi; solleva `ValueError` per un modo fuori da `DETECTION_MODES` o un valore non positivo. Lo usano S32 e S33 (§8.14).
 
 ### `fire_control` di riferimento — una tabella di ruoli, non la selezione dell'arma (`:59-90`)
 
@@ -217,7 +217,7 @@ dello stato, non gli esiti, e passano.
 Quando l'adapter DCS esisterà, questo stesso test diventerà eseguibile alla lettera; fino ad
 allora è il suo equivalente verificabile (`Test/Test_Session_Validation.py:44-47`).
 
-## 8.4 La batteria di scenari S1-S31
+## 8.4 La batteria di scenari S1-S35 (S32-S35 in dettaglio in §8.14)
 
 Origine: S1-S5 adattano le composizioni di forza dei documenti Lanchester ingeriti (**senza i
 loro numeri**: solo composizione e domanda, v. wiki
@@ -264,6 +264,10 @@ prossimità `Urban`, scala gerarchica, rete `Transport` multi-nodo).
 | **S30** | `TestS30CampaignSequence` | Ciclo di campagna (F8c, capitolo 6 §6.24-6.27): quattro sessioni disgiunte condotte da `run_campaign_session`, senza contatti: posizione ripresa, asset non pronto escluso dal validatore, riparazione in corso e poi conclusa, riarmo e rifornimento a fine turnaround. 4 esecuzioni (§8.12). |
 | **S30-ABSENT** | `TestS30AbsentForce` | Una forza **assente** da una sessione conserva i propri record di prontezza (difetto 26, capitolo 6 §6.26): stesse forze di S30-CAMPAIGN, tre sessioni, la 2 senza `Blue-Mech`; nello stesso file `Test_Session_Scenarios_S30.py`. 3 esecuzioni (§8.12). |
 | **S31-VISUAL** | `TestS31VisualSensor` (più `TestS31VisualSensorRanges`, unitaria e fuori dalla fotografia) | Sensore visivo di ripiego di ZSU-57-2 e M163-VADS (D-4c, capitolo 3 §3.5, capitolo 7 §7.12): una difesa aerea a vista, quattro A-10C, cinque varianti (`zsu`, `zsu_off`, `vads_low`, `vads_low_off`, `vads_high`) con l'interruttore `D4C_VISUAL_SENSOR` acceso o spento. 20 esecuzioni (§8.13). |
+| **S32-DWELL** | `TestS32DwellTime` | Permanenza nel volume (D-5, capitolo 4 §4.36): ZSU-57-2 con periodo di rivisita dichiarato di test, 5 varianti (`off`, `long`, `short`, `ewr_off`, `ewr_on`) con `D5_DWELL_TIME` spento o acceso. 20 esecuzioni (§8.14). |
+| **S33-PASSES** | `TestS33DetectionPerPass` | Un'estrazione di rilevamento per passaggio nel volume proprio (FP, capitolo 4 §4.35, con D-5 accesa): 2 varianti (`on` rientro, `cas_on` CAS) × 5 semi. 10 esecuzioni (§8.14). |
+| **S34-BAND** | `TestS34AltitudeBand` | Quota nel volume d'ingaggio (VA, capitolo 4 §4.37): un 9A33-Osa contro 4 A-10C con quattro profili di quota, `VA_ENGAGEMENT_ALTITUDE_BAND` spento/acceso. 32 esecuzioni (§8.14). |
+| **S35-ADTGT** | `TestS35AirDefenceTargets` | Bersagli intercettabili dalle difese aeree (BI, capitolo 4 §4.24): quattro geometrie × `BI_AD_TARGET_RULE` spento/acceso. 32 esecuzioni (§8.14). |
 
 Tutti gli scenari condividono la stessa regola: si prende la composizione delle forze e la
 domanda che pongono, mai coefficienti o esiti numerici precalcolati — per S6-S19 la domanda è
@@ -288,7 +292,7 @@ sottoclasse di `Asset` (confrontava il nome classe esatto invece di usare `isins
   `force_id` (capitolo 4 §4.27).
 - **S19AD** (`Test_Session_Scenarios_S19_Air_Defence.py`, commit `aedd7fa5`): scenario **persistente** della
   riproduzione della proposta SAM (`Proposta_Regole_Allocazione_SAM.md` §1.1 e §7.8). Sette test
-  (`:136-224`): i Maverick sono lanciati; lo Strela non intercetta mai (regola D); lo Strela spara i
+  (classe `TestS19AirDefenceAllocation`, `:126-213`): i Maverick sono lanciati; lo Strela non intercetta mai (regola D); lo Strela spara i
   missili agli aerei in sorvolo e li conserva in standoff; **le quattro missioni dello standoff si dividono il
   fuoco** (`test_standoff_missions_share_the_fire`, F4b+: 8-10 Maverick lanciati e Red-Line distrutta, Strela
   compreso, in tutti e 6 i seed; senza il dominio di coordinamento erano 16 e lo Strela restava in piedi);
@@ -300,7 +304,7 @@ sottoclasse di `Asset` (confrontava il nome classe esatto invece di usare `isins
   BMP-2 (`Target.asset_ids`) con la ROE `only_designated` (`F.missions_for(rules=)`); nomi delle varianti invariati e **24
   esecuzioni su 24 identiche** alla fotografia (§8.11). Dopo la migrazione la classe `TestS19MissionRulesReplaceTheTestFilters` (3 test)
   prova che nessun aereo spara un'arma diversa dal Maverick, che le varianti `_ifv_only` non tirano su `ad0` e che con tutta la linea
-  designata (ROE di default) `ad0` torna bersaglio. Con lo standoff ogni A-10C ha
+  designata (ROE di default) `ad0` torna bersaglio. **Dalla BI** lo stesso file ha la classe `TestS19AdTargetRule` (`:253`, 2 test: con `BI_AD_TARGET_RULE` spento il Tor arretrato intercetta i Maverick, acceso non li intercetta più e i Maverick sono comunque lanciati; la variante è `tor_rear` di S19AD (sessione `S19-0`), che la fotografia registra con l'interruttore spento: i metodi di test non sono eseguiti dalla fotografia, §8.14). Con lo standoff ogni A-10C ha
   una missione propria (la rotta cambia direzione, §8.1): dalla F4b l'ingaggio e il disingaggio sono per
   missione, dalla F4b+ la ripartizione del fuoco è per dominio (stesso blocco, capitolo 4 §4.28).
 - **S10** verifica il meccanismo del disingaggio con soglie **fisse** (`FIXED_THRESHOLDS`, `Test_Session_Scenarios_S10_S18.py:117`)
@@ -315,17 +319,17 @@ sottoclasse di `Asset` (confrontava il nome classe esatto invece di usare `isins
 
 Dalla fase F3 la porta di sessione cambia e servono **numeri** per dimostrare che, a parità di input, il motore
 produce la stessa storia (`Piano_Implementazione_Missione.md`, §0 punto 2 e Fase 0). `Scenario_Baseline.py`
-(944 righe al 2026-11-04, 935 al 2026-10-29, 932 a `fa5fbf1e`, 929 a `dcedc541`, 901 a `a784a9e7`, 693 a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
+(988 righe al 2026-11-13, 944 al 2026-11-04, 935 al 2026-10-29, 932 a `fa5fbf1e`, 929 a `dcedc541`, 901 a `a784a9e7`, 693 a `84a47670`, 590 a `533cd1f5`; **fuori** dalla discovery della suite: il nome non comincia con
 `Test_`) esegue gli scenari di sessione esistenti, riassume ogni `SessionOutcome` in una forma deterministica e la
 salva su JSON, oppure la confronta con una fotografia salvata.
 
-**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:258-388`) elenca le "unità" dei
+**Come trova gli scenari: riuso, non duplicazione.** La tabella `UNITS` (`:287-432`) elenca le "unità" dei
 test: per le classi di scenario (S1-S21, S19AD, S21R, validazione) esegue il loro `setUpClass`, che costruisce le
 forze con `Scenario_Fixtures` e lancia tutte le repliche e varianti usate dai test; per
 `Test_Session_Simulator` (nessun `setUpClass`) un elenco scelto di **metodi** di test (`ORC-*`). Le unità S21 e
-S21R sono messe **in coda** alla tabella (nomi stabili: non spostano le chiavi delle altre); così **S30-CAMPAIGN**, aggiunta dalla F8c (`:379-381`, `_single_or_index`: una chiave per sessione, nessuna variante), dopo di lei **S30-ABSENT** del difetto 26
-(`:382-384`, `TestS30AbsentForce`, stessa funzione di etichetta) e, come **ultima voce dal 2026-11-04**, **S31-VISUAL** della D-4c (`:385-387`, `TestS31VisualSensor`, `_by_occurrence('zsu', 'zsu_off', 'vads_low', 'vads_low_off', 'vads_high')`: le cinque varianti, nomi stabili). Durante
-l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:593-604`) che chiama
+S21R sono messe **in coda** alla tabella (nomi stabili: non spostano le chiavi delle altre); così **S30-CAMPAIGN**, aggiunta dalla F8c (`:408-410`, `_single_or_index`: una chiave per sessione, nessuna variante), dopo di lei **S30-ABSENT** del difetto 26
+(`:411-413`, `TestS30AbsentForce`, stessa funzione di etichetta) e, come voce in coda dal 2026-11-04, **S31-VISUAL** della D-4c (`:414-416`, `TestS31VisualSensor`, `_by_occurrence('zsu', 'zsu_off', 'vads_low', 'vads_low_off', 'vads_high')`: le cinque varianti, nomi stabili); poi, nell'ordine **in cui sono state aggiunte** (non quello dei numeri), **S32-DWELL** (`:417-419`), **S35-ADTGT** (`:420-423`), **S34-BAND** (`:424-427`) e **S33-PASSES** (`:428-431`, solo le varianti `on` e `cas_on`). Durante
+l'esecuzione `Session_Simulator.run_session` è sostituita da un registratore (`_Recorder`, `:637-648`) che chiama
 l'originale e poi riassume l'esito **e** lo stato reale degli asset (letto subito dopo la chiamata: in S11 e
 nella mini-campagna la sessione successiva muta di nuovo le stesse istanze). Le asserzioni dei test non sono
 eseguite per le classi di scenario; per i metodi un'asserzione fallita è segnalata su stderr ma non impedisce la
@@ -336,7 +340,7 @@ stesso `session_id` nell'unità, tradotto in un nome leggibile dalla tabella (es
 S1; `default`/`press_on`/`resistant` per S5; `split`/`single` per S20; `parked`/`control` per S21). Se un
 `setUpClass` cambia l'ordine delle varianti, le chiavi cambiano: va aggiornata la tabella.
 
-**Cosa registra** (`summarize_run`, `:489-588`): intervallo della sessione, forze dei due lati e parametri di
+**Cosa registra** (`summarize_run`, `:533-632`): intervallo della sessione, forze dei due lati e parametri di
 chiamata riconoscibili, esiti di forza per ingaggio (con tempi, perdite, erosione, shock, soglia e, dalla F4b,
 il `block_id` quando c'è), stato finale per asset (salute, operativo, distrutto, munizioni, scorta per arma,
 intercettori, carburante), munizioni consumate per asset e per arma, intercettazioni per asset e per arma,
@@ -344,13 +348,13 @@ eventi di carburante, conteggi (salve, intercettazioni, danni, distruzioni) e le
 **Dalla F4b la voce `force_outcomes` è chiavata per blocco** (gli esiti delle sue forze d'ingaggio, nell'ordine
 degli ingaggi, `block_id or force_id`): con una missione per blocco ha la stessa forma di prima, e il confronto con
 le fotografie precedenti resta possibile. I float sono arrotondati a 6 decimali
-(`ROUND_DIGITS`, `:212`; `-0.0` normalizzato, `norm`, `:409-433`), le chiavi ordinate: **due catture dello stesso
-codice sono identiche byte per byte**. `FORMAT_VERSION = 1` (`:211`).
+(`ROUND_DIGITS`, `:241`; `-0.0` normalizzato, `norm`, `:453-477`), le chiavi ordinate: **due catture dello stesso
+codice sono identiche byte per byte**. `FORMAT_VERSION = 1` (`:240`).
 
 **Parametri di chiamata dopo la F3**: `run_session` non ha più `routes`; perché la fotografia della Fase 0 resti
 confrontabile, la voce `call.parameters.routes` è **ricostruita dalle missioni** (`Mission_Adapter.mission_routes`,
-`_call_parameters`, `:462-486`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
-`:728-736`).
+`_call_parameters`, `:506-530`), e una lista vuota equivale all'assenza della voce (`_without_empty_routes`,
+`:772-780`).
 
 **Uso** (dalla radice del repository, con l'interprete della macchina):
 
@@ -363,14 +367,14 @@ python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline \
 ```
 
 `--only <regex>` limita il confronto a unità o chiavi; `--compare a.json --against b.json` confronta due file
-già catturati senza eseguire nulla. `compare` (`:768-816`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
+già catturati senza eseguire nulla. `compare` (`:812-853`) segnala `ERROR`, `MISSING`, `NEW` e `DIFF` (con al più
 20 righe di differenza per esecuzione). **`--summary` (dalla F4a)** sostituisce l'elenco grezzo con un riepilogo
-leggibile per esecuzione (`summarize_differences`, `:860-888`, che usa `run_digest`, `:819-857`): per ogni
+leggibile per esecuzione (`summarize_differences`, `:904-930`, che usa `run_digest`, `:863-901`): per ogni
 esecuzione che differisce, le sole grandezze cambiate come `vecchio -> nuovo` — esito per forza (e, per i blocchi
 con più forze d'ingaggio, l'esito di ciascuna: `<mission_id>.mission_outcome`), asset distrutti, colpi,
 intercettazioni, carburante e fine del movimento, istante del primo colpo e del primo danno — poi l'elenco delle
 esecuzioni invariate. Non cambia il formato della fotografia; si può usare solo con `--compare`. Codice d'uscita
-(`main`, `:891-940`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
+(`main`, `:935-984`): 0 identiche, 1 differenze o errori di unità, 2 uso errato.
 
 **Dalla F7b** l'evento di fuoco su posizione compare in `engagements` come un ingaggio **con zero forze** (`counts.engagements` lo conta; nessuna voce nuova nel riassunto), come in `SessionOutcome.engagement_outcomes`.
 
@@ -792,7 +796,7 @@ campagna è fuori da `run_session` (capitolo 6 §6.24-6.27). Lo stesso vale per 
 
 Quattro sessioni disgiunte condotte da `Session_Campaign.run_campaign_session`, tutte nel `setUpClass` (così `Scenario_Baseline.capture` le registra come quattro
 esecuzioni: `S30-CAMPAIGN/S30-CAMPAIGN-1` … `-4`, una chiave per sessione, nessuna variante). **Nessun contatto, nessuna estrazione RNG**: la storia dipende solo da geometria,
-tempi e costanti. Forze (`_build_forces`, `Test_Session_Scenarios_S30.py:144-163`): **Blue-Base** (base aerea con un deposito `'Farp'` in (0, 0)), **Blue-Wing** (2 F-16C Block 52d
+tempi e costanti. Forze (`_build_forces`, `Test_Session_Scenarios_S30.py:167-186`): **Blue-Base** (base aerea con un deposito `'Farp'` in (0, 0)), **Blue-Wing** (2 F-16C Block 52d
 con loadout `Strike` parcheggiati sulla base; missione ad anello `DEPARTURE` → `NAV` (100 km, 0, 5000 m) → `LAND`, partenza dal parcheggio), **Blue-Mech** (2 M1A2-Abrams in (0, −20 km):
 `mbt0` in missione `Movement` fino a (10 km, −20 km); `mbt1` senza missione e **già danneggiato prima del registro**, `health = 60`) e **Red-Depot** (una struttura Red a (300 km, 0),
 nessun sensore utile). Le posizioni sono costanti dichiarate di test, non dati tarati; le velocità sono quelle nominali del registro.
@@ -837,7 +841,7 @@ toccare quelle della sequenza.
 
 Lo scenario prova la correzione del capitolo 6 §6.26: una **forza assente** da una sessione conserva i suoi record di prontezza, e il processo concluso mentre è assente si applica al suo ritorno. Usa le stesse
 forze di S30-CAMPAIGN (`_build_forces`), ma una sola missione (`mbt0` verso (10 km, −20 km): `_movement_mission`, `Test_Session_Scenarios_S30.py:150`) e tre sessioni condotte da `run_campaign_session`, tutte
-nel `setUpClass` (`TestS30AbsentForce`, `:445`): chiavi `S30-ABSENT/S30-ABSENT-1` … `-3` (`A1`, `A2`, `A3`, `:106`). **Nessun contatto, nessuna estrazione RNG**. È registrato in `Scenario_Baseline.UNITS` (`:376-378`).
+nel `setUpClass` (`TestS30AbsentForce`, `:445`): chiavi `S30-ABSENT/S30-ABSENT-1` … `-3` (`A1`, `A2`, `A3`, `:106`). **Nessun contatto, nessuna estrazione RNG**. È registrato in `Scenario_Baseline.UNITS` (`:411-413`).
 
 | Sessione | Forze passate | Che cosa mostra |
 |---|---|---|
@@ -918,9 +922,9 @@ nessun test: sono solo un ordine di grandezza della sonda, non un dato). La foto
 
 | Modulo di test | Cosa copre | Test |
 |---|---|---|
-| `Test_Mobile.py`, `TestDetectionRangeVisualSensor` (`:1172`) | il visivo è il **terzo** sensore (`DETECTION_SENSORS == ('radar', 'TVD', 'visual')`); un asset solo visivo ha 6000 m in `air` e `None` in `ground`; composizione col **massimo** (radar 5 km → 6000 m, radar 20 km → 20 000 m); `sensor='visual'` lo isola; con l'interruttore spento `detection_range` e `detection_range(..., sensor='visual')` dànno `None` e il radar resta | 5 |
+| `Test_Mobile.py`, `TestDetectionRangeVisualSensor` (`:1175`) | il visivo è il **terzo** sensore (`DETECTION_SENSORS == ('radar', 'TVD', 'visual')`); un asset solo visivo ha 6000 m in `air` e `None` in `ground`; composizione col **massimo** (radar 5 km → 6000 m, radar 20 km → 20 000 m); `sensor='visual'` lo isola; con l'interruttore spento `detection_range` e `detection_range(..., sensor='visual')` dànno `None` e il radar resta | 5 |
 | `Test_Vehicle_Data.py`, `TestVisualSensorRecords` (`:1646`; era `:1643` prima del blocco C, che aggiunge 3 righe a `:713-721`) | ZSU-57-2 e M163-VADS: `radar` e `TVD` `False`, `visual['capabilities']['air'] == (True, {tracking, 6, engagement, 1})`, `ground`/`sea` falsi; **nessun altro record** ha `visual` (è `None`); `_TVD_eval` e `_radar_eval` dei due restano 0,0 (non entra negli score); il costruttore usa `visual=None` di default | 4 |
-| `Test_Threat_AA_Factory.py`, `TestBuildDetectionThreat` (`:439`, `:453`, `:462`) | `test_visual_fallback_systems_detect_by_sight` (volume di 6 km, sensore `'visual'`, a 1000 m e a 30 m: l'orizzonte non limita) e `..._switch_off_gives_none` (spento: nessun volume di rilevamento, l'intercettazione resta) **sostituiscono** `test_systems_without_sensor_data_give_none`; `test_sensor_tables_are_consistent` (la tabella `EFFECTIVE_EARTH_RADIUS_FACTOR` copre gli stessi sensori di `DETECTION_SENSORS`) | 3 (−1 sostituito: +2 netti) |
+| `Test_Threat_AA_Factory.py`, `TestBuildDetectionThreat` (classe `:393`; i tre test a `:443`, `:457`, `:466`) | `test_visual_fallback_systems_detect_by_sight` (volume di 6 km, sensore `'visual'`, a 1000 m e a 30 m: l'orizzonte non limita) e `..._switch_off_gives_none` (spento: nessun volume di rilevamento, l'intercettazione resta) **sostituiscono** `test_systems_without_sensor_data_give_none`; `test_sensor_tables_are_consistent` (la tabella `EFFECTIVE_EARTH_RADIUS_FACTOR` copre gli stessi sensori di `DETECTION_SENSORS`) | 3 (−1 sostituito: +2 netti) |
 | `Test_Session_Scenarios_S31.py` (nuovo) | S31-VISUAL (5) e `TestS31VisualSensorRanges` (1), v. sopra | 6 |
 
 Il totale 5 + 4 + 2 + 6 = **17** coincide con 4727 − 4710 (conteggio dei metodi `test_` letto nei file; la suite non è stata rieseguita).
@@ -1022,10 +1026,10 @@ Otto varianti × 4 semi (`S35-ADTGT-0..3`), 15 test (12 asserzioni e 3 premesse 
 
 | Modulo di test | Classi (metodi `test_`) | Funzione |
 |---|---|---|
-| `Test/Test_Engagement_Resolver.py` (366 metodi contati con `ast`; 371 secondo `Proposta_FP_Pulizia_Interruttore.md` e il rapporto della pulizia) | `TestDwellFactor` (6), `TestDwellTimeInTheResolver` (12), `TestDetectionPerPass` (24), `TestEngagementAltitude` (14), `TestAirDefenceTargetRule` (12) | D-5, FP, VA, BI |
+| `Test/Test_Engagement_Resolver.py` (**366** metodi `test_` definiti, **371** test eseguiti: v. sotto) | `TestDwellFactor` (6), `TestDwellTimeInTheResolver` (12), `TestDetectionPerPass` (24), `TestEngagementAltitude` (14), `TestAirDefenceTargetRule` (12) | D-5, FP, VA, BI |
 | `Test/Test_Session_Simulator.py` (169) | `TestDwellTimeSwitch` (2), `TestPerPassDetectionStream` (2) | cablaggio D-5 e `pass_rng` |
 | `Test/Test_Contact_Scheduler.py` (119) | `TestAltitudeIntervals` (5), `TestIntersectIntervals` (2) | primitive della VA |
 | `Test/Test_Fire_Control.py` (111) | `TestInterceptDomains` (14), `TestAltitudeBand` (2), `TestFireControlAltitude` (7) | BI e VA |
 | `Test/Test_Mobile.py`, `Test/Test_EWR_Data.py`, `Test/Test_Air_Route_Manager.py` | lettori e dati `dwell_time_s`, metriche D-5 del pianificatore | D-5 |
 
-I conteggi per classe sono metodi `test_` letti con `ast` per questo aggiornamento; la differenza 366 contro 371 per `Test_Engagement_Resolver.py` **non è spiegata dal codice** (probabile conteggio di test ereditati o generati: **non verificato**).
+I conteggi per classe sono metodi `test_` definiti nella classe, letti con `ast` (verificati sul codice per questo aggiornamento, non eseguiti). **Differenza 366 contro 371 per `Test_Engagement_Resolver.py`**: `Proposta_FP_Pulizia_Interruttore.md` §4.7 e il rapporto della pulizia dichiarano 371 perché contano i test *eseguiti* (`Ran 371`); i metodi `test_` definiti sono 366, e i 5 in più sono **ereditati**: `TestGroundedTargetIsASurfaceLauncherTarget` (`Test_Engagement_Resolver.py:3365`) estende `TestLauncherPriority` e definisce 1 solo test, ma ne esegue 6 (1 proprio + i 5 della classe base). Verificato caricando il modulo con `unittest.TestLoader().loadTestsFromName(...).countTestCases()` (senza eseguire nulla): 371 per `Test_Engagement_Resolver`, 169 per `Test_Session_Simulator`, 11 per S33. I conteggi delle altre righe della tabella (169, 119, 111) sono metodi definiti e coincidono con quelli eseguiti.

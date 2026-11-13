@@ -49,11 +49,11 @@ D65 (`run_session` 2/3, che chiama `schedule_contacts` e `resolve_engagement` co
 
 ## 10A.2 L2 e L3 — `Logic/Contact_Scheduler` (1662 righe, 63 simboli)
 
-> **Aggiornamento 2026-11-13.** Il modulo è cambiato con la VA (`585dbc65`): **un'unica inserzione di 84 righe** dopo `_merge_intervals` (due funzioni nuove, `altitude_intervals` `:955` e `intersect_intervals` `:1013`, gruppo «B - CPA e intervalli di portata»). La tabella di fondo è rigenerata (63 righe, righe di `a389cadb`: riga ≤ 954 invariata, ≥ 955 più 84); **le righe nel testo di D67-D70 restano a f009eb43** (stessa regola: ≥ 955 → +84).
+> **Aggiornamento 2026-11-13.** Il modulo è cambiato con la VA (`585dbc65`): **un'unica inserzione di 84 righe** dopo `_merge_intervals` (due funzioni nuove, `altitude_intervals` `:955` e `intersect_intervals` `:1013`, gruppo «B - CPA e intervalli di portata»). La tabella di fondo è rigenerata (63 righe, righe di `a389cadb`: riga ≤ 954 invariata, ≥ 955 più 84); **le righe nel testo di D67-D70 sono state ricalcolate a `a389cadb` nella verifica del 2026-11-13** (stessa regola: ≥ 955 → +84; controllate riga per riga: il testo della riga è identico nelle due versioni).
 
 Lo strato 1 calcola **quando**: tratti di rotta (`Leg`), finestre di contatto (`ContactWindow`), CPA/TCPA, potatura per blocco. È puramente geometrico, senza RNG
 (docstring del modulo, «Nessuna sorgente di casualità»). Il modulo ha **cinque tipi** (quattro `dataclass(frozen=True)`: `Leg` `:122`, `ThreatWindow` `:147`, `CPA` `:181`, `ContactWindow` `:197`,
-più `GroundedSchedule` `:243`, classe normale con `__slots__ = ('_intervals',)` `:259`), **39 funzioni** di primo livello e nessun'altra classe. Costanti: `DEFAULT_INTERSECTION_TOLERANCE` `:86`,
+più `GroundedSchedule` `:243`, classe normale con `__slots__ = ('_intervals',)` `:259`), **41 funzioni** di primo livello (39 a f009eb43, più `altitude_intervals` e `intersect_intervals` della VA) e nessun'altra classe. Costanti: `DEFAULT_INTERSECTION_TOLERANCE` `:86`,
 `TIME_EPS` `:92`, `VELOCITY_EPS` `:98`, `DETECTION_MODE_BY_CLASS` `:104`, `GROUNDED_DETECTION_MODE` `:113`, `ALWAYS` `:116`.
 
 I tre «meccanismi» del docstring sono tre gruppi di funzioni: **A** rotta contro volume di minaccia (`threat_windows`, `route_threat_windows`), **B** CPA/TCPA e intervalli di portata
@@ -181,9 +181,9 @@ flowchart TD
 ```
 
 Lettura: le frecce sono le chiamate a nome di funzione fra gruppi (estrazione `ast`; un riferimento passato come valore non è contato). `P --> M` esiste per un solo motivo: `block_reach` usa `_cylinder_of`
-(`:1226`, `:536`) per includere il raggio dei volumi di difesa nel raggio d'azione del blocco; per il resto il meccanismo A è isolato dal percorso di produzione. I consumatori nel core chiamano:
+(`:1310`, `:536`) per includere il raggio dei volumi di difesa nel raggio d'azione del blocco; per il resto il meccanismo A è isolato dal percorso di produzione. I consumatori nel core chiamano:
 `Session_Simulator` → `schedule_contacts`, `trim_contact_window`, `clamp_legs`, `static_legs`, `position_on_legs`, `GroundedSchedule`, `Leg`; `Mission_Adapter` → `route_legs`, `clamp_legs`, `Leg`, `GroundedSchedule`;
-`Engagement_Resolver` → `position_on_legs`, `range_intervals`, `GroundedSchedule`, `TIME_EPS` e, dal 2026-11, `altitude_intervals`, `intersect_intervals` (VA), `clamp_legs`, `closest_point_of_approach` (FP, `_pass_cpa`) (import `Logic/Engagement_Resolver.py:436-441`). Rimando a **D58** (import fra i moduli) e a **D34** (come `GroundedSchedule` attraversa scheduler, risolutore e fire control).
+`Engagement_Resolver` → `position_on_legs`, `range_intervals`, `GroundedSchedule`, `TIME_EPS` e, dal 2026-11, `altitude_intervals`, `intersect_intervals` (VA), `clamp_legs`, `closest_point_of_approach` (FP, `_pass_cpa`) (import `Logic/Engagement_Resolver.py:525-536`). Rimando a **D58** (import fra i moduli) e a **D34** (come `GroundedSchedule` attraversa scheduler, risolutore e fire control).
 
 ### La sequenza di `schedule_contacts` (D69)
 
@@ -222,11 +222,11 @@ sequenceDiagram
     SC-->>SS: lista di ContactWindow
 ```
 
-Righe: `GroundedSchedule.of` `:1441`; `block_pair_candidates` `:1443-1444` (uscita se vuota `:1445-1446`); `only_assets` → `wanted` `:1451`; `_legs_for` `:1453` (cache `legs_cache`, chiave `id(asset)`; chiama `_asset_legs` `:1457`);
-`_operative_assets(_as_block(...))` `:1462-1463`; `_pair_windows` `:1485`; ordinamento finale `:1487`. Dentro `_asset_legs` (`:1538`) l'ordine è: lista **vuota** data dal chiamante = asset assente dalla sessione (ritorna `[]`, F6-A);
+Righe: `GroundedSchedule.of` `:1525`; `block_pair_candidates` `:1527-1528` (uscita se vuota `:1529-1530`); `only_assets` → `wanted` `:1535`; `_legs_for` `:1537` (cache `legs_cache`, chiave `id(asset)`; chiama `_asset_legs` `:1541`);
+`_operative_assets(_as_block(...))` `:1546-1547`; `_pair_windows` `:1569`; ordinamento finale `:1571`. Dentro `_asset_legs` (`:1622`) l'ordine è: lista **vuota** data dal chiamante = asset assente dalla sessione (ritorna `[]`, F6-A);
 lista data non vuota = tratti usati tali e quali se stanno nella finestra, altrimenti `clamp_legs`; altrimenti `route_legs` + `clamp_legs` dalla rotta (`routes`, `starts`, `speeds`); altrimenti `static_legs` sulla posizione.
-Dentro `_pair_windows` (`:1492`): `_overlap` `:1503`, tagli alle transizioni di `GroundedSchedule` dentro la sovrapposizione `:1507`; senza tagli una sola `contact_windows` con lo stato letto al punto medio (`:1512`), con tagli una per sottointervallo
-con `clamp_legs` e lo stato al punto medio (`:1520`). L'**ordine delle finestre fa parte del contratto** di riproducibilità (docstring di `schedule_contacts`): è la riga `:1487`. Per il chiamante in sessione v. **D65** (`only_assets` dopo una ri-pianificazione, D40).
+Dentro `_pair_windows` (`:1576`): `_overlap` `:1587`, tagli alle transizioni di `GroundedSchedule` dentro la sovrapposizione `:1591`; senza tagli una sola `contact_windows` con lo stato letto al punto medio (`:1596`), con tagli una per sottointervallo
+con `clamp_legs` e lo stato al punto medio (`:1604`). L'**ordine delle finestre fa parte del contratto** di riproducibilità (docstring di `schedule_contacts`): è la riga `:1571`. Per il chiamante in sessione v. **D65** (`only_assets` dopo una ri-pianificazione, D40).
 
 ### La sequenza di `contact_windows` (D70)
 
@@ -263,11 +263,11 @@ sequenceDiagram
     CW-->>PW: lista di ContactWindow
 ```
 
-Righe: `mutual_detection_ranges` `:1056` (solo se una delle due portate è `None`; chiamata da `_pair_windows` senza portate imposte, quindi **sempre** nel percorso di sessione); `range_intervals` portata maggiore `:1070`, minore `:1075`
-(solo con due portate, `:1075`); `_first_detector` `:1079`; per intervallo: `clamp_legs` e `closest_point_of_approach` `:1084-1085`, `_first_contained` `:1086`, `ContactWindow(...)` `:1088`. Dentro `range_intervals` (`:874`) l'ordine è
+Righe: `mutual_detection_ranges` `:1140` (solo se una delle due portate è `None`; chiamata da `_pair_windows` senza portate imposte, quindi **sempre** nel percorso di sessione); `range_intervals` portata maggiore `:1154`, minore `:1159`
+(solo con due portate, `:1159`); `_first_detector` `:1163`; per intervallo: `clamp_legs` e `closest_point_of_approach` `:1168-1169`, `_first_contained` `:1170`, `ContactWindow(...)` `:1172`. Dentro `range_intervals` (`:874`) l'ordine è
 `_overlap`, `_breakpoints`, poi `_relative_motion` per ogni sottointervallo (risolve `|Δr + Δv s|² = R²`), infine `_merge_intervals`; `closest_point_of_approach` (`:804`) ha lo stesso scheletro con `t* = -(Δr·Δv)/|Δv|²` clampato al sottointervallo
-e il caso degenere `|Δv|² <= VELOCITY_EPS`. `mutual_detection_ranges` (`:972`): un osservatore a terra ha portata `None` (sensori spenti); un bersaglio a terra è interrogato nel modo `GROUNDED_DETECTION_MODE` (`'ground'`), altrimenti nel modo
-di `detection_mode_for(target)` (dalla classe del bersaglio, `DETECTION_MODE_BY_CLASS`). **`trim_contact_window`** (`:1129`) non ha un diagramma proprio: riusa gli stessi pezzi (`clamp_legs`, `closest_point_of_approach`, `_first_contained`, `range_intervals`
+e il caso degenere `|Δv|² <= VELOCITY_EPS`. `mutual_detection_ranges` (`:1056`): un osservatore a terra ha portata `None` (sensori spenti); un bersaglio a terra è interrogato nel modo `GROUNDED_DETECTION_MODE` (`'ground'`), altrimenti nel modo
+di `detection_mode_for(target)` (dalla classe del bersaglio, `DETECTION_MODE_BY_CLASS`). **`trim_contact_window`** (`:1213`) non ha un diagramma proprio: riusa gli stessi pezzi (`clamp_legs`, `closest_point_of_approach`, `_first_contained`, `range_intervals`
 solo con due portate) su `[t_from, t_end]` e mantiene portate e `first_detector` della finestra originale; la usa `Session_Simulator` per la «forza occupata» (v. D40 e D65).
 
 ### Tabella completa dei simboli di `Logic/Contact_Scheduler`
@@ -287,14 +287,14 @@ Le colonne «Tipo», «Simbolo», «Firma» e «Riga» sono l'uscita di `inventa
 | tipi | metodo | `ContactWindow.is_mutual` | `is_mutual(self)` | `:238` | True se esiste un intervallo in cui entrambi rilevano l'altro. | nessun chiamante nel core |
 | GroundedSchedule | classe | `GroundedSchedule` | `GroundedSchedule`; campi: __slots__ | `:243` | Aerei a terra nel tempo (F5): per asset, gli intervalli `[t_inizio, t_fine)` a terra. | `MA:grounded_schedule`, `SS:_grounded_after_bingo`, `SS:_grounded_after_fuel` |
 | GroundedSchedule | metodo | `GroundedSchedule.__init__` | `__init__(self, intervals)` | `:261` | Normalizza `{asset_id: [(lo, hi)]}`: ordina, fonde e valida gli intervalli. | `GroundedSchedule.of`; `MA:grounded_schedule` (costruttore) |
-| GroundedSchedule | metodo | `GroundedSchedule.of` | `of(cls, grounded)` | `:293` | Normalizza None, `GroundedSchedule`, mappa di intervalli o iterabile di id (sempre a terra su `ALWAYS`). | `schedule_contacts`; `ER:_EngagementRun.__init__` (`:1669`) |
+| GroundedSchedule | metodo | `GroundedSchedule.of` | `of(cls, grounded)` | `:293` | Normalizza None, `GroundedSchedule`, mappa di intervalli o iterabile di id (sempre a terra su `ALWAYS`). | `schedule_contacts`; `ER:_EngagementRun.__init__` (`:1966`) |
 | GroundedSchedule | metodo | `GroundedSchedule.at` | `at(self, asset_id, t)` | `:311` | L'asset è a terra all'istante `t`. | `_pair_windows`; `ER` (`_gone`, `_grounded_in`, `_schedule_next`, `_on_launch`, `_on_resolve`, ...); `SS` (es. `_consuming_legs`); `MA:final_posture` |
 | GroundedSchedule | metodo | `GroundedSchedule.always` | `always(self, asset_id)` | `:319` | L'asset è a terra su tutta la linea del tempo (insieme semplice, asset senza missione). | `always_ids`; `ER` (`_build_forces`, `_interceptors_of`, `_schedule_next`, `_init_breakpoints`) |
 | GroundedSchedule | metodo | `GroundedSchedule.ever` | `ever(self, asset_id)` | `:323` | L'asset è a terra in qualche istante. | nessun chiamante nel core (solo test) |
-| GroundedSchedule | metodo | `GroundedSchedule.intervals` | `intervals(self, asset_id)` | `:327` | Gli intervalli `(lo, hi)` a terra dell'asset (tupla vuota se non ne ha). | `SS:_grounded_after_fuel` (`:1498`), `SS:_grounded_after_bingo` (`:1645`) |
+| GroundedSchedule | metodo | `GroundedSchedule.intervals` | `intervals(self, asset_id)` | `:327` | Gli intervalli `(lo, hi)` a terra dell'asset (tupla vuota se non ne ha). | `SS:_grounded_after_fuel` (`:1524`), `SS:_grounded_after_bingo` (`:1671`) |
 | GroundedSchedule | metodo | `GroundedSchedule.transitions` | `transitions(self, asset_id)` | `:330` | Istanti finiti in cui lo stato dell'asset cambia (decollo, atterraggio), ordinati. | `_pair_windows` |
 | GroundedSchedule | metodo | `GroundedSchedule.always_ids` | `always_ids(self)` | `:335` | Id degli asset sempre a terra (l'insieme della F4c). | nessun chiamante nel core (solo test) |
-| GroundedSchedule | metodo | `GroundedSchedule.ids` | `ids(self)` | `:339` | Id degli asset a terra in qualche istante. | `SS:_grounded_after_fuel` (`:1498`), `SS:_grounded_after_bingo` (`:1645`) |
+| GroundedSchedule | metodo | `GroundedSchedule.ids` | `ids(self)` | `:339` | Id degli asset a terra in qualche istante. | `SS:_grounded_after_fuel` (`:1524`), `SS:_grounded_after_bingo` (`:1671`) |
 | GroundedSchedule | metodo | `GroundedSchedule.__bool__` | `__bool__(self)` | `:343` | Protocollo Python: vero se almeno un asset ha intervalli. | implicito (`if grounded`) |
 | GroundedSchedule | metodo | `GroundedSchedule.__eq__` | `__eq__(self, other)` | `:346` | Protocollo Python: uguaglianza per intervalli. | implicito |
 | GroundedSchedule | metodo | `GroundedSchedule.__hash__` | `__hash__(self)` | `:349` | Protocollo Python: hash dei soli intervalli ordinati. | implicito |
@@ -343,23 +343,23 @@ Le colonne «Tipo», «Simbolo», «Firma» e «Riga» sono l'uscita di `inventa
 
 ## 10A.3 L2 e L3 — `Logic/Fire_Control` (1217 righe, 36 simboli)
 
-> **Aggiornamento 2026-11-13.** Dalla BI (`munition_class`, `intercept_domains_for`) e dalla VA (`altitudes` nella fire control di registro, tre campi di quota in `shot_spec_for`) il modulo cresce da 1088 a 1217 righe e **tutte le righe della tabella di fondo sono rigenerate** (36 simboli, nessun simbolo nuovo dopo la BI). **Le righe nel testo di D71-D75 restano a f009eb43** e sono sfasate (la BI e la VA aggiungono righe in testa al file: costanti `AD_*` a `:293-302`, `in_altitude_envelope` a `:649`). La firma della fire control di registro è ora `fire_control(shooter, target, target_grounded=False, altitudes=None)` (`:934-935`), v. capitolo 4 §4.4, §4.37.
+> **Aggiornamento 2026-11-13.** Dalla BI (`munition_class`, `intercept_domains_for`) e dalla VA (`altitudes` nella fire control di registro, tre campi di quota in `shot_spec_for`) il modulo cresce da 1088 a 1217 righe e **tutte le righe della tabella di fondo sono rigenerate** (36 simboli, nessun simbolo nuovo dopo la BI). **Le righe nel testo di D71-D75 sono state ricalcolate a `a389cadb` nella verifica del 2026-11-13** (la BI e la VA aggiungono righe in testa al file: costanti `AD_*` a `:293-302`, `in_altitude_envelope` a `:649`; la VA riscrive anche `restrict_by_policy`, che ora ha **quattro** varianti di `restricted`: D72, D73 e D74 aggiornati per `altitudes`, D71 per i tre campi di quota di `ShotSpec`). La firma della fire control di registro è ora `fire_control(shooter, target, target_grounded=False, altitudes=None)` (`:934-935`), v. capitolo 4 §4.4, §4.37.
 
 La fire control sceglie **con che cosa** spara un tiratore. Il risolutore la riceve come funzione iniettata `fire_control(shooter, target) -> ShotSpec | sequenza | None`; questo modulo ne fornisce una che legge i registri
 d'arma (`make_registry_fire_control`), un involucro che la ristringe con la politica d'armi di missione (`restrict_by_policy`, F7a) e due funzioni per il fuoco su posizione (`area_fire_weapon`, `area_fire_pk`, F7b). Il modulo ha
-**tre tipi** (`_Weapon` `:355`, classe con `__slots__` e non dataclass; `WeaponPolicy` `:882` e `AreaWeapon` `:993`, `dataclass(frozen=True)`), **29 funzioni** di primo livello (27 a f009eb43, più `munition_class` e `intercept_domains_for` della BI) e, dentro `make_registry_fire_control`,
-**tre funzioni locali** che non sono nella tabella dell'inventario perché non sono di primo livello: `candidates` `:829`, `fire_control` `:838` (la callable che il risolutore chiama), e dentro `restrict_by_policy` `restrict` `:949`
-e `restricted` `:972`/`:978` (due definizioni alternative a seconda di `ER.accepts_target_grounded`).
+**tre tipi** (`_Weapon` `:376`, classe con `__slots__` e non dataclass; `WeaponPolicy` `:990` e `AreaWeapon` `:1122`, `dataclass(frozen=True)`), **29 funzioni** di primo livello (27 a f009eb43, più `munition_class` e `intercept_domains_for` della BI) e, dentro `make_registry_fire_control`,
+**tre funzioni locali** che non sono nella tabella dell'inventario perché non sono di primo livello: `candidates` `:925`, `fire_control` `:934` (la callable che il risolutore chiama), e dentro `restrict_by_policy` `restrict` `:1058`
+e `restricted` `:1095`/`:1107` (due definizioni alternative a seconda di `ER.accepts_target_grounded`).
 
-Importa i sette registri di dati (`Aircraft_Data`, `Aircraft_Loadouts`, `Aircraft_Weapon_Data`, `Ground_Weapon_Data`, `Ship_Data`, `Ship_Weapon_Data`, `Vehicle_Data`, `:198-204`), `Context.Context`, il risolutore (`ER`, per
-`accepts_target_grounded`, e `ShotSpec`) e `Weapon_Delivery.bomb_engagement_estimate` (`:208`). Costanti del modulo: `AIR_ONLY_TASKS` `:219`, `FALLBACK_DIMENSION` `:224`, `ENGAGEMENT_RANGE_FRACTION` `:228`, `DEFAULT_TIME_OF_FLIGHT_S` `:234`,
-`SALVO_ROUNDS` `:240`, `AUTOMATIC_FIRE_RATE_RPM` `:245`, `GUN_BURST_ROUNDS` `:250`, `WEAPON_COST_EXPONENT` `:273`, `SPEED_OF_SOUND_MS` `:278`, `KNOT_MS` `:281`, `PARKED_TYPE_BY_AIR_TYPE` `:287`, `PARKED_FALLBACK_TYPE` `:299`,
-`AREA_FIRE_TASKS` `:989`; dalla BI `AD_LAND`/`AD_NAVAL` `:293`, `AD_TARGET_DOMAINS` `:294`, `AD_SIZE_GATED_NAVAL` `:295`, `AD_DETECTABLE_DEFAULT` `:297` (righe riverificate il 2026-11-10; le altre righe di questo capitolo sono a f009eb43). **Stime dichiarate dal codice** (i commenti sopra le costanti le chiamano «STIMA non tarata»): `FALLBACK_DIMENSION`, `ENGAGEMENT_RANGE_FRACTION`, `DEFAULT_TIME_OF_FLIGHT_S`, `SALVO_ROUNDS`,
+Importa i sette registri di dati (`Aircraft_Data`, `Aircraft_Loadouts`, `Aircraft_Weapon_Data`, `Ground_Weapon_Data`, `Ship_Data`, `Ship_Weapon_Data`, `Vehicle_Data`, `:208-214`), `Context.Context`, il risolutore (`ER`, per
+`accepts_target_grounded`, e `ShotSpec`) e `Weapon_Delivery.bomb_engagement_estimate` (`:218`). Costanti del modulo: `AIR_ONLY_TASKS` `:229`, `FALLBACK_DIMENSION` `:234`, `ENGAGEMENT_RANGE_FRACTION` `:238`, `DEFAULT_TIME_OF_FLIGHT_S` `:244`,
+`SALVO_ROUNDS` `:250`, `AUTOMATIC_FIRE_RATE_RPM` `:255`, `GUN_BURST_ROUNDS` `:260`, `WEAPON_COST_EXPONENT` `:283`, `SPEED_OF_SOUND_MS` `:288`, `KNOT_MS` `:291`, `PARKED_TYPE_BY_AIR_TYPE` `:308`, `PARKED_FALLBACK_TYPE` `:320`,
+`AREA_FIRE_TASKS` `:1118`; dalla BI `AD_LAND`/`AD_NAVAL` `:298`, `AD_TARGET_DOMAINS` `:299`, `AD_SIZE_GATED_NAVAL` `:300`, `AD_DETECTABLE_DEFAULT` `:302` (righe riverificate il 2026-11-13, a `a389cadb`). **Stime dichiarate dal codice** (i commenti sopra le costanti le chiamano «STIMA non tarata»): `FALLBACK_DIMENSION`, `ENGAGEMENT_RANGE_FRACTION`, `DEFAULT_TIME_OF_FLIGHT_S`, `SALVO_ROUNDS`,
 `AUTOMATIC_FIRE_RATE_RPM`, `GUN_BURST_ROUNDS`, `WEAPON_COST_EXPONENT`, e dalla BI `AD_DETECTABLE_DEFAULT` (commento «STIMA [S]», BI-7); `AD_TARGET_DOMAINS` e `AD_SIZE_GATED_NAVAL` sono **scelte di progetto [S]** (regola dell'utente del 2026-11-07, decisione BI-12 (a)), non dati tarati; `SPEED_OF_SOUND_MS` e `KNOT_MS` sono invece definizioni fisiche. Questo capitolo non le ricalibra: le riporta come sono.
 
 ### Tipi (D71)
 
-*Diagramma D71 — i tipi di `Fire_Control` e la `ShotSpec` del risolutore che essi producono o filtrano (livello L2, verificato a f009eb43).*
+*Diagramma D71 — i tipi di `Fire_Control` e la `ShotSpec` del risolutore che essi producono o filtrano (livello L2, verificato a f009eb43; `ShotSpec` aggiornata a `a389cadb` con i tre campi di quota della VA).*
 
 ```mermaid
 classDiagram
@@ -405,6 +405,9 @@ classDiagram
         +float time_of_flight
         +int stock_per_round
         +frozenset intercept_domains
+        +float min_altitude
+        +float max_altitude
+        +float max_target_z
     }
 
     Weapon ..> ShotSpec : shot_spec_for
@@ -412,14 +415,14 @@ classDiagram
     WeaponPolicy ..> ShotSpec : restrict_by_policy filtra weapon
 ```
 
-Note a D71: i campi di `Weapon` sono gli `__slots__` di `_Weapon` (`:358`); `efficiency` è una `@property` (`:379`) che restituisce il sotto-dizionario `data['efficiency']` o `{}`. Nel diagramma il nome privato compare senza il trattino basso
-iniziale (`Weapon` = `_Weapon`, `:355`) per non dipendere da come il renderer tratta i nomi che cominciano con `_`; lo stereotipo porta il nome vero. `ShotSpec` è del risolutore (D4 mostra tutti i suoi dieci campi, `intercept_domains` dalla BI; qui sono cinque,
-quelli che questo modulo legge o imposta). `AreaWeapon.entry` è il record `_Weapon` scelto (campo con `repr=False`, `compare=False`, `:1010`), che `area_fire_pk` usa per leggere le righe d'efficacia del template. `WeaponPolicy.rules` diventa un
-`MappingProxyType` in `__post_init__` (`:897`). Rimando a **D47** (i tipi nuovi della F7 e chi li consuma), che resta.
+Note a D71: i campi di `Weapon` sono gli `__slots__` di `_Weapon` (`:379`); `efficiency` è una `@property` (`:400`) che restituisce il sotto-dizionario `data['efficiency']` o `{}`. Nel diagramma il nome privato compare senza il trattino basso
+iniziale (`Weapon` = `_Weapon`, `:376`) per non dipendere da come il renderer tratta i nomi che cominciano con `_`; lo stereotipo porta il nome vero. `ShotSpec` è del risolutore (D4 mostra tutti i suoi tredici campi, `intercept_domains` dalla BI e i tre di quota dalla VA; qui sono otto,
+quelli che questo modulo legge o imposta). `AreaWeapon.entry` è il record `_Weapon` scelto (campo con `repr=False`, `compare=False`, `:1139`), che `area_fire_pk` usa per leggere le righe d'efficacia del template. `WeaponPolicy.rules` diventa un
+`MappingProxyType` in `__post_init__` (`:1005`). Rimando a **D47** (i tipi nuovi della F7 e chi li consuma), che resta.
 
 ### Le funzioni per ruolo (D72)
 
-*Diagramma D72 — i gruppi di funzioni di `Fire_Control`, le chiamate fra gruppi e i moduli esterni da cui prendono tipi o dati (livello L2, verificato a f009eb43).*
+*Diagramma D72 — i gruppi di funzioni di `Fire_Control`, le chiamate fra gruppi e i moduli esterni da cui prendono tipi o dati (livello L2, verificato a f009eb43; il nodo ER aggiornato a `a389cadb` con `accepts_altitudes`).*
 
 ```mermaid
 flowchart TD
@@ -429,7 +432,7 @@ flowchart TD
     SCE["filtri, ordine, ShotSpec<br/>rank_weapons, select_weapon, shot_spec_for,<br/>munition_class, intercept_domains_for,<br/>in_altitude_envelope, _surface_capable,<br/>_cell, preference_score, _attack_speed_kmh"]
     POL["politica d'armi<br/>WeaponPolicy, restrict_by_policy,<br/>weapon_category, weapon_tasks, _asset_id"]
     POS["fuoco su posizione<br/>AreaWeapon, area_fire_weapon,<br/>area_fire_pk"]
-    ER["Engagement_Resolver<br/>ShotSpec, accepts_target_grounded"]
+    ER["Engagement_Resolver<br/>ShotSpec, accepts_target_grounded,<br/>accepts_altitudes"]
     WD["Weapon_Delivery<br/>bomb_engagement_estimate"]
     REG["registri d'arma e di piattaforma<br/>Aircraft_*, Ground_*, Ship_*, Vehicle_Data"]
     CTX["Context<br/>classi di bersaglio, dimensione"]
@@ -450,14 +453,14 @@ flowchart TD
     SCE --> WD
 ```
 
-Lettura: `SCE --> ER` perché `shot_spec_for` costruisce una `ShotSpec` (dalla BI con `intercept_domains`, calcolato da `intercept_domains_for` → `munition_class`, funzioni dello stesso gruppo, `Fire_Control.py:799`, `:761`); `SCE --> WD` perché `shot_spec_for` chiama `bomb_engagement_estimate` per le bombe contro la superficie (`:761`); `POL --> ER` perché `restrict_by_policy`
-chiama `ER.accepts_target_grounded` (`:971`); `BER --> REG` perché `air_target_class_of` legge `Aircraft_Data._registry`. Chi chiama il modulo, nel core: `Session_Simulator` → `restrict_by_policy` (`:2277`) e `weapon_category`
-(`_winchester_weapons`, `:1780`, `:1787`); `Mission_Adapter` → `WeaponPolicy` (`weapon_policies`, `:1918`); `Area_Fire` → `area_fire_weapon` (`plan_shot`, `:213`) e `area_fire_pk` (`resolve_area_fire`, `:285`). **Nessun chiamante nel core**
+Lettura: `SCE --> ER` perché `shot_spec_for` costruisce una `ShotSpec` (dalla BI con `intercept_domains`, calcolato da `intercept_domains_for` → `munition_class`, funzioni dello stesso gruppo, `Fire_Control.py:804`, `:766`); `SCE --> WD` perché `shot_spec_for` chiama `bomb_engagement_estimate` per le bombe contro la superficie (`:840`); `POL --> ER` perché `restrict_by_policy`
+chiama `ER.accepts_target_grounded` (`:1080`) e `ER.accepts_altitudes` (`:1081`, VA); `BER --> REG` perché `air_target_class_of` legge `Aircraft_Data._registry`. Chi chiama il modulo, nel core: `Session_Simulator` → `restrict_by_policy` (`:2303`) e `weapon_category`
+(`_winchester_weapons` `:1793`, `FC.weapon_category` `:1806`, `:1813`); `Mission_Adapter` → `WeaponPolicy` (`weapon_policies`, `:1918`); `Area_Fire` → `area_fire_weapon` (`plan_shot`, `:213`) e `area_fire_pk` (`resolve_area_fire`, `:285`). **Nessun chiamante nel core**
 per `make_registry_fire_control` (la fire control è un argomento di `run_session`: la costruisce il chiamante) e per `select_weapon` (solo test). Rimando a **D10** (la selezione come flowchart di regola) e a **D58** (import).
 
 ### La sequenza della fire control dai registri (D73)
 
-*Diagramma D73 — la callable `fire_control` di `make_registry_fire_control` per una coppia (tiratore, bersaglio): dalle armi candidate alla tupla ordinata di `ShotSpec` (livello L3, verificato a f009eb43).*
+*Diagramma D73 — la callable `fire_control` di `make_registry_fire_control` per una coppia (tiratore, bersaglio): dalle armi candidate alla tupla ordinata di `ShotSpec` (livello L3, verificato a f009eb43; messaggi sulle quote aggiornati a `a389cadb`).*
 
 ```mermaid
 sequenceDiagram
@@ -468,13 +471,13 @@ sequenceDiagram
     participant RK as rank_weapons
     participant SP as shot_spec_for
     participant WD as Weapon_Delivery
-    RUN->>FCL: fire_control(shooter.asset, target.asset), con target_grounded=True se il bersaglio e a terra
+    RUN->>FCL: fire_control(shooter.asset, target.asset), con target_grounded=True se il bersaglio e a terra e altitudes=(z tiratore, z bersaglio) con VA acceso
     FCL->>FCL: _shooter_key(shooter), None se il tiratore non ha modello
     FCL->>CAN: candidates(key), _candidate_weapons solo al primo uso se memoize
     CAN-->>FCL: tupla di _Weapon, se vuota ritorna None
     FCL->>TK: target_key(target, grounded=target_grounded)
     TK-->>FCL: chiavi di efficacia, dimensione, e aereo, oppure None
-    FCL->>FCL: _z(shooter) e _z(target) se il bersaglio e aereo o il tiratore e un aereo contro superficie
+    FCL->>FCL: quote di tiratore e bersaglio, _z(shooter) e _z(target) se altitudes e None, altrimenti quelle passate dal risolutore, solo se il bersaglio e aereo o il tiratore e un aereo contro superficie
     FCL->>FCL: cache_key in choice_cache, se memoize e presente ritorna la scelta
     FCL->>RK: rank_weapons(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)
     Note over RK: per ogni arma _surface_capable se superficie, _cell, Pk, in_altitude_envelope se aereo, poi preference_score
@@ -493,14 +496,14 @@ sequenceDiagram
     FCL-->>RUN: tupla di ShotSpec, oppure None se nessuna arma e adatta
 ```
 
-Righe: `fire_control` locale `:838`; `_shooter_key` `:839`; `candidates` `:829` (cache `candidates_cache`); `target_key` `:849`; quote `:858-859` (solo se `is_air or bomber`, `bomber = not is_air and shooter_key[0] == 'Aircraft'`);
-cache `:862-863`; `rank_weapons` `:865`; `_attack_speed_kmh` `:867` (solo se `release_altitude` è noto); `shot_spec_for` per ogni scelta `:868`; salvataggio in cache `:872`. Dentro `rank_weapons` (`:698`): `_surface_capable` solo per bersagli non
+Righe: `fire_control` locale `:934`; `_shooter_key` `:937`; `candidates` `:925` (cache `candidates_cache`); `target_key` `:947`; quote `:960-966` (con `altitudes` non `None` — VA — sono le quote passate dal risolutore, altrimenti `_z(shooter)` e `_z(target)`; solo se `is_air or bomber`, `bomber = not is_air and shooter_key[0] == 'Aircraft'` a `:958`);
+cache `:970-971`; `rank_weapons` `:973`; `_attack_speed_kmh` `:975` (solo se `release_altitude` è noto); `shot_spec_for` per ogni scelta `:976`; salvataggio in cache `:980`. Dentro `rank_weapons` (`:719`): `_surface_capable` solo per bersagli non
 aerei, `_cell` per la riga di efficacia, scarto se Pk ≤ 0, `in_altitude_envelope` solo per bersagli aerei con `altitude_filter`, ordine per `preference_score` (col costo solo se **tutte** le armi adatte lo hanno, `use_cost`), poi Pk, nome del modello,
-tipo d'arma. La risposta è la stessa per la stessa chiave `(shooter_key, keys, dimension, is_air, shooter_z, target_z)`: la memoizzazione non cambia il risultato (docstring). Il risolutore sceglie poi la prima opzione con scorta: v. **D13** e **D83**. Dalla BI `shot_spec_for` calcola anche `intercept_domains` con `intercept_domains_for` (`Fire_Control.py:799`, `:865`), che usa `munition_class` (`:761`) e legge `munition_class` e `ad_detectable` dal registro dell'arma: nessuna chiamata a `Weapon_Delivery` e nessun accesso nuovo al bersaglio. Le righe di questo paragrafo sono quelle di f009eb43 e non sono state ricalcolate dopo la BI.
+tipo d'arma. La risposta è la stessa per la stessa chiave `(shooter_key, keys, dimension, is_air, shooter_z, target_z)`: la memoizzazione non cambia il risultato (docstring). Il risolutore sceglie poi la prima opzione con scorta: v. **D13** e **D83**. Dalla BI `shot_spec_for` calcola anche `intercept_domains` con `intercept_domains_for` (`Fire_Control.py:804`, `:880`), che usa `munition_class` (`:766`) e legge `munition_class` e `ad_detectable` dal registro dell'arma: nessuna chiamata a `Weapon_Delivery` e nessun accesso nuovo al bersaglio. Le righe di D73 sono ricalcolate a `a389cadb` (2026-11-13). La VA aggiunge i tre campi di quota di `ShotSpec` (`shot_spec_for`, `:824-896`: fascia relativa `min_altitude`/`max_altitude` per le armi di superficie contro aerei, tetto assoluto `max_target_z` = `max_height` per le armi d'aereo) e il parametro `altitudes` della callable; il diagramma non mostra il calcolo dei tre campi, che è dentro `shot_spec_for`.
 
 ### La sequenza dell'involucro di politica (D74)
 
-*Diagramma D74 — `restrict_by_policy`: dalla costruzione della politica in `run_session` alla chiamata dentro il risolutore (livello L3, verificato a f009eb43).*
+*Diagramma D74 — `restrict_by_policy`: dalla costruzione della politica in `run_session` alla chiamata dentro il risolutore (livello L3, verificato a f009eb43; aggiornato a `a389cadb` per il parametro `altitudes` della VA).*
 
 ```mermaid
 sequenceDiagram
@@ -515,16 +518,16 @@ sequenceDiagram
     MA-->>SS: dict asset_id -> WeaponPolicy, con WeaponPolicy(mission_id, domain, rules, self_escort)
     opt F7_WEAPON_POLICY acceso e dict non vuoto
         SS->>RP: restrict_by_policy(fire_control, policies)
-        RP->>ER: accepts_target_grounded(fire_control)
-        RP-->>SS: restricted, con o senza il parametro target_grounded
+        RP->>ER: accepts_target_grounded(fire_control) e accepts_altitudes(fire_control)
+        RP-->>SS: restricted, in una di quattro varianti secondo i parametri target_grounded e altitudes accettati dalla base
     end
     SS->>ER: resolve_engagement(..., fire_control, ...)
-    RUN->>RUN: _call_fire_control(shooter, target, time)
+    RUN->>RUN: _call_fire_control(shooter, target, time, altitudes)
     opt bersaglio a terra, una sola volta per run
         RUN->>ER: accepts_target_grounded(self.fire_control)
     end
-    RUN->>RP: restricted(shooter.asset, target.asset), con target_grounded=True se serve
-    RP->>BASE: fire_control(shooter, target)
+    RUN->>RP: restricted(shooter.asset, target.asset), con target_grounded=True e altitudes se servono
+    RP->>BASE: fire_control(shooter, target), con le sole keyword ricevute di valore non di default
     BASE-->>RP: None, una ShotSpec o una sequenza
     RP->>RP: restrict(): policy_of.get(_asset_id(shooter))
     opt il tiratore ha una politica e la risposta non e vuota
@@ -538,9 +541,9 @@ sequenceDiagram
     RUN->>RUN: apply_target_rules se il tiratore ha TargetRules
 ```
 
-Righe: `if F7_WEAPON_POLICY` `Logic/Session_Simulator.py:2273` (interruttore definito a `:894`, acceso), `weapon_policies` `:2274`, `restrict_by_policy` `:2277`; `accepts_target_grounded` in `restrict_by_policy` `:971`; `restricted` `:972`/`:978`;
-`restrict` `:949` (politica cercata con `_asset_id` `:950`; `target_class` `:963`; `allows` `:964`); `_call_fire_control` `Logic/Engagement_Resolver.py:2691` (`accepts_target_grounded` `:2708`, una volta per run, memoizzato in
-`fire_control_knows_grounded`; v. D43). Un tiratore **senza** politica, o una risposta `None`, riceve lo stesso oggetto della base (`restrict`, `:952-953`). Rimando a **D46** (la regola di `allows`), **D48** (il cablaggio F7a in `run_session`) e **D43** (le regole di bersaglio applicate dopo).
+Righe: `if F7_WEAPON_POLICY` `Logic/Session_Simulator.py:2299` (interruttore definito a `:908`, acceso), `weapon_policies` `:2300`, `restrict_by_policy` `:2303`; `accepts_target_grounded` e `accepts_altitudes` in `restrict_by_policy` `:1080`-`:1081`; `restricted` in quattro varianti `:1084`/`:1095`/`:1101`/`:1107` (VA);
+`restrict` `:1058` (politica cercata con `_asset_id` `:1059`; `target_class` `:1072`; `allows` `:1073`); `_call_fire_control` `Logic/Engagement_Resolver.py:3197` (`accepts_target_grounded` `:3223`, una volta per run, memoizzato in
+`fire_control_knows_grounded`; v. D43). Un tiratore **senza** politica, o una risposta `None`, riceve lo stesso oggetto della base (`restrict`, `:1061-1062`). Rimando a **D46** (la regola di `allows`), **D48** (il cablaggio F7a in `run_session`) e **D43** (le regole di bersaglio applicate dopo).
 
 ### La sequenza dell'arma per il fuoco su posizione (D75)
 
@@ -575,9 +578,9 @@ sequenceDiagram
     end
 ```
 
-Righe: `area_fire_weapon` `:1013` (`_shooter_key` `:1025`, `_candidate_weapons` `:1030`, `shot_spec_for(entry, 1.0, 1.0)` `:1043`, `AreaWeapon(...)` `:1052`); `area_fire_pk` `:1058` (`target_key` `:1062`, `_cell` `:1072`); chiamanti in
+Righe: `area_fire_weapon` `:1142` (`_shooter_key` `:1154`, `_candidate_weapons` `:1159`, `shot_spec_for(entry, 1.0, 1.0)` `:1172`, `AreaWeapon(...)` `:1181`); `area_fire_pk` `:1187` (`target_key` `:1191`, `_cell` `:1201`); chiamanti in
 `Logic/Area_Fire.py`: `plan_shot` `:202` (chiama `FC.area_fire_weapon` `:213`), `resolve_area_fire` `:259` (`plan_shot`), `:272-273` (`impact_time`, `lethal_radius`), `:285` (`FC.area_fire_pk`). In sessione `plan_shot` è chiamata **due volte** per ordine:
-senza `stock_of` per stimare l'istante d'impatto a monte (`Logic/Session_Simulator.py:2500`, v. D65), con `stock_of` al momento del tiro (`resolve_area_fire`). Questo diagramma mostra le sole parti di `Fire_Control`; la regola di tiro con le estrazioni è **D49** e la coda di sessione è **D50**.
+senza `stock_of` per stimare l'istante d'impatto a monte (`Logic/Session_Simulator.py:2526`, v. D65), con `stock_of` al momento del tiro (`resolve_area_fire`). Questo diagramma mostra le sole parti di `Fire_Control`; la regola di tiro con le estrazioni è **D49** e la coda di sessione è **D50**.
 
 ### Tabella completa dei simboli di `Logic/Fire_Control`
 
@@ -625,8 +628,8 @@ Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella 
 ## 10A.4 L2 e L3 — `Logic/Engagement_Resolver` (4569 righe, 146 simboli)
 
 > **Aggiornamento 2026-11-13 (codice `a389cadb`).** Questa sezione era verificata a `f009eb43` (con la BI aggiunta il 2026-11-10). Da allora il risolutore ha guadagnato la **D-5**, la **VA** e la **FP** (capitolo 4 §4.35-§4.37): **la tabella dei simboli di fondo è rigenerata** (146 righe, `inventario.py --tabella`, righe di `a389cadb`, 17 simboli nuovi con «Che cosa fa» e «Chiamata da» scritti sul codice), **D82 è riscritto** (la sequenza finale di `_detect_direction`, con i passaggi),
-> **D133 è nuovo** (`_detect_passes`), e i diagrammi D76, D77, D79 e D83 sono aggiornati nei nodi e nelle liste di metodi. **Nessuna costante FP esiste**: l'interruttore `FP_PER_PASS_DETECTION` è stato eliminato il 2026-11-13. **I `:riga` nel testo dei diagrammi non aggiornati** (D78, D80, D81, D84-D87 e le «Letture») **restano a `f009eb43`** e sono sfasati per il risolutore, da circa 300 a circa 700 righe secondo il punto del file: la tabella di fondo è la fonte delle righe di oggi.
-> Didascalie «verificato a f009eb43» = sequenza e nomi non toccati da D-5/BI/VA/FP e letti a quel commit, **non riletti** per questo aggiornamento (salvo D79, D82, D83, D133, D76-D77, riletti sul codice a `a389cadb`).
+> **D133 è nuovo** (`_detect_passes`), e i diagrammi D76, D77, D79 e D83 sono aggiornati nei nodi e nelle liste di metodi. **Nessuna costante FP esiste**: l'interruttore `FP_PER_PASS_DETECTION` è stato eliminato il 2026-11-13. **I `:riga` nel testo dei diagrammi non aggiornati** (D78, D80, D81, D84-D87 e le «Letture») **sono stati ricalcolati a `a389cadb` nella verifica del 2026-11-13**, con la mappa delle righe da `git diff -U0 f009eb43 HEAD` per modulo (spostamento solo se il testo della riga è identico nelle due versioni; i riferimenti a moduli diversi dal risolutore con la mappa del loro modulo); la tabella di fondo resta la fonte delle righe di oggi.
+> Didascalie «verificato a f009eb43» = sequenza e nomi non toccati da D-5/BI/VA/FP e letti a quel commit, **non riletti** per questo aggiornamento (salvo D79, D82, D83, D133, D76-D77, riletti sul codice a `a389cadb`, e D81, riletto nella verifica del 2026-11-13: due righe di controllo aggiunte per `dwell_time_for` e `pass_rng`). Nel D84-D87 non è stata riletta la sequenza, solo ricalcolate le righe.
 
 Lo strato 2 risponde a **come finisce** un ingaggio: `resolve_engagement` (`:4294`) consuma le `ContactWindow` dello scheduler e restituisce un `EngagementResult` **senza mutare nessun asset**; `apply_engagement_result` (`:4488`) è il passo separato
 che applica danni e consumi agli asset veri. Il modulo contiene **16 classi** (11 `dataclass(frozen=True)` di scambio, `_Shadow` con `__slots__`, tre `dataclass` interne `_Candidate`, `_ForceState`, `_PendingGroup`, e `_EngagementRun`),
@@ -640,7 +643,7 @@ a parità d'istante). **Stime dichiarate dal codice** (commento «STIMA DICHIARA
 (commento sopra `:554`) ma la curva è una semplificazione monotona. **D-5, BI, VA e FP non introducono nessuna costante stimata nel risolutore**: la forma `min(1, permanenza / dwell)` è una scelta di progetto [S] senza costanti (capitolo 4 §4.36), e le tabelle di classe della BI stanno in `Fire_Control` (capitolo 4 §4.24, `AD_DETECTABLE_DEFAULT` è una stima [S]). Questo capitolo non le ricalibra.
 
 I **tipi di scambio** (livello L2) hanno già due diagrammi che restano: **D4** (`ShotSpec`, `Detection`, `Salvo`, `SalvoResolution`, `ForceOutcome`, `AmmunitionEvent`, `InterceptionEvent`, `EngagementResult`, `ActivityEnd`, `ActivityCriteria`, capitolo 4 §4.13) e
-**D47** (`TargetRules`, `WeaponPolicy`, `AreaWeapon`). Qui si aggiungono i **tipi interni** della run, che nessun diagramma mostrava (D76), le funzioni di modulo per ruolo (D77, D78) e i 72 metodi della run per ruolo (D79, D80).
+**D47** (`TargetRules`, `WeaponPolicy`, `AreaWeapon`). Qui si aggiungono i **tipi interni** della run, che nessun diagramma mostrava (D76), le funzioni di modulo per ruolo (D77, D78) e gli 84 metodi della run per ruolo (D79, D80).
 
 ### I tipi interni della run (D76)
 
@@ -756,10 +759,10 @@ classDiagram
     ForceState "1" o-- "many" Shadow : interceptors
 ```
 
-Note a D76: `Shadow.ammunition`, `interceptor_stock`, `operative` e `destroyed` sono `@property` (`:1441`, `:1458`, `:1476`, `:1480`); `Shadow` espone `id` e `health` perché `Damage_Model.build_damage_event` la tratta come un asset (duck typing), e la sua contabilità delle scorte
+Note a D76: `Shadow.ammunition`, `interceptor_stock`, `operative` e `destroyed` sono `@property` (`:1701`, `:1718`, `:1736`, `:1740`); `Shadow` espone `id` e `health` perché `Damage_Model.build_damage_event` la tratta come un asset (duck typing), e la sua contabilità delle scorte
 è quella di `Asset/Weapon_Stores` (`WS`), la stessa dell'asset reale: per questo `apply_engagement_result` ritrova sull'asset i consumi che l'ombra ha concesso. `Candidate.exhausted` e `not_before` sono i due campi che `_schedule_next` modifica (candidato esaurito, o rimandato all'ingresso in portata,
 D11). `ForceState.interceptors` è la lista `[(Shadow, canali)]` costruita da `_interceptors_of`; `EngagementRun.domain_interceptors` raccoglie quelle di tutte le forze di un dominio di coordinamento (D32, D33). La coda `queue` contiene tuple `(time, kind, key, sequence, payload)`
-(`_push` `:2111`); `sequence` rompe i pareggi. **Dal 2026-11-13** il diagramma mostra anche i sei campi della D-5, della FP, della BI e della VA: `pass_rng` (stream separato dei passaggi, `None` ammesso solo senza direzioni a più passaggi), `dwell_time_for` (lettore del dwell, `None` = D-5 spenta), `own_passes_of` (passaggi `(start, end)` per coppia `(osservatore, bersaglio)`, per R-INT) e `detection_times_of` (istanti di rilevamento per coppia, costruito alla prima richiesta), `ad_target_rule` e `altitude_band` (gli interruttori BI e VA, letti una volta per run). **Omessi** dal diagramma (esistono in `__init__`, `:1942-2082` a `a389cadb`, più `ad_domain_cache`, `fire_control_knows_altitudes`): le cache `zone_cache`, `may_intercept_cache`, `in_time_cache`, `range_cache`, `air_range_cache`, `class_weights`, `surface_weights`, `profiles`; `legs`, `contacts`, `initial_health`, `destroyed_at`, `woken_by_destruction`,
+(`_push` `:2608`); `sequence` rompe i pareggi. **Dal 2026-11-13** il diagramma mostra anche i sei campi della D-5, della FP, della BI e della VA: `pass_rng` (stream separato dei passaggi, `None` ammesso solo senza direzioni a più passaggi), `dwell_time_for` (lettore del dwell, `None` = D-5 spenta), `own_passes_of` (passaggi `(start, end)` per coppia `(osservatore, bersaglio)`, per R-INT) e `detection_times_of` (istanti di rilevamento per coppia, costruito alla prima richiesta), `ad_target_rule` e `altitude_band` (gli interruttori BI e VA, letti una volta per run). **Omessi** dal diagramma (esistono in `__init__`, `:1942-2082` a `a389cadb`, più `ad_domain_cache`, `fire_control_knows_altitudes`): le cache `zone_cache`, `may_intercept_cache`, `in_time_cache`, `range_cache`, `air_range_cache`, `class_weights`, `surface_weights`, `profiles`; `legs`, `contacts`, `initial_health`, `destroyed_at`, `woken_by_destruction`,
 `attack_pass`, `fire_control_knows_grounded`; le callable iniettate (`rng`, `breakpoint_rng`, `morale_for`, `enemy_estimate_for`, `reaction_profile_for`, `detection_factor`); le liste di esito (`detections`, `salvos`, `resolutions`, `damage_events`, `ammunition_events`, `interception_events`, `activity_ends`).
 
 ### Le funzioni di modulo per ruolo (D77)
@@ -799,9 +802,9 @@ flowchart TD
     ARP --> P
 ```
 
-Lettura: `RUN --> T` raccoglie le costruzioni di `Detection`, `Salvo`, `SalvoResolution`, `AmmunitionEvent`, `InterceptionEvent`, `ActivityEnd`, `ForceOutcome`, `EngagementResult`; `T --> B` è il solo legame fra tipi e funzioni pure (`TargetRules.__post_init__` chiama `_id_set`, `:836`);
-`F --> P` è `_check_factor`; la freccia tratteggiata `RUN -.-> F` non è una chiamata alle fabbriche (nessuna funzione di `RUN` le chiama) ma alla callable che esse **restituiscono** e che il chiamante passa come `detection_factor`. `FCM --> G`: `Fire_Control` (`restrict_by_policy`, `:971`) chiama
-`accepts_target_grounded`. `ARP --> P`: `Air_Route_Manager` importa localmente `detection_probability` (`Logic/Air_Route_Manager.py:1103`), un modulo **fuori dal core**: la legge di Pd del risolutore è riusata dal pianificatore di rotta come metrica (decisione D-5 citata nel suo docstring).
+Lettura: `RUN --> T` raccoglie le costruzioni di `Detection`, `Salvo`, `SalvoResolution`, `AmmunitionEvent`, `InterceptionEvent`, `ActivityEnd`, `ForceOutcome`, `EngagementResult`; `T --> B` è il solo legame fra tipi e funzioni pure (`TargetRules.__post_init__` chiama `_id_set`, `:996`);
+`F --> P` è `_check_factor`; la freccia tratteggiata `RUN -.-> F` non è una chiamata alle fabbriche (nessuna funzione di `RUN` le chiama) ma alla callable che esse **restituiscono** e che il chiamante passa come `detection_factor`. `FCM --> G`: `Fire_Control` (`restrict_by_policy`, `:1080`-`:1081`) chiama
+`accepts_target_grounded` e `accepts_altitudes`. `ARP --> P`: `Air_Route_Manager` importa localmente `detection_probability` (`Logic/Air_Route_Manager.py:1129`), un modulo **fuori dal core**: la legge di Pd del risolutore è riusata dal pianificatore di rotta come metrica (decisione D-5 citata nel suo docstring).
 
 ### Le fabbriche del fattore di rilevamento (D78)
 
@@ -835,10 +838,10 @@ flowchart TD
     COMB -.->|restituisce| DF
 ```
 
-Lettura: ogni fabbrica **restituisce** una callable con la firma `(observer, target) -> float`; `combine_detection_factors` ne fa il prodotto (ogni componente è riportato in [0, 1], `:1249`). `weather_detection_factor` (`:1105`) dà `NIGHT_DETECTION_FACTOR` per la notte e
-`ADVERSE_WEATHER_DETECTION_FACTOR` per il meteo avverso, moltiplicati; `recon_detection_factor_fn` (`:1209`) dà `seen_factor` se il blocco del bersaglio è nell'istantanea di ricognizione dell'osservatore o è dello stesso lato, `unseen_factor` altrimenti, e 1.0 per un osservatore
-dell'altro lato. Import locali: `Meteo_Analysis` `:1179`, `Region.BlockCategory` `:1337`, `Tactical_Analysis` e `enemySide` `:1384-1385`. **Nessuna di queste fabbriche ha un chiamante nel core**: `run_session` non le chiama (nessuna occorrenza in `Session_Simulator.py`), le usa chi prepara la sessione
-(test e scenari: `Test/Test_Session_Scenarios.py:1334` usa `ER.region_recon_detection_factor`). Il docstring di `region_recon_detection_factor` (`:1359`) dichiara che l'istantanea è presa **una volta, prima della sessione**, e che `Block.get_recognition_report` estrae con il modulo `random` di Python
+Lettura: ogni fabbrica **restituisce** una callable con la firma `(observer, target) -> float`; `combine_detection_factors` ne fa il prodotto (ogni componente è riportato in [0, 1], `:1509`). `weather_detection_factor` (`:1365`) dà `NIGHT_DETECTION_FACTOR` per la notte e
+`ADVERSE_WEATHER_DETECTION_FACTOR` per il meteo avverso, moltiplicati; `recon_detection_factor_fn` (`:1469`) dà `seen_factor` se il blocco del bersaglio è nell'istantanea di ricognizione dell'osservatore o è dello stesso lato, `unseen_factor` altrimenti, e 1.0 per un osservatore
+dell'altro lato. Import locali: `Meteo_Analysis` `:1439`, `Region.BlockCategory` `:1597`, `Tactical_Analysis` e `enemySide` `:1644-1645`. **Nessuna di queste fabbriche ha un chiamante nel core**: `run_session` non le chiama (nessuna occorrenza in `Session_Simulator.py`), le usa chi prepara la sessione
+(test e scenari: `Test/Test_Session_Scenarios.py:1334` usa `ER.region_recon_detection_factor`). Il docstring di `region_recon_detection_factor` (`:1619`) dichiara che l'istantanea è presa **una volta, prima della sessione**, e che `Block.get_recognition_report` estrae con il modulo `random` di Python
 (`Utility.calcProbability`) *fuori* dal percorso del motore: non l'ho verificato in `Block`, lo riporto come dichiarazione del codice. Regola e formula: **D12** (capitolo 4 §4.18), che resta.
 
 ### I metodi di `_EngagementRun` per ruolo (D79, D80)
@@ -878,8 +881,8 @@ flowchart TD
     R8 --> R6
 ```
 
-Lettura: `R3 --> R4` è la prima `_schedule_next` per ogni tiratore in `run` (`:3566-3567`); `R3 --> R6` è `_on_decide` (evento `_DECIDE`); `R6 --> R4` è doppia: `_on_decide` richiama `_schedule_next`, `_in_range_at` richiama `_fire_control`, `_first_with_stock` e `_range_entry` per sapere se
-un lanciatore è ingaggiabile; `R8 --> R4` è `_on_launch` che richiama `_schedule_next` (`:2919`, `:2930`, `:2955`) e `_gone` (`:2913`). `R2 --> R1` è `_profile` (il tempo di reazione del tiratore). Le sequenze interne a questi gruppi sono D81-D84; i diagrammi di regola sono D5 (coda), D25 (prelazione), D26 (dottrina di tiro).
+Lettura: `R3 --> R4` è la prima `_schedule_next` per ogni tiratore in `run` (`:4241-4242`); `R3 --> R6` è `_on_decide` (evento `_DECIDE`); `R6 --> R4` è doppia: `_on_decide` richiama `_schedule_next`, `_in_range_at` richiama `_fire_control`, `_first_with_stock` e `_range_entry` per sapere se
+un lanciatore è ingaggiabile; `R8 --> R4` è `_on_launch` che richiama `_schedule_next` (`:3556`, `:3567`, `:3592`) e `_gone` (`:3550`). `R2 --> R1` è `_profile` (il tempo di reazione del tiratore). Le sequenze interne a questi gruppi sono D81-D84; i diagrammi di regola sono D5 (coda), D25 (prelazione), D26 (dottrina di tiro).
 
 *Diagramma D80 — `_EngagementRun` 2/2: risoluzione della salva, intercettazione, disingaggio, fine di attività e regole di bersaglio F7a (livello L2, verificato a f009eb43).*
 
@@ -920,7 +923,7 @@ Rimando a **D22** (soglia di rottura B(t)), **D23** (peso di un nemico percepito
 
 ### La sequenza di `resolve_engagement` (D81)
 
-*Diagramma D81 — `resolve_engagement`: validazione degli argomenti, costruzione della run e ciclo principale; le sequenze interne a ogni gestore di evento sono D82-D85 (livello L3, verificato a f009eb43).*
+*Diagramma D81 — `resolve_engagement`: validazione degli argomenti, costruzione della run e ciclo principale; le sequenze interne a ogni gestore di evento sono D82-D85 (livello L3, verificato a f009eb43; riga di controllo di `dwell_time_for` e `pass_rng` e `:riga` ricalcolati a `a389cadb`).*
 
 ```mermaid
 sequenceDiagram
@@ -932,6 +935,7 @@ sequenceDiagram
     SS->>RE: resolve_engagement(force_a, force_b, contacts, fire_control, rng, extra_forces, legs, ...)
     RE->>RE: controlla rng.random, fire_control chiamabile, salvo_window, provenance
     RE->>RE: controlla breakpoint_rng, morale_for, enemy_estimate_for
+    RE->>RE: controlla dwell_time_for (chiamabile) e pass_rng (con random())
     RE->>RE: controlla che activity_criteria e target_rules siano mappe di ActivityCriteria e di TargetRules
     RE->>RUN: _EngagementRun((force_a, force_b) + extra_forces, contacts, fire_control, rng, ...)
     RUN->>GS: GroundedSchedule.of(grounded)
@@ -978,14 +982,14 @@ sequenceDiagram
     RE-->>SS: EngagementResult
 ```
 
-Lettura: le validazioni sono tutte in testa e prima di costruire la run (`:3728-3766`); sollevano `TypeError`/`ValueError` e non toccano nessuna forza. La run si costruisce in `:3768-3774` e il suo `__init__` (`:1645`) fa, in questo ordine: copia dei parametri
-e creazione degli stati vuoti (`:1650-1750`), `GroundedSchedule.of(grounded)` (`:1669`), `_build_forces` (`:1752`), `_build_domains` (`:1753`); solo se la run è risolvibile, `_init_breakpoints` (`:1756`) e, con criteri di fine attività, `initial_health` e `_check_activity(float('-inf'), targets_only=True)`
-(`:1758-1767`). `_build_forces` (`:1771`) scorre le forze nell'ordine dato e gli asset **ordinati per id** (`:1786`); salta l'asset senza id di dominio (`:1789`), non incluso in `committed` (`:1793`), senza salute intera leggibile (`:1799-1803`), non operativo (`:1805-1811`);
-crea l'ombra (`:1813`) e lo stato di forza con `thresholds=None` per blocchi non militari (`_can_disengage`, `:1818`) e per forze di soli aerei sempre a terra (`:1823`), altrimenti con la dottrina del lato (`:1830`); chiama `_interceptors_of` (`:1841`) dopo aver creato le ombre **di quella forza**.
-Restituisce `False` (e `resolve_engagement` `None`, `:3776-3777`) se meno di due forze hanno asset impegnabili (`:1850-1853`); con 3 o più forze una forza vuota resta nell'esito con `committed=0` (`:1858-1860`). Due forze con lo stesso id o un asset in due forze sono `ValueError` (`:1776`, `:1797`);
-una mappa `coordination_of` mal formata o un dominio a cavallo di due lati lo sono in `_build_domains` (`:1875`, `:1890`).
+Lettura: le validazioni sono tutte in testa e prima di costruire la run (`:4415-4459`); sollevano `TypeError`/`ValueError` e non toccano nessuna forza. La run si costruisce in `:4461-4468` e il suo `__init__` (`:1942`) fa, in questo ordine: copia dei parametri
+e creazione degli stati vuoti (`:1947-2065`), `GroundedSchedule.of(grounded)` (`:1966`), `_build_forces` (`:2067`), `_build_domains` (`:2068`); solo se la run è risolvibile, `_init_breakpoints` (`:2071`) e, con criteri di fine attività, `initial_health` e `_check_activity(float('-inf'), targets_only=True)`
+(`:2073-2082`). `_build_forces` (`:2086`) scorre le forze nell'ordine dato e gli asset **ordinati per id** (`:2101`); salta l'asset senza id di dominio (`:2104`), non incluso in `committed` (`:2108`), senza salute intera leggibile (`:2114-2118`), non operativo (`:2120-2126`);
+crea l'ombra (`:2128`) e lo stato di forza con `thresholds=None` per blocchi non militari (`_can_disengage`, `:2133`) e per forze di soli aerei sempre a terra (`:2138`), altrimenti con la dottrina del lato (`:2145`); chiama `_interceptors_of` (`:2156`) dopo aver creato le ombre **di quella forza**.
+Restituisce `False` (e `resolve_engagement` `None`, `:4470-4471`) se meno di due forze hanno asset impegnabili (`:2165-2168`); con 3 o più forze una forza vuota resta nell'esito con `committed=0` (`:2173-2175`). Due forze con lo stesso id o un asset in due forze sono `ValueError` (`:2091`, `:2112`);
+una mappa `coordination_of` mal formata o un dominio a cavallo di due lati lo sono in `_build_domains` (`:2190`, `:2205`).
 
-Il ciclo principale è `run` (`:3563-3586`): `_detect`, poi una `_schedule_next` per ogni tiratore **in ordine di id** (`:3566-3567`), poi `_schedule_phase_wakes`, poi lo svuotamento della coda con il dispatch per tipo (`:3575-3584`). L'ordine degli eventi a pari istante è quello dei tipi
+Il ciclo principale è `run` (`:4238-4261`): `_detect`, poi una `_schedule_next` per ogni tiratore **in ordine di id** (`:4241-4242`), poi `_schedule_phase_wakes`, poi lo svuotamento della coda con il dispatch per tipo (`:4250-4259`). L'ordine degli eventi a pari istante è quello dei tipi
 (`_LAUNCH` 0 < `_IMPACT` 1 < `_RESOLVE` 2 < `_DECIDE` 3 < `_WAKE` 4, `:536-544`), poi la chiave, poi `sequence`. **Ordine delle estrazioni** (fatto che il codice rende verificabile): il `breakpoint_rng` è consultato una volta per forza **in costruzione** (`:3384`), prima di tutto il resto; l'`rng` di sessione
 è consultato solo da `_draw` (`:2115`), cioè una volta per direzione in `_detect_direction` (`:2001`) e una volta per ogni colpo non fermato su un bersaglio non ancora distrutto in `_on_resolve` (`:3254`). Rimando a **D5** (la coda nella sua forma generale), **D25** (prelazione), **D45** (`_WAKE`).
 
@@ -1236,11 +1240,11 @@ sequenceDiagram
     end
 ```
 
-Lettura: nel codice i tre rami della `alt` sono `return` successivi (`:2909-2931`); la `alt` li mostra come alternative per leggibilità. Le uscite senza alcun effetto sono quattro, nell'ordine `:2882` (generazione), `:2893` (forza rotta), `:2898` (non operativo), `:2904` (fine di attività); `assigned.pop` (`:2889`) precede le ultime tre, quindi un lancio
-che esce lì non copre più nulla. `_refire_interval` (`:2911`) è calcolato **prima** dei controlli sul bersaglio e sulla scorta, perché serve ai due rami che riprogrammano. `units = rounds * spec.stock_per_round` (`:2922`); il controllo `stock < units` (`:2925`) difende l'invariante «la scorta non va mai sotto zero» quando le
-intercettazioni, fra scheduling e lancio, hanno consumato la stessa voce. Il lancio avvenuto ordina: consumo, `AmmunitionEvent`, `Salvo`, `in_flight`, ostile del dominio, `_touch`, evento `_IMPACT`, eventuale `_check_activity` (winchester), **poi** il nuovo `_schedule_next` del tiratore (`:2955`) e **solo dopo** le reazioni
-(RWR `:2959-2961`, `_register_launcher` `:2965-2967`, `_react_to_hostile` `:2969-2970`): il tiratore decide il proprio prossimo lancio senza ancora conoscere la reazione che il suo lancio provoca sugli altri (una reazione al lancio che lo riguarda arriva come `_DECIDE`, D25). L'evento `_IMPACT` produce il gruppo da risolvere in `_on_impact`
-(`:2974`), che accoda il `_RESOLVE` (D5, D85). Rimando a **D37** (fine di attività) e **D45** (`return_fire` e `_WAKE`).
+Lettura: nel codice i tre rami della `alt` sono `return` successivi (`:3546-3568`); la `alt` li mostra come alternative per leggibilità. Le uscite senza alcun effetto sono quattro, nell'ordine `:3519` (generazione), `:3530` (forza rotta), `:3535` (non operativo), `:3541` (fine di attività); `assigned.pop` (`:3526`) precede le ultime tre, quindi un lancio
+che esce lì non copre più nulla. `_refire_interval` (`:3548`) è calcolato **prima** dei controlli sul bersaglio e sulla scorta, perché serve ai due rami che riprogrammano. `units = rounds * spec.stock_per_round` (`:3559`); il controllo `stock < units` (`:3562`) difende l'invariante «la scorta non va mai sotto zero» quando le
+intercettazioni, fra scheduling e lancio, hanno consumato la stessa voce. Il lancio avvenuto ordina: consumo, `AmmunitionEvent`, `Salvo`, `in_flight`, ostile del dominio, `_touch`, evento `_IMPACT`, eventuale `_check_activity` (winchester), **poi** il nuovo `_schedule_next` del tiratore (`:3592`) e **solo dopo** le reazioni
+(RWR `:3596-3598`, `_register_launcher` `:3602-3604`, `_react_to_hostile` `:3606-3607`): il tiratore decide il proprio prossimo lancio senza ancora conoscere la reazione che il suo lancio provoca sugli altri (una reazione al lancio che lo riguarda arriva come `_DECIDE`, D25). L'evento `_IMPACT` produce il gruppo da risolvere in `_on_impact`
+(`:3611`), che accoda il `_RESOLVE` (D5, D85). Rimando a **D37** (fine di attività) e **D45** (`return_fire` e `_WAKE`).
 
 ### La sequenza di `_on_resolve` (D85)
 
@@ -1302,15 +1306,15 @@ sequenceDiagram
     DOC->>DOC: se scatta un motivo, esito DISENGAGED e broken_forces
 ```
 
-Lettura: **Blocco 1** (`:3157-3239`). I canali sono per evento-salva e per dominio: quelli già spesi dalle *altre* forze dello stesso dominio nello stesso istante si sottraggono (`:3161-3170`), le disponibilità si calcolano solo per intercettori operativi e non a terra (`:3186-3189`). Le salve si scorrono nell'ordine `(t_impact, salvo_id)`
-e gli intercettori nell'ordine della regola F (`:3195-3215`); dalla BI la condizione del ciclo è `free <= 0 or not _admissible or not _may_intercept or not _in_time` (`Engagement_Resolver.py:3881-3882` a `a389cadb`, corto circuito di `or`): `_may_intercept` è chiamata solo se `_admissible` è vera e `_in_time` solo se lo sono entrambe (riga riverificata il 2026-11-10; le altre righe di questo paragrafo sono a f009eb43). Anche `_admissible` non fa estrazioni. Né `_may_intercept` né `_in_time` (e dalla BI nemmeno `_admissible`) fanno estrazioni (docstring di `_in_time`, `:3115`): il flusso dell'`rng` non cambia. Le intercettazioni consumano la scorta
-dell'intercettore **prima** del danno (`:3236`), e generano un `InterceptionEvent` per arma (`:3237-3239`). **Blocco 2** (`:3241-3264`): per ogni colpo non fermato su un bersaglio già distrutto si conta `wasted` senza estrarre (payload congelato); altrimenti `_draw()` è valutata come argomento di `build_damage_event`
-(`:3253-3255`), quindi **una estrazione per colpo che arriva su un bersaglio vivo**, nell'ordine salve, colpi. Se il colpo mette fuori combattimento un asset operativo, `loss_shooters` ricorda chi (`:3262-3264`; serve a `_unanswered_fraction`). **Blocco 3** (`:3266-3301`): `shock = perdite / impegnati`, `erosion = (impegnati - operativi dopo) / impegnati`
-(`:3267-3269`); `_check_doctrine` (`:3305`) riceve le frazioni dell'intera forza, oppure, se alcuni impegnati sono aerei a terra, quelle calcolate sui soli combattenti e `withdrawable=bool(fighting_after)` (`:3286-3301`). Dentro `_check_doctrine`: l'annientamento prevale su un disingaggio già deciso (`:3321-3329`);
-senza dottrina (`thresholds` `None`), con esito già deciso o senza possibilità di ritirarsi non c'è altro (`:3331-3332`); altrimenti `_breakpoint` (`:3516`, che chiama `_perceived_ratio` e `_unanswered_fraction`) dà B(t) e si confrontano erosione e shock (`:3334-3349`). Rimando a **D5** (la coda), **D22** (soglia di rottura), **D24** (allocazione delle intercettazioni),
+Lettura: **Blocco 1** (`:3831-3914`). I canali sono per evento-salva e per dominio: quelli già spesi dalle *altre* forze dello stesso dominio nello stesso istante si sottraggono (`:3835-3844`), le disponibilità si calcolano solo per intercettori operativi e non a terra (`:3860-3863`). Le salve si scorrono nell'ordine `(t_impact, salvo_id)`
+e gli intercettori nell'ordine della regola F (`:3869-3890`); dalla BI la condizione del ciclo è `free <= 0 or not _admissible or not _may_intercept or not _in_time` (`Engagement_Resolver.py:3881-3882` a `a389cadb`, corto circuito di `or`): `_may_intercept` è chiamata solo se `_admissible` è vera e `_in_time` solo se lo sono entrambe (riga riverificata il 2026-11-10; le altre righe di questo paragrafo sono state ricalcolate a `a389cadb` il 2026-11-13). Anche `_admissible` non fa estrazioni. Né `_may_intercept` né `_in_time` (e dalla BI nemmeno `_admissible`) fanno estrazioni (docstring di `_in_time`, `:3785`): il flusso dell'`rng` non cambia. Le intercettazioni consumano la scorta
+dell'intercettore **prima** del danno (`:3911`), e generano un `InterceptionEvent` per arma (`:3912-3914`). **Blocco 2** (`:3916-3939`): per ogni colpo non fermato su un bersaglio già distrutto si conta `wasted` senza estrarre (payload congelato); altrimenti `_draw()` è valutata come argomento di `build_damage_event`
+(`:3928-3930`), quindi **una estrazione per colpo che arriva su un bersaglio vivo**, nell'ordine salve, colpi. Se il colpo mette fuori combattimento un asset operativo, `loss_shooters` ricorda chi (`:3937-3939`; serve a `_unanswered_fraction`). **Blocco 3** (`:3941-3976`): `shock = perdite / impegnati`, `erosion = (impegnati - operativi dopo) / impegnati`
+(`:3942-3944`); `_check_doctrine` (`:3980`) riceve le frazioni dell'intera forza, oppure, se alcuni impegnati sono aerei a terra, quelle calcolate sui soli combattenti e `withdrawable=bool(fighting_after)` (`:3961-3976`). Dentro `_check_doctrine`: l'annientamento prevale su un disingaggio già deciso (`:3996-4004`);
+senza dottrina (`thresholds` `None`), con esito già deciso o senza possibilità di ritirarsi non c'è altro (`:4006-4007`); altrimenti `_breakpoint` (`:4191`, che chiama `_perceived_ratio` e `_unanswered_fraction`) dà B(t) e si confrontano erosione e shock (`:4009-4024`). Rimando a **D5** (la coda), **D22** (soglia di rottura), **D24** (allocazione delle intercettazioni),
 **D27** (regola R-INT) e **D33** (difesa di dominio).
 
-**Dal 2026-11-11 (FP-5 (d))** il vincolo `_in_time` non legge più «l'ultimo rilevamento» dell'intercettore sul lanciatore: chiede `_detection_time_of(shadow.id, salvo.shooter_id, salvo.t_launch)`, che cerca il rilevamento **nel passaggio** del lanciatore nel volume dell'intercettore **che contiene il lancio** (`_detection_time_in_pass`); senza i tratti resta l'ultimo rilevamento. Nessuna estrazione: flusso in **D134** (capitolo 4 §4.26). Le righe di questa «Lettura» (salvo la `:3881-3882` appena aggiornata) restano a f009eb43.
+**Dal 2026-11-11 (FP-5 (d))** il vincolo `_in_time` non legge più «l'ultimo rilevamento» dell'intercettore sul lanciatore: chiede `_detection_time_of(shadow.id, salvo.shooter_id, salvo.t_launch)`, che cerca il rilevamento **nel passaggio** del lanciatore nel volume dell'intercettore **che contiene il lancio** (`_detection_time_in_pass`); senza i tratti resta l'ultimo rilevamento. Nessuna estrazione: flusso in **D134** (capitolo 4 §4.26). Le righe di questa «Lettura» sono a `a389cadb` (ricalcolate il 2026-11-13; il flusso di R-INT con i passaggi è in D134).
 
 ### La sequenza di `apply_engagement_result` (D86)
 
@@ -1357,11 +1361,11 @@ sequenceDiagram
     AER-->>SS: summary, quattro contatori
 ```
 
-Lettura: `apply_engagement_result` (`:3794`) è il solo punto in cui l'esito tocca gli asset veri; in sessione la chiama `engage` dopo ogni `resolve_engagement` (`Logic/Session_Simulator.py:2790`, con `*component`) e `fire_area` dopo ogni fuoco su posizione (`:2486`, con `*blocks.values()`: D50). L'indice degli asset è costruito
-con `_domain_id` su tutte le forze passate (`:3814-3821`). I **danni** si applicano per primi e nell'ordine in cui la run li ha prodotti (`:3825-3834`), perché i `health_before`/`health_after` sono concatenati. I **consumi** si ordinano per `(time, tipo, indice)` (`:3843-3845`): a parità d'istante i lanci (tipo 0) precedono le intercettazioni (tipo 1),
-come nella coda (`_LAUNCH` < `_RESOLVE`), per lasciare sull'asset lo stato che l'ombra ha descritto (commento a `:3836-3842`). `_call_with_weapon` (`:3782`) esiste per gli asset duck-typed con la firma precedente al 2026-09-26: senza arma si chiama `consume(amount)`, con arma `consume(amount, weapon=weapon)`.
-**Fatto da non fraintendere**: i contatori `ammunition_events` e `interception_events` del riepilogo aumentano anche se l'asset non ha un `consume_ammunition`/`consume_interceptor_stock` chiamabile (`:3859-3862`, `:3867-3870`): contano gli eventi elaborati, non i consumi effettivamente eseguiti. Un asset non trovato non è un errore:
-è un warning e `missing_assets` (`:3828-3831`, `:3850-3854`). Rimando a **D9** (applicazione dell'esito) e **D13** (scorta per arma).
+Lettura: `apply_engagement_result` (`:4488`) è il solo punto in cui l'esito tocca gli asset veri; in sessione la chiama `engage` dopo ogni `resolve_engagement` (`Logic/Session_Simulator.py:2825`, con `*component`) e `fire_area` dopo ogni fuoco su posizione (`:2512`, con `*blocks.values()`: D50). L'indice degli asset è costruito
+con `_domain_id` su tutte le forze passate (`:4511-4518`). I **danni** si applicano per primi e nell'ordine in cui la run li ha prodotti (`:4522-4531`), perché i `health_before`/`health_after` sono concatenati. I **consumi** si ordinano per `(time, tipo, indice)` (`:4540-4542`): a parità d'istante i lanci (tipo 0) precedono le intercettazioni (tipo 1),
+come nella coda (`_LAUNCH` < `_RESOLVE`), per lasciare sull'asset lo stato che l'ombra ha descritto (commento a `:4533-4539`). `_call_with_weapon` (`:4476`) esiste per gli asset duck-typed con la firma precedente al 2026-09-26: senza arma si chiama `consume(amount)`, con arma `consume(amount, weapon=weapon)`.
+**Fatto da non fraintendere**: i contatori `ammunition_events` e `interception_events` del riepilogo aumentano anche se l'asset non ha un `consume_ammunition`/`consume_interceptor_stock` chiamabile (`:4556-4559`, `:4564-4567`): contano gli eventi elaborati, non i consumi effettivamente eseguiti. Un asset non trovato non è un errore:
+è un warning e `missing_assets` (`:4525-4528`, `:4547-4551`). Rimando a **D9** (applicazione dell'esito) e **D13** (scorta per arma).
 
 ### Che cosa il core importa da `Engagement_Resolver`, e chi (D87)
 
@@ -1392,14 +1396,14 @@ flowchart LR
     ARM -->|"import locale"| API
 ```
 
-Lettura: i cinque moduli del core che importano il risolutore sono `Session_Simulator` (`:771`), `Mission_Adapter` (`:332`), `Area_Fire` (`:77`), `Fire_Control` (`:206-207`) e `Command/Session_Types` (`:63-68`); `Air_Route_Manager` (`:1103`) è **fuori dal core**. Nessun altro modulo del core lo importa (`grep` sui sorgenti non di test: gli altri, come `Fuel_Model`, `Contact_Scheduler`, `Damage_Model`, `Session_Rng`, `Mission_Types`, lo nominano al più in commenti e docstring). Dettaglio per modulo: `Session_Simulator` chiama `ER.resolve_engagement` (`:2765`) e `ER.apply_engagement_result` (`:2486`, `:2790`), costruisce `ER.ActivityCriteria` (`:1867`, `:2722`, `:2738`), annota con `ER.EngagementResult`
-(`:1327`, `:1344`, `:2408`, `:2411`), confronta con `ER.DISENGAGED` (`:2551`, `:2807`) e `ER.ACTIVITY_TARGET_DESTROYED` (`:1903`); `Mission_Adapter` costruisce `ER.TargetRules` (`:1995`) e confronta con `ER.ROE_WEAPON_FREE`/`ER.ROE_PRIORITY_DESIGNATED` (`:1985`, `:1998`); `Area_Fire.resolve_area_fire` costruisce **a mano** un `ER.AmmunitionEvent` e un `ER.EngagementResult` (`:311`, `:314`) senza passare dal risolutore,
-così che `apply_engagement_result` e il resto della sessione trattino il fuoco su posizione come un ingaggio (D50); `Fire_Control` costruisce `ShotSpec` (`:786`) e chiama `ER.accepts_target_grounded` (`:971`); `Session_Types` importa `AmmunitionEvent`, `EngagementResult`, `ForceOutcome`, `InterceptionEvent` per aggregarli in `SessionOutcome`. `Fire_Control`, `Area_Fire` e `Session_Simulator` ripetono in locale il criterio di `_domain_id`
-(`_asset_id` in `Fire_Control.py:1080` e `Area_Fire.py:318`, `_domain_id` in `Session_Simulator.py:974`) invece di importarlo: i loro docstring dichiarano «stesso criterio», non è verificato qui che il corpo sia identico. Per il grafo completo degli import del core v. **D58** e **D59**.
+Lettura: i cinque moduli del core che importano il risolutore sono `Session_Simulator` (`:782`), `Mission_Adapter` (`:332`), `Area_Fire` (`:77`), `Fire_Control` (`:216-217`) e `Command/Session_Types` (`:63-68`); `Air_Route_Manager` (`:1129`) è **fuori dal core**. Nessun altro modulo del core lo importa (`grep` sui sorgenti non di test: gli altri, come `Fuel_Model`, `Contact_Scheduler`, `Damage_Model`, `Session_Rng`, `Mission_Types`, lo nominano al più in commenti e docstring). Dettaglio per modulo: `Session_Simulator` chiama `ER.resolve_engagement` (`:2800`) e `ER.apply_engagement_result` (`:2512`, `:2825`), costruisce `ER.ActivityCriteria` (`:1893`, `:2748`, `:2764`), annota con `ER.EngagementResult`
+(`:1353`, `:1370`, `:2434`, `:2437`), confronta con `ER.DISENGAGED` (`:2577`, `:2842`) e `ER.ACTIVITY_TARGET_DESTROYED` (`:1929`); `Mission_Adapter` costruisce `ER.TargetRules` (`:1995`) e confronta con `ER.ROE_WEAPON_FREE`/`ER.ROE_PRIORITY_DESIGNATED` (`:1985`, `:1998`); `Area_Fire.resolve_area_fire` costruisce **a mano** un `ER.AmmunitionEvent` e un `ER.EngagementResult` (`:311`, `:314`) senza passare dal risolutore,
+così che `apply_engagement_result` e il resto della sessione trattino il fuoco su posizione come un ingaggio (D50); `Fire_Control` costruisce `ShotSpec` (`:875`) e chiama `ER.accepts_target_grounded` (`:1080`) e `ER.accepts_altitudes` (`:1081`); `Session_Types` importa `AmmunitionEvent`, `EngagementResult`, `ForceOutcome`, `InterceptionEvent` per aggregarli in `SessionOutcome`. `Fire_Control`, `Area_Fire` e `Session_Simulator` ripetono in locale il criterio di `_domain_id`
+(`_asset_id` in `Fire_Control.py:1209` e `Area_Fire.py:318`, `_domain_id` in `Session_Simulator.py:987`) invece di importarlo: i loro docstring dichiarano «stesso criterio», non è verificato qui che il corpo sia identico. Per il grafo completo degli import del core v. **D58** e **D59**.
 
 ### Tabella completa dei simboli di `Logic/Engagement_Resolver`
 
-Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella Logic/Engagement_Resolver` (127 righe, nell'ordine dello strumento: prima classi e metodi, poi le funzioni di primo livello, ciascuna sezione in ordine di riga); «Gruppo»: per le funzioni e i tipi di modulo il codice di D77 (**A** API pubblica, **T** tipi di scambio, **B** regole di bersaglio pure, **P** probabilità di rilevamento,
+Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella Logic/Engagement_Resolver` (146 righe a `a389cadb`, nell'ordine dello strumento: prima classi e metodi, poi le funzioni di primo livello, ciascuna sezione in ordine di riga); «Gruppo»: per le funzioni e i tipi di modulo il codice di D77 (**A** API pubblica, **T** tipi di scambio, **B** regole di bersaglio pure, **P** probabilità di rilevamento,
 **F** fabbriche del fattore, **G** ponti, **S** stato di lavoro), per i metodi di `_EngagementRun` il codice **R1-R12** di D79/D80 (la classe stessa è «run»); «Chiamata da»: chiamanti dentro il modulo (estrazione `ast` dei nomi chiamati, verificata caso per caso; i metodi della run sono indicati col solo nome) e nel core (`SS` = `Session_Simulator`, `MA` = `Mission_Adapter`, `AF` = `Area_Fire`, `FCO` = `Fire_Control`, `ST` = `Session_Types`, `ARM` = `Air_Route_Manager`, fuori dal core); «implicito» = chiamato dal costruttore o da una proprietà, non da una chiamata esplicita.
 
 | Gruppo | Tipo | Simbolo | Firma | Riga | Che cosa fa | Chiamata da |
@@ -1524,7 +1528,7 @@ Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella 
 | B | funzione | `apply_target_rules` | `apply_target_rules(rules, result, designated, hostile, air_target, after_attack)` | `:1045` | Funzione pura: la risposta della fire control ristretta dalle regole di un tiratore. | `_fire_control` |
 | P | funzione | `_check_factor` | `_check_factor(factor)` | `:1191` | Valida un fattore di rilevamento in `[0, 1]`. | `_detect_direction`, `detection_probability`, `detection_radius`, `recon_detection_factor_fn`, `recon_unseen_factor` |
 | P | funzione | `_check_dwell` | `_check_dwell(value)` | `:1201` | Periodo di rivisita validato (D-5): `None` o 0 → `None`; `TypeError`/`ValueError` per valori non validi. | `dwell_factor`, `_dwell_of` |
-| P | funzione | `detection_probability` | `detection_probability(distance, sensor_range, factor)` | `:1215` | Pd di un sensore contro un bersaglio a `distance`: legge di quarta potenza, stima dichiarata. | `_detect_direction`; `ARM` (import locale, `Air_Route_Manager.py:1103`) |
+| P | funzione | `detection_probability` | `detection_probability(distance, sensor_range, factor)` | `:1215` | Pd di un sensore contro un bersaglio a `distance`: legge di quarta potenza, stima dichiarata. | `_detect_direction`; `ARM` (import locale, `Air_Route_Manager.py:1129`) |
 | P | funzione | `detection_radius` | `detection_radius(draw, sensor_range, factor)` | `:1245` | Inversa di `detection_probability`: raggio al quale l'estrazione produce il rilevamento. | `_detect_direction` |
 | P | funzione | `dwell_factor` | `dwell_factor(exposure_s, dwell_time_s)` | `:1277` | Fattore di permanenza D-5 `min(1, permanenza / dwell)` (1.0 senza dwell); scelta di progetto [S], nessuna costante. | `_detect_direction`, `_detect_passes`; `ARM:Path.compute_detection_metrics` (fuori dal core) |
 | P | funzione | `registry_dwell_time` | `registry_dwell_time(observer, target, mode)` | `:1302` | Lettore di default del dwell: `observer.detection_dwell_time(mode)`; `None` senza modo o senza il metodo. | passata come valore da `SS:engage` (`:2793`, solo con `D5_DWELL_TIME` acceso) e chiamata come `dwell_time_for` da `_dwell_of` |
@@ -1533,7 +1537,7 @@ Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella 
 | F | funzione | `weather_detection_factor` | `weather_detection_factor(conditions)` | `:1365` | Fattore di degradazione della Pd da notte e meteo avverso. | `weather_detection_factor_fn` |
 | F | funzione | `weather_detection_factor_fn` | `weather_detection_factor_fn(conditions)` | `:1415` | La callable `(observer, target) -> float` per le condizioni meteo date. | `meteo_detection_factor` |
 | F | funzione | `meteo_detection_factor` | `meteo_detection_factor(region_name, date, time)` | `:1432` | Come la precedente, leggendo le condizioni da `Meteo_Analysis`. | nessun chiamante nel core (v. D78) |
-| F | funzione | `_block_attribute` | `_block_attribute(asset, name)` | `:1456` | `asset.block.<name>`, `None` se l'asset non ha blocco o il blocco non ha l'attributo. | `recon_detection_factor_fn` (funzione interna `detection_factor`, `:1238`, `:1241`, `:1244`) |
+| F | funzione | `_block_attribute` | `_block_attribute(asset, name)` | `:1456` | `asset.block.<name>`, `None` se l'asset non ha blocco o il blocco non ha l'attributo. | `recon_detection_factor_fn` (funzione interna `detection_factor`, `:1498`, `:1501`, `:1504`) |
 | F | funzione | `_check_side` | `_check_side(side)` | `:1462` | Valida un lato fra `Blue`, `Red`, `Neutral`. | `recon_detection_factor_fn`, `region_recon_detection_factor` |
 | F | funzione | `recon_detection_factor_fn` | `recon_detection_factor_fn(seen_block_ids, observer_side, unseen_factor, seen_factor)` | `:1469` | La callable della nebbia di guerra di un lato, dall'istantanea dei blocchi visti. | `region_recon_detection_factor` |
 | F | funzione | `combine_detection_factors` | `combine_detection_factors(*fns)` | `:1509` | Una sola callable dal prodotto di più fattori. | nessun chiamante nel core (v. D78) |
@@ -1549,17 +1553,17 @@ Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella 
 | G | funzione | `engagement_intervals_without_legs` | `engagement_intervals_without_legs(t_cpa, distance_cpa, t_end, max_range)` | `:1918` | Ripiego senza tratti di rotta: dal solo CPA. | `_range_entry` |
 | A | funzione | `resolve_engagement` | `resolve_engagement(force_a, force_b, contacts, fire_control, rng, extra_forces, legs, committed, thresholds, reaction_profile_for, detection_factor, salvo_window, provenance, breakpoint_rng, morale_for, enemy_estimate_for, fire_doctrine, rwr_catalogue, coordination_of, grounded, activity_criteria, target_rules, dwell_time_for, pass_rng)` | `:4294` | Risolve un ingaggio fra due o più forze in un'unica timeline, senza mutare asset (D81). | `SS:run_session` (funzione interna `engage`, `:2800`) |
 | A | funzione | `_call_with_weapon` | `_call_with_weapon(consume, amount, weapon)` | `:4476` | `consume(amount, weapon=weapon)`, o la chiamata storica `consume(amount)` senza arma. | `apply_engagement_result` |
-| A | funzione | `apply_engagement_result` | `apply_engagement_result(result, *forces)` | `:4488` | Applica danni e consumi di un esito agli asset reali e ritorna un riepilogo (D86). | `SS:run_session` (funzioni interne `engage` `:2790`, `fire_area` `:2486`) |
+| A | funzione | `apply_engagement_result` | `apply_engagement_result(result, *forces)` | `:4488` | Applica danni e consumi di un esito agli asset reali e ritorna un riepilogo (D86). | `SS:run_session` (funzioni interne `engage` `:2825`, `fire_area` `:2512`) |
 
 ### Limiti e domande
 
-- **Tre accessori di `EngagementResult` duplicati in `SessionOutcome`** *(esito 2026-10-30: lasciati, nessuna azione)*. `ammunition_consumed`, `ammunition_consumed_by_weapon` e `interceptions_consumed` hanno lo stesso corpo in `EngagementResult` (`Engagement_Resolver.py:994`, `:1009`, `:1019`) e in `SessionOutcome` (`Command/Session_Types.py:478`, `:494`, `:509`); nel core si usano
+- **Tre accessori di `EngagementResult` duplicati in `SessionOutcome`** *(esito 2026-10-30: lasciati, nessuna azione)*. `ammunition_consumed`, `ammunition_consumed_by_weapon` e `interceptions_consumed` hanno lo stesso corpo in `EngagementResult` (`Engagement_Resolver.py:1154`, `:1169`, `:1179`) e in `SessionOutcome` (`Command/Session_Types.py:478`, `:494`, `:509`); nel core si usano
   solo quelli di `SessionOutcome` (`Logic/Readiness.py:191-192`), quelli di `EngagementResult` hanno chiamanti solo nei test. Non è un errore di comportamento, ma due punti da tenere allineati. Non verificato se sia voluto.
-- **Contatori di `apply_engagement_result`** *(esito 2026-10-30: docstring corretta in `191b7d37`, il codice non cambia)*. I contatori `ammunition_events` e `interception_events` del riepilogo contano gli eventi elaborati anche se l'asset non ha il metodo di consumo chiamabile (`:3859-3862`, `:3867-3870`); chi legge il riepilogo come «consumi eseguiti» sbaglia. Riportato come fatto del codice, non come difetto.
+- **Contatori di `apply_engagement_result`** *(esito 2026-10-30: docstring corretta in `191b7d37`, il codice non cambia)*. I contatori `ammunition_events` e `interception_events` del riepilogo contano gli eventi elaborati anche se l'asset non ha il metodo di consumo chiamabile (`:4556-4559`, `:4564-4567`); chi legge il riepilogo come «consumi eseguiti» sbaglia. Riportato come fatto del codice, non come difetto.
 - **`_domain_id` ripetuto.** Almeno tre moduli del core ripetono il criterio di `_domain_id` invece di importarlo (D87); i docstring dichiarano l'equivalenza, il corpo non è stato confrontato riga per riga.
-- **Ordine dei simboli nella tabella.** Lo strumento stampa prima classi e metodi, poi le funzioni di primo livello: l'ordine di lettura del file (ad esempio `_id_set` `:788` prima di `TargetRules`) non coincide con quello della tabella.
+- **Ordine dei simboli nella tabella.** Lo strumento stampa prima classi e metodi, poi le funzioni di primo livello: l'ordine di lettura del file (ad esempio `_id_set` `:948` prima di `TargetRules`) non coincide con quello della tabella.
 
-**Righe dopo `191b7d37`.** I `:riga` di questa parte sono quelli di `f009eb43`. Il commit `191b7d37` (solo docstring, commenti, un import e un parametro inutilizzati) sposta in avanti di 3-4 righe i simboli che stanno dopo il punto toccato in `Fuel_Model.py` (da `:933`), `Engagement_Resolver.py` (da `:3807`), `Damage_Model.py` (da `:162`) e `Mission_Types.py` (da `:1004`); in `Session_Validator.py` le righe non cambiano.
+**Righe dopo `191b7d37`** *(storia: i `:riga` di questa parte erano quelli di `f009eb43`; dal 2026-11-13 sono ricalcolati a `a389cadb`, v. la «Nota 2026-11-13» qui sotto)*. Il commit `191b7d37` (solo docstring, commenti, un import e un parametro inutilizzati) sposta in avanti di 3-4 righe i simboli che stanno dopo il punto toccato in `Fuel_Model.py` (da `:933`), `Engagement_Resolver.py` (da `:3807`), `Damage_Model.py` (da `:162`) e `Mission_Types.py` (da `:1004`); in `Session_Validator.py` le righe non cambiano.
 
 **Nota 2026-11-04 (dopo `cbc75634`).** I commit `37816355` (D-4c, sensore visivo) e `cbc75634` (D-4b, radar EWR) **non toccano nessun modulo del core** descritto in questa parte: toccano `Asset/Mobile.py`, `Asset/Vehicle_Data.py`, `Logic/Air_Route_Manager.py` (fuori dal core) e i test; `git diff 191b7d37 HEAD -- Code` non
 compare per `Contact_Scheduler`, `Fire_Control` ed `Engagement_Resolver`, quindi **i `:riga` di questa parte a quei tre moduli restano validi**. Aggiornati qui solo i tre riferimenti a `Logic/Air_Route_Manager.py:1095` (l'import locale di `detection_probability`), ora `:1099` (+4). **Nel diagramma D70** il messaggio
@@ -1571,6 +1575,6 @@ eventualmente citato in questo file (cercati per nome del file: nessuno oltre ai
 
 **Nota 2026-11-13 (D-5, BI, VA, FP: il risolutore, la fire control e lo scheduler cambiano).** Da `f009eb43` (con la BI aggiunta il 2026-11-10) a `a389cadb` cambiano tre moduli di questa parte, **in contrasto con le note del 2026-11-04 e 2026-11-05 qui sopra, che restano vere alla loro data**: `Engagement_Resolver.py` (+697 righe, 3872 → 4569: D-5, VA, FP, più la BI già riportata), `Fire_Control.py` (+129, 1088 → 1217: BI e VA) e `Contact_Scheduler.py` (+84, 1578 → 1662: due primitive della VA).
 Le **tabelle di fondo dei tre moduli sono rigenerate** con `inventario.py --tabella` (righe di `a389cadb`: 146, 36 e 63 righe; 17 simboli nuovi nel risolutore, 2 nello scheduler, nessuno nella fire control dopo la BI); i «Che cosa fa» e i «Chiamata da» dei 19 simboli nuovi sono scritti sul codice (i chiamanti con un'estrazione `ast` dei nomi chiamati, per i moduli del core letti; `ARM` = `Air_Route_Manager`, fuori dal core, usa `dwell_factor`).
-**Diagrammi toccati**: D82 riscritto, D133 nuovo, D76/D77/D79/D83/D68 aggiornati nei nodi; **non toccati** D78, D80, D81, D84-D87, D67, D69-D75: i loro `:riga` nel testo restano a f009eb43 (sfasati). **Costanti**: nessuna costante FP (l'interruttore `FP_PER_PASS_DETECTION` è stato eliminato il 2026-11-13); `D5_DWELL_TIME`, `BI_AD_TARGET_RULE`, `VA_ENGAGEMENT_ALTITUDE_BAND` sono in §10A.4.
+**Diagrammi toccati**: D82 riscritto, D133 nuovo, D76/D77/D79/D83/D68 aggiornati nei nodi; **non toccati nei nodi** D78, D80, D84-D87, D67, D69-D75 (D81 con una riga di controllo in più): i loro `:riga` nel testo sono stati **ricalcolati a `a389cadb`** nella verifica del 2026-11-13, v. sopra; le «Note» più sotto a «Righe dopo `191b7d37`» restano storia. **Costanti**: nessuna costante FP (l'interruttore `FP_PER_PASS_DETECTION` è stato eliminato il 2026-11-13); `D5_DWELL_TIME`, `BI_AD_TARGET_RULE`, `VA_ENGAGEMENT_ALTITUDE_BAND` sono in §10A.4.
 - **`registry_dwell_time` non è chiamata da nessuno nel core**: `Session_Simulator.engage` la passa **come valore** (`extra['dwell_time_for'] = ER.registry_dwell_time`, `:2793`) solo con `D5_DWELL_TIME` acceso, e la chiama il risolutore dietro il nome `dwell_time_for` (`_dwell_of`, `:2493`). Il «Chiamata da» della tabella lo dice così.
 - **Differenza fra conteggi**: il testo di §10A.4 dava 127 simboli a `f009eb43` mentre la tabella ne aveva 129 (la BI ne aggiunge due: `_ad_domain`, `_admissible`); ora il testo e la tabella dicono 146.

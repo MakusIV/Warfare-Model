@@ -6,9 +6,10 @@
 > **Riferimenti `:riga` di questo capitolo**: valgono per `fa5fbf1e` (base) **tranne §6.4, riscritta e riverificata a `a389cadb`**. Per ricondurre un riferimento a `Session_Simulator.py` di una sezione non riscritta al codice di oggi, la correzione è la stessa ovunque perché le inserzioni sono solo quattro:
 > riga base ≥ 730 → **+11**; ≥ 794 → **+14**; ≥ 1030 → **+26**; ≥ 2765 → **+35** (verificata con `git diff -U0 fa5fbf1e HEAD`: hunk `@@ -729,0 +730,11`, `-793,0 +805,3`, `-1029,0 +1044,12`, `-2764,0 +2791,9`). I riferimenti a `Mission_Adapter`, `Session_Types` ecc. non cambiano.
 
-Modulo: `Logic/Session_Simulator.py` (**3163 righe a `fa5fbf1e`**, 3102 a `dcedc541`, 2851 a `a784a9e7`, 937 a `84a47670`, 774 a `533cd1f5`; il
+Modulo: `Logic/Session_Simulator.py` (**3198 righe a `a389cadb`**, 3163 a `fa5fbf1e`, 3102 a `dcedc541`, 2851 a `a784a9e7`, 937 a `84a47670`, 774 a `533cd1f5`; il
 grosso della crescita è il docstring del modulo, che è il documento di progetto di F5, F6, G1-G5, F7 e F8, e la nuova logica di
-sessione). Tutti i riferimenti `:riga` di questo capitolo valgono per `fa5fbf1e`. **Dalla F8** il capitolo descrive anche i moduli
+sessione). I riferimenti `:riga` a `Session_Simulator.py` di questo capitolo valgono per `fa5fbf1e`, **salvo §6.4, §6.7 e le righe indicate come «a `a389cadb`»**
+(regola di conversione nell'avviso in cima; per gli altri moduli valgono per il codice di oggi, verificati il 2026-11-13). **Dalla F8** il capitolo descrive anche i moduli
 che stanno *intorno* all'orchestratore e lo conducono da fuori: il validatore di sessione, la prontezza degli asset e il conduttore
 di campagna (§6.25-6.27, con i dati che `run_session` aggiunge all'esito, §6.24). `Session_Simulator.py` è cambiato poco (65 righe aggiunte e 4 tolte, di cui 23 nel
 docstring del modulo; `git diff -U0 dcedc541..HEAD`): la F8 è fatta di funzioni *nuove fuori da `run_session`*.
@@ -186,7 +187,7 @@ stato rilevato (l'artiglieria che spara dove i blu erano). Non è un ingaggio: n
 d'ingaggio (`EngagementResult.forces` vuoto, quindi niente tempra, disingaggio o shock sul colpito), nessuna
 intercettazione; usa un proprio stream dell'RNG di sessione, `order.rng(mission_id=<missione>, event_id=
 'area_fire|<missione>|<asset>|<wp>|<azione>', counter=0)` (primo uso dello slot `mission_id`), quindi gli stream degli
-ingaggi e della tempra non cambiano e **una sessione senza l'azione è identica a prima**. La regola, le costanti STIMATE
+ingaggi, della tempra e dei passaggi (§6.4) non cambiano e **una sessione senza l'azione è identica a prima**. La regola, le costanti STIMATE
 e i limiti sono in §6.23 e nel capitolo 9 §9.1, «Fuoco su posizione (F7b)».
 
 ## 6.3 Forze impegnate su più fronti: componenti connesse (e, dal G4a, episodi)
@@ -233,7 +234,7 @@ componenti ne tengono conto (sopra).
 
 ## 6.4 RNG: tre stream per episodio d'ingaggio (ingaggio, tempra, passaggi)
 
-*Sezione riscritta il 2026-11-13: i riferimenti `:riga` sono verificati a `a389cadb` (`Session_Simulator.py` 3198 righe).* Ogni episodio apre **tre** stream dell'RNG di sessione, tutti con `mission_id=None`, lo **stesso `counter`** e un `event_id` diverso per il tag:
+*Sezione riscritta il 2026-11-13: i riferimenti `:riga` sono verificati a `a389cadb` (`Session_Simulator.py` 3198 righe).* Ogni episodio apre **tre** stream dell'RNG di sessione, tutti con `mission_id=None`, lo **stesso `counter`** e un `event_id` diverso per il tag. Un **quarto** stream, fuori dagli episodi, è quello del fuoco su posizione (F7b, `mission_id=<missione>`, `counter=0`, `:2501`; vedi sotto e §6.23): `run_session` apre in tutto quattro tipi di stream, ma solo i primi tre dipendono dall'episodio:
 
 | Stream | Chiamata in `engage` | Tag (`event_id`) | Chi lo consuma | Dal |
 |---|---|---|---|---|
@@ -270,7 +271,7 @@ Così estrarre la tempra non sposta le estrazioni di rilevamento e danno dell'in
 nuova per ogni episodio** (stesso `counter`).
 
 **Terzo stream: i passaggi di rilevamento** (FP, 2026-11-11, decisione FP-2 = O3). `pass_event_id(*force_ids)` (`:1044-1054`) ha la stessa forma, gli stessi vincoli e la stessa validazione, con il tag `'detection_pass'`
-(`PASS_EVENT_TAG`, `:807`). `engage` lo costruisce, subito prima della chiamata, e lo passa a `resolve_engagement` come `pass_rng` **sempre** (`:2798`, **non** dietro un interruttore: dalla pulizia del 2026-11-13 la FP non ne ha), con lo stesso `counter`
+(`PASS_EVENT_TAG`, `:807`). `engage` lo costruisce, subito prima della chiamata, e lo passa a `resolve_engagement` come `pass_rng` **sempre** (`:2798`, **non** dietro un interruttore: la pulizia FP, eseguita il 2026-11-12 e mergiata il 2026-11-13, ha eliminato `FP_PER_PASS_DETECTION`), con lo stesso `counter`
 dell'episodio. Il risolutore lo **consuma solo** per le direzioni con almeno due passaggi nel volume proprio dentro una finestra (le estrazioni dal secondo passaggio in poi); con zero o un passaggio non lo tocca mai, e la sessione lo apre comunque (la creazione di un `random.Random` seedato non estrae nulla):
 per questo, a parità di seme, lo stream dell'ingaggio ha **lo stesso numero di estrazioni di rilevamento** di prima e le estrazioni di danno restano nello stesso ordine (capitolo 4 §4.11, §4.35). Un chiamante diretto di `resolve_engagement` con i tratti e una direzione a più passaggi deve passare uno stream
 separato: senza `pass_rng` il risolutore solleva `ValueError`. Verifica: `TestPerPassDetectionStream` (`Test/Test_Session_Simulator.py:269`: `engage` passa sempre `pass_rng`; `pass_event_id` non dipende dall'ordine degli id, è distinto da quelli dell'ingaggio e della tempra e solleva `ValueError` con un solo id) e S33-PASSES (capitolo 8 §8.14: le estrazioni dal secondo passaggio vengono dallo stream dei passaggi).
@@ -433,12 +434,12 @@ sequenceDiagram
 
     CS->>Q: ContactWindow, raggruppate in episodi (forze, domini, EPISODE_GAP)
     Note over Q: PASSO 1: tutti gli ENGAGEMENT, in ordine di tempo
-    Q->>ER: pop ENGAGEMENT, episodio 1 (rng con counter 0)
+    Q->>ER: pop ENGAGEMENT, episodio 1 (rng, tempra e passaggi con counter 0)
     ER-->>Q: EngagementResult, applicato subito (apply_engagement_result)
     Q->>Q: replan degli aerei coinvolti, eventuale reschedule
     Q->>AF: fire_due: AREA_FIRE con impatto anteriore all'episodio 2 (F7b)
     AF-->>Q: EngagementResult senza forze, applicato subito
-    Q->>ER: pop ENGAGEMENT, episodio 2 (stesse forze: counter 1, tempra nuova)
+    Q->>ER: pop ENGAGEMENT, episodio 2 (stesse forze: counter 1, tempra e passaggi nuovi)
     ER-->>Q: EngagementResult, applicato subito
     Q->>Q: replan, eventuale reschedule
     Note over Q,FM: PASSO 2: contabilita' del carburante (tratti definitivi)
@@ -1476,7 +1477,7 @@ l'esito d'Operazione **non** sono regole del motore e non hanno interruttori: so
 scenari che chiamano `run_session` non cambiano. Controprova a interruttore spento: `test_route_cut_by_the_session_end_off_is_failed` e
 `TestF8bCampaignOutcome.test_operation_outcomes` (capitolo 8 §8.12).
 
-**Gli interruttori del risolutore (D-5, BI, VA; FP eliminato).** Dal 2026-11-06 `Logic/Engagement_Resolver.py` ha tre interruttori **suoi** (costanti di modulo, nessun parametro di `run_session`), di segno opposto a quelli di questo modulo: **tutti spenti** nel default, perché la regola
+**Gli interruttori del risolutore (D-5, BI, VA; FP eliminato).** Fra il 2026-11-06 (D-5), il 2026-11-08 (BI, blocco 2) e il 2026-11-10 (VA, blocco 1) `Logic/Engagement_Resolver.py` ha ricevuto tre interruttori **suoi** (costanti di modulo, nessun parametro di `run_session`), di segno opposto a quelli di questo modulo: **tutti spenti** nel default, perché la regola
 nuova non deve cambiare gli esiti precedenti (ogni regola nuova sta dietro un interruttore il cui default riproduce il comportamento precedente). **Nessun codice di produzione li accende**: li leggono i test (`patch.object`), gli scenari S32-S35 e, per la D-5, `Session_Simulator.engage` e `Air_Route_Manager`.
 
 | Interruttore | Modulo | Default | Regola | Effetto se spento | Chi lo legge | Capitolo 4 |
@@ -1485,7 +1486,7 @@ nuova non deve cambiare gli esiti precedenti (ogni regola nuova sta dietro un in
 | `BI_AD_TARGET_RULE` | `Engagement_Resolver` (`:597`) | `False` | BI: l'intercettore ferma un colpo solo se il suo dominio è fra gli `intercept_domains` | nessun filtro: ogni colpo intercettabile è un bersaglio per ogni intercettore idoneo | `_EngagementRun.__init__` (`:2010`, una volta per run) | §4.24 |
 | `VA_ENGAGEMENT_ALTITUDE_BAND` | `Engagement_Resolver` (`:608`) | `False` | VA: volume d'ingaggio = sfera ∩ fascia nel tempo, quote all'istante, rinvio | filtro di quota statico della fire control, solo sfera | `_EngagementRun.__init__` (`:2048`, una volta per run) | §4.37 |
 
-Il **quarto**, `FP_PER_PASS_DETECTION` (rilevamento per passaggio), **non esiste più**: era temporaneo (criterio dell'utente del 2026-11-08: si elimina un interruttore se lo stato precedente è una soluzione superata e non un'alternativa valida), fu acceso il 2026-11-12 e **eliminato il 2026-11-13** (`Proposta_FP_Pulizia_Interruttore.md`). Oggi la FP è una regola sempre attiva (capitolo 4 §4.35). Chi cercasse la costante nel codice, nei test (`Test_Engagement_Resolver`, S33)
+Il **quarto**, `FP_PER_PASS_DETECTION` (rilevamento per passaggio), **non esiste più**: era temporaneo (criterio dell'utente del 2026-11-08: si elimina un interruttore se lo stato precedente è una soluzione superata e non un'alternativa valida), fu acceso il 2026-11-12 e **eliminato** dalla pulizia eseguita il 2026-11-12 (blocchi A-C2, ultimo commit `a389cadb`) e mergiata il 2026-11-13 (`f46e3982`; `Proposta_FP_Pulizia_Interruttore.md`). Oggi la FP è una regola sempre attiva (capitolo 4 §4.35). Chi cercasse la costante nel codice, nei test (`Test_Engagement_Resolver`, S33)
 o nella fotografia non la trova; la ritrova solo nei documenti storici (Proposta FP, sonde in `Rapporti/Sonde_Finestre_Passaggio/`). Un'analisi mirata degli interruttori rimasti (se tenerli o eliminarli) è un lavoro **futuro** deciso dall'utente, non fatto da questo manuale.
 
 Costanti non-interruttore che il modulo definisce: `EPISODE_GAP = FM.DISENGAGE_TIME` (`:914`), le etichette
@@ -1752,7 +1753,7 @@ del conduttore di campagna (§6.27).
 
 ## 6.25 Il validatore di sessione: `Logic/Session_Validator.py` (F8a, `c1182d8a`)
 
-**Dove sta e perché.** Modulo nuovo (269 righe) **fuori** da `run_session`: l'esecutore (sintetico o DCS) esegue, il pianificatore valida.
+**Dove sta e perché.** Modulo nuovo (268 righe) **fuori** da `run_session`: l'esecutore (sintetico o DCS) esegue, il pianificatore valida.
 È la stessa scelta già fatta per il bingo a priori (deviazione 15 del Piano; decisione 17 dell'utente): un chiamante che salta il
 validatore può ancora far girare un ordine non valido, ed è ciò che fanno, di proposito, i test dell'esecutore. Misura della Proposta F8
 §1.7 (una sonda in sola lettura sulle esecuzioni della fotografia di allora, **non rieseguita** per questo aggiornamento): con il validatore

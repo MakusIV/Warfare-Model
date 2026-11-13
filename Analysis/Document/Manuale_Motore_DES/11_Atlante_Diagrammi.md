@@ -46,6 +46,8 @@ dell'atlante non è stata verificata dallo strumento ma con il confronto `git di
 **D131** flusso di `_detect_direction`, **D132** fascia di quota in `_schedule_next`, **D134** R-INT con i passaggi: quattro L4 nel capitolo 4; **D133** sequenza di `_detect_passes`: L3 in `11a`), più il **D82 riscritto** (la sequenza di `_detect_direction`) e i nodi aggiornati di D4, D68, D76, D77, D79, D83, D126; l'Elenco passa a **D1-D134** (D88 e D89 non usati). Il numero **D130** è assegnato al diagramma che nel capitolo 4 §4.24 era «non numerato nell'atlante». **Righe**: la tabella di §10.4 e
 la tabella di §10.5.1 (`Session_Simulator`) sono aggiornate (righe a `a389cadb`: per `Session_Simulator` l'offset è +11 da 730, +14 da 794, +26 da 1030, +35 da 2765; verificato su ogni riga della tabella con `def`); i `:riga` delle sequenze 10.6.1-10.6.3 sono stati spostati con lo stesso offset (97 riferimenti, controllo a campione); **non** ricalcolati i riferimenti ai moduli non toccati. **Controllo con `_strumenti/inventario.py --controlla`** (rieseguito il 2026-11-13 su `05`, `07`, `11` e `11a`, prima e dopo, ignorando i numeri di riga): nessun identificatore nuovo non trovato nel core, salvo parole non-codice (`None`, `t_traccia`, `t_impatto`).
 
+**Verifica del 2026-11-13 (sul codice `a389cadb`, working tree pulito per `Code/`).** (1) Le tabelle complete dei simboli di `Contact_Scheduler` (63), `Fire_Control` (36), `Engagement_Resolver` (146) e `Session_Simulator` (49) in `11a` e in §10.5.1 sono state confrontate **riga per riga** con `_strumenti/inventario.py --tabella`: nessuna differenza di simbolo né di riga. (2) Nel testo di `11a` i `:riga` rimasti a `f009eb43` (D67-D75, D78, D80, D81, D84-D87, le «Letture», le note e le colonne «Che cosa fa»/«Chiamata da») sono stati ricalcolati con la mappa delle righe di `git diff -U0 f009eb43 HEAD` per modulo; in questo file erano rimasti a `f009eb43` quattro riferimenti nell'introduzione di §10.6 (`run_session` `:2163-3163` → `:2189-3198`, `pending` `:2874` → `:2909`, `_mission_outcome` `:3098`, `:3110-3120` → `:3133`, `:3145-3155`), corretti. (3) Righe dei moduli di §10.4 ricontrollate con `grep -c ''` su tutti i 15 moduli: `Mission_Types` 1391 (era 1387), `Damage_Model` 291 (288) e `Fuel_Model` 1579 (1576) per la BI e per `191b7d37`, non per D-5/FP. **Non ricalcolati** i `:riga` di `11b` (a `Mission_Types` oltre `:1004`, a `Fuel_Model` oltre `:933`) e di `11c` (a `Damage_Model` oltre `:162`), che le loro note dichiarano a `f009eb43`: questi due file non sono stati riverificati qui. (4) Conteggi: 132 diagrammi, D1-D134 meno D88 e D89, ciascuno con una sola didascalia o intestazione (controllato con uno script sui capitoli 1-10); il diagramma di §4.24 che era «non numerato» è il D130 (capitolo 4, riga 1879 di `05_Strato2_Risolutore_Ingaggio.md`, dentro §4.24); ogni blocco Mermaid dei capitoli 1-10 ha un numero D nella didascalia o nell'intestazione (D4 ha due blocchi).
+
 ## 10.2 Tabella-atlante
 
 I link portano al capitolo che contiene il diagramma; il titolo di ogni D1-D56 è quello dell'«Elenco dei diagrammi» di `Manuale_Motore_DES.md`.
@@ -111,7 +113,7 @@ le eccezioni sono segnate (D1 → L1; D8 → L3; D29, D55, D56 fuori scala; `sta
 | `stateDiagram-v2`     | D6 ([4](05_Strato2_Risolutore_Ingaggio.md)); D7 ([5](06_Strato3_Applicazione_Stato.md)); D41 ([6](07_Orchestratore_Session_Simulator.md)); D44 ([4](05_Strato2_Risolutore_Ingaggio.md))                                                                                                                                                                                                                                                                                                |
 
 **Fuori scala** (non descrivono il motore): D29 (fasi del piano F0-F9, [9](10_Limiti_Estensioni_Divergenze.md)), D55 e D56 (sequenze degli scenari S30, [8](09_Validazione.md)).
-Conteggio: L1 1 esistente, L2 11, L3 9 (8 sequenze più D8), L4 32 (28 flowchart, 4 stati), fuori scala 3: **56**, tutti i D1-D56.
+Conteggio dei diagrammi esistenti D1-D56: L1 1 esistente, L2 11, L3 9 (8 sequenze più D8), L4 32 (28 flowchart, 4 stati), fuori scala 3: **56**, tutti i D1-D56. **Dal 2026-11-13** si aggiungono quattro diagrammi L4 nuovi, tutti `flowchart TD` del capitolo 4 e non contati nei 56: D130 (§4.24), D131 (§4.35), D132 (§4.37) e D134 (§4.26); quindi L4 = 32 + 4 = 36 (32 flowchart, 4 stati).
 
 ### Stato del pilota per modulo del core
 
@@ -218,7 +220,7 @@ Il pilota copriva due moduli. Le tre parti seguenti estendono i livelli L2 e L3 
 | D123 | `build_damage_event`: controlli, esito e delta di salute dentro il modulo | `sequenceDiagram` | `Damage_Model` | [10C.7](11c_Atlante_Porte_Campagna.md) |
 | D125 | Dalla chiave all'istanza: `SessionOrder.rng`, `session_rng`, `session_seed` | `sequenceDiagram` | `Session_Rng` | [10C.8](11c_Atlante_Porte_Campagna.md) |
 
-Conteggio delle parti A-C: L1 1, L2 31, L3 29: **61** diagrammi, che con D1-D66 fanno 127 in tutto.
+Conteggio delle parti A-C: L1 1, L2 31, L3 30 (D133 incluso, aggiunto il 2026-11-13): **62** diagrammi (61 a `f009eb43`, più D133), che con D1-D66 fanno 128 e con i quattro L4 nuovi del capitolo 4 (D130, D131, D132, D134) **132 in tutto**: D1-D134 meno D88 e D89, non usati.
 
 ## 10.3 L0 — Il core nel suo contesto
 
@@ -227,22 +229,22 @@ Fatti verificati sul codice, che il diagramma D57 rappresenta:
 1. **Chi chiama il core.** `Logic/Session_Campaign.run_campaign_session` (`:109`) è l'unico punto di ingresso del ciclo di campagna; chiama `SS.run_session`
    (`:147`) come attributo del modulo. Nessun modulo fuori dal core importa `Session_Simulator`, `Session_Campaign`, `Session_Validator`, `Readiness`,
    `Session_Types` o `Campaign_Types` (`grep` degli `import` sotto `Source/`, escluso `Test/`): **oggi i chiamanti sono solo i test e gli scenari**
-   (S30 incluso). Nessun `Theater_Session_Manager` (`Logic/Session_Simulator.py:731`).
-2. **Che cosa muta.** `run_session` muta gli asset (`Logic/Session_Simulator.py:2175`: «**Muta gli asset.**»; salute e scorte con `ER.apply_engagement_result` `:2486`
-   e `:2790`, carburante con `FM.apply_fuel_event` `:2978`, `:3037`, `:3066`, salute a zero per l'aereo perso `:3120`). `Readiness.apply_campaign_processes` muta gli asset
+   (S30 incluso). Nessun `Theater_Session_Manager` (`Logic/Session_Simulator.py:742`).
+2. **Che cosa muta.** `run_session` muta gli asset (`Logic/Session_Simulator.py:2201`: «**Muta gli asset.**»; salute e scorte con `ER.apply_engagement_result` `:2512`
+   e `:2825`, carburante con `FM.apply_fuel_event` `:3013`, `:3072`, `:3101`, salute a zero per l'aereo perso `:3155`). `Readiness.apply_campaign_processes` muta gli asset
    (`Logic/Readiness.py:295`, docstring del modulo: «funzioni pure salvo `apply_campaign_processes`») e `apply_final_positions` assegna `asset.position`
    (`Logic/Session_Campaign.py:103`).
-3. **Le forze arrivano come argomenti, non come import.** `forces_a`/`forces_b` sono `Military`/`Block`/`BlockItem` (`Logic/Session_Simulator.py:2194`); il core li legge per
-   attributi (`id`/`name`, `assets`, `side`, `block`: `_domain_id` `:973`, `_as_block` `:988`) e per nome di classe (`validate_class(asset, 'Aircraft')`,
+3. **Le forze arrivano come argomenti, non come import.** `forces_a`/`forces_b` sono `Military`/`Block`/`BlockItem` (`Logic/Session_Simulator.py:2220`); il core li legge per
+   attributi (`id`/`name`, `assets`, `side`, `block`: `_domain_id` `:987`, `_as_block` `:1002`) e per nome di classe (`validate_class(asset, 'Aircraft')`,
    `Logic/Readiness.py:56`, `Logic/Session_Campaign.py:96`). Nessun modulo del core importa `Block/*`.
 4. **Che cosa il core importa dai registri** (import a livello di modulo salvo dove detto):
-   `Asset/Mobile` (la costante `DEFAULT_DETECTION_RANGE_TYPE`, `Logic/Session_Simulator.py:749`, `Logic/Contact_Scheduler.py:73`); i registri di dati d'arma e d'aereo
-   (`Asset/Aircraft_Data`, `Aircraft_Loadouts`, `Aircraft_Weapon_Data`, `Ground_Weapon_Data`, `Ship_Data`, `Ship_Weapon_Data`, `Vehicle_Data`, importati da `Logic/Fire_Control.py:198-204`;
-   `Aircraft_Loadouts` anche da `Logic/Mission_Adapter.py:318`; `Aircraft_Data` in `Logic/Readiness.py:91`, import locale); `Asset/Weapon_Stores` (`Logic/Engagement_Resolver.py:430`);
+   `Asset/Mobile` (la costante `DEFAULT_DETECTION_RANGE_TYPE`, `Logic/Session_Simulator.py:760`, `Logic/Contact_Scheduler.py:73`); i registri di dati d'arma e d'aereo
+   (`Asset/Aircraft_Data`, `Aircraft_Loadouts`, `Aircraft_Weapon_Data`, `Ground_Weapon_Data`, `Ship_Data`, `Ship_Weapon_Data`, `Vehicle_Data`, importati da `Logic/Fire_Control.py:208-214`;
+   `Aircraft_Loadouts` anche da `Logic/Mission_Adapter.py:318`; `Aircraft_Data` in `Logic/Readiness.py:91`, import locale); `Asset/Weapon_Stores` (`Logic/Engagement_Resolver.py:519`);
    `Context/Context` (tabelle: `Logic/Mission_Adapter.py:319`, `Logic/Readiness.py:36`, `Command/Mission_Types.py:68`), `Context/Doctrine`, `Reaction_Profile`, `Air_Defense_Efficacy`
-   (`Logic/Engagement_Resolver.py:431-433`); `DataType/State`, `Route`, `Edge`, `Waypoint`; `Command/Attack_Types` (`Command/Mission_Types.py:67`) e `Logic/Weapon_Delivery` (`Logic/Fire_Control.py:208`).
+   (`Logic/Engagement_Resolver.py:520-522`); `DataType/State`, `Route`, `Edge`, `Waypoint`; `Command/Attack_Types` (`Command/Mission_Types.py:67`) e `Logic/Weapon_Delivery` (`Logic/Fire_Control.py:218`).
 5. **`Region` e il meteo, solo come aiuti opzionali.** `Context.Region` (`BlockCategory`), `Logic.Tactical_Analysis` e `Logic.Meteo_Analysis` sono importati **dentro** due funzioni di
-   `Logic/Engagement_Resolver.py` (`:1337`, `:1384`, `:1179`: `region_recon_detection_factor` e `meteo_detection_factor`), che costruiscono il callable che il chiamante
+   `Logic/Engagement_Resolver.py` (`:1597`, `:1644`, `:1439`: `region_recon_detection_factor` e `meteo_detection_factor`), che costruiscono il callable che il chiamante
    può passare come `detection_factor`. `run_session` non le chiama (`grep` in `Session_Simulator.py`: nessuna occorrenza).
 6. **`Campaign_State` non è importato dal core.** `Context/Campaign_State.py` importa solo il logger (`:10`); il registro di campagna ci passa come dizionario
    (`add_ledger` `:245`, `get_ledger` `:260`), chiamato da chi usa il conduttore (`Logic/Session_Campaign.py`, docstring: il conduttore «non è il `Theater_Session_Manager`»;
@@ -420,19 +422,19 @@ Lettura: nessun modulo fuori da `Session_Campaign` e `Session_Validator` importa
 
 ### Tabella modulo → responsabilità → righe → capitolo
 
-Righe da `grep -c ''` sul codice a `f009eb43`, **tranne i quattro moduli cambiati da D-5, BI, VA e FP, aggiornati a `a389cadb`** (Contact_Scheduler 1662, Engagement_Resolver 4569, Fire_Control 1217, Session_Simulator 3198). «Importa» e «importato da» sono nel perimetro del core (le 15 righe qui sotto).
+Righe da `grep -c ''` sul codice a `a389cadb` (ricontrollate il 2026-11-13 su tutti i 15 moduli): rispetto a `f009eb43` cambiano i quattro moduli di D-5, BI, VA e FP (Contact_Scheduler 1662, Engagement_Resolver 4569, Fire_Control 1217, Session_Simulator 3198), `Mission_Types` (+4, la BI) e `Damage_Model` e `Fuel_Model` (+3 ciascuno, il commit `191b7d37` di soli commenti e docstring). «Importa» e «importato da» sono nel perimetro del core (le 15 righe qui sotto).
 
 | Modulo | Responsabilità (una riga) | Righe | Importa | Importato da | Capitolo |
 |---|---|---|---|---|---|
 | `Command/Session_Types` | Porte `SessionOrder`/`SessionOutcome`, `assemble_session_outcome`, `operation_outcome` | 712 | 6 | 4 | [2](03_Strato0_Contratto_Porte.md) §2.1-2.5 |
-| `Command/Mission_Types` | Tipi di dominio di Missione, Operazione, esiti e validazioni strutturali (`check_mission_assets`) | 1387 | 0 | 5 | [2](03_Strato0_Contratto_Porte.md) §2.6 |
+| `Command/Mission_Types` | Tipi di dominio di Missione, Operazione, esiti e validazioni strutturali (`check_mission_assets`) | 1391 | 0 | 5 | [2](03_Strato0_Contratto_Porte.md) §2.6 |
 | `Command/Campaign_Types` | Regole di finestra, registro di campagna, record di prontezza, violazioni | 406 | 0 | 3 | [2](03_Strato0_Contratto_Porte.md) §2.10 |
 | `Utility/Session_Rng` | Seme deterministico per sessione/missione/evento/contatore; unica sorgente di casualità | 113 | 0 | 1 | [7](08_Supporto_Trasversale.md) §7.1 |
 | `Logic/Contact_Scheduler` | Strato 1: quando — finestre di contatto, tratti di rotta, CPA/TCPA, potatura per blocco | 1662 | 0 | 5 | [3](04_Strato1_Scheduler_Contatti.md) |
 | `Logic/Engagement_Resolver` | Strato 2: come finisce un ingaggio — `resolve_engagement`, salve, danno, disingaggio, `apply_engagement_result` | 4569 | 2 | 5 | [4](05_Strato2_Risolutore_Ingaggio.md) |
 | `Logic/Fire_Control` | Selezione dell'arma dai registri, politica d'armi, arma per il fuoco su posizione | 1217 | 1 | 3 | [4](05_Strato2_Risolutore_Ingaggio.md) §4.16, §4.33-4.34 |
-| `Logic/Damage_Model` | `DamageEvent` e la sua applicazione a un asset | 288 | 0 | 5 | [5](06_Strato3_Applicazione_Stato.md) §5.1 |
-| `Logic/Fuel_Model` | Carburante: `FuelEvent` per tratto, esaurimento, planata, bingo, consumo in ingaggio | 1576 | 1 | 3 | [5](06_Strato3_Applicazione_Stato.md) §5.2 |
+| `Logic/Damage_Model` | `DamageEvent` e la sua applicazione a un asset | 291 | 0 | 5 | [5](06_Strato3_Applicazione_Stato.md) §5.1 |
+| `Logic/Fuel_Model` | Carburante: `FuelEvent` per tratto, esaurimento, planata, bingo, consumo in ingaggio | 1579 | 1 | 3 | [5](06_Strato3_Applicazione_Stato.md) §5.2 |
 | `Logic/Mission_Adapter` | Dalla `Mission` a rotta, partenza, velocità, tratti, postura e forza d'ingaggio per asset | 2000 | 5 | 4 | [6](07_Orchestratore_Session_Simulator.md) §6.10-6.16, §6.19, §6.22 |
 | `Logic/Area_Fire` | Fuoco su posizione: ordini di fuoco, tiro, impatto | 326 | 5 | 1 | [6](07_Orchestratore_Session_Simulator.md) §6.23 |
 | `Logic/Session_Simulator` | Orchestratore: `run_session` e i suoi passi (forze, tratti, episodi, carburante, esiti) | 3198 | 9 | 2 | [6](07_Orchestratore_Session_Simulator.md) |
@@ -757,15 +759,15 @@ richiamano `mission_movements` per ripercorrere gli stessi tratti della sessione
 
 ## 10.6 L3 — La sequenza di chiamate di `run_session`
 
-`run_session` (`Logic/Session_Simulator.py:2163-3163`, circa mille righe) è spezzata in tre sequenze che seguono l'ordine del codice. Partecipanti = moduli (`RS` = `Session_Simulator.run_session` stessa: `RS->>RS` è una
+`run_session` (`Logic/Session_Simulator.py:2189-3198`, circa mille righe) è spezzata in tre sequenze che seguono l'ordine del codice. Partecipanti = moduli (`RS` = `Session_Simulator.run_session` stessa: `RS->>RS` è una
 funzione privata del modulo o una funzione locale). I messaggi sono nomi di funzioni reali; le condizioni sono gli interruttori del modulo (§6.21, tutti accesi di default) e i rami del codice. Dentro `resolve_engagement` la
 sequenza è D5 (capitolo 4): qui il risolutore è una scatola.
 
 I punti in cui il flusso **non** è quello che ci si aspetterebbe:
 
 - La fire control non è chiamata da `run_session`: è passata a `resolve_engagement` (D64 la avvolge con `restrict_by_policy`, D65 la usa).
-- Con i default la coda `heapq` non ordina gli ingaggi: gli episodi sono una lista (`pending`, `:2874`) e la coda con `heapq` serve solo al passo finale del carburante (D66).
-- `_mission_outcome` è calcolato **prima** che l'aereo perso per carburante sia portato a salute zero (`:3098` e `:3110-3120`): gli esiti leggono `fuel_ends`, non la salute finale.
+- Con i default la coda `heapq` non ordina gli ingaggi: gli episodi sono una lista (`pending`, `:2909`) e la coda con `heapq` serve solo al passo finale del carburante (D66).
+- `_mission_outcome` è calcolato **prima** che l'aereo perso per carburante sia portato a salute zero (`:3133` e `:3145-3155`): gli esiti leggono `fuel_ends`, non la salute finale.
 
 ### 10.6.1 Preparazione e validazione
 

@@ -1,7 +1,7 @@
 # Capitolo 9 — Limiti noti, punti di estensione, divergenze codice/wiki
 
 > **Aggiornamento 2026-11-13 (D-5, BI, VA, FP; codice `a389cadb`).** Tre sezioni nuove in §9.1 dopo quella della BI: **«Rilevamento per passaggio nella portata propria (FP)»** (con il limite storico «una sola estrazione per finestra e direzione» **superato**), **«Permanenza nel volume (D-5)»** (dwell dichiarato solo per i 10 EWR, DW-9 aperto) e **«Quota nel volume d'ingaggio (VA)»**; i riferimenti `:riga` della sezione BI sono riverificati; §9.3 ha
-> tre righe nuove (D-5, VA, FP) e §9.4 un riepilogo. **Interruttori del risolutore: `D5_DWELL_TIME`, `BI_AD_TARGET_RULE`, `VA_ENGAGEMENT_ALTITUDE_BAND`, tutti `False`; `FP_PER_PASS_DETECTION` eliminato il 2026-11-13** (capitolo 6 §6.21). Suite **4914 test, OK (skipped=7)**, fotografia **1103 esecuzioni**, 0 cambiate dalla pulizia: numeri dichiarati dalla Proposta della pulizia e da `F4_Differenze_Scenari.md`, **non rieseguiti** (capitolo 8 §8.7, §8.14).
+> tre righe nuove (D-5, VA, FP) e §9.4 un riepilogo. **Interruttori del risolutore: `D5_DWELL_TIME`, `BI_AD_TARGET_RULE`, `VA_ENGAGEMENT_ALTITUDE_BAND`, tutti `False`; `FP_PER_PASS_DETECTION` eliminato il 2026-11-13** (capitolo 6 §6.21). Suite **4914 test, OK (skipped=7)**, fotografia **1103 esecuzioni**, 0 cambiate dalla pulizia: numeri dichiarati dal messaggio del merge `f46e3982` (verificati dalla sessione principale su osboxes), dalla Proposta della pulizia e da `F4_Differenze_Scenari.md`, **non rieseguiti** per questo aggiornamento (capitolo 8 §8.7, §8.14). **Riverificati sul codice in questo aggiornamento**: i `:riga` di §9.1-§9.3 (spostati dall'aumento di `Engagement_Resolver.py`, `Fire_Control.py`, `Session_Simulator.py`, `Air_Route_Manager.py`), il nome e il default dei tre interruttori, i dieci `dwell_time_s` dei registri, i conteggi delle righe dei moduli di §9.4 e la fotografia (1103 chiavi in `runs`).
 > **Discrepanze di commento nel codice**, **non corrette dal manuale** (il codice è sola lettura per questo lavoro): i commenti di testa di `Asset/Aircraft_Weapon_Data.py:2115` e `Asset/Ship_Weapon_Data.py:1239` dicono ancora «Nessuno è ancora letto dal motore» (vedi BI sotto); il docstring del modulo di `Engagement_Resolver` e quello di `_Candidate` sono parzialmente superati dalla FP, e la sezione VA del docstring ha la data «2026-11-xx» (vedi FP e VA sotto).
 > Il resto del capitolo descrive lo stato indicato nelle note precedenti.
 >
@@ -61,7 +61,7 @@ per avere un solo punto di riferimento.
 ### Selezione dell'arma dai registri — fatta (2026-09-24), estesa al cannone di bordo (2026-09-26) e alla gittata delle bombe (2026-09-27)
 
 Aggiornamento rispetto alla stesura iniziale di questo manuale: `fire_control` resta sempre
-**iniettata** dal chiamante (`Logic/Engagement_Resolver.py:24-30`, il contratto non è cambiato,
+**iniettata** dal chiamante (`Logic/Engagement_Resolver.py:25-31`, il contratto non è cambiato,
 esteso solo per accettare anche una sequenza di opzioni, v. sotto), ma esiste ora
 un'implementazione che seleziona davvero l'arma dai registri
 (`Logic/Fire_Control.make_registry_fire_control`, capitolo 4, §4.16), consultando
@@ -69,7 +69,7 @@ un'implementazione che seleziona davvero l'arma dai registri
 ruoli. Dal 2026-09-26 (decisione A5) non seleziona più solo l'arma a Pk massima: restituisce
 **tutte** le armi adatte in ordine di preferenza Pk/costo (`rank_weapons`, capitolo 4, §4.16), e
 il risolutore prova le opzioni in ordine, sparando con la prima che ha ancora scorta (v. sotto).
-Resta da fare, dichiarato nel modulo stesso (`Logic/Fire_Control.py:181-190`): la modulazione
+Resta da fare, dichiarato nel modulo stesso (`Logic/Fire_Control.py:191-193`): la modulazione
 della Pk con la posizione nell'inviluppo (distanza, aspetto) — i valori restano quelli di
 template, indipendenti da dove avviene realmente il tiro nella finestra. (Fino a `a784a9e7` si aggiungeva: «il filtro per
 tipo di missione/bersaglio (ROE) non esiste, decisione A4 rimandata»: **superato dalla F7a**, v. oltre.) **Aggiornamento a `533cd1f5`**: l'entità
@@ -194,7 +194,7 @@ memoria di progetto `project_session_2026_09_25_summary.md`).
 
 Se un asset cambia rotta durante una finestra di contatto già calcolata dallo scheduler, la finestra va invalidata e
 ricalcolata. **Dentro `resolve_engagement` questo meccanismo non esiste ancora**, e il docstring del risolutore lo dice
-(`Logic/Engagement_Resolver.py:374-377`, R4 seconda parte: «il nuovo instradamento e il ricalcolo delle finestre di contatto
+(`Logic/Engagement_Resolver.py:461-464`, R4 seconda parte: «il nuovo instradamento e il ricalcolo delle finestre di contatto
 non li fa questo modulo: dal G4b li fa la sessione»): una forza che si disingaggia è **solo segnalata** nell'esito della run (`ForceOutcome.outcome =
 DISENGAGED`). **Dal G4b lo fa però l'orchestratore, fra un episodio e il successivo** (capitolo 6 §6.20): gli aerei di
 missione interessati sono ri-pianificati (bingo, esaurimento in ingaggio, rientro forzato dopo il disingaggio, uscita di
@@ -207,7 +207,7 @@ cambio di rotta *durante* un episodio (la decisione è alla fine dell'episodio) 
 
 `weather_detection_factor` applica un fattore di degradazione **unico** a qualunque sensore
 abbia prodotto la portata della finestra di contatto, perché la finestra stessa non porta
-l'informazione "quale sensore" (`Logic/Engagement_Resolver.py:461-473`, `:1105-1152`). Un radar non dovrebbe
+l'informazione "quale sensore" (`Logic/Engagement_Resolver.py:556-568`, `:1365-1412`). Un radar non dovrebbe
 subire la stessa degradazione notturna di un sensore ottico, ma oggi la subisce comunque, con un
 compromesso pesato verso il radar. La discriminazione per tipo di sensore richiede che la
 finestra di contatto porti anche il sensore che l'ha prodotta — un cambiamento nello strato 1.
@@ -218,13 +218,13 @@ impraticabile» (ZSU) e «solo tempo sereno» (entrambi): il visivo di notte è 
 
 - **Ripartizione del fuoco**: round-robin locale per tiratore, sul **dominio di coordinamento** dalla F4b+
   (`_schedule_next`,
-  `Logic/Engagement_Resolver.py:2230-2419`), non un'assegnazione ottima arma-bersaglio (nessun
+  `Logic/Engagement_Resolver.py:2727-2925`), non un'assegnazione ottima arma-bersaglio (nessun
   WTA, nessun peso per valore del bersaglio; la Pk della coppia entra solo nella saturazione della
   dottrina di tiro, §4.25). Dal 2026-09-28/29 il round-robin è preceduto dalla priorità ai lanciatori
   (L2/L3, §4.24) e dal filtro dei bersagli bloccati (§4.25).
 - **`salvo_window` di default 0.0**: solo impatti simultanei formano un evento-salva; la finestra
   giusta per raggruppare impatti ravvicinati è un punto aperto di modello, da decidere con la
-  taratura (`Logic/Engagement_Resolver.py:3626`, `:3674-3676`).
+  taratura (`Logic/Engagement_Resolver.py:4301`, `:4351-4353`).
 - **Nessun movimento fisico fra sessioni**: `run_session` non aggiorna `asset.position` a fine
   rotta; una campagna che concatena sessioni vede le forze ripartire dalle posizioni iniziali a
   ogni sessione, a meno che il chiamante non aggiorni le posizioni da sé
@@ -336,7 +336,7 @@ Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabi
   per classe dell'intercettore (`Ship` → navale, ogni altro → terrestre): nella **difesa di dominio mista** (una nave che
   difende truppe a terra, un Tor che difende un trasporto navale in porto) conta chi intercetta, non che cosa è attaccato.
 - **`capacity` non è filtrata per dominio.** Con la regola accesa il conteggio `SalvoResolution.interceptable_rounds` esclude
-  le salve a domini vuoti (`:3818-3822`), ma `capacity` (tetto di Hughes, capitolo 4 §4.5) resta la somma delle disponibilità di
+  le salve a domini vuoti (`:3818-3821`), ma `capacity` (tetto di Hughes, capitolo 4 §4.5) resta la somma delle disponibilità di
   **tutti** gli intercettori del dominio, anche di quelli che non possono fermare quel colpo.
 - **Tempo di volo dei cruise a lungo raggio** (limite **precedente**, reso più visibile dalla regola): `time_of_flight` =
   `ENGAGEMENT_RANGE_FRACTION` (0,5, stima) × portata / velocità (`Logic/Fire_Control.py:238`, `:853`) dà per Kh-55 e Kh-101
@@ -366,7 +366,7 @@ Capitolo 4 §4.35. Dichiarati da `Proposta_Finestre_Per_Passaggio_Portata_Propri
 - **Senza i tratti delle rotte i passaggi non si calcolano.** Una chiamata diretta a `resolve_engagement` senza `legs` fa l'estrazione unica di prima, con il candidato fino a `t_end`, la permanenza D-5 di `_exposure_time` e R-INT con l'**ultimo** rilevamento in lista (limite del ripiego, v. R-INT sotto). **Con i tratti e una direzione a due o più passaggi, `pass_rng` è obbligatorio**: senza,
   `ValueError` (dopo la pulizia del 2026-11-13: prima, con l'interruttore, ricadeva sull'estrazione unica). Nessun chiamante del repository lo incontra (la sessione lo passa sempre); un modulo futuro che chiama `resolve_engagement` con `legs` deve passare uno stream separato.
 - **Fine del tiro all'uscita dal volume (FP-3 (a)).** L'osservatore con la portata minore **non lancia salve nuove** dopo la fine del passaggio (unito); una salva **già lanciata** prosegue fino all'impatto (R4). **Non è modellata una guida** che richieda il sensore dopo il lancio. Effetto sulla fotografia: 44 esecuzioni cambiate (capitolo 8 §8.7), tutte con meno salve della difesa.
-- **R-INT (FP-5 (d)).** Con i tratti, un lancio fuori da ogni passaggio dell'intercettore sul lanciatore è «non visto» anche se l'intercettore lo aveva rilevato in un passaggio precedente (traccia persa all'uscita dal volume). Senza i tratti resta il difetto latente «ultimo rilevamento in lista». Con `BI_AD_TARGET_RULE` acceso la regola conta solo per i colpi che il filtro BI ammette (cruise e balistici; contro i navali, gli antinave).
+- **R-INT (FP-5 (d)).** Con i tratti, un lancio fuori da ogni passaggio dell'intercettore sul lanciatore è «non visto» anche se l'intercettore lo aveva rilevato in un passaggio precedente (traccia persa all'uscita dal volume). Senza i tratti resta il difetto latente «ultimo rilevamento in lista». Con `BI_AD_TARGET_RULE` acceso la regola conta solo per i colpi che il filtro BI ammette (cruise e balistici; contro i navali, gli antinave): affermazione della Proposta FP, **non riverificata** sul codice per questo aggiornamento.
 - **Passaggi tangenti o ritagliati a durata nulla contano come passaggi** (Pd sul bordo = 0,5 × fattore, legge di sempre; con FP-3 (a) nessun candidato se la reazione non è nulla); con la D-5 la permanenza nulla li annulla. La sonda P-1 ne ha contati **0** nella fotografia di allora (`ZERO_PASSES`).
 - **Passaggio diviso da un decollo/atterraggio** (`Contact_Scheduler._pair_windows`, `:1576`, per i tratti a stato costante di `GroundedSchedule`, F5): due finestre, due estrazioni, come prima.
 - **Unione dei passaggi (FP-10)** solo nel risolutore e **solo con la D-5 accesa e un dwell dichiarato** (oggi i 10 EWR; DW-9 estenderà). Senza dwell o con la D-5 spenta, un'uscita di pochi secondi crea un passaggio nuovo e un'estrazione in più (per traiettorie sul bordo del volume la Pd cumulativa è **sovrastimata**: esempio della Proposta §2.11, 0,915 contro 0,759, **non riverificato qui**).
@@ -711,23 +711,24 @@ qui perché dichiarati esplicitamente nel codice come punti aperti:
   di 6 km per ZSU-57-2 e M163-VADS e uno per ciascuno degli otto EWR del nucleo e, dal 2026-11-05, dei sette siti fissi (15 in tutto); `None` resta per i mezzi senza sensori aria, e per i due a vista con l'interruttore `D4C_VISUAL_SENSOR` spento.
 - **Reti di sensori/cueing EWR→SAM (D-7) fuori perimetro**: ogni sito calcola il proprio
   rilevamento in isolamento; un EWR che passa una traccia a un SAM lontano non è modellato.
-- **Attraversamento a corda limitata del solo rilevamento (D-5, opzione 2) non implementato**:
-  richiederebbe un dato di tempo di permanenza del sensore e un cambio della legge di Pd del
-  risolutore, non fatto in questo lavoro.
+- **Attraversamento a corda limitata del solo rilevamento (D-5, opzione 2): fatti la legge e la metrica, non il blocco C.**
+  Dal 2026-11-06 il risolutore ha la legge di permanenza (`dwell_factor`, dietro `D5_DWELL_TIME`, spento) e il pianificatore
+  la stessa legge nelle metriche di rilevamento (`effb0dcf`; v. «Permanenza nel volume (D-5)» più sotto); resta **non fatto** il
+  blocco C (l'«attraversamento a corda limitata» come volume del pianificatore, decisione DW-7).
 - ~~**KGBU-2AO/2PTAB/96r senza dati di rilascio**~~ (RISOLTO 2026-09-28, v. §9.1).
 
 ### Limiti dei sensori EWR e visivo (D-4b/D-4c, 2026-11-04, commit `cbc75634` e `37816355`; blocco C dei siti fissi, 2026-11-05, commit `efa8f353`)
 
 Dichiarati dalla Proposta (`Proposta_Dati_Sensori_EWR_Visivo.md` §5; per il blocco C `Proposta_Dati_Sensori_EWR_Siti_Fissi.md` §5.2) e nei commenti dei record; qui verificati sul codice dove si può, e segnati come **non verificati** dove dipendono da fonti esterne. Il capitolo 7 §7.12 dà i dati, il capitolo 3 §3.5 la lettura.
 
-- **Il DES non ha orizzonte radar.** `acquisition_range` è insieme la `R` della legge di Pd del DES (`detection_probability`, `Logic/Engagement_Resolver.py:1041`) e il raggio nominale del cilindro del pianificatore, che lo taglia con l'orizzonte
-  (capitolo 7 §7.8). Nel DES **nulla** taglia la portata con la quota: nessuna occorrenza di un orizzonte radar in `Contact_Scheduler`, `Engagement_Resolver` e `Session_Simulator` (ricerca fatta per questo aggiornamento; il commento `Engagement_Resolver.py:1598-1607` dice che oggi c'è «solo la SFERA»).
+- **Il DES non ha orizzonte radar.** `acquisition_range` è insieme la `R` della legge di Pd del DES (`detection_probability`, `Logic/Engagement_Resolver.py:1215`) e il raggio nominale del cilindro del pianificatore, che lo taglia con l'orizzonte
+  (capitolo 7 §7.8). Nel DES **nulla** taglia la portata con la quota: nessuna occorrenza di un orizzonte radar in `Contact_Scheduler`, `Engagement_Resolver` e `Session_Simulator` (ricerca fatta per questo aggiornamento; il commento `Engagement_Resolver.py:1872-1881` dice che oggi c'è «solo la SFERA»: commento rimasto indietro, perché la VA, spenta di default, aggiunge all'**ingaggio** la fascia di quota nel tempo, §9.1 «Quota nel volume d'ingaggio»; resta vero che nessun orizzonte radar taglia il **rilevamento**).
   **Un EWR vede quindi a piena `acquisition_range` anche un aereo radente**: nel pianificatore, con antenna a 20 m, un P-18 a 500 m ha un orizzonte di circa 110,6 km (calcolo dalla formula di §7.8) contro i 60 km del suo `acquisition_profile` a 500 m (**circa 1,8 volte**), nel DES la sovrastima è più grande perché non c'è alcun taglio.
   **Per i siti fissi il caso è più forte**: con portate di 300-400 km (AN-FPS-117 330, AMES-Type-80 390, Mammut 300, P-14-Lena 400) un sito apre nel DES finestre di contatto con aerei a centinaia di chilometri, anche radenti. **Il costo di calcolo di queste finestre non è stato misurato**: nessuno scenario della fotografia contiene un sito, quindi nessuna misura esiste (capitolo 3 §3.5).
   Ogni record ha **un solo** `acquisition_range`, quello di fonte per la quota e il bersaglio dichiarati nel suo commento (decisione 7, opzione (a): un `R` alla quota di crociera dove la fonte lo dà, altrimenti il massimo non qualificato).
 - **La curva portata-quota resta una Proposta a parte** (opzione (c) della Proposta §2.4: leggerla nel DES e nel pianificatore cambierebbe la legge del motore). Il dato di fonte è **conservato ma non letto da nessun codice**: `acquisition_profile`, presente solo in **sei** record su quindici: quattro del nucleo
   (SCR-270, P-18, 1L13, 55Zh6) e due siti fissi (AMES-Type-7 `((150, 16), (6100, 140))`, Wassermann `((50, 35), (6000, 190))`); Freya, P-12, P-37, AN/TPS-43 e gli altri cinque siti fissi hanno solo una portata unica (non un profilo).
-- **Notte e meteo non distinguono il sensore**: il fattore di degradazione è unico (`NIGHT_DETECTION_FACTOR = 0.7`, `Logic/Engagement_Resolver.py:472`) e la finestra di contatto non porta il sensore. Il **visivo di notte resta al fattore unico 0,7**: per la ZSU-57-2 le fonti dicono «tiro notturno impraticabile» e per entrambi i mezzi
+- **Notte e meteo non distinguono il sensore**: il fattore di degradazione è unico (`NIGHT_DETECTION_FACTOR = 0.7`, `Logic/Engagement_Resolver.py:567`) e la finestra di contatto non porta il sensore. Il **visivo di notte resta al fattore unico 0,7**: per la ZSU-57-2 le fonti dicono «tiro notturno impraticabile» e per entrambi i mezzi
   «solo tempo sereno» (`Ricerca_Sensore_Visivo_ZSU57_M163_2026_10_29.md`, **non rilette alla fonte primaria**), quindi la portata visiva è con ogni probabilità sovrastimata di notte e con meteo avverso. Una correzione per sensore resta da proporre (richiede che la finestra di contatto porti il sensore, v. «La Pd non distingue radar da ottico»).
 - **Valori stimati o deboli che entrano nel codice** (tutti dichiarati come tali nei commenti dei record; nessuno è un dato tarato):
   - visivo `acquisition_range` **6 km** per ZSU-57-2 e M163-VADS: **STIMA, confidenza bassa** (Howell/DC-3 in scala, intervallo plausibile 3-8 km); nessuna fonte dà la portata di scoperta dei due mezzi;
@@ -775,7 +776,7 @@ disingaggio come esito di ingaggio di prima classe") dice testualmente: *"al sup
 l'ingaggio termina con esito `DISENGAGED` distinto da `DESTROYED`, e **la forza che si
 disingaggia rientra nello scheduler dei contatti con una nuova rotta** (non sparisce)"*.
 
-**Fino a `84a47670` il codice non faceva questo**: il docstring di `Logic/Engagement_Resolver.py` (oggi a `:374-377`, riscritto il
+**Fino a `84a47670` il codice non faceva questo**: il docstring di `Logic/Engagement_Resolver.py` (oggi a `:461-464`, riscritto il
 2026-10-19 da `d1686b28`; allora diceva «rimandato») dichiarava esplicitamente che il **re-scheduling delle finestre** (di cui il rientro nello scheduler
 con una nuova rotta è un caso) è la **seconda parte di R4, rimandata** — non Fase 4. Il blocco di
 stato in cima a `soglie-disingaggio-e-attrito-aggregato.md` (`status: accepted`, aggiornato
@@ -790,7 +791,7 @@ base alternativa (o, comparsi in volo senza basi, fino al punto di comparsa, dov
 sostituiti e lo scheduler è rieseguito per i contatti rimasti (capitolo 6 §6.20) — cioè *«rientra nello scheduler con una
 nuova rotta»*, ma **per decisione dell'orchestratore, fra due episodi, e non dentro `resolve_engagement`**, che resta a
 stato ombra e non muta rotte. Per le forze **terrestri e navali** vale ancora il comportamento di prima (solo segnalate,
-dal G4a passive negli episodi successivi). Il docstring del risolutore (`:374-377`) descrive solo la parte del
+dal G4a passive negli episodi successivi). Il docstring del risolutore (`:461-464`) descrive solo la parte del
 risolutore ed è corretto alla lettera; dal 2026-10-19 (`d1686b28`) dice anche che «dal G4b li fa la sessione», quindi non è più
 ambiguo (voce 18 di §9.6): vale comunque la lettura di §9.1 e del capitolo 4 §4.9.
 
@@ -815,7 +816,7 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 | Fog-of-war reale | **Fatto** (`region_recon_detection_factor`/`recon_detection_factor_fn`, capitolo 4 §4.18, composto con il meteo tramite `combine_detection_factors`); resta da fare: un criterio di "non visto" più stringente (es. `position is None` nel report) per una nebbia meno "debole" (v. §9.1), e la correzione del bug di `Region.get_blocks_by_criteria(category='Military')` (`Context/Region.py:291-301`, v. §9.1) che la sessione di lavoro ha trovato ma non corretto. |
 | Volumi di rilevamento e intercettazione nel pianificatore di rotta | **Fatto** (`Logic/Air_Route_Manager.py`, `ThreatAA`/`DetectionThreat`, `ThreatMode.AVOID_DETECTION`, capitolo 7 §7.8); **dati EWR (otto radar mobili/semimobili, D-4b) e sensore visivo per ZSU-57-2/M163 (D-4c) fatti il 2026-11-04, e sette siti EWR fissi (blocco C della D-4b, AN/FPS-20 escluso) il 2026-11-05**, con i limiti di §9.1 «Limiti dei sensori EWR e visivo»; resta da fare: curva portata-quota dei radar (Proposta a parte), imposizione dell'immobilità dei siti fissi (Proposta separata, decisione C-4), migrazione dei siti a `Structure` (opzione B, richiede codice), reti di sensori/cueing EWR→SAM (D-7), attraversamento a corda limitata del solo rilevamento (D-5 opzione 2), cambio di quota per aggirare un volume di rilevamento (ricostruzione alla nuova quota, proposta §3.6 Attività D). |
 | Pianificatore d'attacco (quota e profilo di sgancio) | **Fatto** (`Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`, capitolo 7 §7.9, alimenta il DES via §4.20); resta da fare: collegare `MissionAsset.attack_profile` (campo già presente, capitolo 2 §2.6) al motore — dalla F7a ne è letta **solo l'arma** (`AttackProfile.weapon` è l'arma designata implicita, `MissionAsset.designated_weapons`), non la quota né il profilo di sgancio —, missili aria-superficie (fuori scope dichiarato), geometria di picchiata/cabrata nel tratto d'esposizione (v. §9.1). |
-| Missione come unità d'ingaggio | **Fatta** (F4b, `a4d8acf0`): vista di forza per missione `Mission_Adapter.MissionForce` (`:1649-1746`) passata a `resolve_engagement`, che accetta "qualunque oggetto con `assets`, `side`, `name`" (docstring `:3641-3645`); il `mission_id` entra nell'RNG attraverso l'`event_id` dell'ingaggio (`Logic/Session_Simulator.py:2766`); la verifica su `morale_for`, `enemy_estimate_for`, soglia di rottura e `committed` è fatta (capitolo 4 §4.27). Dalla F5-F6 il motore legge anche attese, TOT, criteri di fine e il bersaglio dei criteri (capitolo 6 §6.16, §6.18); **dalla F7a** legge anche bersaglio, ROE e armi designate, mediante `Mission_Adapter` (capitolo 6 §6.22), e dalla F7b le azioni `Fire_At_Point`; resta da fare: usare i ruoli degli asset e le regole diverse dalla ROE (allerta, EMCON, reazione alla minaccia, formazione). |
+| Missione come unità d'ingaggio | **Fatta** (F4b, `a4d8acf0`): vista di forza per missione `Mission_Adapter.MissionForce` (`:1649-1746`) passata a `resolve_engagement`, che accetta "qualunque oggetto con `assets`, `side`, `name`" (docstring `:4318-4322`); il `mission_id` entra nell'RNG attraverso l'`event_id` dell'ingaggio (`Logic/Session_Simulator.py:2801`); la verifica su `morale_for`, `enemy_estimate_for`, soglia di rottura e `committed` è fatta (capitolo 4 §4.27). Dalla F5-F6 il motore legge anche attese, TOT, criteri di fine e il bersaglio dei criteri (capitolo 6 §6.16, §6.18); **dalla F7a** legge anche bersaglio, ROE e armi designate, mediante `Mission_Adapter` (capitolo 6 §6.22), e dalla F7b le azioni `Fire_At_Point`; resta da fare: usare i ruoli degli asset e le regole diverse dalla ROE (allerta, EMCON, reazione alla minaccia, formazione). |
 | Dominio di coordinamento: cueing e latenza | **Fatto** il dominio (fuoco, percezione, difesa di salva: F4b+/F4b++, capitolo 4 §4.28-4.29). Resta da fare: il **cueing** del tiro (un sensore che assegna un bersaglio a un tiratore: EWR→SAM, AWACS→caccia, scorta→strike) e una **latenza/perdita** della condivisione, entrambi con la Fase 0 C2; i candidati di tiro per osservatore (`candidates`) sono il punto d'aggancio. |
 | Postura continua, presenza, attese | **Fatte** (F4c, F5-A/B/C): `GroundedSchedule` (capitolo 3 §3.7), presenza prima e dopo la rotta (`Mission_Adapter.movement_legs`, capitolo 6 §6.15), azione `WAIT`, ETA bloccate e TOT per missione (`mission_holds`, capitolo 6 §6.16), postura nell'esito (`SessionOutcome.postures`); resta da fare: circuito geometrico dell'orbita (raggio e velocità d'orbita nella `MissionAction`), shelter/hangar per gli aerei parcheggiati, perimetro reale di una base al posto di `AIR_BASE_AREA_RADIUS_M` (modulo mappe). |
 | Carburante e fine missione | **Fatti** (F6-A, F6-B1, F6-B2, G1-G5): `Fuel_Model` per tratto e nel tempo (capitolo 5 §5.2), criteri di `EndCriteria` come «fine di attività» senza cambio di rotta (capitolo 4 §4.31), `MissionOutcome` completo con regola unica, bingo con albero di decisione, consumo in ingaggio, episodi e ri-pianificazione (capitolo 6 §6.17-6.20); resta da fare: taratura del registro `emergency` (`consume`, `time`, motori con postbruciatore), regola WW2 per l'emergenza di durata inferiore a 5 minuti, salve offensive dal bingo, rientro per danno, `abort_on_threat`, idoneità delle basi per tipo d'aereo. |
@@ -827,11 +828,11 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 | Bersagli intercettabili dalle difese aeree (BI) | **Fatti** (blocchi 1-3, `61df9437`, `0f275d55`, `8ac1b0f7`): classi e flag nei `MISSILES_ASM`, `Fire_Control.munition_class`/`intercept_domains_for`, `ShotSpec.intercept_domains`, filtro `_admissible` dietro `BI_AD_TARGET_RULE` (spento), S35-ADTGT (capitolo 4 §4.24). Resta da fare: decidere se accendere l'interruttore di default (nuova fotografia), un'RCS o una soglia di dimensione al posto del flag, il criterio di dimensione anche per le difese terrestri (BI-12 (b): una riga in `intercept_domains_for`), un missile balistico a registro, la revisione di S35 se cambia L1. Limiti in §9.1 «Bersagli intercettabili dalle difese aeree». |
 | Permanenza nel volume (D-5) | **Fatta la legge** (`Engagement_Resolver.dwell_factor`, `D5_DWELL_TIME` spento, capitolo 4 §4.36) e la metrica del pianificatore (`Air_Route_Manager`, capitolo 7 §7.8). Resta da fare: (1) **dati `dwell_time_s` per SAM, AAA, radar d'aereo, navi, TVD e vista** (DW-9; **solo dati**: aggiungere la chiave al dizionario del sensore nei registri con commento F/D/S e fonte, poi suite e un confronto con l'interruttore **acceso** da rileggere), (2) **decidere se accendere l'interruttore** (nuova fotografia, decisione dell'utente), (3) il **blocco C** (attraversamento a corda limitata nel pianificatore) e l'**orizzonte radar nel DES** (DW-7, attività separate). |
 | Quota nel volume d'ingaggio (VA) | **Fatta** dietro `VA_ENGAGEMENT_ALTITUDE_BAND` (spento): `engagement_intervals(..., band)`, `_altitude_deferral`, `Contact_Scheduler.altitude_intervals`/`intersect_intervals` (capitolo 4 §4.37). Resta da fare: **decidere se accendere l'interruttore**; dare portata e fascia alle `ShotSpec` di test (attività separata); inviluppo con portata ridotta a bassa quota, portata minima e cono di silenzio (volumi non convessi: due intervalli per tratto, Attività D). |
-| Rilevamento per passaggio (FP) | **Fatto, senza interruttore** (capitolo 4 §4.35): `_own_passes`, `_detect_passes`, `pass_rng`. **Punto di aggancio per un volume di rilevamento non sferico**: `_own_intervals` è l'**unico** punto di chiamata del volume proprio nel risolutore (decisione VA-6 (a)); un volume diverso dalla sfera si sostituisce lì, restando contenuto nella sfera di raggio `own_range`. Resta da fare: la metrica **cumulativa** del pianificatore (`cumulative_detection_probability`, quando ci sarà un consumatore), l'allineamento delle finestre dello scheduler all'unione FP-10 (oggi solo tolleranza numerica). |
+| Rilevamento per passaggio (FP) | **Fatto, senza interruttore** (capitolo 4 §4.35): `_own_passes`, `_detect_passes`, `pass_rng`. **Punto di aggancio per un volume di rilevamento non sferico**: `_own_intervals` è l'**unico** punto di chiamata del volume proprio nel risolutore (decisione VA-6 (a)); un volume diverso dalla sfera si sostituisce lì, restando contenuto nella sfera di raggio `own_range`. Resta da fare: la metrica **cumulativa** del pianificatore (nome proposto `cumulative_detection_probability`, **non esiste nel codice**: v. `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`; si aggiungerà quando ci sarà un consumatore), l'allineamento delle finestre dello scheduler all'unione FP-10 (oggi solo tolleranza numerica). |
 | Legame C2 fra unità di difesa | Fase 0 della gerarchia C2: tracce condivise per R-INT (§4.26), assegnazione più rapida per L3 (§4.24). |
 | Re-scheduling dopo disingaggio | **Fatto per gli aerei dal G4b**, a livello di sessione (`Session_Simulator.replan`/`reschedule`, capitolo 6 §6.20): rientro forzato, bingo e esaurimento dopo un episodio con ricalcolo dei contatti (`schedule_contacts(only_assets=)`). Resta da fare: forze terrestri e navali (oggi passive sulla rotta), cambio di rotta *durante* un episodio, condizioni su eventi (`ON_EVENT`); il risolutore resta a stato ombra e non muta rotte. |
-| Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:195-230`, `Logic/Engagement_Resolver.py:1105-1152`). Dal 2026-11-04 serve anche a non sovrastimare il sensore **visivo** di ZSU-57-2 e M163-VADS di notte (§9.1 «Limiti dei sensori EWR e visivo»). |
-| Assegnazione ottima arma-bersaglio | Sostituire la regola greedy round-robin di `_schedule_next` (`Logic/Engagement_Resolver.py:2230-2419`) con un algoritmo di weapon-target assignment, mantenendo l'invariante del payload congelato (R4 prima parte). |
+| Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:195-230`, `Logic/Engagement_Resolver.py:1365-1412`). Dal 2026-11-04 serve anche a non sovrastimare il sensore **visivo** di ZSU-57-2 e M163-VADS di notte (§9.1 «Limiti dei sensori EWR e visivo»). |
+| Assegnazione ottima arma-bersaglio | Sostituire la regola greedy round-robin di `_schedule_next` (`Logic/Engagement_Resolver.py:2727-2925`) con un algoritmo di weapon-target assignment, mantenendo l'invariante del payload congelato (R4 prima parte). |
 | Movimento fisico persistente fra sessioni | **Fatto** (F8b/F8c): `run_session` calcola `SessionOutcome.final_positions` (capitolo 6 §6.24) e `Session_Campaign.apply_final_positions` le applica agli asset (§6.27); `CampaignState.restore(..., restore_position=True)` le ripristina da un'istantanea (capitolo 7 §7.13). `run_session` **non** muta la posizione, per costruzione. Resta da fare: la base di destinazione vera di un aereo `off_scene` (modulo mappe/C2) e un chiamante di produzione del conduttore. |
 | Rifornimento (munizioni/carburante) | **Fatto, senza logistica** (F8c): passo separato che precede una nuova `SessionOrder`, `Logic/Readiness.apply_campaign_processes` → `_rearm_and_refuel` (riassegna il loadout agli aerei, `load_stores_from_registry`/`load_fuel_from_registry` per veicoli e navi; capitolo 6 §6.26). Resta da fare la **logistica (F8d)**: consumo delle scorte del blocco e dipendenza dalle risorse della base (`Resource_Manager`, blocchi `Production`/`Transport`/`Storage`), con tabella di conversione (STIMA) e comportamento a scorte esaurite. |
 | Prontezza degli asset e registro di campagna | **Fatti** (F8c): `Command/Campaign_Types.CampaignLedger`, `Logic/Readiness` (turnaround + riparazione), tempi in `Context/Context.py` (capitolo 2 §2.10, capitolo 6 §6.26, capitolo 7 §7.13). Punti di aggancio: sostituire le STIME con dati tarati (commit di soli dati; per il mare serve una ricerca mirata su GAO/CRS e documenti della Marina), riparazione progressiva, tempi per intensità di impiego (ore volate) invece che per classe, danno grave di una nave (cantiere) con una soglia di fuori servizio per la campagna (F8d). |
@@ -932,7 +933,7 @@ sgancio, che alimenta il DES con una gittata e un tempo di caduta reali per le b
 **Aggiornamento 2026-11-06 → 2026-11-13: D-5, BI, VA e FP (a `a389cadb`)**: in ordine, la permanenza nel volume (D-5, `8943b292` il risolutore e `effb0dcf` il pianificatore, interruttore `D5_DWELL_TIME`, scenario S32); i bersagli intercettabili dalle difese aeree (BI, `61df9437`, `0f275d55`, `8ac1b0f7`, interruttore `BI_AD_TARGET_RULE`, scenario S35); la quota nel volume d'ingaggio (VA, `585dbc65`, `5d87f03d`, interruttore
 `VA_ENGAGEMENT_ALTITUDE_BAND`, scenario S34); il rilevamento per passaggio nella portata propria (FP, da `c1f39787` a `a22b3930`, scenario S33), acceso il 2026-11-12 (`28df28b8`) e **senza interruttore dalla pulizia** (`2c89ca88`, `a389cadb`). **Il risolutore** passa da 3872 a 4569 righe (`Engagement_Resolver.py`), `Fire_Control` da 1088 a 1217, `Contact_Scheduler` da 1578 a 1662 (due primitive), `Session_Simulator` da
 3163 a 3198 (`pass_event_id`), `Mobile` e i registri per i dati (`dwell_time_s`, campi BI). **Tre interruttori nuovi, tutti spenti** (capitolo 6 §6.21): con essi spenti nessuna esecuzione preesistente cambia (1009 identiche a ogni passo); la FP, regola sempre attiva, cambiò **44** esecuzioni (FP-3 (a)) alla sua accensione (2026-11-12) ed è ora nella fotografia. Quattro scenari nuovi (S32-S35, capitolo 8 §8.14). Suite **4914 test, OK (skipped=7)**,
-fotografia **1103 esecuzioni** (numeri dichiarati dalla Proposta della pulizia e da `F4_Differenze_Scenari.md`, **non rieseguiti** per questo aggiornamento; il numero di esecuzioni è invece contato sul file).
+fotografia **1103 esecuzioni** (numeri dichiarati dal messaggio del merge `f46e3982`, dalla Proposta della pulizia e da `F4_Differenze_Scenari.md`, **non rieseguiti** per questo aggiornamento; il numero di esecuzioni è invece contato sul file; le righe dei moduli sono contate con `wc -l`).
 
 I seguiti possibili restano quelli di §9.3: i limiti "minori ma non corretti" già presenti (bug di
 `get_blocks_by_criteria`; ~~le tre KGBU senza dati di rilascio~~, risolte il 2026-09-28) più quelli aggiunti
@@ -985,6 +986,8 @@ aggiornamento; la **F8d** (logistica) non è una fase del Piano originale e **no
 | F8d | logistica: riarmo, rifornimento e riparazione dipendenti dalle risorse della base | **non fatta, per decisione dell'utente** (limite dichiarato) | §9.1 |
 | F9 | documentazione | **questo aggiornamento** (F7a, F7b e F8: tolto il «TOT comune» dai capitoli 2 e 9 — v. §9.6 voce 15 —, documentate F5/F6/F7/F8); sintesi/proposta da allineare | — |
 
+**Fuori tabella**: le attività del 2026-11 (D-4b/D-4c, D-5, BI, VA, FP) non sono fasi del Piano della Missione F0-F9 e **non compaiono** in questa tabella né nel diagramma D29: sono descritte in §9.1 (sezioni dedicate), §9.3 e §9.4 (aggiornamento 2026-11-06 → 2026-11-13); la FP ha una riga nel Piano (`Piano_Implementazione_Missione.md`).
+
 `abort_on_threat` è fuori dal Piano di F6. Fuori piano per decisione (D5.a, N2.d/D2.a/R4 seconda parte, N1, N3.f secondo
 stadio, C2/TSM): rifornimento in volo simulato, condizioni sullo stato e re-scheduling guidato da eventi, adapter DCS,
 secondo stadio di scelta del tipo di missione nel pianificatore, `Theater_Session_Manager`. Domande ancora aperte nel
@@ -1010,7 +1013,7 @@ flowchart LR
 
 ## 9.6 Incoerenze trovate fra documenti di progetto e codice a `fa5fbf1e` (stato delle voci aggiornato al 2026-10-29; voci 28-29 chiuse il 2026-11-05)
 
-Il codice prevale; qui sono **riportate, non corrette**. Letti: `Piano_Implementazione_Missione.md`,
+Il codice prevale; qui sono **riportate, non corrette**. **Righe di codice:** i riferimenti `:riga` di questa sezione verso `Engagement_Resolver.py`, `Session_Simulator.py`, `Fire_Control.py` e gli altri file toccati dal 2026-11 sono quelli di `fa5fbf1e` quando è dichiarato (le voci sono uno storico); dove il testo dice «oggi» sono stati riportati al codice di `a389cadb`. Dopo `fa5fbf1e` `Engagement_Resolver.py` è passato da 3872 a 4569 righe (D-5, BI, VA, FP), quindi le righe di quel file sono tutte più alte. Letti: `Piano_Implementazione_Missione.md`,
 `F4_Differenze_Scenari.md`, `Proposta_F8_Sessione_Campagna.md`, `Ricerca_Turnaround_Riparazione.md`, `Rapporti/Rapporto_F8a_oc-developer.md` … `Rapporto_F8c3_oc-developer.md`,
 `Proposta_F7_Bersagli_Filtro_Armi.md`, `Proposta_Difetto26_Readiness_Ledger.md`, `Rapporti/Rapporto_difetto26_des-developer.md`, `Proposta_Pulizia_Incongruenze_Doc.md`,
 `Rapporti/Rapporto_pulizia-doc_oc-developer.md`, `Proposta_G4_Ri_scheduling.md`, `Proposta_Struttura_Missione_Decisioni.md`,
@@ -1034,15 +1037,15 @@ CHIUSA parzialmente 8. (A `fa5fbf1e`: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 
 
 1. **`mission_id` nell'RNG** — **CHIUSA**. Il piano (F3) lo prevedeva reale nell'RNG; a `533cd1f5` il codice lo
    rimandava a F4. Dalla F4b (`a4d8acf0`) il `mission_id` entra nell'RNG *attraverso l'`event_id`*
-   (`engagement_event_id`, `Logic/Session_Simulator.py:993-1014`, `:2766`), con lo slot `mission_id` di
+   (`engagement_event_id`, `Logic/Session_Simulator.py:1007-1028`, `:2801`), con lo slot `mission_id` di
    `Session_Rng` `None` per gli ingaggi; il piano (deviazioni 1 e 4 di §5) documenta l'una e l'altra scelta. La
    fotografia è stata rigenerata (capitolo 8 §8.7). *Aggiornamento a `dcedc541`*: lo slot `mission_id` è ora **usato** dal fuoco su
-   posizione della F7b (`Session_Simulator.py:2475`, capitolo 6 §6.23), come il piano della F7b dichiarava («primo uso dello slot»).
+   posizione della F7b (`Session_Simulator.py:2501`, capitolo 6 §6.23), come il piano della F7b dichiarava («primo uso dello slot»).
 2. **Parametri `routes`/`starts`/`speeds`** — **CHIUSA**. Il codice li ha rimossi (Q2: una sola strada, `run_session` non
    li ha più). Il corpo della Fase 3 (§1, «Compatibilità») dice ora «**[Esito: rimossi in F3, v. §5.]**»: il testo del piano è
    stato allineato dopo `84a47670` (riscontrato anche a `dcedc541`).
 3. **Rotta aerea "da base a base"** (piano F1, validazione D2.c) — **CHIUSA**: `Mission` controlla solo i
-   **ruoli** (`DEPARTURE` all'inizio, `LAND` alla fine, `Command/Mission_Types.py:1083-1110`), non che i punti
+   **ruoli** (`DEPARTURE` all'inizio, `LAND` alla fine, `Command/Mission_Types.py:1087-1114`), non che i punti
    siano basi; il piano lo registra come deviazione 10 (§5). Il rientro vero che quella deviazione rimandava a F5-F6 esiste
    oggi solo come **bingo** (capitolo 6 §6.19) e come atterraggio su una base vera riconosciuto per riferimento o per area
    (`lands_on_air_base`, capitolo 6 §6.15); gli scenari aerei finiscono ancora per lo più senza rientro.
@@ -1050,15 +1053,15 @@ CHIUSA parzialmente 8. (A `fa5fbf1e`: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 
    resta l'An-30M Recon con `tasks` vuoto (`Asset/Aircraft_Loadouts.py:3620-3625`); la riga F2 della tabella di §5
    del piano riporta «**13** loadout su 14 con task assegnati (An-30M Recon lasciato vuoto)».
 5. **`Salvo.launch_position`** (proposta SAM §7.5) — **APERTA**: il campo opzionale non esiste in `Salvo`
-   (`Logic/Engagement_Resolver.py:631-650`); L1 ricava le posizioni all'istante del lancio dai tratti di rotta
-   (`_position_at`, `:2984-2997`).
+   (`Logic/Engagement_Resolver.py:791-810`); L1 ricava le posizioni all'istante del lancio dai tratti di rotta
+   (`_position_at`, `:3621-3634`).
 6. **Regola L2 come "primo elemento della chiave"** (proposta SAM §7.7 Q3) — **APERTA**: nel codice è una
-   selezione di pool (`pool = priority or self._designated_first(shooter, viable) or viable`, `Logic/Engagement_Resolver.py:2366`;
+   selezione di pool (`pool = priority or self._designated_first(shooter, viable) or viable`, `Logic/Engagement_Resolver.py:2863`;
    fino a `a784a9e7` era `priority or viable`: la F7a vi ha inserito, **dopo** la priorità L2, la precedenza al designato di
    `priority_designated`, capitolo 4 §4.32) che ignora anche la restrizione al primo istante utile (`not priority and
-   t_fire > t_first`, `:2380`); equivalente nello spirito, non nella forma.
+   t_fire > t_first`, `:2877`); equivalente nello spirito, non nella forma.
 7. **Esito di una missione sul posto** — **CHIUSA** (F8b, `33698fb4`). Il piano la descriveva "ancora in corso" e il codice dava `FAILED` perché `MissionStatus` non aveva quello stato.
-   Ora esiste `MissionStatus.IN_PROGRESS` (`Command/Mission_Types.py:167-168`), prodotto da `_mission_outcome` (`Logic/Session_Simulator.py:2141-2142`) con `F8_IN_PROGRESS` acceso
+   Ora esiste `MissionStatus.IN_PROGRESS` (`Command/Mission_Types.py:167-168`), prodotto da `_mission_outcome` (`Logic/Session_Simulator.py:2167-2168`) con `F8_IN_PROGRESS` acceso
    (capitolo 6 §6.11), e il Piano dice ora, fra i suoi punti aperti, «RISOLTO dalla F8b (`IN_PROGRESS`)» (riscontrato sul Piano attuale). Resta vero che la fotografia non registra lo stato di missione.
 8. **Docstring di `Session_Simulator` obsolete** — **CHIUSA parzialmente** (già a `84a47670`): le due frasi sulla
    selezione dell'arma sono state corrette e rimandano a `Fire_Control.make_registry_fire_control` (la `fire_control`
@@ -1090,12 +1093,12 @@ CHIUSA parzialmente 8. (A `fa5fbf1e`: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 
     Resta un'imprecisione per omissione, minore: la riga non elenca ciò che *non* è letto (allerta, EMCON, reazione alla minaccia e
     formazione di `MissionRules`; `abort_on_threat`, `last_waypoint`; `OutcomeRule` e missione principale dell'`Operation` — letti dalla F8b da `Command/Session_Types.operation_outcome`, non da `Logic/`).
 13. **Manuale a `533cd1f5`: riferimento stantio** — **CHIUSA**. Il §9.2 D1 citava `Logic/Engagement_Resolver.py:160-162`
-    per il «re-scheduling delle finestre»; corretto già a `84a47670`. Il testo vero è oggi a `:374-377` (era `:322-324` a `a784a9e7`:
+    per il «re-scheduling delle finestre»; corretto già a `84a47670`. Il testo vero è oggi a `:461-464` (era `:374-377` a `fa5fbf1e` e `:322-324` a `a784a9e7`:
     la F7a ha inserito 50 righe di docstring sopra).
 14. **Commento del risolutore: `domain_of`** — **CHIUSA** (`d1686b28`, piano P1). Il commento di `_EngagementRun.__init__`
-    (`Logic/Engagement_Resolver.py:1677-1679`) dice ora che `domain_of` è «calcolato in `_build_domains` (chiamato subito dopo
+    (`Logic/Engagement_Resolver.py:1677-1679` a `fa5fbf1e`, oggi `:1974-1976`) dice ora che `domain_of` è «calcolato in `_build_domains` (chiamato subito dopo
     `_build_forces`)»: riscontrato sul codice, `_build_domains` è a `:1862` e la chiamata sta a `:1753`, subito dopo
-    `_build_forces` (`:1752`).
+    `_build_forces` (`:1752`) (a `fa5fbf1e`; oggi `:2177`, `:2068` e `:2067`).
 
 **Voci aggiunte a `a784a9e7`: stato a `dcedc541`**
 
@@ -1121,7 +1124,7 @@ CHIUSA parzialmente 8. (A `fa5fbf1e`: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 
     codice, coerente con il capitolo 6 §6.14-6.15. (Resta la riga della tabella dei campi in capitolo 2 §2.2, riscritta in questo
     aggiornamento.)
 18. **Docstring del risolutore: «Re-scheduling NON implementato (R4, seconda parte)»** — **CHIUSA** (`d1686b28`, piano P2). Il docstring
-    di `Engagement_Resolver` (`:374-377`) dice ora «Re-scheduling delle finestre NON implementato **nel risolutore** (R4, seconda parte)
+    di `Engagement_Resolver` (`:374-377` a `fa5fbf1e`, oggi `:461-464`) dice ora «Re-scheduling delle finestre NON implementato **nel risolutore** (R4, seconda parte)
     ... non li fa questo modulo: dal G4b li fa la sessione (`Session_Simulator`, ri-pianificazione dopo il disingaggio)»: riscontrato
     sul codice, non è più ambiguo; è coerente con capitolo 6 §6.20 e §9.2 D1.
 19. **Piano, deviazione 15 (F6-B2): «scelte DA CONFERMARE»** — **APERTA, storica** (riverificata). La deviazione 15 del Piano
@@ -1185,8 +1188,8 @@ CHIUSA parzialmente 8. (A `fa5fbf1e`: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 
 
 **Voci nuove dell'aggiornamento del 2026-11-04 (sensori D-4b/D-4c, codice `37816355` e `cbc75634`)** — riportate il 2026-11-04 senza correggerle; **entrambe CHIUSE il 2026-11-05** (v. sotto)
 
-28. **Commenti di `Logic/Air_Route_Manager.py` sulle altezze d'antenna e sui sensori** — **CHIUSA il 2026-11-05** (commit `ed8d0fa3`, solo commenti e docstring, e di nuovo `efa8f353`, solo commento; era APERTA, minore). **Stato attuale**: il commento sulle altezze d'antenna (`Logic/Air_Route_Manager.py:649-659`) dice che la chiave `antenna_height` può stare nei dizionari `radar`/`TVD`/`visual`, la dichiarano SCR-270 (16,8 m) e tre siti fissi
-    (Chain-Home 73 m, Wassermann 37 m, AMES-Type-80 11,4 m, tutti dedotti) e che gli **11** record EWR senza il dato usano i 20 m, «gli EWR sono 15: 8 mobili/semimobili e 7 siti fissi»; il commento di testa della fabbrica (`:624`) cita `radar`/`TVD`/`visual` e il docstring di `sensor_antenna_height` (`:706`) cita `'radar'/'TVD'/'visual'`. Verificato leggendo `git show ed8d0fa3` (diff di soli commenti: il messaggio
+28. **Commenti di `Logic/Air_Route_Manager.py` sulle altezze d'antenna e sui sensori** — **CHIUSA il 2026-11-05** (commit `ed8d0fa3`, solo commenti e docstring, e di nuovo `efa8f353`, solo commento; era APERTA, minore). **Stato attuale**: il commento sulle altezze d'antenna (`Logic/Air_Route_Manager.py:658-668`) dice che la chiave `antenna_height` può stare nei dizionari `radar`/`TVD`/`visual`, la dichiarano SCR-270 (16,8 m) e tre siti fissi
+    (Chain-Home 73 m, Wassermann 37 m, AMES-Type-80 11,4 m, tutti dedotti) e che gli **11** record EWR senza il dato usano i 20 m, «gli EWR sono 15: 8 mobili/semimobili e 7 siti fissi»; il commento di testa della fabbrica (`:633`) cita `radar`/`TVD`/`visual` e il docstring di `sensor_antenna_height` (`:715`) cita `'radar'/'TVD'/'visual'`. Verificato leggendo `git show ed8d0fa3` (diff di soli commenti: il messaggio
     del commit dichiara `Test_Threat_AA_Factory` Ran 58 OK, **non rieseguito** qui). Il testo che segue è quello **originale della voce** (2026-11-04), conservato per riferimento; i suoi `:riga` sono **quelli di allora**. Il commento sulle altezze d'antenna (`:650-654`) dice che la chiave opzionale `antenna_height` non è presente in nessun record («nessun record la contiene oggi») e che
     non c'è nessun record EWR («nessun record EWR oggi»): dal 2026-11-04 il registro ha otto EWR e lo **SCR-270 dichiara** `antenna_height` 16,8 (`Asset/Vehicle_Data.py:4655`, letta da `sensor_antenna_height`, `:701`). Il commento di testa della fabbrica (`:620-632`) e il docstring di `sensor_antenna_height` (`:702`) citano solo
     `radar`/`TVD`, mentre la funzione tratta anche `visual`. Il comportamento del codice è corretto: sono i testi a essere rimasti indietro.
@@ -1206,7 +1209,7 @@ d'uscita) né `MISSION_SPEED` e il caso positivo di `MISSION_START_INVALID` nel 
 sezione F7b, «Scelte dove il piano lasciava margine»; qui verificate sul codice): `fire_orders(mission, movement, t0)` invece di
 `(mission, movement, asset)` (l'asset è in `movement.asset_id`, `t0` serve alle condizioni `AT_TIME`, `Logic/Area_Fire.py:144`);
 `area_fire_weapon(shooter, distance_m, weapon=None, stock_of=None)` con il parametro `stock_of` in più e un `AreaWeapon` invece del
-record privato (`Logic/Fire_Control.py:1013`); `area_fire_pk(weapon, target, grounded=False)`; `resolve_area_fire(..., *, inactive_from,
+record privato (`Logic/Fire_Control.py:1142`); `area_fire_pk(weapon, target, grounded=False)`; `resolve_area_fire(..., *, inactive_from,
 grounded_at)` con due parametri keyword in più e valore di ritorno `Optional` (`Logic/Area_Fire.py:231`); l'istante `AT_TIME` è
 `max(arrivo, t0 + time)` (il piano scriveva `max(arrivo, time)`); l'esito è applicato a **tutti** i blocchi, non solo al blocco del
 tiratore e ai colpiti; il «nemico» è l'altro schieramento A/B (`block_owner`), non il `side` del blocco; un aereo *in volo* non è
