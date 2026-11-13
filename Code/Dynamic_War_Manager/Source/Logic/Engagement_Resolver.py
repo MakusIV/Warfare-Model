@@ -13,9 +13,10 @@ attraverso l'RNG di sessione passato dal chiamante.
 
 1. **Pd — chi rileva davvero.** La finestra di contatto dice che l'osservatore *potrebbe*
    vedere il bersaglio; se lo vede lo decide un'estrazione contro
-   `detection_probability(d_cpa, portata)`. Una sola estrazione per coppia e direzione
-   decide sia *se* sia *a che distanza* avviene il rilevamento (v. `detection_radius`), e
-   quindi *quando*: l'istante e' ricavato analiticamente con
+   `detection_probability(d_cpa, portata)`. Un'estrazione per coppia, direzione e
+   passaggio nel volume proprio (v. "Rilevamento per passaggio", FP: un solo passaggio, e
+   quindi una sola estrazione, e' il caso comune) decide sia *se* sia *a che distanza*
+   avviene il rilevamento (v. `detection_radius`), e quindi *quando*: l'istante e' ricavato analiticamente con
    `Contact_Scheduler.range_intervals` quando il chiamante fornisce i tratti delle rotte.
    Con `dwell_time_for` (D-5) la soglia e' moltiplicata per il fattore di permanenza.
 2. **Latenza di reazione — chi spara per primo.** Dal rilevamento al primo lancio passa
@@ -141,7 +142,7 @@ LANCIO: la salva parte solo quando la distanza 3D tiratore-bersaglio e' <= max_r
   l'ordine delle estrazioni RNG e' invariato, e con `max_range=None` il percorso di codice
   e' identico a quello precedente.
 
-## Quota nel volume d'ingaggio (VA, 2026-11-xx)
+## Quota nel volume d'ingaggio (VA, 2026-11-10)
 
 `Proposta_Allineamento_Volumi_DES_Pianificatore.md`, interruttore `VA_ENGAGEMENT_ALTITUDE_BAND` (SPENTO). Acceso:
 

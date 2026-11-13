@@ -418,7 +418,8 @@ disingaggiata ancora a terra (non decollati) a `t_r` non sono ri-pianificati.
   contengono separatori (una concatenazione `"a:b"` non lo sarebbe).
 - `counter`: dal G4a l'ordinale degli episodi con lo stesso insieme di forze nella sessione (0 per il
   primo, quindi lo stream di prima per ogni componente che e' un solo episodio), per lo stream
-  dell'ingaggio e per quello della tempra; con `G4_EPISODES` spento sempre 0 (ogni componente e'
+  dell'ingaggio, per quello della tempra e per quello dei passaggi (FP, `pass_rng`, con
+  `event_id` composto con `PASS_EVENT_TAG`); con `G4_EPISODES` spento sempre 0 (ogni componente e'
   risolta una sola volta per sessione).
 
 **Precondizione di riproducibilita':** gli id di forza devono essere STABILI fra le
@@ -2728,7 +2729,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     def engage(time, force_ids, group, event_id):
         component = [forces[force_id] for force_id in force_ids]
         # G4a: `counter` = ordinale degli episodi con lo STESSO insieme di forze (0 per il primo: lo stream di
-        # prima), per lo stream dell'ingaggio e per quello della tempra (tempra nuova per episodio).
+        # prima), per lo stream dell'ingaggio, per quello della tempra (nuova per episodio) e per quello dei passaggi (`pass_rng`, FP).
         counter = ordinals.get(event_id, 0)
         ordinals[event_id] = counter + 1
         # F6-B1: criteri passati solo se dichiarati (senza, la chiamata e' quella di prima), con le

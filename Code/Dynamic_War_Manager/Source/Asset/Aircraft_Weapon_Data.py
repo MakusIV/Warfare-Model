@@ -2112,7 +2112,7 @@ AIR_WEAPONS = {
         },
     },
     # Campi per la regola dei bersagli intercettabili dalla difesa aerea (BI, blocco 1):
-    # 'munition_class', 'ad_detectable', 'diameter_mm', 'mass_kg'. Nessuno e' ancora letto dal motore.
+    # 'munition_class', 'ad_detectable', 'diameter_mm', 'mass_kg'. Letti dal motore: 'munition_class' e 'ad_detectable' da `Fire_Control` (regola BI, interruttore spento di default); 'diameter_mm' e 'mass_kg' non ancora.
     # Piano: Analysis/Document/Proposta_Bersagli_Intercettabili_Difesa_Aerea.md (§5.2);
     # valori e fonti: Analysis/Document/Proposta_Dati_Bersagli_Intercettabili.md (§10.2).
     # Sono stime di progetto [S] su dati di fonti aperte, non dati tarati: lunghezza esclusa dal metro.
