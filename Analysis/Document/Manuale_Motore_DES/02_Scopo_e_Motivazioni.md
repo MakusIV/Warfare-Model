@@ -150,7 +150,7 @@ dell'utente registrati"), e si ritrovano nel codice come regole verificabili:
    dominio (`Logic/Contact_Scheduler.py:58-60`); la coda eventi del risolutore usa un tie-break
    deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:385-390`, `:536-544`); l'RNG di
    ogni ingaggio è derivato da una chiave canonica che non dipende dall'ordine di iterazione di
-   un dizionario Python (`Logic/Session_Simulator.py:993-1014`, `engagement_event_id`; `:405-437`).
+   un dizionario Python (`Logic/Session_Simulator.py:1007-1028`, `engagement_event_id`; `:405-437`).
 3. **Perdite e danni per singolo asset**, mai aggregati. È il motivo per cui esiste
    `Logic/Damage_Model.py` (un `DamageEvent` per colpo risolto, non un delta di forza) e per cui
    `Logic/Tactical_Evaluation.calcFightResult` — il modello aggregato a rapporto di forze

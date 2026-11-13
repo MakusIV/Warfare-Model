@@ -1,5 +1,11 @@
 # Capitolo 6 — L'orchestratore: `Session_Simulator.run_session`
 
+> **Aggiornamento 2026-11-13 (D-5 e FP; codice a `a389cadb`).** `Logic/Session_Simulator.py` è ora di **3198 righe** (+35 rispetto a `fa5fbf1e`): quattro inserzioni, tutte legate al risolutore. (1) Il docstring del modulo guadagna due sezioni, «Permanenza nel volume (D-5)» e
+> «Rilevamento per passaggio (FP)» (`:730-740`). (2) La costante `PASS_EVENT_TAG = 'detection_pass'` (`:807`, con il commento `:805-806`). (3) La funzione `pass_event_id(*force_ids)` (`:1044-1054`). (4) In `engage`, due righe nuove prima di `resolve_engagement`: `extra['dwell_time_for'] = ER.registry_dwell_time` solo con
+> `ER.D5_DWELL_TIME` acceso (`:2791-2793`) e `extra['pass_rng'] = order.rng(mission_id=None, event_id=pass_event_id(*force_ids), counter=counter)` **sempre** (`:2798`). **Nessun interruttore nuovo nel modulo** (restano i 15 di §6.21; `D5_DWELL_TIME` è del risolutore). La firma di `run_session` non cambia.
+> **Riferimenti `:riga` di questo capitolo**: valgono per `fa5fbf1e` (base) **tranne §6.4, riscritta e riverificata a `a389cadb`**. Per ricondurre un riferimento a `Session_Simulator.py` di una sezione non riscritta al codice di oggi, la correzione è la stessa ovunque perché le inserzioni sono solo quattro:
+> riga base ≥ 730 → **+11**; ≥ 794 → **+14**; ≥ 1030 → **+26**; ≥ 2765 → **+35** (verificata con `git diff -U0 fa5fbf1e HEAD`: hunk `@@ -729,0 +730,11`, `-793,0 +805,3`, `-1029,0 +1044,12`, `-2764,0 +2791,9`). I riferimenti a `Mission_Adapter`, `Session_Types` ecc. non cambiano.
+
 Modulo: `Logic/Session_Simulator.py` (**3163 righe a `fa5fbf1e`**, 3102 a `dcedc541`, 2851 a `a784a9e7`, 937 a `84a47670`, 774 a `533cd1f5`; il
 grosso della crescita è il docstring del modulo, che è il documento di progetto di F5, F6, G1-G5, F7 e F8, e la nuova logica di
 sessione). Tutti i riferimenti `:riga` di questo capitolo valgono per `fa5fbf1e`. **Dalla F8** il capitolo descrive anche i moduli
@@ -225,38 +231,49 @@ disingaggio erano per blocco, e due missioni dello stesso blocco condividevano l
 disingaggio (capitolo 4 §4.27); dalla F4b+ (`098671d7`) fuoco e percezione sono condivisi nel dominio, e le
 componenti ne tengono conto (sopra).
 
-## 6.4 RNG: uno stream per ingaggio, uno stream per la tempra
+## 6.4 RNG: tre stream per episodio d'ingaggio (ingaggio, tempra, passaggi)
 
-`order.rng(mission_id=None, event_id=engagement_event_id(*forze), counter=ordinale)` (`:2766`):
+*Sezione riscritta il 2026-11-13: i riferimenti `:riga` sono verificati a `a389cadb` (`Session_Simulator.py` 3198 righe).* Ogni episodio apre **tre** stream dell'RNG di sessione, tutti con `mission_id=None`, lo **stesso `counter`** e un `event_id` diverso per il tag:
+
+| Stream | Chiamata in `engage` | Tag (`event_id`) | Chi lo consuma | Dal |
+|---|---|---|---|---|
+| ingaggio | `order.rng(mission_id=None, event_id=event_id, counter=counter)` (`:2801`; `event_id` = `engagement_event_id(*forze)`) | `'engagement'` (`ENGAGEMENT_EVENT_TAG`, `:801`) | `rng` di `resolve_engagement`: rilevamento (la prima estrazione di ogni direzione/passaggio) e danno | stesura iniziale |
+| tempra | `breakpoint_rng=order.rng(mission_id=None, event_id=temper_event_id(*force_ids), counter=counter)` (`:2809-2811`) | `'temper'` (`TEMPER_EVENT_TAG`, `:804`) | `breakpoint_rng`: la tempra della forza (§4.21) | 2026-09-29 |
+| passaggi | `extra['pass_rng'] = order.rng(mission_id=None, event_id=pass_event_id(*force_ids), counter=counter)` (`:2798`) | `'detection_pass'` (`PASS_EVENT_TAG`, `:807`) | `pass_rng`: le estrazioni di rilevamento **dal secondo passaggio in poi** (FP, capitolo 4 §4.35) | 2026-11-11 |
 
 - `mission_id=None`: è il livello "di sessione" di `Session_Rng`. **Dalla F4b il `mission_id` entra nell'RNG
   attraverso l'`event_id`**, non attraverso lo slot `mission_id`: un ingaggio è fra DUE O PIÙ forze, tipicamente
   missioni di entrambi i lati, e nessuna ne possiede lo stream. Lo slot resta `None` (livello "di sessione") per gli ingaggi; è riservato alle
   estrazioni che appartengono a una sola missione (docstring `:405-423`): **nessuna fino alla F7a, e dalla F7b il fuoco su
-  posizione** (`order.rng(mission_id=<missione>, event_id='area_fire|...', counter=0)`, `:2475`, §6.23), il cui tiro appartiene
-  a UNA missione. È un altro stream, quindi gli ingaggi e la tempra non cambiano. **Nota**: il piano della
+  posizione** (`order.rng(mission_id=<missione>, event_id='area_fire|...', counter=0)`, `:2501`, §6.23), il cui tiro appartiene
+  a UNA missione. È un altro stream, quindi gli ingaggi, la tempra e i passaggi non cambiano. **Nota**: il piano della
   Missione prevedeva il `mission_id` reale già in F3; il codice l'ha rimandato a F4b (deviazione 1 del piano, con
   l'`event_id` al posto dello slot, deviazione 4: capitolo 9 §9.6).
-- `event_id`: `engagement_event_id(*force_ids)` (`:993-1014`) è la codifica JSON di
+- `event_id`: `engagement_event_id(*force_ids)` (`:1007-1028`) è la codifica JSON di
   `['engagement', id_1, id_2, ...]` con gli id dell'ingaggio **ordinati** — funzione pura
   dell'**insieme** delle forze, mai dell'ordine di iterazione o di passaggio a `run_session`. Dalla F4b gli id sono
   quelli delle **forze d'ingaggio**: i `mission_id` (o l'id del blocco per un blocco senza missioni e per la vista
   residua). Rinominare una missione cambia solo lo stream degli ingaggi che la coinvolgono
   (`test_renaming_a_mission_changes_its_stream_only`), e l'unione di una componente per dominio cambia l'`event_id`
-  (è un ingaggio diverso, con forze diverse).
+  (è un ingaggio diverso, con forze diverse). **Errori** (`ValueError`): meno di due id, id non stringa o vuoti, id ripetuti.
 - **`counter` (G4a)**: l'**ordinale degli episodi con lo stesso insieme di forze** nella sessione (`ordinals`,
-  `:2421`, `:2706-2707`): 0 per il primo, 1 per il secondo che coinvolge esattamente le stesse forze, e così via.
-  Vale sia per lo stream dell'ingaggio sia per quello della tempra. Una componente che è un solo episodio ha quindi
+  `:2447`, `:2732-2733`): 0 per il primo, 1 per il secondo che coinvolge esattamente le stesse forze, e così via.
+  Vale per **tutti e tre** gli stream (ingaggio, tempra, passaggi). Una componente che è un solo episodio ha quindi
   esattamente lo stream, le finestre, l'ordine e l'esito di prima; con `G4_EPISODES` spento è sempre 0 (ogni componente
   è risolta una sola volta per sessione). Il vecchio "contatore libero per un futuro re-ingaggio" è dunque stato
   consumato dal G4a.
 
-**Secondo stream: la tempra delle forze** (2026-09-29). `temper_event_id(*force_ids)` (`:1017-1027`) ha
-la stessa forma e gli stessi vincoli ma il tag `'temper'` (`TEMPER_EVENT_TAG`, `:793`) invece di
-`'engagement'`; `run_session` lo passa a `resolve_engagement` come `breakpoint_rng`
-(`order.rng(mission_id=None, event_id=temper_event_id(*force_ids), counter=counter)`, `:2774-2776`). Così estrarre
-la tempra non sposta le estrazioni di rilevamento e danno dell'ingaggio (capitolo 4 §4.11, §4.21), e **la tempra è
+**Secondo stream: la tempra delle forze** (2026-09-29). `temper_event_id(*force_ids)` (`:1031-1041`) ha
+la stessa forma e gli stessi vincoli (anzi, chiama `engagement_event_id` per la validazione) ma il tag `'temper'`
+(`TEMPER_EVENT_TAG`, `:804`) invece di `'engagement'`; `run_session` lo passa a `resolve_engagement` come `breakpoint_rng`.
+Così estrarre la tempra non sposta le estrazioni di rilevamento e danno dell'ingaggio (capitolo 4 §4.11, §4.21), e **la tempra è
 nuova per ogni episodio** (stesso `counter`).
+
+**Terzo stream: i passaggi di rilevamento** (FP, 2026-11-11, decisione FP-2 = O3). `pass_event_id(*force_ids)` (`:1044-1054`) ha la stessa forma, gli stessi vincoli e la stessa validazione, con il tag `'detection_pass'`
+(`PASS_EVENT_TAG`, `:807`). `engage` lo costruisce, subito prima della chiamata, e lo passa a `resolve_engagement` come `pass_rng` **sempre** (`:2798`, **non** dietro un interruttore: dalla pulizia del 2026-11-13 la FP non ne ha), con lo stesso `counter`
+dell'episodio. Il risolutore lo **consuma solo** per le direzioni con almeno due passaggi nel volume proprio dentro una finestra (le estrazioni dal secondo passaggio in poi); con zero o un passaggio non lo tocca mai, e la sessione lo apre comunque (la creazione di un `random.Random` seedato non estrae nulla):
+per questo, a parità di seme, lo stream dell'ingaggio ha **lo stesso numero di estrazioni di rilevamento** di prima e le estrazioni di danno restano nello stesso ordine (capitolo 4 §4.11, §4.35). Un chiamante diretto di `resolve_engagement` con i tratti e una direzione a più passaggi deve passare uno stream
+separato: senza `pass_rng` il risolutore solleva `ValueError`. Verifica: `TestPerPassDetectionStream` (`Test/Test_Session_Simulator.py:269`: `engage` passa sempre `pass_rng`; `pass_event_id` non dipende dall'ordine degli id, è distinto da quelli dell'ingaggio e della tempra e solleva `ValueError` con un solo id) e S33-PASSES (capitolo 8 §8.14: le estrazioni dal secondo passaggio vengono dallo stream dei passaggi).
 
 **Precondizione di riproducibilità**: gli id di forza devono essere **stabili** fra le
 esecuzioni. `Block.__init__` genera l'id con `Utility.setId`, che aggiunge un suffisso casuale —
@@ -311,7 +328,7 @@ attività, con un log (`:3074-3091`). I contatti invece sono cercati **solo** de
 (docstring `:707-712`); allo stesso modo la ri-pianificazione dopo un episodio non agisce oltre la fine della sessione
 (`:2576-2578`).
 
-## 6.7 Cosa non fa (docstring `:730-739`, aggiornato alla F7 e alla F8)
+## 6.7 Cosa non fa (docstring `:741-750` a `a389cadb`; `:730-739` a `fa5fbf1e`; aggiornato alla F7 e alla F8)
 
 Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`. Non rifornisce (munizioni o carburante: lo fa, fra le
 sessioni, `Logic/Readiness`, §6.26). **Non valida l'ordine di sessione** (lo fa `Logic/Session_Validator`, §6.25: durata, sovrapposizione,
@@ -327,7 +344,7 @@ corrette e rimandano alla fabbrica, v. capitolo 9 §9.6). **Non chiama i validat
 `check_mission_bingo`), che dalla F8a chiama il validatore di sessione (§6.19, §6.25, capitolo 9 §9.1). Il filtro delle armi per tipo di
 missione e le regole di bersaglio (fase F7a) **non** sono dell'orchestratore, che li cabla soltanto (§6.22). Non legge
 `abort_on_threat` né `last_waypoint` di `EndCriteria`, né di `MissionRules` allerta, reazione alla minaccia, EMCON e
-formazione. Nessun componente LLM.
+formazione. Nessun componente LLM. **Non decide** né la permanenza nel volume (D-5) né i passaggi di rilevamento (FP): sono regole del risolutore (capitolo 4 §4.36, §4.35); il modulo passa soltanto, al risolutore, il lettore `registry_dwell_time` con `D5_DWELL_TIME` acceso e lo stream `pass_rng` sempre (§6.4; docstring del modulo, sezioni «Permanenza nel volume (D-5)» e «Rilevamento per passaggio (FP)», `:730-740`).
 
 ## 6.8 Diagramma D8 — flusso dati di `run_session`
 
@@ -370,7 +387,7 @@ flowchart TD
     AFO --> AFE["fire_due / fire_area:<br/>Area_Fire.resolve_area_fire<br/>(stream proprio, nessuna forza)"]
     LOOP -->|"prima dell'episodio che comincia dopo l'impatto"| AFE
     AFE --> APPLY
-    LOOP --> ER["Engagement_Resolver.resolve_engagement<br/>(rng + breakpoint_rng, coordination_of, grounded,<br/>activity_criteria, target_rules)"]
+    LOOP --> ER["Engagement_Resolver.resolve_engagement<br/>(rng + breakpoint_rng + pass_rng, coordination_of, grounded,<br/>activity_criteria, target_rules, dwell_time_for con D-5)"]
     ER --> APPLY["apply_engagement_result<br/>(danno + munizioni + intercettazioni)"]
     APPLY --> STATE["stato reale degli asset (mutato)"]
     APPLY --> REPLAN["replan: aerei che hanno consumato o disingaggiati<br/>(bingo, esaurimento, rientro forzato)"]
@@ -1458,6 +1475,18 @@ dietro un interruttore il cui default riproduce il comportamento precedente»), 
 l'esito d'Operazione **non** sono regole del motore e non hanno interruttori: sono funzioni nuove fuori da `run_session`, quindi gli
 scenari che chiamano `run_session` non cambiano. Controprova a interruttore spento: `test_route_cut_by_the_session_end_off_is_failed` e
 `TestF8bCampaignOutcome.test_operation_outcomes` (capitolo 8 §8.12).
+
+**Gli interruttori del risolutore (D-5, BI, VA; FP eliminato).** Dal 2026-11-06 `Logic/Engagement_Resolver.py` ha tre interruttori **suoi** (costanti di modulo, nessun parametro di `run_session`), di segno opposto a quelli di questo modulo: **tutti spenti** nel default, perché la regola
+nuova non deve cambiare gli esiti precedenti (ogni regola nuova sta dietro un interruttore il cui default riproduce il comportamento precedente). **Nessun codice di produzione li accende**: li leggono i test (`patch.object`), gli scenari S32-S35 e, per la D-5, `Session_Simulator.engage` e `Air_Route_Manager`.
+
+| Interruttore | Modulo | Default | Regola | Effetto se spento | Chi lo legge | Capitolo 4 |
+|---|---|---|---|---|---|---|
+| `D5_DWELL_TIME` | `Engagement_Resolver` (`:591`) | `False` | D-5: Pd × `min(1, permanenza / dwell_time_s)` | legge di sola distanza; nessun lettore passato al risolutore; nessuna unione dei passaggi (FP-10) | `Session_Simulator.engage` (`:2791`, a ogni chiamata), `Air_Route_Manager.compute_detection_metrics` (`:1132`) | §4.36 |
+| `BI_AD_TARGET_RULE` | `Engagement_Resolver` (`:597`) | `False` | BI: l'intercettore ferma un colpo solo se il suo dominio è fra gli `intercept_domains` | nessun filtro: ogni colpo intercettabile è un bersaglio per ogni intercettore idoneo | `_EngagementRun.__init__` (`:2010`, una volta per run) | §4.24 |
+| `VA_ENGAGEMENT_ALTITUDE_BAND` | `Engagement_Resolver` (`:608`) | `False` | VA: volume d'ingaggio = sfera ∩ fascia nel tempo, quote all'istante, rinvio | filtro di quota statico della fire control, solo sfera | `_EngagementRun.__init__` (`:2048`, una volta per run) | §4.37 |
+
+Il **quarto**, `FP_PER_PASS_DETECTION` (rilevamento per passaggio), **non esiste più**: era temporaneo (criterio dell'utente del 2026-11-08: si elimina un interruttore se lo stato precedente è una soluzione superata e non un'alternativa valida), fu acceso il 2026-11-12 e **eliminato il 2026-11-13** (`Proposta_FP_Pulizia_Interruttore.md`). Oggi la FP è una regola sempre attiva (capitolo 4 §4.35). Chi cercasse la costante nel codice, nei test (`Test_Engagement_Resolver`, S33)
+o nella fotografia non la trova; la ritrova solo nei documenti storici (Proposta FP, sonde in `Rapporti/Sonde_Finestre_Passaggio/`). Un'analisi mirata degli interruttori rimasti (se tenerli o eliminarli) è un lavoro **futuro** deciso dall'utente, non fatto da questo manuale.
 
 Costanti non-interruttore che il modulo definisce: `EPISODE_GAP = FM.DISENGAGE_TIME` (`:914`), le etichette
 `FUEL_HALT`/`FUEL_GLIDE`/`FUEL_CRASH` (`:917-919`) e i regimi `CRUISE_REGIME`/`COMBAT_REGIME` (`:796-797`).

@@ -7,7 +7,7 @@ Test_Session_Scenarios_S10_S18.py` (S10-S18), `Test/Test_Session_Scenarios_S19.p
 `Test/Test_Session_Scenarios_S19_Air_Defence.py` (S19, S19AD), `Test/Test_Session_Scenarios_S20.py` (S20) e
 `Test/Test_Session_Scenarios_S21.py` (S21, S21R), `Test/Test_Session_Scenarios_S22.py` ... `_S27.py` (S22-S27, §8.10),
 `Test/Test_Session_Scenarios_S28.py` e `_S29.py` (S28, S29, §8.11), `Test/Test_Session_Scenarios_S30.py` (S30, §8.12),
-`Test/Test_Session_Scenarios_S31.py` (S31, §8.13; dal 2026-11-04), più `Test/Test_EWR_Data.py` (radar EWR, §8.13), più lo strumento di non regressione `Test/Scenario_Baseline.py` (§8.7). Suite finale della Fase 7: **3371 test, OK
+`Test/Test_Session_Scenarios_S31.py` (S31, §8.13; dal 2026-11-04), `Test/Test_Session_Scenarios_S32.py` ... `_S35.py` (S32-DWELL, S33-PASSES, S34-BAND, S35-ADTGT, §8.14; dal 2026-11-06), più `Test/Test_EWR_Data.py` (radar EWR, §8.13), più lo strumento di non regressione `Test/Scenario_Baseline.py` (§8.7). Suite finale della Fase 7: **3371 test, OK
 (skipped=5)** (wiki `decisions/virtual-session-engine-des`, sezione Fase 7). **Suite a `fa5fbf1e` (codice identico a quello di `dc53af99`): 4701 test, OK
 (skipped=7)**, e **confronto con la fotografia: 986 esecuzioni IDENTICHE**: erano i numeri della verifica fatta dalla sessione principale al commit `dc53af99`
 (messaggio del commit e Piano §5, riga F8-R), **riportati qui come dichiarati e NON rieseguiti** per questo aggiornamento; la fotografia di non regressione era
@@ -28,6 +28,11 @@ sessione principale con `tools/ai/verifica.sh`, e **non sono stati rieseguiti** 
 **Aggiornamento 2026-11-05 (blocco C della D-4b, siti EWR fissi, codice `efa8f353`; manuale riverificato a `f33902ba`): suite 4757 test, OK (skipped=7); confronto con la fotografia: 1009 esecuzioni, 1009 IDENTICHE, 0 cambiate, 0 nuove; fotografia di non regressione invariata a 1009 esecuzioni.** Il blocco porta 4742 → 4757 (**+15**, tutti in `Test_EWR_Data.py`: 15 → 30 test) e adatta **un** test esistente
 (`TestSpeedEval.test_all_vehicles_speed_eval_positive` in `Test_Vehicle_Data.py`, che salta i record `fixed_site`: §8.13). I numeri sono quelli del rapporto `Rapporti/Rapporto_sensori_C_des-developer.md` (§6: `Ran 4757 tests in 1231.551s`, `OK (skipped=7)`, `compared 1009 runs: IDENTICAL (957.6 s)`, `grep -cE '^(CHANGED|NEW)'` = 0)
 e della verifica della sessione principale, **riportati come dichiarati e NON rieseguiti** per questo aggiornamento. Nessuno scenario e nessuna unità della fotografia sono nuovi o cambiati.
+
+**Aggiornamento 2026-11-13 (D-5, BI, VA, FP: quattro scenari nuovi, S32-S35; codice `a389cadb`, fotografia `3b5edf49`): suite `Ran 4914` test, `OK (skipped=7)`; confronto con la fotografia: `UNCHANGED (1103)`, 0 cambiate; fotografia di non regressione installata: 1103 esecuzioni** (conteggio fatto per questo aggiornamento sul file `Test/baseline/scenario_baseline.json`: 1103 chiavi in `runs`, `errors` vuoto;
+per unità: S32-DWELL 20, S33-PASSES 10, S34-BAND 32, S35-ADTGT 32; 1009 + 94 = 1103). I numeri di suite e confronto sono quelli dichiarati da `Proposta_FP_Pulizia_Interruttore.md` (§4.7-§4.8, attesi e poi verificati dalla sessione principale), da `F4_Differenze_Scenari.md` (sezioni BI e FP) e dai messaggi dei commit di verifica (`git log`), **riportati come dichiarati e NON rieseguiti** per questo
+aggiornamento. Il passo da 4757 a 4914 test e da 1009 a 1103 esecuzioni è in §8.14 (cronologia) e nella tabella di §8.7 (righe D-5, BI, VA, FP). **Cambia solo la «forma» della suite**: i quattro scenari nuovi sono in coda alla tabella `UNITS` di `Scenario_Baseline` (nomi stabili) e **nessun scenario preesistente cambia con gli interruttori spenti**; la FP, accesa il 2026-11-12, cambiò **44** esecuzioni di S13, S14, S21, S24-ORBIT,
+S26-BINGO e S28-CLASS (fotografia di 1113, F4), tutte per FP-3 (a) e tutte già nella fotografia di oggi.
 
 **Aggiornamento rispetto alla stesura iniziale**: le estensioni successive alla Fase 7 (selezione
 arma dai registri, nebbia di guerra, scorta per modello d'arma, cannone di bordo, finestre di
@@ -379,8 +384,8 @@ missione, i motivi di fine per asset e `crew_recovered` sono nell'esito di missi
 verificano nei test, S25-S27, e con catture estese fuori dal repository). Il G3 aggiunge solo eventi `FuelEvent` con
 `regime` `'engagement'` nella voce `fuel`; il G4a una voce in `engagements` per episodio.
 
-**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (**1009 esecuzioni** al 2026-11-04, contate sul
-file; chiavi `errors`/`meta`/`runs`, `errors` vuoto; 989 al 2026-10-29, 986 a `fa5fbf1e`, 982 a `dcedc541`, 918 a `a784a9e7`, 370 a `84a47670`). Ne è stata fatta la cattura iniziale su una copia
+**La fotografia di riferimento** è `Test/baseline/scenario_baseline.json` (**1103 esecuzioni** al 2026-11-13, contate sul
+file; 1113 dal 2026-11-12 al 2026-11-13; **1009 esecuzioni** al 2026-11-04; chiavi `errors`/`meta`/`runs`, `errors` vuoto; 989 al 2026-10-29, 986 a `fa5fbf1e`, 982 a `dcedc541`, 918 a `a784a9e7`, 370 a `84a47670`). Ne è stata fatta la cattura iniziale su una copia
 isolata di `18a772d6` (292 esecuzioni, identica in due catture separate); è stata **rigenerata più volte**, sempre dopo un
 confronto spiegato e con due catture consecutive identiche (determinismo). La storia, dal documento delle differenze
 `Analysis/Document/F4_Differenze_Scenari.md` (le righe da F5-A in poi sono nuove di questo aggiornamento; le esecuzioni
@@ -417,6 +422,13 @@ sono quelle della fotografia **installata** nel commit indicato, come risulta da
 | D-4c, sensore visivo, S31-VISUAL | `37816355` | 1009 (+20: S31-VISUAL) | di 989: **989 identiche**, 0 cambiate, 20 nuove (`S31-VISUAL/S31-VISUAL-0..3/{zsu, zsu_off, vads_low, vads_low_off, vads_high}`); nessuno scenario preesistente usa ZSU-57-2 o M163-VADS, quindi l'interruttore `D4C_VISUAL_SENSOR` acceso non cambia nulla (`Rapporti/Rapporto_sensori_A_des-developer.md` §6: `UNCHANGED (989)`, `compared 1009 runs: 20 difference lines` = le 20 nuove; confronto con codice di uscita 1 per le nuove, atteso) ; fotografia installata nello stesso commit |
 | D-4b, radar EWR (blocco B) | `cbc75634` | 1009 | **1009 identiche**, 0 cambiate, 0 nuove (`compared 1009 runs: IDENTICAL`, `Rapporti/Rapporto_sensori_B_oc-developer.md` §6 e `.ai-run/confronto.log`): nessuno scenario istanzia un EWR e il combat score globale dei record preesistenti non cambia (G2); **non rieseguito** per questo aggiornamento |
 | D-4b, siti EWR fissi (blocco C) | `efa8f353` | 1009 | **1009 identiche**, 0 cambiate, 0 nuove (`compared 1009 runs: IDENTICAL`, 957.6 s, `Rapporti/Rapporto_sensori_C_des-developer.md` §6; 0 righe `CHANGED`/`NEW` in `.ai-run/confronto.log`): nessuno scenario istanzia un EWR, il combat score globale dei record preesistenti non cambia (G2), il DES non legge gli score del registro e **nessuna regola legge `fixed_site`**; **non rieseguito** per questo aggiornamento. Nessuna fotografia nuova installata. Una sonda preventiva della Proposta (7 siti in memoria) aveva già dato 1009 identiche |
+| D-5, permanenza, S32-DWELL (blocco A) | `8943b292` | 1009 (S32-DWELL: 20 esecuzioni non installate) | **1009 identiche** (D-5 spenta: la legge non agisce); le 20 di S32-DWELL (5 varianti × 4 semi) compaiono come nuove nel confronto (`compared 1029 runs: 20 difference lines`, dai rapporti BI blocchi 1-2); la fotografia **non** le include fino al 2026-11-12; dichiarato, **non rieseguito** |
+| BI, bersagli intercettabili, blocchi 1-3 | `61df9437`, `0f275d55`, `8ac1b0f7` (merge `a74d7505`, `4803424b`, `fa6bc1d8`) | 1009 (+32 S35-ADTGT non installate) | **1009 identiche** a `BI_AD_TARGET_RULE` spento (blocco 1: suite 4801, blocco 2: 4829, blocco 3: 4844; `compared 1061 runs: 52 difference lines` = 20 S32 + 32 S35 nuove); acceso, la sonda B-1 cambia ESATTAMENTE le 6 `S19AD/S19-0..5/tor_rear` (`F4_Differenze_Scenari.md`); dichiarato, **non rieseguito** |
+| VA, quota nel volume d'ingaggio, blocchi 1-2 | `585dbc65`, `5d87f03d` (merge `6070fd33`, `2e4203fe`) | 1009 (+32 S34-BAND non installate) | **1009 identiche** a `VA_ENGAGEMENT_ALTITUDE_BAND` spento; suite 4867 (blocco 1) e 4876 (blocco 2), `compared 1093 runs: 84 difference lines` (20 + 32 + 32 nuove) secondo i messaggi dei commit di verifica `b48b3e55` e `436b5905`; dichiarato, **non rieseguito** |
+| FP, rilevamento per passaggio, blocco 1 (1A-1D) | `c1f39787`, `fb1dc1f7`, `770cdb2b`, `a22b3930` (merge `c66b2e4b`) | 1009 | **1009 identiche** con l'interruttore `FP_PER_PASS_DETECTION` **spento** (default di allora); suite 4906 (messaggio di `f52de254`: confronto `1093:84`, cattura di base IDENTICAL su 1093); dichiarato, **non rieseguito** |
+| FP, scenario S33-PASSES (blocco 2) | `f97f2738` (merge `2b5df9d4`) | 1009 (+20 S33 non installate) | suite 4919; `compared 1113 runs: 104 difference lines` (messaggio di `cd30a212`: 84 + 20 nuove di S33 a 4 varianti `off`, `on`, `cas_off`, `cas_on` × 5 semi); dichiarato, **non rieseguito** |
+| FP accesa + fotografia nuova | `28df28b8` (2026-11-12) | **1113** (1009 + 20 S32 + 32 S35 + 32 S34 + 20 S33) | rispetto alla fotografia di 1009: **965 identiche, 44 cambiate** (esattamente le `AFTER_PASS` della sonda P-0: FP-3 (a), 153 salve della difesa in meno, mai in aumento; sonda P-1: 0 `RINT_D`, 0 passaggi di durata zero), 104 nuove; installata su richiesta dell'utente dopo la lettura delle cambiate (`F4_Differenze_Scenari.md`, sezione FP) |
+| FP, pulizia dell'interruttore | `2c89ca88` (C1), `a389cadb` (C2); fotografia installata in `3b5edf49` (2026-11-13) | **1103** (1113 − 10: tolte `off` e `cas_off` di S33) | **`UNCHANGED (1103)`**, 0 cambiate; fino all'installazione le 10 `off`/`cas_off` risultavano `MISSING` (`compared 1103 runs: 10 difference lines`); suite **`Ran 4914`**, `OK (skipped=7)` (4919 − 5: `Proposta_FP_Pulizia_Interruttore.md` §4.7); dichiarato, **non rieseguito** |
 
 **Il processo di non regressione, come applicato dalla F4** (ogni passo dichiara la propria differenza prima di
 essere committato): (1) la fotografia *prima* del passo viene ricontrollata **identica** al codice di partenza;
@@ -941,3 +953,79 @@ dava 7 fallimenti e **nessun altro**). Ora salta i record con `getattr(obj, 'fix
 
 **Non coperto da test** (letto nel codice, non verificato da un'asserzione): l'**immobilità non è imposta** (nessun test mostra che una missione che muova un sito lo faccia muovere, né che `check_mission_speed` lo escluda con un warning: il comportamento è letto in `Logic/Mission_Adapter.py:1141-1149` e `:1188-1194`, dove un asset senza velocità massima nota è escluso dalla regola A con un warning); la
 rilevazione di un sito in sessione (il test 15 asserisce solo l'assenza di tiri e di consumo, come quello del blocco B); il **costo di calcolo** delle finestre di contatto con raggi di 300-400 km (nessuno scenario ha un sito); l'uso di `acquisition_profile` (nessun codice lo legge); e il fatto che nessuna regola legga `fixed_site` (è verificato dalla ricerca delle occorrenze nel codice, non da un test).
+
+## 8.14 Scenari e verifiche della D-5, della BI, della VA e della FP (S32-DWELL, S35-ADTGT, S34-BAND, S33-PASSES; 2026-11-06/13)
+
+Quattro scenari nuovi, uno per funzione, tutti in coda alla tabella `UNITS` di `Test/Scenario_Baseline.py` con nomi stabili (`Scenario_Baseline.py:417-431`) e tutti con la stessa disciplina di S31 (§8.13): i test asseriscono proprietà **qualitative o strutturali** (relazioni fra varianti), **mai un numero di calibrazione**. Le misure vengono dai moduli di
+test, dai rapporti degli esecutori (`Rapporti/Rapporto_*`) e da `F4_Differenze_Scenari.md`; **suite e confronto non sono stati rieseguiti** per questo aggiornamento (numeri in testa al capitolo). L'interruttore di ogni regola è sostituito con `patch.object` **sul modulo che contiene davvero il risolutore** (`sys.modules[ER.__name__]`), perché `Session_Simulator.engage` (D-5) e `_EngagementRun.__init__` (VA, BI) lo leggono a ogni chiamata o una volta per run.
+Le tre geometrie di S32, S33 e S34 riprendono quella di S19 e S31 (una linea Red di 3 `BMP-2` con sensore visivo dichiarato di test, una difesa aerea a corto raggio in (1000, −300), 4 `A-10C` `Maverick/Gun CAS` da (−40 km, 0), bersaglio ristretto ai BMP-2, ROE `only_designated`, soglie `BOTH_HOLD`, fire control dei registri); i valori di quota, di posizione e di dwell dichiarati di test sono **geometria o stime di test [S], non dati tarati**.
+
+| Scenario | Funzione | File e classe | Varianti × semi | Esecuzioni | Test |
+|---|---|---|---|---|---|
+| **S32-DWELL** | D-5, permanenza | `Test/Test_Session_Scenarios_S32.py`, `TestS32DwellTime` | 5 × 4 | 20 | 6 |
+| **S33-PASSES** | FP, rilevamento per passaggio (con D-5) | `Test/Test_Session_Scenarios_S33.py`, `TestS33DetectionPerPass` | 2 × 5 | 10 | 11 |
+| **S34-BAND** | VA, quota nel volume d'ingaggio | `Test/Test_Session_Scenarios_S34.py`, `TestS34AltitudeBand` | 8 × 4 | 32 | 9 |
+| **S35-ADTGT** | BI, bersagli intercettabili | `Test/Test_Session_Scenarios_S35.py`, `TestS35AirDefenceTargets` | 8 × 4 | 32 | 15 |
+
+Totale **94 esecuzioni** nella fotografia di 1103 (1009 + 94); i test sono contati sul codice (metodi `test_` per classe), non eseguiti.
+
+### S32-DWELL (D-5): permanenza nel volume
+
+Cinque varianti, 4 semi (`S32-DWELL-0..3`), con lo stesso `session_id` per le 5 varianti di un seme (la fotografia numera le esecuzioni per occorrenza del `session_id`). La difesa è una `ZSU-57-2`; il periodo di rivisita della ZSU è **dichiarato di test** (`F.declare_dwell`), non un dato.
+
+| Variante | `D5_DWELL_TIME` | dwell della ZSU (di test) | Con P-18 | Che cosa prova |
+|---|---|---|---|---|
+| `off` | spento | — | no | riferimento (legge di sola distanza) |
+| `long` | acceso | 30 s (permanenza 62-67 s: `g` = 1) | no | riduzione esatta alla legge di prima |
+| `short` | acceso | 600 s (`g` ≈ 0,10-0,11) | no | Pd ridotta: rilevamenti della ZSU in meno |
+| `ewr_off` | spento | — | sì (a 30 km) | riferimento con un radar EWR |
+| `ewr_on` | acceso | — (il P-18 usa il dato di fonte del registro, 6 s) | sì | con permanenza di minuti nulla cambia |
+
+Sei test: la premessa non vacua (`test_premise_the_zsu_fires_with_the_previous_law`: in `off` la ZSU spara in almeno un seme), `test_long_dwell_reproduces_the_previous_law` (stesse munizioni e stessi danni di `off`, con `dwell_time_s` = 30 e `exposure_s ≥ 30` nelle `Detection`), `test_short_dwell_never_adds_a_detection` (nel primo episodio i rilevamenti di `short` sono un sottoinsieme di quelli di `off`), `test_short_dwell_reduces_the_aaa_detections` (totale sui semi: `short` < `off`, stretto),
+`test_short_dwell_probability_is_bounded_by_the_exposure` e `test_ewr_source_dwell_changes_nothing_at_medium_altitude`.
+
+### S33-PASSES (FP, con D-5): un'estrazione per passaggio
+
+La ZSU-57-2 (volume visivo 6 km, quota di crociera 3000 m) contro 4 A-10C; **due varianti, 5 semi** (`S33-PASSES-0..4`), entrambe con **D-5 accesa e `ZSU_DWELL_S = 2,0 s`** dichiarato sulla ZSU: **STIMA [S] dell'utente (2026-11-08)**, il periodo di aggiornamento della traccia di un osservatore umano con ottica; **non è un dato**.
+
+| Variante | Geometria | Che cosa prova |
+|---|---|---|
+| `on` | **rientro**: andata sulla linea Red, uscita a 14 km, ritorno, uscita (`REENTRY`) | due passaggi per aereo nel volume della ZSU, due estrazioni (`pass_index` 0 e 1, `pass_count` 2) |
+| `cas_on` | **CAS**: tre BMP-2 attaccati in sequenza, A e C dentro i 6 km della ZSU, B a 13 km; punto sopra A, B, virata e ritorno sopra C | due passaggi **non contigui** (pausa ~104 s) per aereo |
+
+Con passaggi di 50-67 s la permanenza dà `g = 1` e con uscite di 100-130 s l'unione FP-10 non unisce (il dwell di 2 s è molto più breve): la D-5 **non cambia né le estrazioni né la Pd**; per questo non ci sono varianti con dwell lunghi. I test (11): le premesse geometriche (`test_cas_premise_geometry`, `test_premise_two_passes_per_aircraft`, `test_cas_premise_two_separate_passes_per_aircraft`, `test_premise_the_zsu_fires`), **FP-2 (O3)** (`test_first_passes_draw_from_the_engagement_stream`
+e la sua versione CAS: le prime estrazioni delle `Detection` sono le prime uscite dello stream dell'ingaggio; `test_cas_second_pass_draws_from_the_pass_stream`: le estrazioni dal secondo passaggio vengono da `pass_rng`, nel loro ordine, con almeno un rilevamento nel secondo passaggio per ogni A-10C), **FP-3 (a)** (`test_no_launch_after_the_pass_without_a_new_detection` e la sua versione CAS: ogni salva della ZSU nasce da un
+rilevamento dello stesso bersaglio nello stesso episodio, prima della fine del passaggio), `test_d5_reads_the_dwell_and_leaves_the_probability_unchanged` e `test_variant_switches_are_scoped` (l'interruttore D-5 è ripristinato anche se l'esecuzione solleva). **Una spia** (`spy` su `resolve_engagement`) salva una **copia profonda** dello stream dell'ingaggio e di `pass_rng` **prima** dell'esecuzione, per poter riprodurre le estrazioni attese.
+**Cosa S33 non prova**: FP-5 (d) (nessun intercettore che rileva un lanciatore in rientro: solo test unitari), l'**unione FP-10** effettiva e la permanenza con `g < 1` (idem: S33 percorre solo il ramo «nessuna unione, `g = 1`»).
+**Storia**: S33 nacque con **4 varianti** (`off` e `cas_off` con FP e D-5 spente, `on` e `cas_on`; 13 test; 20 esecuzioni) quando la FP aveva un interruttore; con l'eliminazione dell'interruttore (2026-11-13) lo stato spento non esiste più: **tolte `off` e `cas_off`** (decisione dell'utente U-1 (a)), 11 test e 10 esecuzioni; le 10 tolte risultarono `MISSING` nel confronto fino all'installazione della fotografia di 1103.
+
+### S34-BAND (VA): quota nel volume d'ingaggio
+
+Geometria di S19/S32 con un **9A33-Osa** in (1000, −300, 0) (missile `9M33-SAM`: portata 10 km, fascia relativa 25-5000 m, dal registro; radar di 30 km) e 4 A-10C con quattro **profili di quota** (geometria di test): `level` (3000 m costanti), `climb` (3000 → 6000 m prima della sfera), `descend` (6000 → 3000 m prima del rilevamento), `late_descend` (6000 m fino a 12 km, poi 3000 m). **8 varianti** = 4 profili × interruttore
+`VA_ENGAGEMENT_ALTITUDE_BAND` spento/acceso (`level_off/on`, `climb_off/on`, `descend_off/on`, `late_descend_off/on`), 4 semi (`S34-BAND-0..3`).
+
+| Profilo | Interruttore spento | Interruttore acceso |
+|---|---|---|
+| `level` | salve in fascia | identiche |
+| `climb` | salve **sopra** la fascia (filtro statico sulla quota di partenza) | **nessuna** salva |
+| `descend` | nessuna salva | salve in fascia |
+| `late_descend` | nessuna salva | salve **dopo il rinvio** (VA-2.1) |
+
+Nove test: `test_level_switch_does_not_change_the_events`, `test_climb_off_osa_fires_above_the_band`, `test_climb_on_osa_never_fires`, `test_descend_off_osa_never_fires`, `test_descend_on_osa_fires_in_band`, `test_late_descend_off_osa_never_fires`, `test_late_descend_on_osa_fires_after_the_deferral`, `test_late_descend_on_is_reproducible` e `test_level_engagement_stream_is_unchanged_by_the_switch` (lo stream dell'ingaggio non cambia: nessuna estrazione nuova né spostata).
+Il commit del blocco 2 riporta una sonda di geometria conforme all'atteso (`climb_off` 4/4 semi con salve sopra la fascia, `descend_on` 0/4 rilevamenti sopra 5000 m, `late_descend_on` 4/4 semi con rinvio: messaggio di `5d87f03d`, dichiarato, non rieseguito).
+
+### S35-ADTGT (BI): bersagli intercettabili dalle difese aeree
+
+Otto varianti × 4 semi (`S35-ADTGT-0..3`), 15 test (12 asserzioni e 3 premesse non vacue): quattro geometrie (`land_tactical`, `land_cruise`, `naval`, `naval_maverick`), ciascuna con interruttore `BI_AD_TARGET_RULE` spento (`_off`) e acceso (`_on`). **Dettaglio** (geometrie, esiti, le due scelte di costruzione: la nave Rezky, il sensore `sea` di 20 km come **valore di test [S]**, la dipendenza da L1) in capitolo 4 §4.24 e in `F4_Differenze_Scenari.md`, sezione BI.
+
+### Test unitari della D-5, della BI, della VA e della FP (letti sui file, non eseguiti)
+
+| Modulo di test | Classi (metodi `test_`) | Funzione |
+|---|---|---|
+| `Test/Test_Engagement_Resolver.py` (366 metodi contati con `ast`; 371 secondo `Proposta_FP_Pulizia_Interruttore.md` e il rapporto della pulizia) | `TestDwellFactor` (6), `TestDwellTimeInTheResolver` (12), `TestDetectionPerPass` (24), `TestEngagementAltitude` (14), `TestAirDefenceTargetRule` (12) | D-5, FP, VA, BI |
+| `Test/Test_Session_Simulator.py` (169) | `TestDwellTimeSwitch` (2), `TestPerPassDetectionStream` (2) | cablaggio D-5 e `pass_rng` |
+| `Test/Test_Contact_Scheduler.py` (119) | `TestAltitudeIntervals` (5), `TestIntersectIntervals` (2) | primitive della VA |
+| `Test/Test_Fire_Control.py` (111) | `TestInterceptDomains` (14), `TestAltitudeBand` (2), `TestFireControlAltitude` (7) | BI e VA |
+| `Test/Test_Mobile.py`, `Test/Test_EWR_Data.py`, `Test/Test_Air_Route_Manager.py` | lettori e dati `dwell_time_s`, metriche D-5 del pianificatore | D-5 |
+
+I conteggi per classe sono metodi `test_` letti con `ast` per questo aggiornamento; la differenza 366 contro 371 per `Test_Engagement_Resolver.py` **non è spiegata dal codice** (probabile conteggio di test ereditati o generati: **non verificato**).

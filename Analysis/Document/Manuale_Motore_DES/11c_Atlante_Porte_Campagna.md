@@ -958,31 +958,37 @@ rilegge gli stessi numeri. (3) `session_seed` non ha chiamanti nel core fuori da
 
 ### Chi apre quale stream (D126)
 
-*Diagramma D126 — le chiavi con cui `run_session` apre gli stream e i consumatori che estraggono; la freccia `A --> B` significa «lo stream va da A a B» (livello L2, verificato a f009eb43).*
+*Diagramma D126 — le chiavi con cui `run_session` apre gli stream e i consumatori che estraggono; la freccia `A --> B` significa «lo stream va da A a B» (livello L2, verificato a f009eb43; **aggiornato a `a389cadb`**: aggiunto lo stream dei passaggi, righe di `Session_Simulator.py` e del risolutore ricalcolate).*
 
 ```mermaid
 flowchart LR
     ORD["SessionOrder.rng<br/>session_id fisso per tutta la sessione"]
-    K1["engage :2766<br/>mission_id None<br/>event_id engagement_event_id :993<br/>counter ordinale dell episodio"]
-    K2["engage :2774<br/>mission_id None<br/>event_id temper_event_id :1017<br/>counter ordinale dell episodio"]
-    K3["fire_area :2475<br/>mission_id della missione<br/>event_id area_fire_event_id<br/>counter 0"]
-    C1["Engagement_Resolver<br/>_draw :2115<br/>rilevamento e danno"]
-    C2["Engagement_Resolver<br/>tempra :3384<br/>una estrazione per forza"]
+    K1["engage :2801<br/>mission_id None<br/>event_id engagement_event_id :1007<br/>counter ordinale dell episodio"]
+    K2["engage :2809<br/>mission_id None<br/>event_id temper_event_id :1031<br/>counter ordinale dell episodio"]
+    K4["engage :2798<br/>mission_id None<br/>event_id pass_event_id :1044<br/>counter ordinale dell episodio"]
+    K3["fire_area :2501<br/>mission_id della missione<br/>event_id area_fire_event_id<br/>counter 0"]
+    C1["Engagement_Resolver<br/>_draw :2612<br/>rilevamento (primo passaggio) e danno"]
+    C2["Engagement_Resolver<br/>tempra :4059<br/>una estrazione per forza"]
+    C4["Engagement_Resolver<br/>_detect_passes :2575<br/>una estrazione per passaggio dal secondo"]
     C3["Area_Fire<br/>resolve_area_fire :296 e :306<br/>due estrazioni per colpo<br/>una per candidato"]
 
     ORD --> K1
     ORD --> K2
+    ORD --> K4
     ORD --> K3
     K1 --> C1
     K2 --> C2
+    K4 --> C4
     K3 --> C3
 ```
 
-Lettura: **legenda: la freccia significa che lo stream va da A a B**. Sono i soli tre punti in cui il core apre uno stream, tutti in `Logic/Session_Simulator.py`: `engage` per l'ingaggio (`order.rng(mission_id=None, event_id=event_id, counter=counter)` `:2766`) e per la tempra (`breakpoint_rng=order.rng(mission_id=None, event_id=temper_event_id(*force_ids), counter=counter)` `:2774-2776`),
-`fire_area` per il fuoco su posizione (`order.rng(mission_id=fire_order.mission_id, event_id=event_id, counter=0)` `:2475`). **I due `event_id` dell'ingaggio** sono funzioni pure dell'**insieme** degli id di forza: `engagement_event_id` (`:993-1014`) e `temper_event_id` (`:1017-1027`) producono un JSON `['engagement', id, ...]` o `['temper', id, ...]` con gli id **ordinati**, così l'ordine con cui le forze arrivano a `run_session` non cambia lo stream;
-i tag sono `ENGAGEMENT_EVENT_TAG = 'engagement'` (`:790`) e `TEMPER_EVENT_TAG = 'temper'` (`:793`). Il `counter` è l'**ordinale degli episodi** con lo stesso insieme di forze: `counter = ordinals.get(event_id, 0)` e poi `ordinals[event_id] = counter + 1` (`:2706-2707`, `ordinals` dichiarato a `:2421`), così ogni episodio dello stesso insieme ha uno stream nuovo, e lo stesso `counter` serve ai due flussi
-(ingaggio e tempra). L'`event_id` del fuoco su posizione è invece una **stringa con barre verticali** (`area_fire|<missione>|<asset>|<wp>|<azione>`, `Logic/Area_Fire.py:131-133`), non un JSON; è il primo uso dello slot `mission_id` (docstring `Area_Fire.py:49-50`). **Perché due flussi per l'ingaggio**: la tempra si estrae «dal flusso separato» perché le estrazioni di rilevamento e danno di `rng` restino quelle di prima
-(`Engagement_Resolver.py:84-87`); senza `breakpoint_rng` la tempra non si estrae (`:3383`). Le estrazioni del fuoco su posizione sono contate in D109 (11b): due per colpo (raggio e angolo) e una per candidato nel raggio letale e non distrutto. **Nessun altro modulo del core estrae**: `Contact_Scheduler`, `Fuel_Model`, `Damage_Model`, `Readiness` e il ciclo di campagna non toccano mai l'RNG (ricerca di `.random()` e `random.` nei moduli del core).
+Lettura (righe a `a389cadb`): **legenda: la freccia significa che lo stream va da A a B**. Sono i soli **quattro** punti in cui il core apre uno stream, tutti in `Logic/Session_Simulator.py`: tre in `engage` per un episodio d'ingaggio (**il terzo, `pass_event_id`, è del 2026-11-11**: FP) e uno in `fire_area` per il fuoco su posizione. `engage` apre: lo stream dell'**ingaggio** (`order.rng(mission_id=None, event_id=event_id, counter=counter)` `:2801`), quello della **tempra**
+(`breakpoint_rng=order.rng(mission_id=None, event_id=temper_event_id(*force_ids), counter=counter)` `:2809-2811`) e quello dei **passaggi** (`extra['pass_rng'] = order.rng(mission_id=None, event_id=pass_event_id(*force_ids), counter=counter)` `:2798`); `fire_area` apre quello del fuoco su posizione (`order.rng(mission_id=fire_order.mission_id, event_id=event_id, counter=0)` `:2501`).
+**I tre `event_id` dell'ingaggio** sono funzioni pure dell'**insieme** degli id di forza: `engagement_event_id` (`:1007-1028`), `temper_event_id` (`:1031-1041`) e `pass_event_id` (`:1044-1054`) producono un JSON `['engagement', id, ...]`, `['temper', id, ...]` o `['detection_pass', id, ...]` con gli id **ordinati**, così l'ordine con cui le forze arrivano a `run_session` non cambia lo stream;
+i tag sono `ENGAGEMENT_EVENT_TAG = 'engagement'` (`:801`), `TEMPER_EVENT_TAG = 'temper'` (`:804`) e `PASS_EVENT_TAG = 'detection_pass'` (`:807`). Il `counter` è l'**ordinale degli episodi** con lo stesso insieme di forze: `counter = ordinals.get(event_id, 0)` e poi `ordinals[event_id] = counter + 1` (`:2732-2733`, `ordinals` dichiarato a `:2447`), così ogni episodio dello stesso insieme ha uno stream nuovo, e lo stesso `counter` serve ai **tre** flussi
+(ingaggio, tempra e passaggi). L'`event_id` del fuoco su posizione è invece una **stringa con barre verticali** (`area_fire|<missione>|<asset>|<wp>|<azione>`, `Logic/Area_Fire.py:131-133`), non un JSON; è il primo uso dello slot `mission_id` (docstring `Area_Fire.py:49-50`). **Perché tre flussi per l'ingaggio**: la tempra si estrae «dal flusso separato» perché le estrazioni di rilevamento e danno di `rng` restino quelle di prima
+(`Engagement_Resolver.py:89-92`); senza `breakpoint_rng` la tempra non si estrae (`:4058`); lo stream dei passaggi è separato per lo stesso motivo (decisione FP-2 = O3): il **primo** passaggio di ogni direzione estrae da `rng` nella posizione dell'estrazione unica di prima, e **solo dal secondo passaggio** si estrae da `pass_rng` (`_detect_passes`, `:2575`); con zero o un passaggio per direzione `pass_rng` è aperto ma **mai consumato**. Le estrazioni del fuoco su posizione sono contate in D109 (11b): due per colpo (raggio e angolo) e una per candidato nel raggio letale e non distrutto.
+**Nessun altro modulo del core estrae**: `Contact_Scheduler`, `Fuel_Model`, `Damage_Model`, `Readiness` e il ciclo di campagna non toccano mai l'RNG (ricerca di `.random()` e `random.` nei moduli del core).
 
 ### Tabella completa dei simboli di `Utility/Session_Rng`
 

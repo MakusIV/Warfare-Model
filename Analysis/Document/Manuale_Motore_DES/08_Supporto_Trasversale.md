@@ -1,5 +1,9 @@
 # Capitolo 7 — Moduli di supporto trasversali
 
+> **Aggiornamento 2026-11-13 (D-5, BI, VA, FP; codice `a389cadb`).** Toccano questo capitolo solo tre punti, tutti **dati o metriche** (le regole sono nel capitolo 4 §4.35-§4.37): (1) **§7.8**, le metriche di rilevamento del pianificatore replicano la legge di permanenza D-5 quando `Engagement_Resolver.D5_DWELL_TIME` è acceso (blocco B della D-5, `effb0dcf`: `Logic/Air_Route_Manager.py`, 71 righe toccate
+> rispetto a `f33902ba`; **i riferimenti `:riga` della §7.8 a `Air_Route_Manager.py` non sono stati ricalcolati**: `compute_detection_metrics` è ora `:1098-1211`); il paragrafo «Fuori perimetro» che dava la D-5 opzione 2 come non fatta è corretto. (2) **§7.12**, voci nuove di dati: `dwell_time_s` dei 10 radar EWR (D-5) con i due lettori di `Mobile`,
+> i quattro campi dei 52 `MISSILES_ASM` per la BI, e il fatto che la VA non ha dati nuovi (usa campi già presenti nei registri). (3) La `fire_control` e la `ShotSpec` (§7.7) guadagnano l'estensione `altitudes` e i tre campi di quota (capitolo 4 §4.4). **Nessun interruttore nuovo in questo capitolo.** Il pianificatore **non** cambia per la FP (decisione FP-9 (a); limite nel capitolo 9).
+>
 > **Aggiornamento 2026-11-05 (codice `efa8f353`, blocco C della D-4b: siti EWR fissi; manuale riverificato a `f33902ba`).** Sette radar di installazione fissa nel registro `Vehicle_Data` come `Vehicle` **immobile**, con il marcatore `fixed_site` (§7.12, voce «Siti EWR fissi»): gli EWR del registro sono ora **15** e il registro **79 record**. Dati e un marcatore che nessuna regola legge,
 > **nessuna regola nuova e nessun interruttore**; fotografia invariata (1009 identiche). Cambiano in questo capitolo: §7.4 e §7.12 (riferimenti `Vehicle_Data.py` ricalcolati: +7 dopo la riga 109, +27 per i record EWR del nucleo) e §7.8 (testo sull'altezza d'antenna; **riferimenti a `Logic/Air_Route_Manager.py` aumentati di 4 dalla riga 657**: +3 per il commit `ed8d0fa3`, solo commenti
 > e docstring, del 2026-11-05 mattina, **che il manuale del 2026-11-04 non registrava**, e +1 per `efa8f353`, solo commento). Nessun codice del motore o del pianificatore cambia. **Suite e confronto non rieseguiti per questo aggiornamento** (`Ran 4757`, `OK (skipped=7)`, 1009 identiche: numeri verificati dalla sessione principale).
@@ -430,7 +434,7 @@ il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo 9)
   un'estensione **facoltativa**: se la callable dichiara il parametro keyword `target_grounded` (o `**kwargs`) il
   risolutore lo passa a `True` quando il bersaglio è un aereo a terra (capitolo 4 §4.4, §4.30); una fire control
   che non lo dichiara riceve la chiamata di sempre, con un warning per run se il bersaglio è a terra. La fire
-  control di registro e quella di riferimento degli scenari lo dichiarano.
+  control di registro e quella di riferimento degli scenari lo dichiarano. **Dal 2026-11-10 (VA)** c'è una seconda estensione facoltativa, il parametro keyword `altitudes=(z_tiratore, z_bersaglio)` (o `**kwargs`): il risolutore la passa solo con `VA_ENGAGEMENT_ALTITUDE_BAND` acceso e i tratti delle rotte (capitolo 4 §4.4, §4.37); la fire control di registro la dichiara, quella di riferimento degli scenari **no**; l'involucro `restrict_by_policy` la dichiara solo se la base la dichiara (quattro varianti secondo `target_grounded` e `altitudes`).
 - `detection_factor: (observer, target) -> float in [0,1]` — degradazione della Pd (§7.4);
   default nessuna degradazione (`factor=1.0`). Oltre al meteo (`weather_detection_factor_fn`/
   `meteo_detection_factor`, §7.4), esistono fabbriche dello stesso fattore per la nebbia di guerra
@@ -564,6 +568,11 @@ risolutore). `PathCollection.best_path_key(mode)` (`:1239-1250`) cambia il crite
 percorso migliore solo in `AVOID_DETECTION`: prima il minimo tempo sotto sensore, poi il pericolo
 residuo d'intercettazione, poi la lunghezza (altre modalità: la chiave storica pericolo→lunghezza).
 
+**Permanenza D-5 nelle metriche (blocco B, `effb0dcf`).** `Path.compute_detection_metrics` (`Logic/Air_Route_Manager.py:1098-1211`) legge `Engagement_Resolver.D5_DWELL_TIME` a ogni chiamata (`dwell_enabled`, `:1132`). `DetectionThreat` ha un campo `dwell_time_s` (`:306-316`, `None` = non dichiarato), preso dal sensore col raggio effettivo (`:750`).
+I tratti **contigui** dello stesso volume (`CROSSING_JOIN_TOLERANCE_S`) sono **un solo attraversamento**, come una finestra del DES, anche su più edge: `exposure` = ultima uscita − primo ingresso, `d_min` = minima delle distanze minime; ogni tratto porta `crossing_exposure_s` (sempre) e `dwell_time_s`. **Solo con l'interruttore acceso e `dwell_time_s` non `None`**
+la `detection_probability` di ogni tratto dell'attraversamento diventa `detection_probability(d_min, R, dwell_factor(exposure, dwell))`; altrimenti resta quella per tratto di prima (metriche identiche a interruttore spento). È una **metrica**, non un vincolo, e **non** replica il rilevamento per passaggio (FP, decisione FP-9 (a)): `max_detection_probability` è il **peggiore** degli attraversamenti, non la probabilità di essere rilevati
+almeno una volta, che il DES dà con più passaggi (due attraversamenti a 0,4: metrica 0,4, DES 0,64: esempio della Proposta FP §5.2, **non riverificato qui**).
+
 ### `Block/Military.py`: le due liste per blocco
 
 `Military.air_defense_threats()` (`Block/Military.py:552-582`, preesistente, ora con
@@ -576,9 +585,7 @@ per sito. Nessuna delle due entra in `air_defense_power()` per la parte di rilev
 ### Fuori perimetro, dichiarato
 
 Reti di sensori/cueing EWR→SAM (D-7); la **curva portata-quota** dei radar
-(`acquisition_profile`, dato conservato ma non letto da nessun codice: v. §7.12 e capitolo 9; i **siti fissi** EWR del blocco C sono **fatti** dal 2026-11-05, §7.12); attraversamento a corda limitata del **solo** rilevamento (D-5, opzione 2:
-richiederebbe un dato di tempo di permanenza del sensore e un cambio della legge del risolutore
-DES); la firma a due liste minacce di `plan_attack_profile` (D-8) — implementata insieme al
+(`acquisition_profile`, dato conservato ma non letto da nessun codice: v. §7.12 e capitolo 9; i **siti fissi** EWR del blocco C sono **fatti** dal 2026-11-05, §7.12); attraversamento a corda limitata del **solo** rilevamento nel pianificatore (blocco C della D-5, **rimandato**, decisione DW-7: richiederebbe l'orizzonte radar nel DES, che non c'è; la legge di permanenza D-5 è invece **fatta**, dietro l'interruttore spento `D5_DWELL_TIME`, capitolo 4 §4.36); la firma a due liste minacce di `plan_attack_profile` (D-8) — implementata insieme al
 pianificatore d'attacco, v. §7.9.
 
 ### Diagramma D14 — tipi e modalità
@@ -925,6 +932,14 @@ Modifiche ai registri d'arma e d'aereo, senza codice consumatore nuovo ma con ef
 - **Come si comporta un EWR nel motore** (vale per gli otto del nucleo e per i sette siti fissi; tutto verificato sul codice, nessuna regola nuova): `Vehicle.isEWR` (`Asset/Vehicle.py:298-299`); `build_threat_aa` dà `None` (nessuna arma AD) e `Military.air_detection_threats()` include il suo volume di rilevamento (§7.8); in sessione, secondo la Proposta (§1.3, sonda E-4: dichiarata dalla Proposta, non riverificata qui), **rileva** (percezione condivisa del dominio) e
   **non spara mai** (nessun `AmmunitionEvent` dell'EWR, asserito da `Test_EWR_Data`; come bersaglio è classificato `air_defence`, `Logic/Fire_Control.py:596-608`). **Non emette per gli RWR**: `emits_radar` è `True` (ha un radar aria), ma `sam_category` è `None` perché `roles` contiene solo `'EWR'` e non c'è nessuna arma SAM (`Context/Air_Defense_Efficacy.py:523-552`, `_ROLE_CATEGORY` `:518`),
   quindi un EWR resta **fuori da `default_rwr_catalogue`** (`:697-698`) e il flag `ewr` di `Aircraft_Rwr_Data` resta senza effetto (§7.10). I test sono `Test_EWR_Data.py` (capitolo 8 §8.13; 30 test, di cui 15 dei siti fissi). Gli inventari di campagna (`Initial_Context`/`Actual_Context`) restano a `ag.EWR.value: {}`: la Proposta li lascia vuoti (decisione 17), **non ricontrollato** nei file.
+
+- **Dati per la D-5, la BI e la VA (2026-11-06/10; solo dati, nessun interruttore proprio: quelli del risolutore sono nel capitolo 6 §6.21).**
+  - **`dwell_time_s`** [s] nel dizionario `radar` di **10 dei 15 radar EWR** (`Asset/Vehicle_Data.py:4659-5058`): SCR-270 60; P-12 e P-18 6; P-37, 1L13, 55Zh6, AN/TPS-43 e P-14 10; AMES Type 7 7,5; AMES Type 80 15 (periodo di rivisita = 60 / giri al minuto della fonte; regola di progetto [S] sugli intervalli, DW-2; Type 80 poggia su un'interpretazione [S]).
+    Non lo dichiarano Chain Home (per scelta: antenna fissa a illuminazione continua), FuMG-80-Freya, AN-FPS-117, Wassermann e Mammut; **nessun record di SAM, AAA, aereo, nave, TVD o vista lo dichiara** (DW-9, capitolo 9). Chiave **opzionale**: assente = legge di Pd invariata. Lettori in `Asset/Mobile.py`: `detection_dwell_time(mode, range_type)` (`:1692`,
+    il dwell del sensore con la portata massima, stessa esclusione del visivo di `detection_range`) e l'helper `_sensor_dwell_s` (`:1572`: `None` se manca, non è un numero finito `> 0`, mai un'eccezione); il pianificatore legge lo stesso valore (`DetectionThreat.dwell_time_s`, §7.8). Test dei valori: `Test/Test_EWR_Data.py:475-490`; dei lettori: `Test/Test_Mobile.py`.
+  - **Campi BI nei registri d'arma** (blocco 1, `61df9437`; decisioni D1-D6 della Proposta dati): `munition_class`, `ad_detectable`, `diameter_mm`, `mass_kg` nei **52 `MISSILES_ASM`** (44 aerei in `Asset/Aircraft_Weapon_Data.py`, 8 navali in `Asset/Ship_Weapon_Data.py`), **stime di progetto [S]** su fonti aperte, non dati tarati. Il motore legge `munition_class` e `ad_detectable` (`Logic/Fire_Control.py:766`, `:804`), **non**
+    `diameter_mm` né `mass_kg` (dati di supporto). **I commenti di testa dei due registri (`Aircraft_Weapon_Data.py:2115`, `Ship_Weapon_Data.py:1239`) dicono ancora «Nessuno è ancora letto dal motore»: è superato dal blocco 2** (discrepanza di commento, non modificata dal manuale; capitolo 9). Regola e conteggi (32 `True`, 20 `False`): capitolo 4 §4.24.
+  - **VA: nessun dato nuovo.** Usa i campi già nei registri: `min_altitude`/`max_altitude` (m, relativi al tiratore) di `Ground_Weapon_Data` e `Ship_Weapon_Data`, e `max_height` (km, assoluta) di `Aircraft_Weapon_Data`, copiati nella `ShotSpec` da `Fire_Control.shot_spec_for` (capitolo 4 §4.16, §4.37).
 
 ## 7.13 Dati di campagna: i tempi di turnaround e riparazione e `Campaign_State` (F8c, F8-R)
 

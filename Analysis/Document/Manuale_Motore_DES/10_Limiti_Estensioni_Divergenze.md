@@ -1,5 +1,10 @@
 # Capitolo 9 — Limiti noti, punti di estensione, divergenze codice/wiki
 
+> **Aggiornamento 2026-11-13 (D-5, BI, VA, FP; codice `a389cadb`).** Tre sezioni nuove in §9.1 dopo quella della BI: **«Rilevamento per passaggio nella portata propria (FP)»** (con il limite storico «una sola estrazione per finestra e direzione» **superato**), **«Permanenza nel volume (D-5)»** (dwell dichiarato solo per i 10 EWR, DW-9 aperto) e **«Quota nel volume d'ingaggio (VA)»**; i riferimenti `:riga` della sezione BI sono riverificati; §9.3 ha
+> tre righe nuove (D-5, VA, FP) e §9.4 un riepilogo. **Interruttori del risolutore: `D5_DWELL_TIME`, `BI_AD_TARGET_RULE`, `VA_ENGAGEMENT_ALTITUDE_BAND`, tutti `False`; `FP_PER_PASS_DETECTION` eliminato il 2026-11-13** (capitolo 6 §6.21). Suite **4914 test, OK (skipped=7)**, fotografia **1103 esecuzioni**, 0 cambiate dalla pulizia: numeri dichiarati dalla Proposta della pulizia e da `F4_Differenze_Scenari.md`, **non rieseguiti** (capitolo 8 §8.7, §8.14).
+> **Discrepanze di commento nel codice**, **non corrette dal manuale** (il codice è sola lettura per questo lavoro): i commenti di testa di `Asset/Aircraft_Weapon_Data.py:2115` e `Asset/Ship_Weapon_Data.py:1239` dicono ancora «Nessuno è ancora letto dal motore» (vedi BI sotto); il docstring del modulo di `Engagement_Resolver` e quello di `_Candidate` sono parzialmente superati dalla FP, e la sezione VA del docstring ha la data «2026-11-xx» (vedi FP e VA sotto).
+> Il resto del capitolo descrive lo stato indicato nelle note precedenti.
+>
 > **Aggiornamento 2026-11-05 (blocco C della D-4b: siti EWR fissi, codice `efa8f353`; manuale riverificato a `f33902ba`).** Il punto «**Siti fissi (blocco C della Proposta) non fatti**» di §9.1 è ora **FATTO**: sette radar di installazione fissa (AN-FPS-117, Chain-Home, AMES-Type-7, AMES-Type-80, Wassermann, Mammut, P-14-Lena) sono nel registro `Vehicle_Data` come `Vehicle` **immobile**
 > con il marcatore `fixed_site`; l'**AN/FPS-20 è escluso** (fonte contraddittoria 322/407 km, confidenza bassa). Gli EWR sono **15**, i record **79**. Suite **4757 test, OK (skipped=7)**, fotografia **1009 esecuzioni, tutte identiche** (numeri del rapporto dell'esecutore e della sessione principale, **non rieseguiti**). Dati e un marcatore che nessuna regola legge:
 > **nessuna regola nuova, nessun interruttore**. Cambiano in questo capitolo: §9.1 («Limiti dei sensori EWR e visivo»: punti aggiornati e **limiti nuovi del blocco C**: immobilità non imposta, copertura angolare, torri non rappresentate, costo di calcolo delle finestre non misurato), §9.3 (due righe), §9.4 (riepilogo) e §9.6 (**voci 28 e 29 ora CHIUSE**, v. sotto).
@@ -285,10 +290,10 @@ difesa, dichiarate nella proposta §4).
 
 ### Bersagli intercettabili dalle difese aeree (BI, 2026-11-07/08: commit `61df9437`, `0f275d55`, `8ac1b0f7`)
 
-Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabili_Difesa_Aerea.md` §7-§8 e da `Proposta_Dati_Bersagli_Intercettabili.md`; qui verificati sul codice il 2026-11-10 dove si può, e segnati come **non verificati** dove dipendono da fonti esterne o da misure già fatte dalla Proposta.
+Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabili_Difesa_Aerea.md` §7-§8 e da `Proposta_Dati_Bersagli_Intercettabili.md`; qui verificati sul codice il 2026-11-10 dove si può (**righe riverificate il 2026-11-13 a `a389cadb`**, spostate dalla VA e dalla FP), e segnati come **non verificati** dove dipendono da fonti esterne o da misure già fatte dalla Proposta.
 
 - **La regola è spenta di default e nessun codice di produzione la accende.** `Engagement_Resolver.BI_AD_TARGET_RULE = False`
-  (`Logic/Engagement_Resolver.py:535`): con il default il motore si comporta come prima della BI (ogni missile e ogni bomba
+  (`Logic/Engagement_Resolver.py:597`): con il default il motore si comporta come prima della BI (ogni missile e ogni bomba
   guidata è un bersaglio per ogni intercettore `Anti_Missile`, salvo L1 e R-INT: un Tor ferma ancora i Maverick, come in S19AD
   `tor_rear`). La accendono solo i test (`patch.object`), fra cui S35 (ricerca nei sorgenti il 2026-11-10: nessuna
   occorrenza dell'interruttore fuori da `Engagement_Resolver`, `Fire_Control` e `Test/`). La regola dell'utente del 2026-09-28
@@ -302,13 +307,13 @@ Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabi
   (anomalia del registro, decisione D2 (a) della Proposta dati); il **Kh-22N** resta `anti_ship` (D3.1 (a)). Sei voci in
   **zona grigia** sono state approvate dall'utente una per una (AGM-88, Kh-25MP, Kh-25MPU, RB-05A, RB-05E `False`;
   Kormoran, 340 mm contro i 343 mm dell'ancora, `True`). Il **default di classe** `AD_DETECTABLE_DEFAULT`
-  (`Logic/Fire_Control.py:297`) è una **stima [S]** (BI-7) ma sui registri veri **non è mai usato**: tutte le 52 voci
+  (`Logic/Fire_Control.py:302`) è una **stima [S]** (BI-7) ma sui registri veri **non è mai usato**: tutte le 52 voci
   dichiarano il flag. Il **metro del Maverick** (diametro ≤ 304,8 mm **e** massa ≤ 304 kg → `False`; diametro ≥ 343 mm **e**
   massa ≥ 515,25 kg → `True`; lunghezza esclusa) è una scelta di progetto [S], verificata solo da un test dei dati: **8 voci
   non hanno la coppia diametro-massa** (RB-05E, RB-75T, 9M120-F, Kh-65, Kh-555, KD-63B, KD-20, YJ-18, lette nei registri il
   2026-11-10) e sfuggono al controllo di coerenza.
 - **Nessun missile balistico a registro, nessun cruise lanciato da terra.** La parte «balistici» della regola
-  (`AD_TARGET_DOMAINS['ballistic']`, `Logic/Fire_Control.py:294`) è scritta ma **non è provabile in sessione** finché i
+  (`AD_TARGET_DOMAINS['ballistic']`, `Logic/Fire_Control.py:299`) è scritta ma **non è provabile in sessione** finché i
   registri non avranno un'arma di quella classe.
 - **Dimensione binaria, nessuna RCS.** Il criterio di dimensione è un **flag** `ad_detectable` (`True`/`False`) per voce, non
   una soglia: il motore non legge né `diameter_mm` né `mass_kg` (nessuna occorrenza fuori dai registri e dai test, ricerca del
@@ -318,8 +323,8 @@ Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabi
   il raggio di scoperta del colpo con l'RCS (`Proposta_Intercettazione_Reazione.md`, decisione Q2 del 2026-09-30).
 - **Il criterio di dimensione vale solo per le difese navali (decisione BI-12 (a), scelta di progetto [S], incoerenza I-1
   accettata dall'utente il 2026-11-07).** Per le difese terrestri contano solo le classi `cruise` e `ballistic`
-  (`AD_SIZE_GATED_NAVAL` = `anti_ship`, `arm`, `tactical`, solo dominio navale: `Logic/Fire_Control.py:295`, commento a
-  `:288-292`). Quindi **Kh-29L/T/TE e Kh-58** (e ogni missile `tactical` o `arm`) **non sono mai bersagli delle difese
+  (`AD_SIZE_GATED_NAVAL` = `anti_ship`, `arm`, `tactical`, solo dominio navale: `Logic/Fire_Control.py:300`, commento a
+  `:293-297`). Quindi **Kh-29L/T/TE e Kh-58** (e ogni missile `tactical` o `arm`) **non sono mai bersagli delle difese
   terrestri**, anche se di taglia simile al **Kh-59**, che lo è invece perché `cruise` (decisione BI-2): lo stesso missile
   può risultare «visibile» a una nave (flag `True`) e «invisibile» a un Buk. Il registro dà infatti `ad_detectable` `True` a
   Kh-29L, Kh-29T, Kh-29TE e Kh-58 (lette nei registri il 2026-11-10; anche Kh-31P). L'alternativa (BI-12 (b): dimensione
@@ -327,14 +332,14 @@ Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabi
 - **Armi non a registro e bersagli a tabella.** Una `ShotSpec` senza `intercept_domains` (armi `test:*` di `SHOTS`, o una
   classe di munizione non classificabile) non ha vincoli (decisione BI-8): gli scenari a tabella non vedono mai la regola, nemmeno
   con l'interruttore acceso.
-- **Dominio dell'intercettore, non del bersaglio (BI-5).** `_ad_domain` (`Logic/Engagement_Resolver.py:3189`) classifica
+- **Dominio dell'intercettore, non del bersaglio (BI-5).** `_ad_domain` (`Logic/Engagement_Resolver.py:3656`) classifica
   per classe dell'intercettore (`Ship` → navale, ogni altro → terrestre): nella **difesa di dominio mista** (una nave che
   difende truppe a terra, un Tor che difende un trasporto navale in porto) conta chi intercetta, non che cosa è attaccato.
 - **`capacity` non è filtrata per dominio.** Con la regola accesa il conteggio `SalvoResolution.interceptable_rounds` esclude
-  le salve a domini vuoti (`:3333-3337`), ma `capacity` (tetto di Hughes, capitolo 4 §4.5) resta la somma delle disponibilità di
+  le salve a domini vuoti (`:3818-3822`), ma `capacity` (tetto di Hughes, capitolo 4 §4.5) resta la somma delle disponibilità di
   **tutti** gli intercettori del dominio, anche di quelli che non possono fermare quel colpo.
 - **Tempo di volo dei cruise a lungo raggio** (limite **precedente**, reso più visibile dalla regola): `time_of_flight` =
-  `ENGAGEMENT_RANGE_FRACTION` (0,5, stima) × portata / velocità (`Logic/Fire_Control.py:233`, `:848`) dà per Kh-55 e Kh-101
+  `ENGAGEMENT_RANGE_FRACTION` (0,5, stima) × portata / velocità (`Logic/Fire_Control.py:238`, `:853`) dà per Kh-55 e Kh-101
   circa 5200 e 11000 s (calcolo dai valori di registro, non eseguito tramite `shot_spec_for`: portata 2500 e 5500 km, velocità 240 e 250 m/s); la Proposta
   dice che R-INT li vede sempre «in tempo» (**non riverificato qui**). Per questo S35 usa il Kh-59 (portata 90 km).
 - **S35 dipende da L1** (regola dell'utente del 2026-09-28, `Proposta_Regole_Allocazione_SAM.md` §7.7, Q2: i colpi lanciati
@@ -348,8 +353,60 @@ Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabi
   **valore di test [S]**, non un dato del registro.
 - **Commenti di testa dei registri superati.** I commenti sopra `'MISSILES_ASM'` (`Asset/Aircraft_Weapon_Data.py:2115`,
   `Asset/Ship_Weapon_Data.py:1239`) dicono ancora che nessuno dei quattro campi «è ancora letto dal motore»: dal blocco 2 il
-  motore legge `munition_class` e `ad_detectable` (`Logic/Fire_Control.py:761`, `:813`), non `diameter_mm` né `mass_kg`. È un
+  motore legge `munition_class` e `ad_detectable` (`Logic/Fire_Control.py:766`, `:818`), non `diameter_mm` né `mass_kg`. È un
   commento di codice, non è stato modificato dal manuale.
+
+### Rilevamento per passaggio nella portata propria (FP, 2026-11-11; regola senza interruttore dal 2026-11-13)
+
+Capitolo 4 §4.35. Dichiarati da `Proposta_Finestre_Per_Passaggio_Portata_Propria.md` §5.2 e da `Proposta_FP_Pulizia_Interruttore.md` §5; qui riletti sul codice a `a389cadb`.
+
+- **Limite STORICO, superato dalla FP: «una sola estrazione per finestra e direzione, anche con più passaggi nel volume minore».** Fino al 2026-11-10 il risolutore faceva **una** estrazione di rilevamento per finestra e direzione, con la distanza minima dell'**intera finestra**, e il candidato al tiro valeva fino alla **fine della finestra** (calcolata sulla portata *maggiore*): l'osservatore con la
+  portata minore (un SAM o un'AAA contro un aereo con radar a lungo raggio) che vedeva il bersaglio uscire e rientrare dal proprio volume otteneva una sola occasione di rilevamento, e continuava a sparare **dopo** l'uscita. Era un limite del DES precedente alla D-5 (che anzi lo aggravava sommando le permanenze), segnalato come «permanenza sommata su più passaggi» dalla Proposta D-5 §5.2 (2026-11-06).
+  **Superato**: oggi un'estrazione per passaggio, distanza e permanenza del passaggio, candidato fino alla fine del passaggio (capitolo 4 §4.35). Il manuale precedente al 2026-11-13 **non** dichiarava il limite (la Proposta FP §1.7 lo nota): è nato e superato nello stesso aggiornamento.
+- **Senza i tratti delle rotte i passaggi non si calcolano.** Una chiamata diretta a `resolve_engagement` senza `legs` fa l'estrazione unica di prima, con il candidato fino a `t_end`, la permanenza D-5 di `_exposure_time` e R-INT con l'**ultimo** rilevamento in lista (limite del ripiego, v. R-INT sotto). **Con i tratti e una direzione a due o più passaggi, `pass_rng` è obbligatorio**: senza,
+  `ValueError` (dopo la pulizia del 2026-11-13: prima, con l'interruttore, ricadeva sull'estrazione unica). Nessun chiamante del repository lo incontra (la sessione lo passa sempre); un modulo futuro che chiama `resolve_engagement` con `legs` deve passare uno stream separato.
+- **Fine del tiro all'uscita dal volume (FP-3 (a)).** L'osservatore con la portata minore **non lancia salve nuove** dopo la fine del passaggio (unito); una salva **già lanciata** prosegue fino all'impatto (R4). **Non è modellata una guida** che richieda il sensore dopo il lancio. Effetto sulla fotografia: 44 esecuzioni cambiate (capitolo 8 §8.7), tutte con meno salve della difesa.
+- **R-INT (FP-5 (d)).** Con i tratti, un lancio fuori da ogni passaggio dell'intercettore sul lanciatore è «non visto» anche se l'intercettore lo aveva rilevato in un passaggio precedente (traccia persa all'uscita dal volume). Senza i tratti resta il difetto latente «ultimo rilevamento in lista». Con `BI_AD_TARGET_RULE` acceso la regola conta solo per i colpi che il filtro BI ammette (cruise e balistici; contro i navali, gli antinave).
+- **Passaggi tangenti o ritagliati a durata nulla contano come passaggi** (Pd sul bordo = 0,5 × fattore, legge di sempre; con FP-3 (a) nessun candidato se la reazione non è nulla); con la D-5 la permanenza nulla li annulla. La sonda P-1 ne ha contati **0** nella fotografia di allora (`ZERO_PASSES`).
+- **Passaggio diviso da un decollo/atterraggio** (`Contact_Scheduler._pair_windows`, `:1576`, per i tratti a stato costante di `GroundedSchedule`, F5): due finestre, due estrazioni, come prima.
+- **Unione dei passaggi (FP-10)** solo nel risolutore e **solo con la D-5 accesa e un dwell dichiarato** (oggi i 10 EWR; DW-9 estenderà). Senza dwell o con la D-5 spenta, un'uscita di pochi secondi crea un passaggio nuovo e un'estrazione in più (per traiettorie sul bordo del volume la Pd cumulativa è **sovrastimata**: esempio della Proposta §2.11, 0,915 contro 0,759, **non riverificato qui**).
+- **Finestre e pianificatore restano con la tolleranza numerica** (FP-10, sotto-decisione 2): l'osservatore con la portata *maggiore* riceve ancora **due finestre** (due estrazioni) per un'uscita breve dal volume anche se è ≤ dwell; il pianificatore conta due attraversamenti (`CROSSING_JOIN_TOLERANCE_S` = 1e-6 s, `Air_Route_Manager.py:38`). **Incoerenza dichiarata** fra DES (FP) e finestre/pianificatore.
+- **Pianificatore (FP-9 (a))**: `Path.max_detection_probability` è il **peggiore** degli attraversamenti, non la probabilità cumulativa di essere rilevati almeno una volta che il DES dà con più passaggi (due attraversamenti a 0,4: metrica 0,4, DES 0,64: esempio della Proposta §5.2, non riverificato). La metrica cumulativa si aggiungerà quando ci sarà un consumatore.
+- **Copertura di sessione ridotta**: la **fotografia non esercita il caso multi-passaggio** (sonda P-0: 0 direzioni a più passaggi su 33 910, dalla Proposta §5.1, non rifatta). Il percorso `_detect_passes`/`pass_rng`/FP-3/FP-4/FP-6/FP-10 è coperto dai test unitari e da **S33-PASSES**, che prova però solo il ramo «nessuna unione, `g = 1`» (dwell di test 2 s [S]); **FP-5 (d), l'unione FP-10 effettiva e la permanenza con `g < 1` sono provate solo dai test unitari**.
+- **Il numero di estrazioni non è visibile nel confronto con la fotografia** (le `Detection` non sono registrate): lo verificano i test.
+- **Attacchi CAS a più bersagli** (Proposta §1.10): il moto è la spezzata dei punti di missione, nessuna manovra d'attacco generata dal motore; l'ordine degli attacchi lo decidono priorità e portate; la rotta non cambia se i bersagli sono distrutti prima (salvo G4b). Un tratto rettilineo attraversa al più una volta un volume convesso: i passaggi multipli nascono solo da rotte con virate (o, in futuro, da volumi non convessi).
+- **Commenti di codice non aggiornati** (non modificati dal manuale): il docstring del modulo, punto 1 della catena (`Logic/Engagement_Resolver.py:14-20`), dice ancora che «una sola estrazione per coppia e direzione decide sia se sia a che distanza» (vero **per occasione di rilevamento**, non più per finestra: la sezione «Rilevamento per passaggio», `:197-223`, lo corregge più sotto), e il docstring di `_Candidate` (`:1746-1752`) dice che `t_cpa` e
+  `distance_cpa` «vengono dalla finestra di contatto» (con due o più passaggi vengono dal passaggio, `_detect_passes`).
+
+### Permanenza nel volume (D-5, 2026-11-06; interruttore `D5_DWELL_TIME` spento)
+
+Capitolo 4 §4.36. Dichiarati da `Proposta_Dwell_Time_Rilevamento.md` §5; riletti sul codice a `a389cadb`.
+
+- **Legge spenta di default, nessun codice di produzione la accende** (`Engagement_Resolver.D5_DWELL_TIME = False`, `:591`; la accendono solo i test e gli scenari S32 e S33): con i soli dati dei registri la D-5 **non produce effetti visibili** nelle sessioni della fotografia (Proposta §5.1; **non riverificato qui**).
+- **Dwell dichiarato solo per 10 radar EWR; DW-9 aperto.** `dwell_time_s` è nel `radar` di SCR-270, P-12, P-18, P-37, 1L13, 55Zh6, AN/TPS-43, AMES Type 7, AMES Type 80 e P-14 (`Asset/Vehicle_Data.py`); **nessun SAM, nessuna AAA, nessun radar d'aereo, nave, TVD o sensore visivo lo dichiara** (decisione DW-9: solo il meccanismo ora, valori quando la ricerca per classe di sensore sarà completa). Chain Home non lo dichiara per scelta
+  (illuminazione continua); FuMG-80-Freya, AN-FPS-117, Wassermann e Mammut non lo dichiarano (nessun dato di rotazione). **Conseguenza**: finché mancano i dati per i **tiratori**, la legge non cambia nessun esito di tiro dei registri; estenderli a SAM e AAA **cambierà la fotografia con l'interruttore acceso** (sonda S-2: 10 s a tutti gli osservatori cambiano 2 esecuzioni su 1009; sonda S-1: 17, 45, 464 rilevamenti persi su 29 483 a 30, 60, 120 s: dalla Proposta §5.1, non rifatte) e il confronto andrà riletto.
+- **Valori deboli [S]**: i 10 periodi sono dati di fonte di confidenza media (55Zh6 media-bassa) con una **regola di progetto** [S] sugli intervalli di giri/min (DW-2: regime normale se citato, altrimenti la rotazione più veloce); il **P-12** ha una contraddizione di fonte (10 contro 2-6 giri/min); l'**AMES Type 80** (15 s) poggia su un'**interpretazione** [S] («4, fino a 6» letto come regime normale 4: con la lettura «più veloce» sarebbe 10 s).
+  Valori di test di S32 (30 s, 600 s) e di S33 (2 s): **dichiarati di test**, mai nei registri.
+- **La forma della legge è una scelta di progetto [S]** con giustificazione geometrica (`min(1, permanenza / dwell)`), non tarata; non modella la conferma M su N (assorbita nella RIV). **Nessuna costante stimata nuova nel motore.**
+- **La D-5 non accorcia le rotte contro gli EWR** (rischio principale, invariato): con periodi di 6-60 s la corda a Pd ridotta è di pochi km (al più 3,75 km a 250 m/s per periodi fino a 15 s). L'effetto «volo basso non visto» richiede l'**orizzonte radar nel DES**, che non c'è (attività separata, **blocco C rimandato**, decisione DW-7: «attraversamento a corda limitata» nel pianificatore, non eseguito).
+- **Solo riduzione**: per permanenze lunghe la Pd resta quella della distanza minima (nessun cumulo di scansioni). **Sensore unico per asset**: la permanenza è quella del sensore con la portata massima; un secondo sensore più corto senza dwell non entra. **Permanenza sui tratti, non sullo stato**: l'intervallo che precede l'inizio della finestra conta anche se in quella parte l'osservatore o il bersaglio erano a terra (spinge verso la legge attuale: conservativo).
+- **Nessun dwell sul tracciamento dei colpi**: R-INT (`_round_track_time`) scopre un colpo all'ingresso nella portata aerea dell'intercettore, come prima.
+- **Pianificatore e DES divergono solo in un caso**: il `dwell_time_s` della `DetectionThreat` è quello del sensore col raggio effettivo maggiore (dopo l'orizzonte), il DES usa quello con la portata nominale maggiore; differiscono solo se un TVD supera un radar dopo l'orizzonte (nessun EWR ha TVD). Fixture: `declare_sensor` non dichiara una permanenza.
+- **Interazione con la FP**: la permanenza è quella del **passaggio** (mai la somma: era il difetto trovato il 2026-11-06 e corretto da FP-6); l'unione FP-10 richiede dwell dichiarato (limite sopra).
+
+### Quota nel volume d'ingaggio (VA, 2026-11-10; interruttore `VA_ENGAGEMENT_ALTITUDE_BAND` spento)
+
+Capitolo 4 §4.37. Dichiarati da `Proposta_Allineamento_Volumi_DES_Pianificatore.md` §5.2; riletti sul codice a `a389cadb`.
+
+- **Regola spenta di default, nessun codice di produzione la accende** (`VA_ENGAGEMENT_ALTITUDE_BAND = False`, `:608`): spenta, il filtro di quota della fire control resta **statico** sulla posizione di partenza degli asset e il volume d'ingaggio è la sola sfera.
+- **Prima arma con scorta, senza ripiego per la portata**: fuori dal rinvio di quota, se l'arma preferita non entra mai nella propria sfera il candidato si esaurisce anche se un'altra potrebbe ingaggiare (è il limite di §9.1 «la scelta per scorta precede il controllo di portata»).
+- **Sfera ∩ fascia è una prima approssimazione**: gli inviluppi reali hanno portata ridotta a bassa quota e vicino al tetto e una zona morta interna (nessun dato nel registro). **Portata minima e cono di silenzio non modellati** (forme non convesse: due intervalli per tratto, tema della Attività D).
+- **Riferimento verticale**: quota relativa al tiratore (armi di superficie) o assoluta (armi d'aereo), **senza terreno**; `altitude_reference='AGL'` dei punti di missione non è letto.
+- **Pianificatore conservativo** (VA-4 (a)): negli angoli del cilindro vede pericolo dove il DES non spara. **Rilevamento** (VA-5): resta sferico nel DES e cilindrico nel pianificatore; la permanenza D-5 continua a divergere nella forma.
+- **Fire control di test non allineata**: le `ShotSpec` di `Scenario_Fixtures.SHOTS` non hanno portata né fascia e non dichiarano `altitudes`: la regola non le tocca (nella fotografia producono salve sopra il tetto del cilindro del pianificatore e oltre il raggio: sonda V-0 della Proposta, 523 e 1 238 salve, non rifatta); dar loro portata e fascia cambierebbe la fotografia (attività separata, decisione dell'utente).
+- **Fascia o tetto senza portata**: una `ShotSpec` con fascia o tetto ma `max_range = None` non riceve nessun controllo nel tempo (il rinvio salta le opzioni senza `max_range`): la regola «una disuguaglianza, due istanti» vale lì solo all'istante della fire control. Nei registri terrestri e navali (31 armi con fascia di quota) nessuna manca di portata (verifica della sessione principale riportata dalla Proposta); le armi aria-aria **non** sono state controllate.
+- **Non verificato dalla Proposta**: il costo in tempo della memoizzazione con le quote all'istante, la qualità dei `max_height` delle armi d'aereo rispetto a fonti esterne, e il rinvio con un ingresso in fascia più breve del passo di campionamento della sonda V-2 (la sonda campionava 40 istanti; il codice usa il calcolo esatto, `altitude_intervals`).
+- **Commento di codice con data segnaposto** (non modificato dal manuale): la sezione «Quota nel volume d'ingaggio (VA, 2026-11-xx)» del docstring del modulo (`Logic/Engagement_Resolver.py:144`) ha ancora «2026-11-xx».
 
 ### Limiti della Missione a `fa5fbf1e` (fasi F0-F8 e G1-G5 fatte, F9 questo aggiornamento)
 
@@ -768,6 +825,9 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 | Alimentazione di morale e stima del nemico | Fornire `morale_for`/`enemy_estimate_for` a `run_session` da `Block.morale` corretto (decisione D9) e dalla ricognizione/C2 (capitolo 4 §4.21). |
 | Settori RWR, `ewr`, `confidence` | Consumo nel modulo rotte/evasione e in un futuro SEAD (`Asset/Aircraft_Rwr_Data.py`, capitolo 7 §7.10). |
 | Bersagli intercettabili dalle difese aeree (BI) | **Fatti** (blocchi 1-3, `61df9437`, `0f275d55`, `8ac1b0f7`): classi e flag nei `MISSILES_ASM`, `Fire_Control.munition_class`/`intercept_domains_for`, `ShotSpec.intercept_domains`, filtro `_admissible` dietro `BI_AD_TARGET_RULE` (spento), S35-ADTGT (capitolo 4 §4.24). Resta da fare: decidere se accendere l'interruttore di default (nuova fotografia), un'RCS o una soglia di dimensione al posto del flag, il criterio di dimensione anche per le difese terrestri (BI-12 (b): una riga in `intercept_domains_for`), un missile balistico a registro, la revisione di S35 se cambia L1. Limiti in §9.1 «Bersagli intercettabili dalle difese aeree». |
+| Permanenza nel volume (D-5) | **Fatta la legge** (`Engagement_Resolver.dwell_factor`, `D5_DWELL_TIME` spento, capitolo 4 §4.36) e la metrica del pianificatore (`Air_Route_Manager`, capitolo 7 §7.8). Resta da fare: (1) **dati `dwell_time_s` per SAM, AAA, radar d'aereo, navi, TVD e vista** (DW-9; **solo dati**: aggiungere la chiave al dizionario del sensore nei registri con commento F/D/S e fonte, poi suite e un confronto con l'interruttore **acceso** da rileggere), (2) **decidere se accendere l'interruttore** (nuova fotografia, decisione dell'utente), (3) il **blocco C** (attraversamento a corda limitata nel pianificatore) e l'**orizzonte radar nel DES** (DW-7, attività separate). |
+| Quota nel volume d'ingaggio (VA) | **Fatta** dietro `VA_ENGAGEMENT_ALTITUDE_BAND` (spento): `engagement_intervals(..., band)`, `_altitude_deferral`, `Contact_Scheduler.altitude_intervals`/`intersect_intervals` (capitolo 4 §4.37). Resta da fare: **decidere se accendere l'interruttore**; dare portata e fascia alle `ShotSpec` di test (attività separata); inviluppo con portata ridotta a bassa quota, portata minima e cono di silenzio (volumi non convessi: due intervalli per tratto, Attività D). |
+| Rilevamento per passaggio (FP) | **Fatto, senza interruttore** (capitolo 4 §4.35): `_own_passes`, `_detect_passes`, `pass_rng`. **Punto di aggancio per un volume di rilevamento non sferico**: `_own_intervals` è l'**unico** punto di chiamata del volume proprio nel risolutore (decisione VA-6 (a)); un volume diverso dalla sfera si sostituisce lì, restando contenuto nella sfera di raggio `own_range`. Resta da fare: la metrica **cumulativa** del pianificatore (`cumulative_detection_probability`, quando ci sarà un consumatore), l'allineamento delle finestre dello scheduler all'unione FP-10 (oggi solo tolleranza numerica). |
 | Legame C2 fra unità di difesa | Fase 0 della gerarchia C2: tracce condivise per R-INT (§4.26), assegnazione più rapida per L3 (§4.24). |
 | Re-scheduling dopo disingaggio | **Fatto per gli aerei dal G4b**, a livello di sessione (`Session_Simulator.replan`/`reschedule`, capitolo 6 §6.20): rientro forzato, bingo e esaurimento dopo un episodio con ricalcolo dei contatti (`schedule_contacts(only_assets=)`). Resta da fare: forze terrestri e navali (oggi passive sulla rotta), cambio di rotta *durante* un episodio, condizioni su eventi (`ON_EVENT`); il risolutore resta a stato ombra e non muta rotte. |
 | Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:195-230`, `Logic/Engagement_Resolver.py:1105-1152`). Dal 2026-11-04 serve anche a non sovrastimare il sensore **visivo** di ZSU-57-2 e M163-VADS di notte (§9.1 «Limiti dei sensori EWR e visivo»). |
@@ -868,6 +928,11 @@ arma candidata reale, con propria voce di scorta (commit `8bd69727`, decisione A
 sgancio, che alimenta il DES con una gittata e un tempo di caduta reali per le bombe (commit
 `6754bf1c`, decisione B6, capitolo 4 §4.20, capitolo 7 §7.9). La suite di test è passata da 3371 a
 **3645 test, OK (skipped=5)** attraverso queste sette estensioni (capitolo 8).
+
+**Aggiornamento 2026-11-06 → 2026-11-13: D-5, BI, VA e FP (a `a389cadb`)**: in ordine, la permanenza nel volume (D-5, `8943b292` il risolutore e `effb0dcf` il pianificatore, interruttore `D5_DWELL_TIME`, scenario S32); i bersagli intercettabili dalle difese aeree (BI, `61df9437`, `0f275d55`, `8ac1b0f7`, interruttore `BI_AD_TARGET_RULE`, scenario S35); la quota nel volume d'ingaggio (VA, `585dbc65`, `5d87f03d`, interruttore
+`VA_ENGAGEMENT_ALTITUDE_BAND`, scenario S34); il rilevamento per passaggio nella portata propria (FP, da `c1f39787` a `a22b3930`, scenario S33), acceso il 2026-11-12 (`28df28b8`) e **senza interruttore dalla pulizia** (`2c89ca88`, `a389cadb`). **Il risolutore** passa da 3872 a 4569 righe (`Engagement_Resolver.py`), `Fire_Control` da 1088 a 1217, `Contact_Scheduler` da 1578 a 1662 (due primitive), `Session_Simulator` da
+3163 a 3198 (`pass_event_id`), `Mobile` e i registri per i dati (`dwell_time_s`, campi BI). **Tre interruttori nuovi, tutti spenti** (capitolo 6 §6.21): con essi spenti nessuna esecuzione preesistente cambia (1009 identiche a ogni passo); la FP, regola sempre attiva, cambiò **44** esecuzioni (FP-3 (a)) alla sua accensione (2026-11-12) ed è ora nella fotografia. Quattro scenari nuovi (S32-S35, capitolo 8 §8.14). Suite **4914 test, OK (skipped=7)**,
+fotografia **1103 esecuzioni** (numeri dichiarati dalla Proposta della pulizia e da `F4_Differenze_Scenari.md`, **non rieseguiti** per questo aggiornamento; il numero di esecuzioni è invece contato sul file).
 
 I seguiti possibili restano quelli di §9.3: i limiti "minori ma non corretti" già presenti (bug di
 `get_blocks_by_criteria`; ~~le tre KGBU senza dati di rilascio~~, risolte il 2026-09-28) più quelli aggiunti
@@ -1158,3 +1223,12 @@ progetto non tarata; designazione geometrica alla prima decisione; fuoco su posi
 terra e mare, niente intercettazione né fuoco amico; ciclo di campagna senza chiamanti di produzione; tempi di turnaround e riparazione non tarati
 (una sola fonte verificata; turnaround navale 48 h = stima senza fonte numerica); nessuna logistica (F8d non fatta); processi applicati all'inizio della
 sessione successiva; riparazione a gradino; aereo `off_scene` che non cambia posizione; Operazioni per sessione**.
+
+**Aggiunta del 2026-11-13 (voci 30-33, tutte APERTE e minori: commenti e docstring del codice rimasti indietro rispetto al comportamento; il manuale le riporta, non le corregge perché il codice è sola lettura per questo lavoro).** Verificate sul codice a `a389cadb`.
+
+30. **Commenti di testa dei registri dei missili aria-superficie** — **APERTA**. `Asset/Aircraft_Weapon_Data.py:2115` e `Asset/Ship_Weapon_Data.py:1239` (sopra `'MISSILES_ASM'`) dicono «'munition_class', 'ad_detectable', 'diameter_mm', 'mass_kg'. **Nessuno è ancora letto dal motore.**». **Falso dal blocco 2 della BI** (`0f275d55`): `Fire_Control.munition_class` e `intercept_domains_for` leggono `munition_class` e `ad_detectable` (`Logic/Fire_Control.py:766`, `:804`, `:818`);
+    solo `diameter_mm` e `mass_kg` non sono letti da nessun codice del motore (sono dati di supporto, verificati dai test dei dati). Già segnalata dalla sezione BI di §9.1; qui promossa a voce perché è un commento **in un file di dati** che chi aggiunge un missile leggerà.
+31. **Docstring del risolutore non aggiornati alla FP** — **APERTA**. (a) Il punto 1 della catena nel docstring del modulo (`Logic/Engagement_Resolver.py:14-20`) dice che «una sola estrazione per coppia e direzione decide sia se sia a che distanza avviene il rilevamento»: vero **per occasione di rilevamento**, non per finestra (la sezione «Rilevamento per passaggio», `:197-223`, e il capitolo 4 §4.35 dicono il resto). (b) Il docstring di `_Candidate` (`:1746-1752`) dice che `t_cpa` e `distance_cpa`
+    «vengono dalla finestra di contatto»: con due o più passaggi vengono dal passaggio (`_detect_passes`, `:2596-2598`).
+32. **Data segnaposto nel docstring della VA** — **APERTA**. La sezione «Quota nel volume d'ingaggio (VA, 2026-11-xx)» del docstring del modulo (`Logic/Engagement_Resolver.py:144`) ha «2026-11-xx» invece della data (il blocco 1 della VA è del 2026-11-10, `585dbc65`).
+33. **Riferimento di riga obsoleto in un docstring di test** — **APERTA**. Il docstring di `TestS33DetectionPerPass.test_first_passes_draw_from_the_engagement_stream` (`Test/Test_Session_Scenarios_S33.py`) cita `Engagement_Resolver.py:4277-4278` per «la fase di rilevamento è la prima del risolutore»: oggi `run()` è a `:4238-4239` (`self._detect()` a `:4239`). Nessun effetto sul test.

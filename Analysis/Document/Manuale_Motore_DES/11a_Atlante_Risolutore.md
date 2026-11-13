@@ -3,7 +3,7 @@
 Questo file è la **parte A** del capitolo 10 (l'atlante dei diagrammi). Il pilota, con la scala dei livelli L0-L4, le convenzioni e i diagrammi D57-D66, è in
 [`11_Atlante_Diagrammi.md`](11_Atlante_Diagrammi.md): qui non si ripete la scala, si **estende** il livello L2 (tipi e API pubblica, con la tabella completa dei simboli)
 e il livello L3 (sequenze di chiamata) a tre moduli del core che nel pilota erano «parziali» o «da fare»: `Logic/Contact_Scheduler`, `Logic/Fire_Control` e
-`Logic/Engagement_Resolver`. I diagrammi nuovi sono **D67-D87**. I diagrammi D1-D56 dei capitoli 1-8 non sono toccati: dove una regola ha già il suo diagramma (livello L4)
+`Logic/Engagement_Resolver`. I diagrammi nuovi sono **D67-D87**, più **D133** (aggiunto il 2026-11-13) e il **D82 riscritto** (v. §10A.4). I diagrammi D1-D56 dei capitoli 1-8 non sono toccati: dove una regola ha già il suo diagramma (livello L4)
 il nuovo diagramma rimanda a quello e non lo duplica.
 
 **Come leggere.** I riferimenti sono `percorso:riga`, **relativi a `Code/Dynamic_War_Manager/Source/`**, come nel resto del manuale; una riga senza percorso (`:1379`) è del modulo di cui si sta parlando.
@@ -34,19 +34,22 @@ perché l'estrazione non dice in quale ramo si chiama. Nessun test eseguito: nes
 | D79 | L2 | `flowchart TD` | I metodi di `_EngagementRun` per ruolo 1/2: costruzione, rilevamento, scelta del tiro | `Engagement_Resolver` | 10A.4 | D5, D25, D26 |
 | D80 | L2 | `flowchart TD` | I metodi di `_EngagementRun` per ruolo 2/2: risoluzione, intercettazione, disingaggio, regole F7a | `Engagement_Resolver` | 10A.4 | D6, D22, D24, D37, D43 |
 | D81 | L3 | `sequenceDiagram` | `resolve_engagement`: validazione, costruzione della run e ciclo principale | `Engagement_Resolver` | 10A.4 | D5 |
-| D82 | L3 | `sequenceDiagram` | `_detect_direction`: una estrazione di rilevamento | `Engagement_Resolver` | 10A.4 | D5, D23 |
+| D82 | L3 | `sequenceDiagram` | `_detect_direction`: dai passaggi nel volume proprio all'estrazione e al candidato (**riscritto 2026-11-13**; prima: «una estrazione di rilevamento») | `Engagement_Resolver` | 10A.4 | D5, D23, D131, D133 |
 | D83 | L3 | `sequenceDiagram` | `_schedule_next`: l'ordine delle chiamate della scelta del tiro | `Engagement_Resolver` | 10A.4 | D11, D13, D25, D26, D43, D44 |
 | D84 | L3 | `sequenceDiagram` | `_on_launch`: dal lancio alla salva in volo | `Engagement_Resolver` | 10A.4 | D5, D25, D37, D45 |
 | D85 | L3 | `sequenceDiagram` | `_on_resolve`: intercettazione, danno per colpo e dottrina | `Engagement_Resolver` | 10A.4 | D5, D22, D24, D27, D33 |
 | D86 | L3 | `sequenceDiagram` | `apply_engagement_result`: danni e consumi sugli asset reali | `Engagement_Resolver` | 10A.4 | D9, D13 |
 | D87 | L2 | `flowchart LR` | Che cosa il core importa da `Engagement_Resolver`, e chi | `Engagement_Resolver` | 10A.4 | D58, D59 |
+| D133 | L3 | `sequenceDiagram` | `_detect_passes`: un'estrazione per passaggio, permanenza D-5, CPA e candidato per passaggio (**nuovo 2026-11-13**) | `Engagement_Resolver` | 10A.4 | D82, D131 |
 
-Conteggio: **L2** = D67, D68, D71, D72, D76, D77, D78, D79, D80, D87 (10); **L3** = D69, D70, D73, D74, D75, D81, D82, D83, D84, D85, D86 (11); totale **21** (D67-D87).
+Conteggio: **L2** = D67, D68, D71, D72, D76, D77, D78, D79, D80, D87 (10); **L3** = D69, D70, D73, D74, D75, D81, D82, D83, D84, D85, D86, **D133** (12); totale **22** (D67-D87 più D133, numerato fuori sequenza perché assegnato nel 2026-11-13 dopo D129: i D130-D132 e D134 sono diagrammi L4 del capitolo 4, v. `11_Atlante_Diagrammi.md`).
 
 Sequenze già esistenti, **non duplicate**: D5 (la coda degli eventi dentro un ingaggio), D11 (rimando `not_before`), D25 (prelazione ai lanciatori), D45 (`return_fire` e `_WAKE`), D50 (fuoco su posizione nella coda di sessione),
 D65 (`run_session` 2/3, che chiama `schedule_contacts` e `resolve_engagement` come scatole). I nuovi diagrammi L3 mostrano **dentro** queste scatole.
 
-## 10A.2 L2 e L3 — `Logic/Contact_Scheduler` (1578 righe, 61 simboli)
+## 10A.2 L2 e L3 — `Logic/Contact_Scheduler` (1662 righe, 63 simboli)
+
+> **Aggiornamento 2026-11-13.** Il modulo è cambiato con la VA (`585dbc65`): **un'unica inserzione di 84 righe** dopo `_merge_intervals` (due funzioni nuove, `altitude_intervals` `:955` e `intersect_intervals` `:1013`, gruppo «B - CPA e intervalli di portata»). La tabella di fondo è rigenerata (63 righe, righe di `a389cadb`: riga ≤ 954 invariata, ≥ 955 più 84); **le righe nel testo di D67-D70 restano a f009eb43** (stessa regola: ≥ 955 → +84).
 
 Lo strato 1 calcola **quando**: tratti di rotta (`Leg`), finestre di contatto (`ContactWindow`), CPA/TCPA, potatura per blocco. È puramente geometrico, senza RNG
 (docstring del modulo, «Nessuna sorgente di casualità»). Il modulo ha **cinque tipi** (quattro `dataclass(frozen=True)`: `Leg` `:122`, `ThreatWindow` `:147`, `CPA` `:181`, `ContactWindow` `:197`,
@@ -142,14 +145,14 @@ Una differenza trovata nel confronto: D3 mostra in `GroundedSchedule` un campo `
 
 ### Le funzioni per ruolo (D68)
 
-*Diagramma D68 — i gruppi di funzioni di `Contact_Scheduler` e le chiamate fra gruppi; «consumatori» = `Session_Simulator`, `Mission_Adapter`, `Engagement_Resolver` (livello L2, verificato a f009eb43).*
+*Diagramma D68 — i gruppi di funzioni di `Contact_Scheduler` e le chiamate fra gruppi; «consumatori» = `Session_Simulator`, `Mission_Adapter`, `Engagement_Resolver` (livello L2, verificato a f009eb43; il nodo B aggiornato a `a389cadb` con le due primitive della VA).*
 
 ```mermaid
 flowchart TD
     O["orchestrazione<br/>schedule_contacts, _pair_windows,<br/>_asset_legs, _operative_assets, _asset_id"]
     P["C - potatura per blocco<br/>block_pair_candidates, _block_profile,<br/>block_max_speed, block_reach,<br/>region_block_pairs, _as_block"]
     W["finestre di contatto<br/>contact_windows, trim_contact_window,<br/>mutual_detection_ranges, detection_mode_for,<br/>_first_detector, _first_contained"]
-    C["B - CPA e intervalli di portata<br/>closest_point_of_approach, range_intervals,<br/>_overlap, _breakpoints,<br/>_relative_motion, _merge_intervals"]
+    C["B - CPA e intervalli di portata<br/>closest_point_of_approach, range_intervals,<br/>altitude_intervals, intersect_intervals,<br/>_overlap, _breakpoints,<br/>_relative_motion, _merge_intervals"]
     L["tratti<br/>route_legs, static_legs, clamp_legs,<br/>legs_span, position_on_legs"]
     M["A - minacce<br/>threat_windows, route_threat_windows,<br/>_cylinder_of, _edge_threat_fractions,<br/>_fraction_along, _merge_threat_intervals"]
     V["vettori<br/>_to_xyz, _to_point, _sub, _dot, _lerp"]
@@ -180,7 +183,7 @@ flowchart TD
 Lettura: le frecce sono le chiamate a nome di funzione fra gruppi (estrazione `ast`; un riferimento passato come valore non è contato). `P --> M` esiste per un solo motivo: `block_reach` usa `_cylinder_of`
 (`:1226`, `:536`) per includere il raggio dei volumi di difesa nel raggio d'azione del blocco; per il resto il meccanismo A è isolato dal percorso di produzione. I consumatori nel core chiamano:
 `Session_Simulator` → `schedule_contacts`, `trim_contact_window`, `clamp_legs`, `static_legs`, `position_on_legs`, `GroundedSchedule`, `Leg`; `Mission_Adapter` → `route_legs`, `clamp_legs`, `Leg`, `GroundedSchedule`;
-`Engagement_Resolver` → `position_on_legs`, `range_intervals`, `GroundedSchedule`, `TIME_EPS` (import `Logic/Engagement_Resolver.py:436-441`). Rimando a **D58** (import fra i moduli) e a **D34** (come `GroundedSchedule` attraversa scheduler, risolutore e fire control).
+`Engagement_Resolver` → `position_on_legs`, `range_intervals`, `GroundedSchedule`, `TIME_EPS` e, dal 2026-11, `altitude_intervals`, `intersect_intervals` (VA), `clamp_legs`, `closest_point_of_approach` (FP, `_pass_cpa`) (import `Logic/Engagement_Resolver.py:436-441`). Rimando a **D58** (import fra i moduli) e a **D34** (come `GroundedSchedule` attraversa scheduler, risolutore e fire control).
 
 ### La sequenza di `schedule_contacts` (D69)
 
@@ -269,7 +272,7 @@ solo con due portate) su `[t_from, t_end]` e mantiene portate e `first_detector`
 
 ### Tabella completa dei simboli di `Logic/Contact_Scheduler`
 
-Le colonne «Tipo», «Simbolo», «Firma» e «Riga» sono l'uscita di `inventario.py --tabella Logic/Contact_Scheduler` (61 righe, nell'ordine del file). «Gruppo» è il ruolo di D68; «Che cosa fa» è una sintesi dai docstring;
+Le colonne «Tipo», «Simbolo», «Firma» e «Riga» sono l'uscita di `inventario.py --tabella Logic/Contact_Scheduler` (63 righe a `a389cadb`, nell'ordine del file). «Gruppo» è il ruolo di D68; «Che cosa fa» è una sintesi dai docstring;
 «Chiamata da» elenca i chiamanti **dentro il modulo** e **nel core** (`SS` = `Session_Simulator`, `MA` = `Mission_Adapter`, `ER` = `Engagement_Resolver`), ricavati con l'estrazione `ast` dei nomi chiamati: i test non sono contati.
 
 | Gruppo | Tipo | Simbolo | Firma | Riga | Che cosa fa | Chiamata da |
@@ -318,25 +321,29 @@ Le colonne «Tipo», «Simbolo», «Firma» e «Riga» sono l'uscita di `inventa
 | CPA e portata (B) | funzione | `closest_point_of_approach` | `closest_point_of_approach(legs_a, legs_b)` | `:804` | Istante e distanza di massimo avvicinamento fra due mobili. | `contact_windows`, `trim_contact_window` |
 | CPA e portata (B) | funzione | `range_intervals` | `range_intervals(legs_a, legs_b, radius)` | `:874` | Intervalli in cui la distanza fra i due mobili è `<= radius`. | `contact_windows`, `trim_contact_window`, `ER:_detection_time`, `ER:engagement_intervals` |
 | CPA e portata (B) | funzione | `_merge_intervals` | `_merge_intervals(intervals)` | `:938` | Fonde gli intervalli che si toccano o si sovrappongono (entro `TIME_EPS`). | `range_intervals` |
-| finestre di contatto | funzione | `detection_mode_for` | `detection_mode_for(asset)` | `:957` | Modo di rilevamento con cui un bersaglio di questa classe va interrogato. | `mutual_detection_ranges` |
-| finestre di contatto | funzione | `mutual_detection_ranges` | `mutual_detection_ranges(asset_a, asset_b, range_type, grounded_a, grounded_b)` | `:972` | Portate [m] con cui A vede B e B vede A. | `contact_windows` |
-| finestre di contatto | funzione | `contact_windows` | `contact_windows(asset_a, legs_a, asset_b, legs_b, range_a, range_b, range_type, grounded_a, grounded_b)` | `:1023` | Finestre in cui due asset sono a portata di rilevamento l'uno dell'altro. | `_pair_windows` |
-| finestre di contatto | funzione | `_first_detector` | `_first_detector(range_a, range_b)` | `:1103` | Chi ottiene il primo contatto: chi ha la portata più lunga. | `contact_windows` |
-| finestre di contatto | funzione | `_first_contained` | `_first_contained(intervals, start, end)` | `:1117` | Il primo intervallo che cade dentro `[start, end]`, ritagliato ad esso. | `contact_windows`, `trim_contact_window` |
-| finestre di contatto | funzione | `trim_contact_window` | `trim_contact_window(window, t_from, legs_a, legs_b)` | `:1129` | La finestra ritagliata a `[t_from, t_end]`, oppure None se il ritaglio la svuota (G4a). | `SS:_trim_busy`, `SS:run_session` |
-| orchestrazione | funzione | `_asset_id` | `_asset_id(asset)` | `:1175` | Identificativo di dominio di un asset o di un blocco. Mai un id del simulatore. | `_asset_legs`, `_pair_windows`, `contact_windows`, `schedule_contacts` |
-| potatura per blocco (C) | funzione | `block_max_speed` | `block_max_speed(block)` | `:1188` | Velocità massima [m/s] fra gli asset operativi del blocco, 0.0 se nessuno si muove. | `_block_profile` |
-| potatura per blocco (C) | funzione | `block_reach` | `block_reach(block, mode)` | `:1226` | Raggio d'azione [m] del blocco: la più lunga fra portata di fuoco e di rilevamento. | `_block_profile` |
-| potatura per blocco (C) | funzione | `_as_block` | `_as_block(item)` | `:1273` | Accetta indifferentemente un `Block` o un `BlockItem` (che lo incapsula in `.block`). | `block_pair_candidates`, `schedule_contacts` |
-| potatura per blocco (C) | funzione | `block_pair_candidates` | `block_pair_candidates(blocks_a, blocks_b, horizon, margin, skip_same_side)` | `:1278` | Coppie di blocchi per cui un contatto non è escludibile nella finestra `horizon`. | `schedule_contacts`, `region_block_pairs` |
-| potatura per blocco (C) | funzione | `_block_profile` | `_block_profile(block, horizon)` | `:1353` | (side, posizione, inviluppo) di un blocco: tutto ciò che serve alla potatura. | `block_pair_candidates` |
-| potatura per blocco (C) | funzione | `region_block_pairs` | `region_block_pairs(region, side_a, side_b, horizon, category, margin)` | `:1362` | `block_pair_candidates` applicata ai blocchi di due schieramenti di una `Region`. | nessun chiamante nel core (solo test) |
-| orchestrazione | funzione | `schedule_contacts` | `schedule_contacts(blocks_a, blocks_b, horizon, routes, starts, speeds, t0, margin, range_type, skip_same_side, grounded, legs, only_assets)` | `:1379` | Tutte le finestre di contatto fra due insiemi di blocchi, in `[t0, t0 + horizon]`. | `SS:run_session` |
-| orchestrazione | funzione | `_pair_windows` | `_pair_windows(asset_a, legs_a, asset_b, legs_b, range_type, grounded)` | `:1492` | Finestre di una coppia, spezzate agli istanti di decollo/atterraggio dei due asset (F5). | `schedule_contacts` |
-| orchestrazione | funzione | `_operative_assets` | `_operative_assets(block)` | `:1527` | Asset operativi di un blocco; lista vuota se il blocco non ne ha. | `schedule_contacts` |
-| orchestrazione | funzione | `_asset_legs` | `_asset_legs(asset, routes, starts, speeds, t0, horizon, given)` | `:1538` | Tratti dell'asset: quelli dati dal chiamante, altrimenti dalla rotta (`route_legs`), altrimenti fermo (`static_legs`). | `schedule_contacts` |
+| B (intervalli) | funzione | `altitude_intervals` | `altitude_intervals(legs_a, legs_b, z_min, z_max, relative)` | `:955` | Intervalli in cui la quota di B è in `[z_min, z_max]`, relativa ad A o assoluta (VA); stessi sottointervalli di `range_intervals`, quota lineare; `ValueError` se `z_min > z_max`. | `ER:engagement_intervals` |
+| B (intervalli) | funzione | `intersect_intervals` | `intersect_intervals(first, second)` | `:1013` | Intersezione di due liste ordinate di intervalli disgiunti (VA): due intervalli che si toccano entro `TIME_EPS` danno un intervallo nullo. | `ER:engagement_intervals` |
+| finestre di contatto | funzione | `detection_mode_for` | `detection_mode_for(asset)` | `:1041` | Modo di rilevamento con cui un bersaglio di questa classe va interrogato. | `mutual_detection_ranges` |
+| finestre di contatto | funzione | `mutual_detection_ranges` | `mutual_detection_ranges(asset_a, asset_b, range_type, grounded_a, grounded_b)` | `:1056` | Portate [m] con cui A vede B e B vede A. | `contact_windows` |
+| finestre di contatto | funzione | `contact_windows` | `contact_windows(asset_a, legs_a, asset_b, legs_b, range_a, range_b, range_type, grounded_a, grounded_b)` | `:1107` | Finestre in cui due asset sono a portata di rilevamento l'uno dell'altro. | `_pair_windows` |
+| finestre di contatto | funzione | `_first_detector` | `_first_detector(range_a, range_b)` | `:1187` | Chi ottiene il primo contatto: chi ha la portata più lunga. | `contact_windows` |
+| finestre di contatto | funzione | `_first_contained` | `_first_contained(intervals, start, end)` | `:1201` | Il primo intervallo che cade dentro `[start, end]`, ritagliato ad esso. | `contact_windows`, `trim_contact_window` |
+| finestre di contatto | funzione | `trim_contact_window` | `trim_contact_window(window, t_from, legs_a, legs_b)` | `:1213` | La finestra ritagliata a `[t_from, t_end]`, oppure None se il ritaglio la svuota (G4a). | `SS:_trim_busy`, `SS:run_session` |
+| orchestrazione | funzione | `_asset_id` | `_asset_id(asset)` | `:1259` | Identificativo di dominio di un asset o di un blocco. Mai un id del simulatore. | `_asset_legs`, `_pair_windows`, `contact_windows`, `schedule_contacts` |
+| potatura per blocco (C) | funzione | `block_max_speed` | `block_max_speed(block)` | `:1272` | Velocità massima [m/s] fra gli asset operativi del blocco, 0.0 se nessuno si muove. | `_block_profile` |
+| potatura per blocco (C) | funzione | `block_reach` | `block_reach(block, mode)` | `:1310` | Raggio d'azione [m] del blocco: la più lunga fra portata di fuoco e di rilevamento. | `_block_profile` |
+| potatura per blocco (C) | funzione | `_as_block` | `_as_block(item)` | `:1357` | Accetta indifferentemente un `Block` o un `BlockItem` (che lo incapsula in `.block`). | `block_pair_candidates`, `schedule_contacts` |
+| potatura per blocco (C) | funzione | `block_pair_candidates` | `block_pair_candidates(blocks_a, blocks_b, horizon, margin, skip_same_side)` | `:1362` | Coppie di blocchi per cui un contatto non è escludibile nella finestra `horizon`. | `schedule_contacts`, `region_block_pairs` |
+| potatura per blocco (C) | funzione | `_block_profile` | `_block_profile(block, horizon)` | `:1437` | (side, posizione, inviluppo) di un blocco: tutto ciò che serve alla potatura. | `block_pair_candidates` |
+| potatura per blocco (C) | funzione | `region_block_pairs` | `region_block_pairs(region, side_a, side_b, horizon, category, margin)` | `:1446` | `block_pair_candidates` applicata ai blocchi di due schieramenti di una `Region`. | nessun chiamante nel core (solo test) |
+| orchestrazione | funzione | `schedule_contacts` | `schedule_contacts(blocks_a, blocks_b, horizon, routes, starts, speeds, t0, margin, range_type, skip_same_side, grounded, legs, only_assets)` | `:1463` | Tutte le finestre di contatto fra due insiemi di blocchi, in `[t0, t0 + horizon]`. | `SS:run_session` |
+| orchestrazione | funzione | `_pair_windows` | `_pair_windows(asset_a, legs_a, asset_b, legs_b, range_type, grounded)` | `:1576` | Finestre di una coppia, spezzate agli istanti di decollo/atterraggio dei due asset (F5). | `schedule_contacts` |
+| orchestrazione | funzione | `_operative_assets` | `_operative_assets(block)` | `:1611` | Asset operativi di un blocco; lista vuota se il blocco non ne ha. | `schedule_contacts` |
+| orchestrazione | funzione | `_asset_legs` | `_asset_legs(asset, routes, starts, speeds, t0, horizon, given)` | `:1622` | Tratti dell'asset: quelli dati dal chiamante, altrimenti dalla rotta (`route_legs`), altrimenti fermo (`static_legs`). | `schedule_contacts` |
 
-## 10A.3 L2 e L3 — `Logic/Fire_Control` (1088 righe, 34 simboli)
+## 10A.3 L2 e L3 — `Logic/Fire_Control` (1217 righe, 36 simboli)
+
+> **Aggiornamento 2026-11-13.** Dalla BI (`munition_class`, `intercept_domains_for`) e dalla VA (`altitudes` nella fire control di registro, tre campi di quota in `shot_spec_for`) il modulo cresce da 1088 a 1217 righe e **tutte le righe della tabella di fondo sono rigenerate** (36 simboli, nessun simbolo nuovo dopo la BI). **Le righe nel testo di D71-D75 restano a f009eb43** e sono sfasate (la BI e la VA aggiungono righe in testa al file: costanti `AD_*` a `:293-302`, `in_altitude_envelope` a `:649`). La firma della fire control di registro è ora `fire_control(shooter, target, target_grounded=False, altitudes=None)` (`:934-935`), v. capitolo 4 §4.4, §4.37.
 
 La fire control sceglie **con che cosa** spara un tiratore. Il risolutore la riceve come funzione iniettata `fire_control(shooter, target) -> ShotSpec | sequenza | None`; questo modulo ne fornisce una che legge i registri
 d'arma (`make_registry_fire_control`), un involucro che la ristringe con la politica d'armi di missione (`restrict_by_policy`, F7a) e due funzioni per il fuoco su posizione (`area_fire_weapon`, `area_fire_pk`, F7b). Il modulo ha
@@ -574,58 +581,63 @@ senza `stock_of` per stimare l'istante d'impatto a monte (`Logic/Session_Simulat
 
 ### Tabella completa dei simboli di `Logic/Fire_Control`
 
-Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella Logic/Fire_Control` (34 righe, nell'ordine del file); «Gruppo» come D72; «Chiamata da»: chiamanti dentro il modulo e nel core (`SS` = `Session_Simulator`, `MA` = `Mission_Adapter`, `AF` = `Area_Fire`); le funzioni locali di `make_registry_fire_control` e `restrict_by_policy` sono attribuite alla funzione che le contiene.
+Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella Logic/Fire_Control` (36 righe a `a389cadb`, nell'ordine del file); «Gruppo» come D72; «Chiamata da»: chiamanti dentro il modulo e nel core (`SS` = `Session_Simulator`, `MA` = `Mission_Adapter`, `AF` = `Area_Fire`); le funzioni locali di `make_registry_fire_control` e `restrict_by_policy` sono attribuite alla funzione che le contiene.
 
 | Gruppo | Tipo | Simbolo | Firma | Riga | Che cosa fa | Chiamata da |
 |---|---|---|---|---|---|---|
-| armi candidate | classe | `_Weapon` | `_Weapon`; campi: __slots__ | `:355` | Arma candidata: dati del registro normalizzati in unità SI (`__slots__`, non dataclass). | `_candidate_weapons` |
-| armi candidate | metodo | `_Weapon.__init__` | `__init__(self, model, weapon_type, domain, data)` | `:361` | Normalizza il record di registro in unità SI: `kind`, `range_m`, `air_range_m`, `speed_ms`, `fire_rate`, quote, `tasks`, `cost`. | `_candidate_weapons` (costruttore `_Weapon`) |
-| armi candidate | metodo | `_Weapon.efficiency` | `efficiency(self)` | `:380` | Proprietà: la tabella `efficiency` del record (`{}` se assente). | `_cell` (lettura dell'attributo) |
-| politica d'armi | classe | `WeaponPolicy` | `WeaponPolicy`; campi: mission_id, domain, rules, self_escort | `:882` | Politica d'armi di UN asset di missione (v. «Politica d'armi per tipo di missione»). | `MA:weapon_policies` |
-| politica d'armi | metodo | `WeaponPolicy.__post_init__` | `__post_init__(self)` | `:897` | Rende `rules` un mapping immutabile (`MappingProxyType`). | implicito alla costruzione della dataclass |
-| politica d'armi | metodo | `WeaponPolicy.allows` | `allows(self, weapon, target_class_name)` | `:900` | L'arma `weapon` (modello) è ammessa contro la classe `target_class_name`? | `restrict_by_policy` (funzione `restrict`) |
-| fuoco su posizione | classe | `AreaWeapon` | `AreaWeapon`; campi: model, caliber_mm, max_range_m, time_of_flight, stock_per_round, entry | `:993` | Arma scelta per il fuoco su posizione (F7b), con i campi che servono a `Logic/Area_Fire`. | `area_fire_weapon` (costruttore); letta da `AF:lethal_radius`, `AF:impact_time` |
-| politica d'armi | funzione | `weapon_category` | `weapon_category(domain, model)` | `:317` | Categoria d'arma del registro del dominio (es. `MISSILES_AAM`) che contiene il modello, o None. | `weapon_tasks`, `SS:_winchester_weapons` |
-| politica d'armi | funzione | `weapon_tasks` | `weapon_tasks(domain, model)` | `:338` | Task del modello nel registro del dominio (`frozenset`), None se il modello non è a registro. | `WeaponPolicy.allows` |
-| armi candidate | funzione | `_number` | `_number(value)` | `:385` | Il valore come float se è un numero (non bool), altrimenti None. | `_Weapon.__init__`, `_cell`, `_positive`, `_range_m` |
-| armi candidate | funzione | `_positive` | `_positive(value)` | `:391` | Il valore se è un numero > 0, altrimenti None. | `_Weapon.__init__`, `_air_range_m`, `_attack_speed_kmh`, `_speed_ms`, `area_fire_weapon` |
-| armi candidate | funzione | `_range_m` | `_range_m(domain, data)` | `:396` | Portata massima [m]: Ground in metri (dict direct/indirect o numero), Ship e Air in km. | `_Weapon.__init__` |
-| armi candidate | funzione | `_air_range_m` | `_air_range_m(domain, data, range_m)` | `:412` | Portata [m] contro bersagli aerei: per Ground il tiro diretto se dichiarato, altrimenti `range_m`. | `_Weapon.__init__` |
-| armi candidate | funzione | `_speed_ms` | `_speed_ms(domain, weapon_type, data)` | `:427` | Velocità dell'arma/proietto [m/s], nelle unità di ogni registro (v. commenti costanti). | `_Weapon.__init__` |
-| armi candidate | funzione | `_shooter_key` | `_shooter_key(shooter)` | `:446` | (classe, modello, loadout) del tiratore, o None se non ha un modello. | `area_fire_weapon`, `make_registry_fire_control` |
-| armi candidate | funzione | `_candidate_weapons` | `_candidate_weapons(shooter_key)` | `:458` | Armi candidate di un tiratore, in ordine deterministico (tipo, modello). | `area_fire_weapon`, `make_registry_fire_control` |
-| bersaglio | funzione | `air_target_class_of` | `air_target_class_of(target)` | `:526` | Classe di bersaglio aereo (`Context.AIR_TARGET_CLASSES`) di un `Aircraft` in volo. | `target_key` |
-| bersaglio | funzione | `parked_target_class` | `parked_target_class(target)` | `:542` | Classe d'efficacia (di superficie) di un aereo a terra (F4c, v. «Aerei a terra»). | `target_key` |
-| bersaglio | funzione | `target_key` | `target_key(target, grounded)` | `:555` | (chiavi di efficacia in ordine di ricerca, dimensione, è aereo) del bersaglio. | `area_fire_pk`, `make_registry_fire_control` |
-| bersaglio | funzione | `target_class` | `target_class(target, grounded)` | `:593` | Classe del bersaglio per la politica d'armi (F7a, `Context.TARGET_CLASSES`). | `restrict_by_policy` |
-| bersaglio | funzione | `_z` | `_z(asset)` | `:616` | Quota `position.z` dell'asset, None se non leggibile. | `make_registry_fire_control` |
-| filtri, ordine, ShotSpec | funzione | `in_altitude_envelope` | `in_altitude_envelope(weapon, shooter_z, target_z)` | `:628` | True se il bersaglio aereo è nell'inviluppo di quota dell'arma (v. «Quota»). | `rank_weapons` |
-| filtri, ordine, ShotSpec | funzione | `_surface_capable` | `_surface_capable(weapon)` | `:659` | Un'arma spara a superficie se ha almeno un task non puramente antiaereo (o nessun task). | `rank_weapons` |
-| filtri, ordine, ShotSpec | funzione | `_cell` | `_cell(weapon, keys, dimension)` | `:664` | (accuracy, destroy_capacity) grezzi della prima chiave presente nel template. | `area_fire_pk`, `rank_weapons` |
-| filtri, ordine, ShotSpec | funzione | `preference_score` | `preference_score(pk, cost, use_cost)` | `:686` | Punteggio di preferenza di un'arma (decisione A5, v. `WEAPON_COST_EXPONENT`). | `rank_weapons` |
-| filtri, ordine, ShotSpec | funzione | `rank_weapons` | `rank_weapons(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)` | `:698` | Tutte le armi adatte, in ordine di preferenza: tuple (arma, accuracy, destroy_capacity). | `make_registry_fire_control`, `select_weapon` |
-| filtri, ordine, ShotSpec | funzione | `select_weapon` | `select_weapon(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)` | `:737` | L'arma preferita fra quelle adatte (la prima di `rank_weapons`), o None. | nessun chiamante nel core (solo test) |
-| filtri, ordine, ShotSpec | funzione | `munition_class` | `munition_class(weapon)` | `:761` | Classe di munizione dell'arma (BI): dichiarata nel registro (`MISSILES_ASM`) o derivata da categoria e task; `None` se non classificabile. | `intercept_domains_for` |
-| filtri, ordine, ShotSpec | funzione | `intercept_domains_for` | `intercept_domains_for(weapon)` | `:799` | Domini di difesa aerea (`land`, `naval`) che possono considerare il colpo un bersaglio (BI): dalla classe e, per i navali, dal flag `ad_detectable`; `None` se la classe è ignota. | `shot_spec_for` |
-| filtri, ordine, ShotSpec | funzione | `shot_spec_for` | `shot_spec_for(weapon, accuracy, destroy_capacity, is_air, release_altitude_m, attack_speed_kmh)` | `:819` | `ShotSpec` della scelta, con i campi derivati del docstring del modulo (dalla BI anche `intercept_domains`). | `area_fire_weapon`, `make_registry_fire_control` |
-| filtri, ordine, ShotSpec | funzione | `_attack_speed_kmh` | `_attack_speed_kmh(shooter_key)` | `:793` | Velocità `attack` [km/h] del loadout assegnato a un aereo, None se non disponibile. | `make_registry_fire_control` |
-| fabbrica | funzione | `make_registry_fire_control` | `make_registry_fire_control(altitude_filter, memoize)` | `:806` | Fabbrica della fire control `(shooter, target, target_grounded)`: tupla ordinata di `ShotSpec` o None; cache opzionali. | nessun chiamante nel core: la fire control è un argomento di `run_session` |
-| politica d'armi | funzione | `restrict_by_policy` | `restrict_by_policy(fire_control, policy_of)` | `:926` | Involucro puro: `fire_control` con le opzioni ristrette dalla politica d'armi del tiratore (F7a). | `SS:run_session` |
-| fuoco su posizione | funzione | `area_fire_weapon` | `area_fire_weapon(shooter, distance_m, weapon, stock_of)` | `:1013` | L'arma con cui `shooter` spara una posizione a `distance_m` [m] in orizzontale (F7b), o None. | `AF:plan_shot` |
-| fuoco su posizione | funzione | `area_fire_pk` | `area_fire_pk(weapon, target, grounded)` | `:1058` | `destroy_capacity` della riga del template per la classe del bersaglio, None se non classificabile, Pk nulla o aereo in volo. | `AF:resolve_area_fire` |
-| politica d'armi | funzione | `_asset_id` | `_asset_id(asset)` | `:1080` | Id di dominio di un asset (`id`, poi `name`), copia del criterio di `ER._domain_id`. | `restrict_by_policy` |
+| armi candidate | classe | `_Weapon` | `_Weapon`; campi: __slots__ | `:376` | Arma candidata: dati del registro normalizzati in unità SI (`__slots__`, non dataclass). | `_candidate_weapons` |
+| armi candidate | metodo | `_Weapon.__init__` | `__init__(self, model, weapon_type, domain, data)` | `:382` | Normalizza il record di registro in unità SI: `kind`, `range_m`, `air_range_m`, `speed_ms`, `fire_rate`, quote, `tasks`, `cost`. | `_candidate_weapons` (costruttore `_Weapon`) |
+| armi candidate | metodo | `_Weapon.efficiency` | `efficiency(self)` | `:401` | Proprietà: la tabella `efficiency` del record (`{}` se assente). | `_cell` (lettura dell'attributo) |
+| politica d'armi | classe | `WeaponPolicy` | `WeaponPolicy`; campi: mission_id, domain, rules, self_escort | `:990` | Politica d'armi di UN asset di missione (v. «Politica d'armi per tipo di missione»). | `MA:weapon_policies` |
+| politica d'armi | metodo | `WeaponPolicy.__post_init__` | `__post_init__(self)` | `:1005` | Rende `rules` un mapping immutabile (`MappingProxyType`). | implicito alla costruzione della dataclass |
+| politica d'armi | metodo | `WeaponPolicy.allows` | `allows(self, weapon, target_class_name)` | `:1008` | L'arma `weapon` (modello) è ammessa contro la classe `target_class_name`? | `restrict_by_policy` (funzione `restrict`) |
+| fuoco su posizione | classe | `AreaWeapon` | `AreaWeapon`; campi: model, caliber_mm, max_range_m, time_of_flight, stock_per_round, entry | `:1122` | Arma scelta per il fuoco su posizione (F7b), con i campi che servono a `Logic/Area_Fire`. | `area_fire_weapon` (costruttore); letta da `AF:lethal_radius`, `AF:impact_time` |
+| politica d'armi | funzione | `weapon_category` | `weapon_category(domain, model)` | `:338` | Categoria d'arma del registro del dominio (es. `MISSILES_AAM`) che contiene il modello, o None. | `weapon_tasks`, `SS:_winchester_weapons` |
+| politica d'armi | funzione | `weapon_tasks` | `weapon_tasks(domain, model)` | `:359` | Task del modello nel registro del dominio (`frozenset`), None se il modello non è a registro. | `WeaponPolicy.allows` |
+| armi candidate | funzione | `_number` | `_number(value)` | `:406` | Il valore come float se è un numero (non bool), altrimenti None. | `_Weapon.__init__`, `_cell`, `_positive`, `_range_m` |
+| armi candidate | funzione | `_positive` | `_positive(value)` | `:412` | Il valore se è un numero > 0, altrimenti None. | `_Weapon.__init__`, `_air_range_m`, `_attack_speed_kmh`, `_speed_ms`, `area_fire_weapon` |
+| armi candidate | funzione | `_range_m` | `_range_m(domain, data)` | `:417` | Portata massima [m]: Ground in metri (dict direct/indirect o numero), Ship e Air in km. | `_Weapon.__init__` |
+| armi candidate | funzione | `_air_range_m` | `_air_range_m(domain, data, range_m)` | `:433` | Portata [m] contro bersagli aerei: per Ground il tiro diretto se dichiarato, altrimenti `range_m`. | `_Weapon.__init__` |
+| armi candidate | funzione | `_speed_ms` | `_speed_ms(domain, weapon_type, data)` | `:448` | Velocità dell'arma/proietto [m/s], nelle unità di ogni registro (v. commenti costanti). | `_Weapon.__init__` |
+| armi candidate | funzione | `_shooter_key` | `_shooter_key(shooter)` | `:467` | (classe, modello, loadout) del tiratore, o None se non ha un modello. | `area_fire_weapon`, `make_registry_fire_control` |
+| armi candidate | funzione | `_candidate_weapons` | `_candidate_weapons(shooter_key)` | `:479` | Armi candidate di un tiratore, in ordine deterministico (tipo, modello). | `area_fire_weapon`, `make_registry_fire_control` |
+| bersaglio | funzione | `air_target_class_of` | `air_target_class_of(target)` | `:547` | Classe di bersaglio aereo (`Context.AIR_TARGET_CLASSES`) di un `Aircraft` in volo. | `target_key` |
+| bersaglio | funzione | `parked_target_class` | `parked_target_class(target)` | `:563` | Classe d'efficacia (di superficie) di un aereo a terra (F4c, v. «Aerei a terra»). | `target_key` |
+| bersaglio | funzione | `target_key` | `target_key(target, grounded)` | `:576` | (chiavi di efficacia in ordine di ricerca, dimensione, è aereo) del bersaglio. | `area_fire_pk`, `make_registry_fire_control` |
+| bersaglio | funzione | `target_class` | `target_class(target, grounded)` | `:614` | Classe del bersaglio per la politica d'armi (F7a, `Context.TARGET_CLASSES`). | `restrict_by_policy` |
+| bersaglio | funzione | `_z` | `_z(asset)` | `:637` | Quota `position.z` dell'asset, None se non leggibile. | `make_registry_fire_control` |
+| filtri, ordine, ShotSpec | funzione | `in_altitude_envelope` | `in_altitude_envelope(weapon, shooter_z, target_z)` | `:649` | True se il bersaglio aereo è nell'inviluppo di quota dell'arma (v. «Quota»). | `rank_weapons` |
+| filtri, ordine, ShotSpec | funzione | `_surface_capable` | `_surface_capable(weapon)` | `:680` | Un'arma spara a superficie se ha almeno un task non puramente antiaereo (o nessun task). | `rank_weapons` |
+| filtri, ordine, ShotSpec | funzione | `_cell` | `_cell(weapon, keys, dimension)` | `:685` | (accuracy, destroy_capacity) grezzi della prima chiave presente nel template. | `area_fire_pk`, `rank_weapons` |
+| filtri, ordine, ShotSpec | funzione | `preference_score` | `preference_score(pk, cost, use_cost)` | `:707` | Punteggio di preferenza di un'arma (decisione A5, v. `WEAPON_COST_EXPONENT`). | `rank_weapons` |
+| filtri, ordine, ShotSpec | funzione | `rank_weapons` | `rank_weapons(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)` | `:719` | Tutte le armi adatte, in ordine di preferenza: tuple (arma, accuracy, destroy_capacity). | `make_registry_fire_control`, `select_weapon` |
+| filtri, ordine, ShotSpec | funzione | `select_weapon` | `select_weapon(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)` | `:758` | L'arma preferita fra quelle adatte (la prima di `rank_weapons`), o None. | nessun chiamante nel core (solo test) |
+| filtri, ordine, ShotSpec | funzione | `munition_class` | `munition_class(weapon)` | `:766` | Classe di munizione dell'arma (BI): dichiarata nel registro (`MISSILES_ASM`) o derivata da categoria e task; `None` se non classificabile. | `intercept_domains_for` |
+| filtri, ordine, ShotSpec | funzione | `intercept_domains_for` | `intercept_domains_for(weapon)` | `:804` | Domini di difesa aerea (`land`, `naval`) che possono considerare il colpo un bersaglio (BI): dalla classe e, per i navali, dal flag `ad_detectable`; `None` se la classe è ignota. | `shot_spec_for` |
+| filtri, ordine, ShotSpec | funzione | `shot_spec_for` | `shot_spec_for(weapon, accuracy, destroy_capacity, is_air, release_altitude_m, attack_speed_kmh)` | `:824` | `ShotSpec` della scelta, con i campi derivati del docstring del modulo (dalla BI anche `intercept_domains`). | `area_fire_weapon`, `make_registry_fire_control` |
+| filtri, ordine, ShotSpec | funzione | `_attack_speed_kmh` | `_attack_speed_kmh(shooter_key)` | `:885` | Velocità `attack` [km/h] del loadout assegnato a un aereo, None se non disponibile. | `make_registry_fire_control` |
+| fabbrica | funzione | `make_registry_fire_control` | `make_registry_fire_control(altitude_filter, memoize)` | `:898` | Fabbrica della fire control `(shooter, target, target_grounded)`: tupla ordinata di `ShotSpec` o None; cache opzionali. | nessun chiamante nel core: la fire control è un argomento di `run_session` |
+| politica d'armi | funzione | `restrict_by_policy` | `restrict_by_policy(fire_control, policy_of)` | `:1034` | Involucro puro: `fire_control` con le opzioni ristrette dalla politica d'armi del tiratore (F7a). | `SS:run_session` |
+| fuoco su posizione | funzione | `area_fire_weapon` | `area_fire_weapon(shooter, distance_m, weapon, stock_of)` | `:1142` | L'arma con cui `shooter` spara una posizione a `distance_m` [m] in orizzontale (F7b), o None. | `AF:plan_shot` |
+| fuoco su posizione | funzione | `area_fire_pk` | `area_fire_pk(weapon, target, grounded)` | `:1187` | `destroy_capacity` della riga del template per la classe del bersaglio, None se non classificabile, Pk nulla o aereo in volo. | `AF:resolve_area_fire` |
+| politica d'armi | funzione | `_asset_id` | `_asset_id(asset)` | `:1209` | Id di dominio di un asset (`id`, poi `name`), copia del criterio di `ER._domain_id`. | `restrict_by_policy` |
 
-## 10A.4 L2 e L3 — `Logic/Engagement_Resolver` (3872 righe, 127 simboli)
+## 10A.4 L2 e L3 — `Logic/Engagement_Resolver` (4569 righe, 146 simboli)
 
-Lo strato 2 risponde a **come finisce** un ingaggio: `resolve_engagement` (`:3619`) consuma le `ContactWindow` dello scheduler e restituisce un `EngagementResult` **senza mutare nessun asset**; `apply_engagement_result` (`:3794`) è il passo separato
+> **Aggiornamento 2026-11-13 (codice `a389cadb`).** Questa sezione era verificata a `f009eb43` (con la BI aggiunta il 2026-11-10). Da allora il risolutore ha guadagnato la **D-5**, la **VA** e la **FP** (capitolo 4 §4.35-§4.37): **la tabella dei simboli di fondo è rigenerata** (146 righe, `inventario.py --tabella`, righe di `a389cadb`, 17 simboli nuovi con «Che cosa fa» e «Chiamata da» scritti sul codice), **D82 è riscritto** (la sequenza finale di `_detect_direction`, con i passaggi),
+> **D133 è nuovo** (`_detect_passes`), e i diagrammi D76, D77, D79 e D83 sono aggiornati nei nodi e nelle liste di metodi. **Nessuna costante FP esiste**: l'interruttore `FP_PER_PASS_DETECTION` è stato eliminato il 2026-11-13. **I `:riga` nel testo dei diagrammi non aggiornati** (D78, D80, D81, D84-D87 e le «Letture») **restano a `f009eb43`** e sono sfasati per il risolutore, da circa 300 a circa 700 righe secondo il punto del file: la tabella di fondo è la fonte delle righe di oggi.
+> Didascalie «verificato a f009eb43» = sequenza e nomi non toccati da D-5/BI/VA/FP e letti a quel commit, **non riletti** per questo aggiornamento (salvo D79, D82, D83, D133, D76-D77, riletti sul codice a `a389cadb`).
+
+Lo strato 2 risponde a **come finisce** un ingaggio: `resolve_engagement` (`:4294`) consuma le `ContactWindow` dello scheduler e restituisce un `EngagementResult` **senza mutare nessun asset**; `apply_engagement_result` (`:4488`) è il passo separato
 che applica danni e consumi agli asset veri. Il modulo contiene **16 classi** (11 `dataclass(frozen=True)` di scambio, `_Shadow` con `__slots__`, tre `dataclass` interne `_Candidate`, `_ForceState`, `_PendingGroup`, e `_EngagementRun`),
-**87 metodi** (72 di `_EngagementRun`) e **24 funzioni** di primo livello: 16 + 87 + 24 = 127 simboli, tutti nella tabella di fondo.
+**99 metodi** (84 di `_EngagementRun`) e **31 funzioni** di primo livello: 16 + 99 + 31 = 146 simboli, tutti nella tabella di fondo.
 
-Costanti del modulo (non sono nella tabella dell'inventario): parametri della legge di rilevamento `PD_AT_ACQUISITION_RANGE` `:454` e `PD_RANGE_EXPONENT` `:459`; fattori ambientali `NIGHT_DETECTION_FACTOR` `:472`, `ADVERSE_WEATHER_DETECTION_FACTOR` `:473`;
-nebbia di guerra `UNSEEN_DETECTION_FACTOR` `:487`, `RECON_EFFICIENCY_FOG_RELIEF` `:488`; soglie `OPERATIVE_HEALTH_FLOOR` `:492`, `FRACTION_EPS` `:496`, `BREAKPOINT_U_EPS` `:500`, `STATIONARY_EPS` `:501`, `ATTACK_POINT_TOLERANCE_M` `:525`;
-esiti di forza `HELD`/`DISENGAGED`/`DESTROYED` `:504-506`; motivi `TRIGGER_*` `:510-512` e `ACTIVITY_*` `:518-521`; livelli di ROE `ROE_*` `:529-534`; i cinque tipi di evento della coda `_LAUNCH` 0, `_IMPACT` 1, `_RESOLVE` 2, `_DECIDE` 3, `_WAKE` 4 (`:536-544`, in questo ordine
+Costanti del modulo (non sono nella tabella dell'inventario), righe a `a389cadb`: parametri della legge di rilevamento `PD_AT_ACQUISITION_RANGE` `:549` e `PD_RANGE_EXPONENT` `:554`; fattori ambientali `NIGHT_DETECTION_FACTOR` `:567`, `ADVERSE_WEATHER_DETECTION_FACTOR` `:568`;
+nebbia di guerra `UNSEEN_DETECTION_FACTOR` `:582`, `RECON_EFFICIENCY_FOG_RELIEF` `:583`; **i tre interruttori, tutti `False`**: `D5_DWELL_TIME` `:591`, `BI_AD_TARGET_RULE` `:597`, `VA_ENGAGEMENT_ALTITUDE_BAND` `:608` (**nessun interruttore FP**); `AD_DOMAINS` `:611` (`land`, `naval`);
+soglie `OPERATIVE_HEALTH_FLOOR` `:615`, `FRACTION_EPS` `:619`, `BREAKPOINT_U_EPS` `:623`, `STATIONARY_EPS` `:624`, `ATTACK_POINT_TOLERANCE_M` `:648`; esiti di forza `HELD`/`DISENGAGED`/`DESTROYED` `:627-629`; motivi `TRIGGER_*` `:633-635` e `ACTIVITY_*` `:641-644`; livelli di ROE `ROE_*` `:652-657`; le keyword facoltative della fire control
+`TARGET_GROUNDED_KEYWORD` `:1832` e `ALTITUDES_KEYWORD` `:1836`; i cinque tipi di evento della coda `_LAUNCH` 0, `_IMPACT` 1, `_RESOLVE` 2, `_DECIDE` 3, `_WAKE` 4 (`:659-667`, in questo ordine
 a parità d'istante). **Stime dichiarate dal codice** (commento «STIMA DICHIARATA»): `PD_AT_ACQUISITION_RANGE`, `NIGHT_DETECTION_FACTOR`, `ADVERSE_WEATHER_DETECTION_FACTOR`, `UNSEEN_DETECTION_FACTOR`, `RECON_EFFICIENCY_FOG_RELIEF`; `PD_RANGE_EXPONENT` ha la forma dall'equazione radar
-(commento sopra `:459`) ma la curva è una semplificazione monotona. Questo capitolo non le ricalibra.
+(commento sopra `:554`) ma la curva è una semplificazione monotona. **D-5, BI, VA e FP non introducono nessuna costante stimata nel risolutore**: la forma `min(1, permanenza / dwell)` è una scelta di progetto [S] senza costanti (capitolo 4 §4.36), e le tabelle di classe della BI stanno in `Fire_Control` (capitolo 4 §4.24, `AD_DETECTABLE_DEFAULT` è una stima [S]). Questo capitolo non le ricalibra.
 
 I **tipi di scambio** (livello L2) hanno già due diagrammi che restano: **D4** (`ShotSpec`, `Detection`, `Salvo`, `SalvoResolution`, `ForceOutcome`, `AmmunitionEvent`, `InterceptionEvent`, `EngagementResult`, `ActivityEnd`, `ActivityCriteria`, capitolo 4 §4.13) e
 **D47** (`TargetRules`, `WeaponPolicy`, `AreaWeapon`). Qui si aggiungono i **tipi interni** della run, che nessun diagramma mostrava (D76), le funzioni di modulo per ruolo (D77, D78) e i 72 metodi della run per ruolo (D79, D80).
@@ -724,6 +736,12 @@ classDiagram
         +dict target_rules
         +GroundedSchedule grounded
         +set broken_forces
+        +object pass_rng
+        +object dwell_time_for
+        +dict own_passes_of
+        +dict detection_times_of
+        +bool ad_target_rule
+        +bool altitude_band
     }
     class Salvo {
         <<tipo di scambio, D4>>
@@ -741,24 +759,24 @@ classDiagram
 Note a D76: `Shadow.ammunition`, `interceptor_stock`, `operative` e `destroyed` sono `@property` (`:1441`, `:1458`, `:1476`, `:1480`); `Shadow` espone `id` e `health` perché `Damage_Model.build_damage_event` la tratta come un asset (duck typing), e la sua contabilità delle scorte
 è quella di `Asset/Weapon_Stores` (`WS`), la stessa dell'asset reale: per questo `apply_engagement_result` ritrova sull'asset i consumi che l'ombra ha concesso. `Candidate.exhausted` e `not_before` sono i due campi che `_schedule_next` modifica (candidato esaurito, o rimandato all'ingresso in portata,
 D11). `ForceState.interceptors` è la lista `[(Shadow, canali)]` costruita da `_interceptors_of`; `EngagementRun.domain_interceptors` raccoglie quelle di tutte le forze di un dominio di coordinamento (D32, D33). La coda `queue` contiene tuple `(time, kind, key, sequence, payload)`
-(`_push` `:2111`); `sequence` rompe i pareggi. **Omessi** dal diagramma (esistono in `__init__`, `:1645-1769`): le cache `zone_cache`, `may_intercept_cache`, `in_time_cache`, `range_cache`, `air_range_cache`, `class_weights`, `surface_weights`, `profiles`; `legs`, `contacts`, `initial_health`, `destroyed_at`, `woken_by_destruction`,
+(`_push` `:2111`); `sequence` rompe i pareggi. **Dal 2026-11-13** il diagramma mostra anche i sei campi della D-5, della FP, della BI e della VA: `pass_rng` (stream separato dei passaggi, `None` ammesso solo senza direzioni a più passaggi), `dwell_time_for` (lettore del dwell, `None` = D-5 spenta), `own_passes_of` (passaggi `(start, end)` per coppia `(osservatore, bersaglio)`, per R-INT) e `detection_times_of` (istanti di rilevamento per coppia, costruito alla prima richiesta), `ad_target_rule` e `altitude_band` (gli interruttori BI e VA, letti una volta per run). **Omessi** dal diagramma (esistono in `__init__`, `:1942-2082` a `a389cadb`, più `ad_domain_cache`, `fire_control_knows_altitudes`): le cache `zone_cache`, `may_intercept_cache`, `in_time_cache`, `range_cache`, `air_range_cache`, `class_weights`, `surface_weights`, `profiles`; `legs`, `contacts`, `initial_health`, `destroyed_at`, `woken_by_destruction`,
 `attack_pass`, `fire_control_knows_grounded`; le callable iniettate (`rng`, `breakpoint_rng`, `morale_for`, `enemy_estimate_for`, `reaction_profile_for`, `detection_factor`); le liste di esito (`detections`, `salvos`, `resolutions`, `damage_events`, `ammunition_events`, `interception_events`, `activity_ends`).
 
 ### Le funzioni di modulo per ruolo (D77)
 
-*Diagramma D77 — i gruppi di funzioni e di tipi di modulo di `Engagement_Resolver` e chi li chiama (livello L2, verificato a f009eb43).*
+*Diagramma D77 — i gruppi di funzioni e di tipi di modulo di `Engagement_Resolver` e chi li chiama (livello L2, verificato a f009eb43; aggiornato a `a389cadb` nei nodi P, G, CS e RUN per D-5, FP e VA).*
 
 ```mermaid
 flowchart TD
     A["A - API pubblica<br/>resolve_engagement,<br/>apply_engagement_result,<br/>_call_with_weapon"]
-    RUN["_EngagementRun<br/>72 metodi in 12 gruppi<br/>(D79, D80)"]
+    RUN["_EngagementRun<br/>84 metodi in 12 gruppi<br/>(D79, D80)"]
     T["T - tipi di scambio<br/>ShotSpec, Detection, Salvo, SalvoResolution,<br/>eventi, ActivityCriteria, ActivityEnd,<br/>TargetRules, ForceOutcome, EngagementResult"]
     B["B - regole di bersaglio pure<br/>_id_set, rules_defer, apply_target_rules"]
-    P["P - probabilita di rilevamento<br/>_check_factor, detection_probability,<br/>detection_radius"]
+    P["P - probabilita di rilevamento, permanenza e passaggi<br/>_check_factor, _check_dwell, detection_probability,<br/>detection_radius, dwell_factor, registry_dwell_time,<br/>_join_passes, _detection_time_in_pass"]
     F["F - fabbriche del fattore (D78)<br/>weather_*, meteo_*, recon_*,<br/>combine_detection_factors"]
-    G["G - ponti<br/>accepts_target_grounded, engagement_intervals,<br/>engagement_intervals_without_legs"]
+    G["G - ponti<br/>accepts_keyword, accepts_target_grounded,<br/>accepts_altitudes, engagement_intervals,<br/>engagement_intervals_without_legs"]
     S["S - stato di lavoro<br/>_Shadow, _Candidate, _ForceState,<br/>_PendingGroup, _domain_id, _can_disengage"]
-    CS["Contact_Scheduler<br/>position_on_legs, range_intervals,<br/>GroundedSchedule, TIME_EPS"]
+    CS["Contact_Scheduler<br/>position_on_legs, range_intervals,<br/>altitude_intervals, intersect_intervals,<br/>closest_point_of_approach, clamp_legs,<br/>GroundedSchedule, TIME_EPS"]
     DM["Damage_Model<br/>build_damage_event, apply_damage_event"]
     FCM["Fire_Control<br/>restrict_by_policy"]
     ARP["Air_Route_Manager<br/>fuori dal core"]
@@ -825,20 +843,20 @@ dell'altro lato. Import locali: `Meteo_Analysis` `:1179`, `Region.BlockCategory`
 
 ### I metodi di `_EngagementRun` per ruolo (D79, D80)
 
-I 72 metodi della run a f009eb43 (più la classe, `:1642`; la BI ne aggiunge due, v. sotto) sono divisi in 12 gruppi di ruolo, con il codice `R1`-`R12` usato anche nella tabella di fondo. Conteggi: R1 costruzione 8; R2 rilevamento 6; R3 coda ed esito 5; R4 scelta del tiro 8; R5 dottrina di tiro 6;
-R6 lanciatori L2/L3 4; R7 regole di bersaglio F7a 11; R8 lancio e impatto 2; R9 intercettazione 9 (7 a f009eb43, più `_ad_domain` e `_admissible` della BI); R10 risoluzione della salva 1; R11 disingaggio e rottura 10; R12 fine di attività 4 (totale 72 a f009eb43, 74 con i due metodi della BI; i metodi aggiunti da altri lavori dopo f009eb43 non sono ancora riportati in questo atlante). Le frecce sono chiamate a nome di metodo (`self._x(...)`) fra gruppi;
+Gli **84 metodi** della run a `a389cadb` (più la classe, `:1939`) sono divisi in 12 gruppi di ruolo, con il codice `R1`-`R12` usato anche nella tabella di fondo. Conteggi: R1 costruzione 8; R2 rilevamento **13** (6 a f009eb43, più i sette della D-5 e della FP: `_exposure_time`, `_own_intervals`, `_dwell_of`, `_own_passes`, `_pass_cpa`, `_pass_detection_time`, `_detect_passes`); R3 coda ed esito 5; R4 scelta del tiro **11** (8, più i tre della VA: `_band_of`, `_altitudes_at`, `_altitude_deferral`); R5 dottrina di tiro 6;
+R6 lanciatori L2/L3 4; R7 regole di bersaglio F7a 11; R8 lancio e impatto 2; R9 intercettazione 9 (7 a f009eb43, più `_ad_domain` e `_admissible` della BI); R10 risoluzione della salva 1; R11 disingaggio e rottura 10; R12 fine di attività 4 (totale 84: 72 a f009eb43, più 2 della BI, 7 di D-5/FP e 3 della VA). Le frecce sono chiamate a nome di metodo (`self._x(...)`) fra gruppi;
 i gruppi che accodano un evento chiamano tutti `_push` (R3): quegli archi non sono disegnati. Il raggruppamento è mio (i metodi non sono raggruppati nel codice), ma segue le intestazioni di sezione del file («fase 1: rilevamento», «coda eventi», «fase 2: scelta del bersaglio e lancio»,
 «dottrina di tiro», «fase 3: impatto, saturazione, danno», «fase 4: disingaggio», «soglia di rottura stocastica»).
 
-*Diagramma D79 — `_EngagementRun` 1/2: costruzione, rilevamento, ciclo principale, scelta del tiro, dottrina di tiro, prelazione ai lanciatori, lancio e impatto (livello L2, verificato a f009eb43).*
+*Diagramma D79 — `_EngagementRun` 1/2: costruzione, rilevamento, ciclo principale, scelta del tiro, dottrina di tiro, prelazione ai lanciatori, lancio e impatto (livello L2, verificato a f009eb43; nodi R2 e R4 aggiornati a `a389cadb`).*
 
 ```mermaid
 flowchart TD
     RE["resolve_engagement<br/>funzione di modulo"]
     R1["R1 costruzione<br/>__init__, _build_forces, _build_domains,<br/>_shadow_of, _interceptors_of,<br/>_profile, _same_domain, _init_breakpoints"]
-    R2["R2 rilevamento<br/>_detect, _detect_direction, _detection_time,<br/>_perceive, _perceive_rwr, _grounded_in"]
+    R2["R2 rilevamento<br/>_detect, _detect_direction, _detect_passes, _detection_time,<br/>_pass_detection_time, _pass_cpa, _own_passes, _own_intervals,<br/>_dwell_of, _exposure_time, _perceive, _perceive_rwr, _grounded_in"]
     R3["R3 coda ed esito<br/>run, _push, _draw, _touch, _result"]
-    R4["R4 scelta del tiro<br/>_schedule_next, _fire_control,<br/>_call_fire_control, _first_with_stock, _options,<br/>_range_entry, _refire_interval, _gone"]
+    R4["R4 scelta del tiro<br/>_schedule_next, _fire_control,<br/>_call_fire_control, _first_with_stock, _options,<br/>_range_entry, _band_of, _altitudes_at, _altitude_deferral,<br/>_refire_interval, _gone"]
     R5["R5 dottrina di tiro<br/>_blocked, _coverage, _force_shots_on,<br/>_rounds_in_flight, _engaged_shooters, _wait"]
     R6["R6 lanciatori L2-L3<br/>_register_launcher, _is_launcher_against,<br/>_in_range_at, _on_decide"]
     R8["R8 lancio e impatto<br/>_on_launch, _on_impact"]
@@ -971,9 +989,9 @@ Il ciclo principale è `run` (`:3563-3586`): `_detect`, poi una `_schedule_next`
 (`_LAUNCH` 0 < `_IMPACT` 1 < `_RESOLVE` 2 < `_DECIDE` 3 < `_WAKE` 4, `:536-544`), poi la chiave, poi `sequence`. **Ordine delle estrazioni** (fatto che il codice rende verificabile): il `breakpoint_rng` è consultato una volta per forza **in costruzione** (`:3384`), prima di tutto il resto; l'`rng` di sessione
 è consultato solo da `_draw` (`:2115`), cioè una volta per direzione in `_detect_direction` (`:2001`) e una volta per ogni colpo non fermato su un bersaglio non ancora distrutto in `_on_resolve` (`:3254`). Rimando a **D5** (la coda nella sua forma generale), **D25** (prelazione), **D45** (`_WAKE`).
 
-### La sequenza di `_detect_direction` (D82)
+### La sequenza di `_detect_direction` (D82, riscritto) e di `_detect_passes` (D133)
 
-*Diagramma D82 — `_detect_direction`: una estrazione di rilevamento per direzione di una finestra di contatto, fino al candidato e alla percezione (livello L3, verificato a f009eb43).*
+*Diagramma D82 — `_detect_direction`: dal calcolo dei passaggi nel volume proprio all'estrazione, fino al candidato e alla percezione; con due o più passaggi delega a `_detect_passes` (D133) (livello L3, riscritto e verificato a `a389cadb`: sostituisce la versione a «una estrazione per direzione» verificata a f009eb43, anteriore a D-5 e FP).*
 
 ```mermaid
 sequenceDiagram
@@ -981,9 +999,12 @@ sequenceDiagram
     participant DD as _detect_direction
     participant GS as GroundedSchedule
     participant DF as detection_factor
-    participant PD as detection_probability e detection_radius
-    participant DT as _detection_time
+    participant OP as _dwell_of e _own_passes
     participant CS as Contact_Scheduler
+    participant DPS as _detect_passes
+    participant EX as _exposure_time
+    participant PD as detection_probability / detection_radius / dwell_factor
+    participant DT as _detection_time
     participant ADE as Air_Defense_Efficacy
     DET->>DD: _detect_direction(window, osservatore, bersaglio, own_range, other_range)
     opt own_range assente o non positiva
@@ -997,8 +1018,32 @@ sequenceDiagram
         DD->>DF: detection_factor(observer.asset, target.asset)
         DD->>DD: _check_factor(valore), fuori da 0 e 1 e errore
     end
-    DD->>DD: _draw(), una sola estrazione rng.random()
-    DD->>DD: distance = max(distance_cpa, 0)
+    DD->>OP: _dwell_of(window, observer, target), None senza dwell_time_for o senza dato
+    DD->>OP: _own_passes(window, observer.id, target.id, own_range, dwell)
+    OP->>CS: _own_intervals, poi range_intervals(legs_observer, legs_target, own_range)
+    OP->>OP: _join_passes(intervalli, dwell), uniti se l uscita non supera il dwell
+    OP-->>DD: lista (lo, hi, start, end), oppure None senza i tratti di entrambi
+    alt passes non e None
+        DD->>DD: own_passes_of della coppia, esteso con (start, end), per R-INT
+        alt almeno due passaggi
+            DD->>DPS: _detect_passes(window, observer, target, own_range, factor, dwell, passes) (D133)
+            DPS-->>DD: una estrazione e una Detection per passaggio
+            DD-->>DET: esce
+        else nessun passaggio
+            DD->>DD: pass_exposure = 0.0
+        else un solo passaggio
+            DD->>DD: pass_exposure = min(end, t_end) - start
+            DD->>DD: FP-3 a, candidate_end = hi se la portata propria e la minore
+        end
+    end
+    opt dwell non None
+        opt passes e None, ripiego senza tratti
+            DD->>EX: _exposure_time(window, own_range, other_range)
+        end
+        DD->>PD: factor = factor x dwell_factor(permanenza, dwell)
+    end
+    DD->>DD: _draw(), una sola estrazione dallo stream rng
+    DD->>DD: distance = max(distance_cpa della finestra, 0)
     opt distance non oltre own_range
         DD->>PD: detection_probability(distance, own_range, factor)
     end
@@ -1006,9 +1051,6 @@ sequenceDiagram
     opt detected
         DD->>PD: detection_radius(draw, own_range, factor)
         DD->>DT: _detection_time(window, observer.id, target.id, own_range, other_range, radius)
-        opt tratti di rotta di entrambi e raggio noto
-            DT->>CS: range_intervals(legs_observer, legs_target, radius)
-        end
         DT-->>DD: istante del rilevamento
         DD->>DD: _perceive(observer.force_id, target.id, time)
         DD->>DD: identified_by del dominio, minimo fra i tempi
@@ -1019,22 +1061,67 @@ sequenceDiagram
             DD->>DD: _perceive_rwr(target, observer, time), poi ADE.rwr_class_of
         end
         DD->>DD: t_ready = time + _profile(observer.id).total
-        opt t_ready non oltre window.t_end piu TIME_EPS
-            DD->>DD: candidates[observer.id].append(_Candidate(...))
+        opt t_ready non oltre candidate_end piu TIME_EPS
+            DD->>DD: candidates[observer.id].append(_Candidate(t_end = candidate_end))
         end
     end
     DD->>DD: detections.append(Detection(...)), anche se non rilevato
 ```
 
-Lettura: `_detect` (`:1965`) ordina le finestre per `(t_start, asset_a_id, asset_b_id, t_end)` (`:1966`), scarta quelle con un asset non impegnato o con i due asset della stessa forza (`:1970-1979`) e per ognuna chiama `_detect_direction` **due volte**: prima A osserva B con `range_a`, poi B osserva A con `range_b`
-(`:1983-1984`). Le uscite senza estrazione sono solo due (`:1988-1994`): portata assente o non positiva, e osservatore a terra (sensori spenti); ogni altro caso consuma **esattamente una estrazione**, anche quando la distanza minima supera la portata (la probabilità è allora 0.0, `:2003`). La stessa
-estrazione decide se e quando: `detection_radius` ne ricava il raggio (`:2008`) e `_detection_time` (`:2081`) il primo istante in cui la distanza scende sotto quel raggio, con `Contact_Scheduler.range_intervals` se ci sono i tratti di rotta di entrambi (`:2094-2095`), altrimenti l'istante geometrico di
-ingresso in portata o `t_cpa` (`:2101-2107`). Il candidato nasce solo se il tiratore è pronto dentro la finestra (`:2021-2026`); il `Detection` è registrato sempre (`:2028`). L'RWR del bersaglio è consultato solo se il bersaglio non è a terra (`:2017`, valutazione in corto circuito con `ADE.rwr_perception`, `:2018`).
-La formula della Pd e la regola del dominio di coordinamento sono in **D12** e **D23**; la percezione che ne deriva è usata da `_perceived_ratio` (D22).
+Lettura: `_detect` (`:2280`) ordina le finestre per `(t_start, asset_a_id, asset_b_id, t_end)` (`:2281-2282`), scarta quelle con un asset non impegnato o con i due asset della stessa forza (`:2288-2294`) e per ognuna chiama `_detect_direction` **due volte**: prima A osserva B con `range_a`, poi B osserva A con `range_b`
+(`:2298-2299`). **Le uscite senza estrazione sono due** (`:2303-2310`): portata assente o non positiva, e osservatore a terra (sensori spenti); **un terzo caso è un errore**: con almeno due passaggi e `pass_rng` mancante `_detect_passes` solleva `ValueError` **prima di ogni estrazione** (`:2560-2562`). Ogni altro caso consuma **una estrazione per passaggio** se i passaggi sono due o più (D133), **esattamente una** altrimenti,
+anche quando la distanza minima supera la portata (la probabilità è allora 0.0, `:2356`).
+**Tre casi dopo `_own_passes`** (`:2325`): `None` (nessun tratto: il **ripiego senza tratti**, la sola strada in cui `_exposure_time` è chiamata, `:2351`); lista vuota (permanenza D-5 0, `:2337`); un passaggio (permanenza del passaggio, `:2342`; FP-3 (a) con `candidate_end = hi`, `:2344-2348`). La stessa estrazione decide se e quando: `detection_radius` ne ricava il raggio (`:2361`) e `_detection_time` (`:2434`) il primo istante
+in cui la distanza scende sotto quel raggio, con `Contact_Scheduler.range_intervals` se ci sono i tratti di rotta di entrambi, altrimenti l'istante geometrico di ingresso in portata o `t_cpa`. Il candidato nasce solo se il tiratore è pronto entro `candidate_end` (`:2376-2379`: la fine della finestra, o la fine del passaggio con FP-3 (a)); il `Detection` è registrato sempre (`:2381-2384`, senza `pass_index`). L'RWR del bersaglio è consultato solo se il bersaglio non è a terra
+(`:2370-2372`). **Nessuna costante, nessun interruttore FP**: dalla pulizia del 2026-11-13 il ramo `if self.pass_rng is not None` non esiste più, e i passaggi si calcolano sempre quando ci sono i tratti. La formula della Pd e la regola del dominio di coordinamento sono in **D12** e **D23**; la percezione che ne deriva è usata da `_perceived_ratio` (D22); la regola in forma di flusso è **D131** (capitolo 4 §4.35).
+
+*Diagramma D133 — `_detect_passes`: un'estrazione per passaggio, con la permanenza D-5, il CPA del passaggio e il candidato fino alla fine del passaggio (livello L3, verificato a `a389cadb`).*
+
+```mermaid
+sequenceDiagram
+    participant DD as _detect_direction
+    participant DPS as _detect_passes
+    participant RNG as rng e pass_rng
+    participant PC as _pass_cpa
+    participant CS as Contact_Scheduler
+    participant PD as detection_probability / detection_radius / dwell_factor
+    participant PT as _pass_detection_time
+    DD->>DPS: _detect_passes(window, observer, target, own_range, factor, dwell, passes)
+    opt pass_rng is None
+        DPS-->>DD: ValueError, prima di ogni estrazione
+    end
+    loop per ogni passaggio (lo, hi, start, end), indice 0, 1, ...
+        opt dwell non None
+            DPS->>PD: exposure = max(0, min(end, t_end) - start), poi factor x dwell_factor(exposure, dwell)
+        end
+        alt indice 0
+            DPS->>RNG: _draw(), dallo stream rng dell ingaggio
+        else dal secondo passaggio
+            DPS->>RNG: _draw(self.pass_rng), dallo stream separato dei passaggi
+        end
+        DPS->>PC: _pass_cpa(window, observer.id, target.id, lo, hi)
+        PC->>CS: clamp_legs e closest_point_of_approach, sui tratti ritagliati a [lo, hi]
+        PC-->>DPS: (t_cpa, distanza del passaggio)
+        DPS->>PD: detection_probability(distanza, own_range, pass_factor), 0 se oltre la portata
+        opt detected
+            DPS->>PD: detection_radius(draw, own_range, pass_factor)
+            DPS->>PT: _pass_detection_time(observer.id, target.id, own_range, lo, hi, radius, t_cpa)
+            DPS->>DPS: _perceive, identified_by, RWR come in _detect_direction
+            opt t_ready non oltre hi piu TIME_EPS
+                DPS->>DPS: candidates.append(_Candidate(t_end = hi, t_cpa e distance_cpa del passaggio))
+            end
+        end
+        DPS->>DPS: detections.append(Detection con pass_index, pass_count, pass_start = lo, pass_end = hi)
+    end
+```
+
+Lettura: `_detect_passes` (`:2550-2604`) è chiamata **solo** da `_detect_direction` con almeno due passaggi (`:2332-2334`); per due passaggi la direzione ha **due** estrazioni, la prima da `self.rng` e la seconda da `self.pass_rng` (`:2575`), nell'ordine di tempo dei passaggi. **Ordine delle estrazioni** (parte del contratto, capitolo 4 §4.11): lo stream `rng` consuma una sola estrazione per direzione, nella posizione di sempre, qualunque sia il numero di passaggi; `pass_rng` consuma una estrazione per ogni passaggio dal secondo. La permanenza D-5 è quella del **proprio** passaggio
+(`:2569-2573`, non tagliata all'inizio della finestra, mai la somma); il candidato vale fino a `hi`, la fine del passaggio ritagliata alla finestra (`:2594-2598`, FP-3 (a)), con CPA e distanza **del passaggio** (FP-4, `_pass_cpa`, `:2528`); le salve già lanciate non cambiano. `_pass_detection_time` (`:2540`) cerca il primo istante **dentro il passaggio** in cui la distanza scende sotto il raggio estratto (`_own_intervals(..., radius)`), con ripiego il CPA del passaggio.
+Rimando a **D131** (flusso di `_detect_direction`), **D134** (regola R-INT con i passaggi, che consuma `own_passes_of`) e a capitolo 4 §4.35.
 
 ### La sequenza di `_schedule_next` (D83)
 
-*Diagramma D83 — `_schedule_next`: l'ordine delle chiamate con cui un tiratore sceglie bersaglio, arma e istante del prossimo lancio (livello L3, verificato a f009eb43).*
+*Diagramma D83 — `_schedule_next`: l'ordine delle chiamate con cui un tiratore sceglie bersaglio, arma e istante del prossimo lancio (livello L3, verificato a f009eb43; aggiornato a `a389cadb` con il rinvio di quota e la fascia della VA).*
 
 ```mermaid
 sequenceDiagram
@@ -1043,6 +1130,7 @@ sequenceDiagram
     participant DOT as _blocked e _wait
     participant FCT as _fire_control
     participant EXT as fire_control iniettata
+    participant ALT as _altitude_deferral
     participant RNG as _range_entry
     participant Q as coda eventi
     CH->>SN: _schedule_next(shooter_id, t_earliest)
@@ -1072,16 +1160,20 @@ sequenceDiagram
         end
         SN->>SN: primo istante utile t_first, poi _engaged_shooters per ogni candidato e chiave minima
         SN->>FCT: _fire_control(shooter, target, t_fire)
-        FCT->>EXT: _call_fire_control, con target_grounded=True se il bersaglio e a terra
+        FCT->>EXT: _call_fire_control, con target_grounded=True se a terra e altitudes se VA acceso e la fire control le dichiara
         EXT-->>FCT: None, una ShotSpec o una sequenza
         FCT->>FCT: apply_target_rules(...) se il tiratore ha TargetRules
         FCT-->>SN: risposta ristretta
         SN->>SN: _first_with_stock(shooter, risposta), (spec, colpi) o None
         opt choice e None
+            SN->>ALT: _altitude_deferral(shooter, candidato, t_fire), solo con VA acceso (D132)
+            ALT-->>SN: un istante successivo imposta not_before e il ciclo riparte, oppure l opzione al bordo della fascia, oppure nulla
+        end
+        opt choice ancora None
             SN->>SN: candidato exhausted, il ciclo riparte
         end
         opt spec.max_range definita
-            SN->>RNG: _range_entry(shooter_id, candidato, max_range, t_fire)
+            SN->>RNG: _range_entry(shooter_id, candidato, max_range, t_fire, band = _band_of(spec))
             RNG-->>SN: None esaurisce, un istante successivo imposta not_before e il ciclo riparte
         end
         SN->>SN: assigned[shooter_id] e assigned_shot[shooter_id]
@@ -1089,11 +1181,11 @@ sequenceDiagram
     end
 ```
 
-Lettura: i controlli iniziali sono `:2296-2307`; il ciclo `while True` (`:2312`) si ripete finché una scelta non è accodata o non resta nulla (`return` a `:2353`, `:2371`, `:2419`); ricomincia (`continue`) quando un candidato viene esaurito o rimandato (`:2395`, `:2410`, `:2414`). **Valutazione pigra** (`:2359-2367`): `_designated_first` è chiamata
-solo se `priority` è vuota (`priority or self._designated_first(...) or viable`); `_in_range_at` (`:2723`) è chiamata solo per i candidati che sono già lanciatori contro la forza (corto circuito di `and`, `:2360-2361`) e a sua volta passa da `_fire_control`, `_first_with_stock` e `_range_entry` **senza** modificare il candidato. `_blocked` (`:2460`)
-usa `_rounds_in_flight` per il tetto «due missili, poi guarda» e `_coverage` (che itera `_force_shots_on`) per la saturazione; i lanciatori prioritari sono esenti dalla saturazione, non dal tetto (`:2470`). Se `_wait` ritorna `False` (nessun impatto da attendere) il pool **resta quello non filtrato** e il tiratore procede (`:2369-2373`). Il filtro
-«primo istante utile» (`:2376-2381`) non vale per i lanciatori prioritari (`not priority`). `_fire_control` (`:2676`) applica `apply_target_rules` solo se il tiratore ha regole (`:2681-2689`); `_call_fire_control` (`:2691`) passa `target_grounded=True` solo se il bersaglio è a terra all'istante `time` e la fire control lo accetta (`accepts_target_grounded`, `:2708`,
-una volta per run). Il payload accodato `(index, spec, rounds, generation)` (`:2418`) è congelato: `_on_launch` non richiama la fire control (D84). Rimando alle regole: **D11** (`not_before`), **D13** (opzioni con scorta), **D25** (prelazione), **D26** (dottrina di tiro), **D43** e **D44** (regole di bersaglio).
+Lettura (righe a `a389cadb`): i controlli iniziali sono `:2793-2805`; il ciclo `while True` (`:2809`) si ripete finché una scelta non è accodata o non resta nulla (`return` a `:2851`, `:2868`, `:2925`); ricomincia (`continue`) quando un candidato viene esaurito o rimandato (`:2895`, `:2901`, `:2916`, `:2920`). **Valutazione pigra** (`:2856-2863`): `_designated_first` è chiamata
+solo se `priority` è vuota (`priority or self._designated_first(...) or viable`); `_in_range_at` (`:3253`) è chiamata solo per i candidati che sono già lanciatori contro la forza (corto circuito di `and`) e a sua volta passa da `_fire_control`, `_first_with_stock`, **`_altitude_deferral`** (un rinvio non è «a portata adesso») e `_range_entry` **senza** modificare il candidato. `_blocked` usa `_rounds_in_flight` per il tetto «due missili, poi guarda» e `_coverage`
+(che itera `_force_shots_on`) per la saturazione; i lanciatori prioritari sono esenti dalla saturazione, non dal tetto. Se `_wait` ritorna `False` (nessun impatto da attendere, `:2867`) il pool **resta quello non filtrato** e il tiratore procede. Il filtro «primo istante utile» (`:2873-2878`) non vale per i lanciatori prioritari (`not priority`). `_fire_control` (`:3182`) applica `apply_target_rules` solo se il tiratore ha regole;
+`_call_fire_control` (`:3197-3247`) passa `target_grounded=True` solo se il bersaglio è a terra all'istante `time` e la fire control lo accetta, e `altitudes` solo con VA acceso, i tratti e una fire control che la dichiara (`_altitudes_at`, `:3429`). **Dalla VA**: dopo `_first_with_stock` senza opzioni (`:2887-2891`), `_altitude_deferral` (`:3460-3510`) può rinviare la decisione (`not_before`, `:2893-2895`) o restituire l'opzione al bordo della fascia;
+il controllo di portata passa la `band` della `ShotSpec` (`:2911-2912`). Il payload accodato `(index, spec, rounds, generation)` (`:2924`) è congelato: `_on_launch` non richiama la fire control (D84). Rimando alle regole: **D11** (`not_before`), **D13** (opzioni con scorta), **D25** (prelazione), **D26** (dottrina di tiro), **D43** e **D44** (regole di bersaglio), **D132** (fascia di quota).
 
 ### La sequenza di `_on_launch` (D84)
 
@@ -1211,12 +1303,14 @@ sequenceDiagram
 ```
 
 Lettura: **Blocco 1** (`:3157-3239`). I canali sono per evento-salva e per dominio: quelli già spesi dalle *altre* forze dello stesso dominio nello stesso istante si sottraggono (`:3161-3170`), le disponibilità si calcolano solo per intercettori operativi e non a terra (`:3186-3189`). Le salve si scorrono nell'ordine `(t_impact, salvo_id)`
-e gli intercettori nell'ordine della regola F (`:3195-3215`); dalla BI la condizione del ciclo è `free <= 0 or not _admissible or not _may_intercept or not _in_time` (`Engagement_Resolver.py:3396-3397`, corto circuito di `or`): `_may_intercept` è chiamata solo se `_admissible` è vera e `_in_time` solo se lo sono entrambe (riga riverificata il 2026-11-10; le altre righe di questo paragrafo sono a f009eb43). Anche `_admissible` non fa estrazioni. Né `_may_intercept` né `_in_time` (e dalla BI nemmeno `_admissible`) fanno estrazioni (docstring di `_in_time`, `:3115`): il flusso dell'`rng` non cambia. Le intercettazioni consumano la scorta
+e gli intercettori nell'ordine della regola F (`:3195-3215`); dalla BI la condizione del ciclo è `free <= 0 or not _admissible or not _may_intercept or not _in_time` (`Engagement_Resolver.py:3881-3882` a `a389cadb`, corto circuito di `or`): `_may_intercept` è chiamata solo se `_admissible` è vera e `_in_time` solo se lo sono entrambe (riga riverificata il 2026-11-10; le altre righe di questo paragrafo sono a f009eb43). Anche `_admissible` non fa estrazioni. Né `_may_intercept` né `_in_time` (e dalla BI nemmeno `_admissible`) fanno estrazioni (docstring di `_in_time`, `:3115`): il flusso dell'`rng` non cambia. Le intercettazioni consumano la scorta
 dell'intercettore **prima** del danno (`:3236`), e generano un `InterceptionEvent` per arma (`:3237-3239`). **Blocco 2** (`:3241-3264`): per ogni colpo non fermato su un bersaglio già distrutto si conta `wasted` senza estrarre (payload congelato); altrimenti `_draw()` è valutata come argomento di `build_damage_event`
 (`:3253-3255`), quindi **una estrazione per colpo che arriva su un bersaglio vivo**, nell'ordine salve, colpi. Se il colpo mette fuori combattimento un asset operativo, `loss_shooters` ricorda chi (`:3262-3264`; serve a `_unanswered_fraction`). **Blocco 3** (`:3266-3301`): `shock = perdite / impegnati`, `erosion = (impegnati - operativi dopo) / impegnati`
 (`:3267-3269`); `_check_doctrine` (`:3305`) riceve le frazioni dell'intera forza, oppure, se alcuni impegnati sono aerei a terra, quelle calcolate sui soli combattenti e `withdrawable=bool(fighting_after)` (`:3286-3301`). Dentro `_check_doctrine`: l'annientamento prevale su un disingaggio già deciso (`:3321-3329`);
 senza dottrina (`thresholds` `None`), con esito già deciso o senza possibilità di ritirarsi non c'è altro (`:3331-3332`); altrimenti `_breakpoint` (`:3516`, che chiama `_perceived_ratio` e `_unanswered_fraction`) dà B(t) e si confrontano erosione e shock (`:3334-3349`). Rimando a **D5** (la coda), **D22** (soglia di rottura), **D24** (allocazione delle intercettazioni),
 **D27** (regola R-INT) e **D33** (difesa di dominio).
+
+**Dal 2026-11-11 (FP-5 (d))** il vincolo `_in_time` non legge più «l'ultimo rilevamento» dell'intercettore sul lanciatore: chiede `_detection_time_of(shadow.id, salvo.shooter_id, salvo.t_launch)`, che cerca il rilevamento **nel passaggio** del lanciatore nel volume dell'intercettore **che contiene il lancio** (`_detection_time_in_pass`); senza i tratti resta l'ultimo rilevamento. Nessuna estrazione: flusso in **D134** (capitolo 4 §4.26). Le righe di questa «Lettura» (salvo la `:3881-3882` appena aggiornata) restano a f009eb43.
 
 ### La sequenza di `apply_engagement_result` (D86)
 
@@ -1310,135 +1404,152 @@ Colonne «Tipo», «Simbolo», «Firma» e «Riga» da `inventario.py --tabella 
 
 | Gruppo | Tipo | Simbolo | Firma | Riga | Che cosa fa | Chiamata da |
 |---|---|---|---|---|---|---|
-| T | classe | `ShotSpec` | `ShotSpec`; campi: accuracy, destroy_capacity, rounds, weapon, time_of_flight, interceptable, cycle_time, max_range, stock_per_round, intercept_domains | `:600` | Che cosa spara un tiratore contro un bersaglio (accuracy e destroy_capacity, colpi, arma, volo, portata, unità di scorta per colpo, domini di difesa aerea che possono fermarne il colpo, BI): è la risposta della fire control. | `FCO:shot_spec_for` (costruttore); letta da `_first_with_stock`, `_options`, `_refire_interval` |
-| T | metodo | `ShotSpec.__post_init__` | `__post_init__(self)` | `:637` | Valida i campi (tipi e intervalli; `intercept_domains` deve essere `None` o un `frozenset` incluso in `AD_DOMAINS`) e solleva `TypeError`/`ValueError`. | implicito alla costruzione |
-| T | classe | `Detection` | `Detection`; campi: observer_id, target_id, sensor_range, distance_cpa, probability, draw, detected, time | `:615` | Esito di un'estrazione di rilevamento (una per finestra e direzione). | `_detect_direction` (costruttore) |
-| T | classe | `Salvo` | `Salvo`; campi: salvo_id, t_launch, t_impact, shooter_id, target_id, target_force_id, rounds, spec | `:632` | Una salva lanciata, a payload congelato. | `_on_launch` (costruttore) |
-| T | classe | `SalvoResolution` | `SalvoResolution`; campi: time, force_id, salvo_ids, rounds, interceptable_rounds, capacity, intercepted, wasted, losses, shock, erosion | `:654` | Un evento-salva risolto contro una forza: unità di saturazione e di shock. | `_on_resolve` (costruttore) |
-| T | classe | `AmmunitionEvent` | `AmmunitionEvent`; campi: time, asset_id, rounds, weapon | `:684` | Consumo esplicito di munizioni offensive (unità di scorta). | `_on_launch`, `AF:resolve_area_fire` (costruttore); `ST` (import) |
-| T | classe | `InterceptionEvent` | `InterceptionEvent`; campi: time, asset_id, interceptions, force_id, salvo_ids, weapon | `:708` | Intercettazioni effettuate da un intercettore, uno per arma. | `_on_resolve` (costruttore); `ST` (import) |
-| T | classe | `ActivityCriteria` | `ActivityCriteria`; campi: winchester_weapons, damage_threshold, target_ids, destroyed_targets, until, reference_health | `:742` | Criteri di fine di attività di un asset, nella forma del risolutore (F6-B1). | `SS:_activity_criteria` (costruttore); letta da `_check_activity`, `_targets_destroyed_at`, `_activity_end_time` |
-| T | classe | `ActivityEnd` | `ActivityEnd`; campi: time, asset_id, reason | `:780` | Fine di attività scattata nella run. | `_end_activity` (costruttore) |
-| T | classe | `TargetRules` | `TargetRules`; campi: roe, designated_ids, designated_area, designated_weapons, air_self_defence, known_hostile_ids, attack_point, known_destroyed_ids | `:803` | Regole di bersaglio di un asset tiratore (F7a). | `MA:target_rules` (costruttore, `:1995`); lette da `_is_deferred`, `_fire_control` e altri metodi del gruppo R7 |
-| T | metodo | `TargetRules.__post_init__` | `__post_init__(self)` | `:836` | Valida `roe`, normalizza gli insiemi di id e verifica `attack_point` e `designated_area`. | implicito alla costruzione |
-| T | classe | `ForceOutcome` | `ForceOutcome`; campi: force_id, side, outcome, time, triggers, committed, lost, erosion, max_shock, temper, breakpoint, morale, force_ratio, unanswered_fraction, block_id | `:928` | Esito di una forza: HELD, DISENGAGED o DESTROYED, con i motivi e le grandezze di dottrina. | `_result` (costruttore); `ST` (import) |
-| T | classe | `EngagementResult` | `EngagementResult`; campi: t_start, t_end, forces, detections, salvos, resolutions, damage_events, ammunition_events, interception_events, activity_ends | `:967` | Esito completo e immutabile di un ingaggio. | `_result` (costruttore); `AF:resolve_area_fire` (costruttore); `SS` (tipo e lettura); `ST` (import) |
-| T | metodo | `EngagementResult.outcome_of` | `outcome_of(self, force_id)` | `:986` | L'esito della forza `force_id`, `None` se non partecipa. | nessun chiamante nel core (solo test) |
-| T | metodo | `EngagementResult.ammunition_consumed` | `ammunition_consumed(self)` | `:994` | Unità di scorta spese offensivamente per asset (solo le salve). | nessun chiamante nel core su `EngagementResult` (solo test); `Readiness.py:191` chiama il metodo omonimo di `SessionOutcome` |
-| T | metodo | `EngagementResult.ammunition_consumed_by_weapon` | `ammunition_consumed_by_weapon(self)` | `:1009` | Come `ammunition_consumed`, ripartito per arma: `{asset: {arma: unità}}`. | nessun chiamante nel core su `EngagementResult` (solo test); esiste un metodo omonimo in `SessionOutcome` (`Session_Types.py:494`) |
-| T | metodo | `EngagementResult.interceptions_consumed` | `interceptions_consumed(self)` | `:1019` | Intercettazioni effettuate per asset. | nessun chiamante nel core su `EngagementResult` (solo test); `Readiness.py:192` chiama il metodo omonimo di `SessionOutcome` |
-| S | classe | `_Shadow` | `_Shadow`; campi: __slots__ | `:1409` | Copia di lavoro di un asset impegnato: salute e scorte evolvono qui, non sull'asset. | `_shadow_of` (costruttore) |
-| S | metodo | `_Shadow.__init__` | `__init__(self, asset_id, asset, force_id, health, ammunition, interceptor_stock, stores, unmodelled, interceptor_weapons)` | `:1427` | Copia le scorte per arma (o i pool anonimi) e prepara la vista degli intercettori. | `_shadow_of` |
-| S | metodo | `_Shadow.ammunition` | `ammunition(self)` | `:1442` | Proprietà: scorta totale (vista, come `Mobile.ammunition`). | implicito (proprietà) |
-| S | metodo | `_Shadow.available` | `available(self, weapon)` | `:1446` | Unità spendibili da `weapon`, `None` = nessun vincolo. | `_first_with_stock`, `_on_launch` |
-| S | metodo | `_Shadow.has_stock` | `has_stock(self)` | `:1450` | Esiste almeno un'arma con scorta (le armi non modellate non hanno vincolo). | `_schedule_next` |
-| S | metodo | `_Shadow.consume` | `consume(self, weapon, units)` | `:1453` | Consuma `units` di scorta dalla voce dell'arma (o dall'aggregato) e ritorna il consumato. | `_on_launch` |
-| S | metodo | `_Shadow.interceptor_stock` | `interceptor_stock(self)` | `:1459` | Proprietà: scorta di intercettori (vista sulle voci AD o pool anonimo). | `_on_resolve` (proprietà) |
-| S | metodo | `_Shadow.consume_interceptions` | `consume_interceptions(self, amount)` | `:1462` | Consuma `amount` intercettazioni e ritorna la ripartizione `[(arma, n)]`. | `_on_resolve` |
-| S | metodo | `_Shadow.operative` | `operative(self)` | `:1477` | Proprietà: la salute supera `OPERATIVE_HEALTH_FLOOR`. | molti metodi della run (`_build_forces`, `_schedule_next`, `_on_launch`, `_on_resolve`, `_result`, ...) |
-| S | metodo | `_Shadow.destroyed` | `destroyed(self)` | `:1481` | Proprietà: la salute è sotto la soglia di distruzione di `Damage_Model`. | `_on_resolve`, `_check_activity`, `_designated_destroyed` |
-| S | classe | `_Candidate` | `_Candidate`; campi: t_ready, target_id, t_end, exhausted, t_cpa, distance_cpa, not_before | `:1486` | Un bersaglio rilevato da un tiratore, ingaggiabile in `[t_ready, t_end]`. | `_detect_direction` (costruttore); modificata da `_schedule_next`, `_on_launch` |
-| S | classe | `_ForceState` | `_ForceState`; campi: force_id, side, committed, thresholds, interceptors, outcome, time, triggers, max_shock, force, air, temper, temper_z, morale, enemy_estimate, stationary, loss_shooters, breakpoint, force_ratio, unanswered_fraction, fire, block_id | `:1503` | Stato di una forza nella run: impegnati, dottrina, esito e grandezze della soglia di rottura. | `_build_forces` (costruttore) |
-| S | classe | `_PendingGroup` | `_PendingGroup`; campi: resolve_time, salvos | `:1532` | Salve che atterrano su una forza entro la finestra di salva, da risolvere insieme. | `_on_impact` (costruttore) |
-| run | classe | `_EngagementRun` | `_EngagementRun`; campi: - | `:1642` | Stato e coda eventi di un ingaggio a due o più forze. | `resolve_engagement` (costruttore) |
-| R1 | metodo | `_EngagementRun.__init__` | `__init__(self, forces, contacts, fire_control, rng, legs, committed, thresholds, reaction_profile_for, detection_factor, salvo_window, provenance, breakpoint_rng, morale_for, enemy_estimate_for, fire_doctrine, rwr_catalogue, coordination_of, grounded, activity_criteria, target_rules)` | `:1645` | Crea gli stati vuoti, costruisce forze e domini, inizializza le soglie di rottura e la fine di attività (D81). | `resolve_engagement` (costruttore) |
-| R1 | metodo | `_EngagementRun._build_forces` | `_build_forces(self, forces, committed, thresholds)` | `:1771` | Ombre e `_ForceState` di ogni forza; `False` se meno di due forze hanno asset impegnabili. | `__init__` |
-| R1 | metodo | `_EngagementRun._build_domains` | `_build_domains(self, coordination_of)` | `:1862` | Dominio di coordinamento di ogni forza e intercettori per dominio, in ordine della regola F. | `__init__` |
-| R1 | metodo | `_EngagementRun._same_domain` | `_same_domain(self, force_a, force_b)` | `:1903` | Le due forze sono nello stesso dominio di coordinamento? | `_engaged_shooters`, `_force_shots_on`, `_register_launcher` |
-| R1 | metodo | `_EngagementRun._shadow_of` | `_shadow_of(asset_id, asset, force_id, health)` | `:1907` | Metodo statico: stato ombra dalle scorte dell'asset, con letture difensive. | `_build_forces` |
-| R1 | metodo | `_EngagementRun._interceptors_of` | `_interceptors_of(self, force, force_id)` | `:1934` | Lista `[(ombra, canali)]` degli intercettori della forza, esclusi gli aerei sempre a terra. | `_build_forces` |
-| R1 | metodo | `_EngagementRun._profile` | `_profile(self, shooter_id)` | `:1957` | Profilo di reazione del tiratore, memoizzato. | `_detect_direction`, `_in_time`, `_react_to_hostile`, `_refire_interval`, `_register_launcher` |
-| R2 | metodo | `_EngagementRun._detect` | `_detect(self)` | `:1965` | Una `_detect_direction` per direzione di ogni finestra, in ordine canonico. | `run` |
-| R2 | metodo | `_EngagementRun._detect_direction` | `_detect_direction(self, window, observer, target, own_range, other_range)` | `:1986` | Una estrazione di rilevamento e, se rileva, percezione e candidato (D82). | `_detect` |
-| R2 | metodo | `_EngagementRun._perceive` | `_perceive(self, force_id, asset_id, time)` | `:2033` | Il dominio della forza percepisce l'asset nemico dall'istante `time`. | `_detect_direction`, `_perceive_rwr` |
-| R2 | metodo | `_EngagementRun._perceive_rwr` | `_perceive_rwr(self, aircraft, emitter, time)` | `:2039` | Percezione dell'emettitore da parte dell'RWR dell'aereo, con la classe dell'emettitore (R-CLS). | `_detect_direction`, `_on_launch` |
-| R11 | metodo | `_EngagementRun._air_threat` | `_air_threat(self, state, shadow, time, n_aircraft)` | `:2048` | Peso di un nemico percepito da una forza aerea (R-CLS). | `_perceived_ratio` |
-| R2 | metodo | `_EngagementRun._detection_time` | `_detection_time(self, window, observer_id, target_id, own_range, other_range, radius)` | `:2081` | Istante del rilevamento dentro la finestra. | `_detect_direction` |
-| R3 | metodo | `_EngagementRun._push` | `_push(self, time, kind, key, payload)` | `:2111` | Accoda un evento `(time, kind, key, sequence, payload)`. | `_on_impact`, `_on_launch`, `_react_to_hostile`, `_register_launcher`, `_schedule_next`, `_schedule_phase_wakes`, `_wait`, `_wake_after_destruction` |
-| R3 | metodo | `_EngagementRun._draw` | `_draw(self)` | `:2115` | Una estrazione dell'`rng` di sessione, validata in `[0, 1)`. | `_detect_direction`, `_on_resolve` |
-| R3 | metodo | `_EngagementRun._touch` | `_touch(self, time)` | `:2123` | Aggiorna `t_end` al massimo istante visto. | `_on_launch`, `_on_resolve` |
-| R12 | metodo | `_EngagementRun._activity_end_time` | `_activity_end_time(self, asset_id)` | `:2128` | Istante dal quale l'asset non lancia più, `None` se nessuno. | `_on_launch`, `_schedule_next` |
-| R12 | metodo | `_EngagementRun._targets_destroyed_at` | `_targets_destroyed_at(self, criteria)` | `:2142` | Istante in cui tutti i bersagli del criterio sono distrutti, `None` se qualcuno no. | `_check_activity` |
-| R12 | metodo | `_EngagementRun._check_activity` | `_check_activity(self, time, targets_only)` | `:2158` | Verifica i criteri di fine di attività (danno, winchester, bersagli distrutti) e registra quelli scattati. | `__init__`, `_on_launch`, `_on_resolve` |
-| R12 | metodo | `_EngagementRun._end_activity` | `_end_activity(self, time, asset_id, reason)` | `:2194` | Registra la fine di attività e annulla il lancio programmato se è già in vigore. | `_check_activity` |
-| R5 | metodo | `_EngagementRun._engaged_shooters` | `_engaged_shooters(self, target_id, force_id, exclude)` | `:2209` | Quanti altri tiratori del dominio sono impegnati ora su `target_id`. | `_schedule_next` |
-| R4 | metodo | `_EngagementRun._schedule_next` | `_schedule_next(self, shooter_id, t_earliest)` | `:2230` | Decide il prossimo lancio del tiratore e lo accoda con payload congelato (D83). | `run`, `_on_decide`, `_on_launch`, `_on_wake` |
-| R5 | metodo | `_EngagementRun._force_shots_on` | `_force_shots_on(self, target_id, force_id)` | `:2423` | Generatore delle salve del dominio dirette a `target_id`: in volo o schedulate. | `_coverage`, `_wait` |
-| R5 | metodo | `_EngagementRun._coverage` | `_coverage(self, target_id, force_id)` | `:2443` | Probabilità che le salve già dirette dal dominio distruggano il bersaglio. | `_blocked` |
-| R5 | metodo | `_EngagementRun._rounds_in_flight` | `_rounds_in_flight(self, shooter_id, target_id)` | `:2456` | Colpi in volo del tiratore contro il bersaglio. | `_blocked` |
-| R5 | metodo | `_EngagementRun._blocked` | `_blocked(self, shooter, target_id, exempt_from_saturation)` | `:2460` | Il tiratore non deve aggiungere salve (tetto o saturazione). | `_schedule_next` |
-| R5 | metodo | `_EngagementRun._wait` | `_wait(self, shooter, pool, t_earliest)` | `:2475` | Tutti i bersagli bloccati: ridecisione al primo impatto previsto. | `_schedule_next` |
-| R4 | metodo | `_EngagementRun._gone` | `_gone(self, target)` | `:2497` | Il bersaglio non è raggiungibile perché la sua forza ha rotto il contatto (salvo aerei a terra). | `_on_launch`, `_schedule_next` |
-| R2 | metodo | `_EngagementRun._grounded_in` | `_grounded_in(self, asset_id, window)` | `:2506` | L'asset è a terra nella finestra (stato al punto medio). | `_detect_direction` |
-| R7 | metodo | `_EngagementRun._is_designated` | `_is_designated(self, rules, target, time)` | `:2515` | Il bersaglio è designato dalla missione del tiratore a `time` (id o area). | `_designated_first`, `_fire_control`, `_is_deferred` |
-| R7 | metodo | `_EngagementRun._is_hostile` | `_is_hostile(self, shooter, target_id)` | `:2532` | Il bersaglio ha già lanciato contro il dominio del tiratore (`return_fire`). | `_fire_control`, `_is_deferred` |
-| R7 | metodo | `_EngagementRun._attack_pass_time` | `_attack_pass_time(self, shooter_id, rules)` | `:2538` | Istante in cui il tiratore ha raggiunto e superato il punto ATTACK, `None`; memoizzato. | `_attack_over`, `_schedule_phase_wakes` |
-| R7 | metodo | `_EngagementRun._designated_destroyed` | `_designated_destroyed(self, rules)` | `:2565` | Tutti i bersagli designati per id sono distrutti. | `_attack_over`, `_wake_after_destruction` |
-| R7 | metodo | `_EngagementRun._attack_over` | `_attack_over(self, shooter_id, rules, time)` | `:2578` | Fine dell'attacco di `priority_designated` a `time`. | `_fire_control`, `_is_deferred` |
-| R7 | metodo | `_EngagementRun._is_deferred` | `_is_deferred(self, shooter, target, time)` | `:2587` | La regola di bersaglio esclude il bersaglio ora per una ragione che dipende dal tempo. | `_schedule_next` |
-| R7 | metodo | `_EngagementRun._designated_first` | `_designated_first(self, shooter, viable)` | `:2602` | I candidati designati e a portata, solo con ROE `priority_designated`. | `_schedule_next` |
-| R7 | metodo | `_EngagementRun._react_to_hostile` | `_react_to_hostile(self, time, launcher, target_force_id)` | `:2616` | Riesamina dopo il `refire_interval` i tiratori `return_fire` del dominio che hanno il nuovo ostile fra i candidati. | `_on_launch` |
-| R7 | metodo | `_EngagementRun._schedule_phase_wakes` | `_schedule_phase_wakes(self)` | `:2640` | Risveglio dei tiratori `priority_designated` al passaggio sul punto ATTACK. | `run` |
-| R7 | metodo | `_EngagementRun._wake_after_destruction` | `_wake_after_destruction(self, time)` | `:2654` | Dopo una risoluzione, risveglia una volta i tiratori il cui designato è distrutto. | `_on_resolve` |
-| R7 | metodo | `_EngagementRun._on_wake` | `_on_wake(self, time, shooter_id)` | `:2665` | Riesame di un tiratore dopo un cambio di fase o un nuovo ostile. | `run` |
-| R4 | metodo | `_EngagementRun._fire_control` | `_fire_control(self, shooter, target, time)` | `:2676` | La fire control sulla coppia, ristretta dalle regole di bersaglio del tiratore. | `_in_range_at`, `_schedule_next` |
-| R4 | metodo | `_EngagementRun._call_fire_control` | `_call_fire_control(self, shooter, target, time)` | `:2691` | Chiama la fire control iniettata, con `target_grounded` per un aereo a terra (F4c). | `_fire_control` |
-| R6 | metodo | `_EngagementRun._is_launcher_against` | `_is_launcher_against(self, asset_id, force_id)` | `:2719` | L'asset ha lanciato armi aria-superficie contro il dominio della forza (L2). | `_register_launcher`, `_schedule_next` |
-| R6 | metodo | `_EngagementRun._in_range_at` | `_in_range_at(self, shooter, index, candidate, t_fire)` | `:2723` | Il candidato è ingaggiabile (arma con scorta, entro portata) a `t_fire`, senza effetti sul candidato. | `_designated_first`, `_register_launcher`, `_schedule_next` |
-| R6 | metodo | `_EngagementRun._register_launcher` | `_register_launcher(self, time, launcher, target_force_id)` | `:2743` | Primo lancio aria-superficie di un aereo contro una forza: i difensori ridecidono dopo il `refire_interval` (L3). | `_on_launch` |
-| R6 | metodo | `_EngagementRun._on_decide` | `_on_decide(self, time, shooter_id, generation)` | `:2795` | Fine della valutazione dopo una prelazione: nuova decisione con lo stato attuale. | `run` |
-| R4 | metodo | `_EngagementRun._options` | `_options(result)` | `:2804` | Metodo statico: le opzioni di una risposta della fire control (`None`, una `ShotSpec` o una sequenza). | `_first_with_stock`, `apply_target_rules` |
-| R4 | metodo | `_EngagementRun._first_with_stock` | `_first_with_stock(self, shooter, result)` | `:2822` | `(ShotSpec, colpi)` della prima opzione con scorta per almeno un colpo, o `None`. | `_in_range_at`, `_schedule_next` |
-| R4 | metodo | `_EngagementRun._range_entry` | `_range_entry(self, shooter_id, candidate, max_range, t_from)` | `:2841` | Primo istante con il bersaglio entro la portata, o `None`; memoizzato. | `_in_range_at`, `_schedule_next` |
-| R4 | metodo | `_EngagementRun._refire_interval` | `_refire_interval(self, shooter_id, spec)` | `:2876` | Intervallo fra due salve: `cycle_time` della `ShotSpec` o `refire_interval` del profilo. | `_on_launch` |
-| R8 | metodo | `_EngagementRun._on_launch` | `_on_launch(self, time, shooter_id, payload)` | `:2879` | Esegue un lancio programmato: consumo, `Salvo`, evento d'impatto, reazioni (D84). | `run` |
-| R8 | metodo | `_EngagementRun._on_impact` | `_on_impact(self, time, force_id, salvo)` | `:2974` | Raggruppa le salve che atterrano sulla forza entro la finestra e accoda la risoluzione. | `run` |
-| R9 | metodo | `_EngagementRun._position_at` | `_position_at(self, shadow, t)` | `:2984` | Posizione `(x, y, z)` a `t`, dai tratti di rotta o dalla posizione dell'asset; `None` se ignota. | `_is_designated`, `_may_intercept`, `_round_track_time` |
-| R9 | metodo | `_EngagementRun._interception_zone` | `_interception_zone(self, shadow)` | `:2999` | Zona d'intercettazione V_I come (raggio, quota base, quota tetto) relativi; memoizzata. | `_may_intercept` |
-| R9 | metodo | `_EngagementRun._ad_domain` | `_ad_domain(self, shadow)` | `:3189` | Dominio di difesa aerea dell'intercettore (BI-5): `naval` per una nave (`Ship`), altrimenti `land`; memoizzato in `ad_domain_cache`. | `_admissible` |
-| R9 | metodo | `_EngagementRun._admissible` | `_admissible(self, shadow, salvo)` | `:3196` | Filtro BI: vero se `BI_AD_TARGET_RULE` è spento o la `ShotSpec` non dichiara i domini; altrimenti solo se il dominio dell'intercettore è fra gli `intercept_domains` della salva. Nessuna estrazione. | `_on_resolve` |
-| R9 | metodo | `_EngagementRun._may_intercept` | `_may_intercept(self, shadow, salvo)` | `:3019` | Regola L1: il punto di lancio della salva è fuori dal V_I dell'intercettore. | `_on_resolve` |
-| R9 | metodo | `_EngagementRun._detection_time_of` | `_detection_time_of(self, observer_id, target_id)` | `:3044` | Istante in cui l'osservatore ha rilevato il bersaglio, `None` se mai. | `_in_time` |
-| R9 | metodo | `_EngagementRun._air_detection_range` | `_air_detection_range(self, shadow)` | `:3052` | Raggio di rilevamento aereo dell'intercettore [m]; memoizzato. | `_round_track_time` |
-| R9 | metodo | `_EngagementRun._round_track_time` | `_round_track_time(self, shadow, salvo)` | `:3069` | Istante in cui l'intercettore scopre dalla geometria un colpo di cui non ha visto il lancio. | `_in_time` |
-| R9 | metodo | `_EngagementRun._in_time` | `_in_time(self, shadow, salvo)` | `:3107` | Regola R-INT: l'intercettore ha traccia e tempo di reagire prima dell'impatto. | `_on_resolve` |
-| R10 | metodo | `_EngagementRun._on_resolve` | `_on_resolve(self, time, force_id)` | `:3133` | Risolve un evento-salva: intercettazione, danno per colpo, dottrina (D85). | `run` |
-| R11 | metodo | `_EngagementRun._check_doctrine` | `_check_doctrine(self, time, state, shock, erosion, operative_left, salvo_losses, withdrawable)` | `:3305` | Confronta le perdite con la dottrina del lato per la forza intera. | `_on_resolve` |
-| R1 | metodo | `_EngagementRun._init_breakpoints` | `_init_breakpoints(self)` | `:3356` | Tempra, morale, stima a priori e postura di ogni forza con dottrina. | `__init__` |
-| R11 | metodo | `_EngagementRun._morale_of` | `_morale_of(self, state)` | `:3393` | Morale della forza in `[0, 1]`, `None` se ignoto o fuori intervallo. | `_init_breakpoints` |
-| R11 | metodo | `_EngagementRun._enemy_estimate_of` | `_enemy_estimate_of(self, state)` | `:3409` | Stima a priori della forza nemica, `None` se ignota o non valida. | `_init_breakpoints` |
-| R11 | metodo | `_EngagementRun._stationary` | `_stationary(self, state)` | `:3425` | `True` se tutti gli asset con tratti sono fermi, `None` se nessuno ne ha. | `_init_breakpoints` |
-| R11 | metodo | `_EngagementRun._is_enemy` | `_is_enemy(self, state, shadow)` | `:3443` | L'ombra è un nemico della forza (lato diverso o lato ignoto). | `_perceived_ratio` |
-| R11 | metodo | `_EngagementRun._perceived_ratio` | `_perceived_ratio(self, time, state)` | `:3451` | Rapporto di forze percepito rho, `None` se non definito. | `_breakpoint` |
-| R11 | metodo | `_EngagementRun._surface_weight` | `_surface_weight(self, shadow)` | `:3496` | Peso di minaccia di un asset di superficie, memoizzato. | `_perceived_ratio` |
-| R11 | metodo | `_EngagementRun._unanswered_fraction` | `_unanswered_fraction(self, state)` | `:3505` | Quota delle perdite causate da tiratori non rilevati dal dominio. | `_breakpoint` |
-| R11 | metodo | `_EngagementRun._breakpoint` | `_breakpoint(self, time, state)` | `:3516` | Soglia di rottura B(t) = logistica della mediana modulata, con la tempra della forza. | `_check_doctrine` |
-| R3 | metodo | `_EngagementRun.run` | `run(self)` | `:3563` | Ciclo principale: rilevamento, prime decisioni, svuotamento della coda con dispatch per tipo. | `resolve_engagement` |
-| R3 | metodo | `_EngagementRun._result` | `_result(self)` | `:3588` | Costruisce `ForceOutcome` ed `EngagementResult` dalle liste di esito. | `run` |
-| B | funzione | `_id_set` | `_id_set(label, value)` | `:788` | `frozenset` di id (stringhe non vuote) da un iterabile. | `TargetRules.__post_init__` |
-| B | funzione | `rules_defer` | `rules_defer(rules, designated, hostile, air_target, after_attack)` | `:872` | Funzione pura: la regola esclude il bersaglio per una ragione che dipende dal tempo. | `_is_deferred`, `apply_target_rules` |
-| B | funzione | `apply_target_rules` | `apply_target_rules(rules, result, designated, hostile, air_target, after_attack)` | `:885` | Funzione pura: la risposta della fire control ristretta dalle regole di un tiratore. | `_fire_control` |
-| P | funzione | `_check_factor` | `_check_factor(factor)` | `:1031` | Valida un fattore di rilevamento in `[0, 1]`. | `_detect_direction`, `detection_probability`, `detection_radius`, `recon_detection_factor_fn`, `recon_unseen_factor` |
-| P | funzione | `detection_probability` | `detection_probability(distance, sensor_range, factor)` | `:1041` | Pd di un sensore contro un bersaglio a `distance`: legge di quarta potenza, stima dichiarata. | `_detect_direction`; `ARM` (import locale, `Air_Route_Manager.py:1103`) |
-| P | funzione | `detection_radius` | `detection_radius(draw, sensor_range, factor)` | `:1071` | Inversa di `detection_probability`: raggio al quale l'estrazione produce il rilevamento. | `_detect_direction` |
-| F | funzione | `weather_detection_factor` | `weather_detection_factor(conditions)` | `:1105` | Fattore di degradazione della Pd da notte e meteo avverso. | `weather_detection_factor_fn` |
-| F | funzione | `weather_detection_factor_fn` | `weather_detection_factor_fn(conditions)` | `:1155` | La callable `(observer, target) -> float` per le condizioni meteo date. | `meteo_detection_factor` |
-| F | funzione | `meteo_detection_factor` | `meteo_detection_factor(region_name, date, time)` | `:1172` | Come la precedente, leggendo le condizioni da `Meteo_Analysis`. | nessun chiamante nel core (v. D78) |
-| F | funzione | `_block_attribute` | `_block_attribute(asset, name)` | `:1196` | `asset.block.<name>`, `None` se l'asset non ha blocco o il blocco non ha l'attributo. | `recon_detection_factor_fn` (funzione interna `detection_factor`, `:1238`, `:1241`, `:1244`) |
-| F | funzione | `_check_side` | `_check_side(side)` | `:1202` | Valida un lato fra `Blue`, `Red`, `Neutral`. | `recon_detection_factor_fn`, `region_recon_detection_factor` |
-| F | funzione | `recon_detection_factor_fn` | `recon_detection_factor_fn(seen_block_ids, observer_side, unseen_factor, seen_factor)` | `:1209` | La callable della nebbia di guerra di un lato, dall'istantanea dei blocchi visti. | `region_recon_detection_factor` |
-| F | funzione | `combine_detection_factors` | `combine_detection_factors(*fns)` | `:1249` | Una sola callable dal prodotto di più fattori. | nessun chiamante nel core (v. D78) |
-| F | funzione | `recon_unseen_factor` | `recon_unseen_factor(recon_efficiency, unseen_factor, seen_factor, relief)` | `:1286` | Fattore dei bersagli non visti, modulato dall'efficienza di ricognizione. | `region_recon_detection_factor` |
-| F | funzione | `side_recon_efficiency` | `side_recon_efficiency(region, side)` | `:1318` | Efficienza di ricognizione di un lato in una regione: il massimo fra le sue `Military`. | `region_recon_detection_factor` |
-| F | funzione | `region_recon_detection_factor` | `region_recon_detection_factor(region, observer_side, unseen_factor, seen_factor, relief)` | `:1359` | `recon_detection_factor_fn` per un lato, dall'istantanea di ricognizione della regione. | nessun chiamante nel core (v. D78) |
-| S | funzione | `_domain_id` | `_domain_id(obj)` | `:1537` | Identificativo di dominio di un asset o di una forza (`id`, poi `name`). | `_build_forces`, `_interceptors_of`, `apply_engagement_result` |
-| S | funzione | `_can_disengage` | `_can_disengage(force)` | `:1548` | La forza ha diritto a una politica di disingaggio (`Military` sì, `Block` non militare no). | `_build_forces` |
-| G | funzione | `accepts_target_grounded` | `accepts_target_grounded(fire_control)` | `:1575` | La fire control accetta la keyword `target_grounded` (o `**kwargs`), per introspezione della firma. | `_call_fire_control`; `FCO:restrict_by_policy` |
-| G | funzione | `engagement_intervals` | `engagement_intervals(legs_shooter, legs_target, max_range)` | `:1611` | Intervalli in cui il bersaglio è nella sfera di raggio `max_range` (delega a `range_intervals`). | `_range_entry` (via `self.engagement_intervals`, assegnato in `__init__`) |
-| G | funzione | `engagement_intervals_without_legs` | `engagement_intervals_without_legs(t_cpa, distance_cpa, t_end, max_range)` | `:1621` | Ripiego senza tratti di rotta: dal solo CPA. | `_range_entry` |
-| A | funzione | `resolve_engagement` | `resolve_engagement(force_a, force_b, contacts, fire_control, rng, extra_forces, legs, committed, thresholds, reaction_profile_for, detection_factor, salvo_window, provenance, breakpoint_rng, morale_for, enemy_estimate_for, fire_doctrine, rwr_catalogue, coordination_of, grounded, activity_criteria, target_rules)` | `:3619` | Risolve un ingaggio fra due o più forze in un'unica timeline, senza mutare asset (D81). | `SS:run_session` (funzione interna `engage`, `:2765`) |
-| A | funzione | `_call_with_weapon` | `_call_with_weapon(consume, amount, weapon)` | `:3782` | `consume(amount, weapon=weapon)`, o la chiamata storica `consume(amount)` senza arma. | `apply_engagement_result` |
-| A | funzione | `apply_engagement_result` | `apply_engagement_result(result, *forces)` | `:3794` | Applica danni e consumi di un esito agli asset reali e ritorna un riepilogo (D86). | `SS:run_session` (funzioni interne `engage` `:2790`, `fire_area` `:2486`) |
+| T | classe | `ShotSpec` | `ShotSpec`; campi: accuracy, destroy_capacity, rounds, weapon, time_of_flight, interceptable, cycle_time, max_range, stock_per_round, intercept_domains, min_altitude, max_altitude, max_target_z | `:673` | Che cosa spara un tiratore contro un bersaglio (accuracy e destroy_capacity, colpi, arma, volo, portata, unità di scorta per colpo, domini di difesa aerea che possono fermarne il colpo (BI), fascia di quota relativa `min_altitude`/`max_altitude` e tetto assoluto `max_target_z` (VA)): è la risposta della fire control. | `FCO:shot_spec_for` (costruttore); letta da `_first_with_stock`, `_options`, `_refire_interval` |
+| T | metodo | `ShotSpec.__post_init__` | `__post_init__(self)` | `:718` | Valida i campi (tipi e intervalli; `intercept_domains` deve essere `None` o un `frozenset` incluso in `AD_DOMAINS`) e solleva `TypeError`/`ValueError`. | implicito alla costruzione |
+| T | classe | `Detection` | `Detection`; campi: observer_id, target_id, sensor_range, distance_cpa, probability, draw, detected, time, exposure_s, dwell_time_s, pass_index, pass_count, pass_start, pass_end | `:767` | Esito di un'estrazione di rilevamento: una per passaggio nel volume proprio (FP) se la direzione ha due o più passaggi, altrimenti una per direzione; porta anche permanenza e dwell (D-5) e i dati del passaggio (`pass_index`, `pass_count`, `pass_start`, `pass_end`). | `_detect_direction`, `_detect_passes` (costruttore) |
+| T | classe | `Salvo` | `Salvo`; campi: salvo_id, t_launch, t_impact, shooter_id, target_id, target_force_id, rounds, spec | `:792` | Una salva lanciata, a payload congelato. | `_on_launch` (costruttore) |
+| T | classe | `SalvoResolution` | `SalvoResolution`; campi: time, force_id, salvo_ids, rounds, interceptable_rounds, capacity, intercepted, wasted, losses, shock, erosion | `:814` | Un evento-salva risolto contro una forza: unità di saturazione e di shock. | `_on_resolve` (costruttore) |
+| T | classe | `AmmunitionEvent` | `AmmunitionEvent`; campi: time, asset_id, rounds, weapon | `:844` | Consumo esplicito di munizioni offensive (unità di scorta). | `_on_launch`, `AF:resolve_area_fire` (costruttore); `ST` (import) |
+| T | classe | `InterceptionEvent` | `InterceptionEvent`; campi: time, asset_id, interceptions, force_id, salvo_ids, weapon | `:868` | Intercettazioni effettuate da un intercettore, uno per arma. | `_on_resolve` (costruttore); `ST` (import) |
+| T | classe | `ActivityCriteria` | `ActivityCriteria`; campi: winchester_weapons, damage_threshold, target_ids, destroyed_targets, until, reference_health | `:902` | Criteri di fine di attività di un asset, nella forma del risolutore (F6-B1). | `SS:_activity_criteria` (costruttore); letta da `_check_activity`, `_targets_destroyed_at`, `_activity_end_time` |
+| T | classe | `ActivityEnd` | `ActivityEnd`; campi: time, asset_id, reason | `:940` | Fine di attività scattata nella run. | `_end_activity` (costruttore) |
+| T | classe | `TargetRules` | `TargetRules`; campi: roe, designated_ids, designated_area, designated_weapons, air_self_defence, known_hostile_ids, attack_point, known_destroyed_ids | `:963` | Regole di bersaglio di un asset tiratore (F7a). | `MA:target_rules` (costruttore, `:1995`); lette da `_is_deferred`, `_fire_control` e altri metodi del gruppo R7 |
+| T | metodo | `TargetRules.__post_init__` | `__post_init__(self)` | `:996` | Valida `roe`, normalizza gli insiemi di id e verifica `attack_point` e `designated_area`. | implicito alla costruzione |
+| T | classe | `ForceOutcome` | `ForceOutcome`; campi: force_id, side, outcome, time, triggers, committed, lost, erosion, max_shock, temper, breakpoint, morale, force_ratio, unanswered_fraction, block_id | `:1088` | Esito di una forza: HELD, DISENGAGED o DESTROYED, con i motivi e le grandezze di dottrina. | `_result` (costruttore); `ST` (import) |
+| T | classe | `EngagementResult` | `EngagementResult`; campi: t_start, t_end, forces, detections, salvos, resolutions, damage_events, ammunition_events, interception_events, activity_ends | `:1127` | Esito completo e immutabile di un ingaggio. | `_result` (costruttore); `AF:resolve_area_fire` (costruttore); `SS` (tipo e lettura); `ST` (import) |
+| T | metodo | `EngagementResult.outcome_of` | `outcome_of(self, force_id)` | `:1146` | L'esito della forza `force_id`, `None` se non partecipa. | nessun chiamante nel core (solo test) |
+| T | metodo | `EngagementResult.ammunition_consumed` | `ammunition_consumed(self)` | `:1154` | Unità di scorta spese offensivamente per asset (solo le salve). | nessun chiamante nel core su `EngagementResult` (solo test); `Readiness.py:191` chiama il metodo omonimo di `SessionOutcome` |
+| T | metodo | `EngagementResult.ammunition_consumed_by_weapon` | `ammunition_consumed_by_weapon(self)` | `:1169` | Come `ammunition_consumed`, ripartito per arma: `{asset: {arma: unità}}`. | nessun chiamante nel core su `EngagementResult` (solo test); esiste un metodo omonimo in `SessionOutcome` (`Session_Types.py:494`) |
+| T | metodo | `EngagementResult.interceptions_consumed` | `interceptions_consumed(self)` | `:1179` | Intercettazioni effettuate per asset. | nessun chiamante nel core su `EngagementResult` (solo test); `Readiness.py:192` chiama il metodo omonimo di `SessionOutcome` |
+| S | classe | `_Shadow` | `_Shadow`; campi: __slots__ | `:1669` | Copia di lavoro di un asset impegnato: salute e scorte evolvono qui, non sull'asset. | `_shadow_of` (costruttore) |
+| S | metodo | `_Shadow.__init__` | `__init__(self, asset_id, asset, force_id, health, ammunition, interceptor_stock, stores, unmodelled, interceptor_weapons)` | `:1687` | Copia le scorte per arma (o i pool anonimi) e prepara la vista degli intercettori. | `_shadow_of` |
+| S | metodo | `_Shadow.ammunition` | `ammunition(self)` | `:1702` | Proprietà: scorta totale (vista, come `Mobile.ammunition`). | implicito (proprietà) |
+| S | metodo | `_Shadow.available` | `available(self, weapon)` | `:1706` | Unità spendibili da `weapon`, `None` = nessun vincolo. | `_first_with_stock`, `_on_launch` |
+| S | metodo | `_Shadow.has_stock` | `has_stock(self)` | `:1710` | Esiste almeno un'arma con scorta (le armi non modellate non hanno vincolo). | `_schedule_next` |
+| S | metodo | `_Shadow.consume` | `consume(self, weapon, units)` | `:1713` | Consuma `units` di scorta dalla voce dell'arma (o dall'aggregato) e ritorna il consumato. | `_on_launch` |
+| S | metodo | `_Shadow.interceptor_stock` | `interceptor_stock(self)` | `:1719` | Proprietà: scorta di intercettori (vista sulle voci AD o pool anonimo). | `_on_resolve` (proprietà) |
+| S | metodo | `_Shadow.consume_interceptions` | `consume_interceptions(self, amount)` | `:1722` | Consuma `amount` intercettazioni e ritorna la ripartizione `[(arma, n)]`. | `_on_resolve` |
+| S | metodo | `_Shadow.operative` | `operative(self)` | `:1737` | Proprietà: la salute supera `OPERATIVE_HEALTH_FLOOR`. | molti metodi della run (`_build_forces`, `_schedule_next`, `_on_launch`, `_on_resolve`, `_result`, ...) |
+| S | metodo | `_Shadow.destroyed` | `destroyed(self)` | `:1741` | Proprietà: la salute è sotto la soglia di distruzione di `Damage_Model`. | `_on_resolve`, `_check_activity`, `_designated_destroyed` |
+| S | classe | `_Candidate` | `_Candidate`; campi: t_ready, target_id, t_end, exhausted, t_cpa, distance_cpa, not_before | `:1746` | Un bersaglio rilevato da un tiratore, ingaggiabile in `[t_ready, t_end]`. | `_detect_direction` (costruttore); modificata da `_schedule_next`, `_on_launch` |
+| S | classe | `_ForceState` | `_ForceState`; campi: force_id, side, committed, thresholds, interceptors, outcome, time, triggers, max_shock, force, air, temper, temper_z, morale, enemy_estimate, stationary, loss_shooters, breakpoint, force_ratio, unanswered_fraction, fire, block_id | `:1763` | Stato di una forza nella run: impegnati, dottrina, esito e grandezze della soglia di rottura. | `_build_forces` (costruttore) |
+| S | classe | `_PendingGroup` | `_PendingGroup`; campi: resolve_time, salvos | `:1792` | Salve che atterrano su una forza entro la finestra di salva, da risolvere insieme. | `_on_impact` (costruttore) |
+| run | classe | `_EngagementRun` | `_EngagementRun`; campi: - | `:1939` | Stato e coda eventi di un ingaggio a due o più forze. | `resolve_engagement` (costruttore) |
+| R1 | metodo | `_EngagementRun.__init__` | `__init__(self, forces, contacts, fire_control, rng, legs, committed, thresholds, reaction_profile_for, detection_factor, salvo_window, provenance, breakpoint_rng, morale_for, enemy_estimate_for, fire_doctrine, rwr_catalogue, coordination_of, grounded, activity_criteria, target_rules, dwell_time_for, pass_rng)` | `:1942` | Crea gli stati vuoti, legge una volta `BI_AD_TARGET_RULE` e `VA_ENGAGEMENT_ALTITUDE_BAND`, riceve `dwell_time_for` e `pass_rng`, costruisce forze e domini, inizializza le soglie di rottura e la fine di attività (D81). | `resolve_engagement` (costruttore) |
+| R1 | metodo | `_EngagementRun._build_forces` | `_build_forces(self, forces, committed, thresholds)` | `:2086` | Ombre e `_ForceState` di ogni forza; `False` se meno di due forze hanno asset impegnabili. | `__init__` |
+| R1 | metodo | `_EngagementRun._build_domains` | `_build_domains(self, coordination_of)` | `:2177` | Dominio di coordinamento di ogni forza e intercettori per dominio, in ordine della regola F. | `__init__` |
+| R1 | metodo | `_EngagementRun._same_domain` | `_same_domain(self, force_a, force_b)` | `:2218` | Le due forze sono nello stesso dominio di coordinamento? | `_engaged_shooters`, `_force_shots_on`, `_register_launcher` |
+| R1 | metodo | `_EngagementRun._shadow_of` | `_shadow_of(asset_id, asset, force_id, health)` | `:2222` | Metodo statico: stato ombra dalle scorte dell'asset, con letture difensive. | `_build_forces` |
+| R1 | metodo | `_EngagementRun._interceptors_of` | `_interceptors_of(self, force, force_id)` | `:2249` | Lista `[(ombra, canali)]` degli intercettori della forza, esclusi gli aerei sempre a terra. | `_build_forces` |
+| R1 | metodo | `_EngagementRun._profile` | `_profile(self, shooter_id)` | `:2272` | Profilo di reazione del tiratore, memoizzato. | `_detect_direction`, `_in_time`, `_react_to_hostile`, `_refire_interval`, `_register_launcher` |
+| R2 | metodo | `_EngagementRun._detect` | `_detect(self)` | `:2280` | Una `_detect_direction` per direzione di ogni finestra, in ordine canonico. | `run` |
+| R2 | metodo | `_EngagementRun._detect_direction` | `_detect_direction(self, window, observer, target, own_range, other_range)` | `:2301` | Per direzione di una finestra: legge fattore e dwell, calcola i passaggi nel volume proprio (`_own_passes`); con due o più delega a `_detect_passes`, altrimenti una estrazione (distanza e permanenza del passaggio, FP-3 (a)); se rileva, percezione e candidato (D82, D131). | `_detect` |
+| R2 | metodo | `_EngagementRun._perceive` | `_perceive(self, force_id, asset_id, time)` | `:2386` | Il dominio della forza percepisce l'asset nemico dall'istante `time`. | `_detect_direction`, `_perceive_rwr` |
+| R2 | metodo | `_EngagementRun._perceive_rwr` | `_perceive_rwr(self, aircraft, emitter, time)` | `:2392` | Percezione dell'emettitore da parte dell'RWR dell'aereo, con la classe dell'emettitore (R-CLS). | `_detect_direction`, `_on_launch` |
+| R11 | metodo | `_EngagementRun._air_threat` | `_air_threat(self, state, shadow, time, n_aircraft)` | `:2401` | Peso di un nemico percepito da una forza aerea (R-CLS). | `_perceived_ratio` |
+| R2 | metodo | `_EngagementRun._detection_time` | `_detection_time(self, window, observer_id, target_id, own_range, other_range, radius)` | `:2434` | Istante del rilevamento dentro la finestra (estrazione unica); dentro un passaggio lo dà `_pass_detection_time`. | `_detect_direction` |
+| R2 | metodo | `_EngagementRun._exposure_time` | `_exposure_time(self, window, own_range, other_range)` | `:2462` | Permanenza D-5 [s] nel **ripiego senza tratti** (chiamate dirette senza `legs`): tutta la finestra se la portata propria è la maggiore, altrimenti l'intervallo reciproco, altrimenti 0. Con i tratti la permanenza è quella del passaggio (`_detect_direction`, `_detect_passes`; mai la somma, FP-6). Nessuna estrazione. | `_detect_direction` |
+| R2 | metodo | `_EngagementRun._own_intervals` | `_own_intervals(self, observer_id, target_id, own_range, radius)` | `:2476` | Intervalli in cui il bersaglio è nella sfera di raggio `own_range` (o `radius`, il raggio estratto) centrata sull'osservatore, da `range_intervals` sui tratti; `None` senza i tratti di entrambi. **Unico punto di chiamata del volume proprio** (decisione VA-6 (a)). | `_detection_time`, `_own_passes`, `_pass_detection_time` |
+| R2 | metodo | `_EngagementRun._dwell_of` | `_dwell_of(self, window, observer, target)` | `:2493` | Periodo di rivisita [s] del sensore dell'osservatore contro il bersaglio (D-5): `None` senza lettore (`dwell_time_for`) o senza dato; il modo è quello del bersaglio (a terra: `GROUNDED_DETECTION_MODE`). Nessuna estrazione. | `_detect_direction` |
+| R2 | metodo | `_EngagementRun._own_passes` | `_own_passes(self, window, observer_id, target_id, own_range, dwell)` | `:2504` | Passaggi `(lo, hi, start, end)` del bersaglio nel volume proprio dentro la finestra, uniti se separati da un'uscita ≤ dwell (FP-10, `_join_passes`); `None` senza i tratti (ripiego). | `_detect_direction` |
+| R2 | metodo | `_EngagementRun._pass_cpa` | `_pass_cpa(self, window, observer_id, target_id, lo, hi)` | `:2528` | `(t_cpa, distanza)` del massimo avvicinamento dentro il passaggio `[lo, hi]` (FP-4), con `clamp_legs` e `closest_point_of_approach`; ripiego il CPA della finestra, con un `logger.debug`. | `_detect_passes` |
+| R2 | metodo | `_EngagementRun._pass_detection_time` | `_pass_detection_time(self, observer_id, target_id, own_range, lo, hi, radius, t_cpa)` | `:2540` | Istante del rilevamento dentro il passaggio: primo istante con la distanza sotto il raggio estratto; ripiego il CPA del passaggio. | `_detect_passes` |
+| R2 | metodo | `_EngagementRun._detect_passes` | `_detect_passes(self, window, observer, target, own_range, factor, dwell, passes)` | `:2550` | Una estrazione per passaggio (due o più passaggi): il primo da `rng`, gli altri da `pass_rng`; `ValueError` se `pass_rng` manca; CPA, permanenza D-5 e candidato fino alla fine del proprio passaggio, una `Detection` per passaggio (D133). | `_detect_direction` |
+| R3 | metodo | `_EngagementRun._push` | `_push(self, time, kind, key, payload)` | `:2608` | Accoda un evento `(time, kind, key, sequence, payload)`. | `_on_impact`, `_on_launch`, `_react_to_hostile`, `_register_launcher`, `_schedule_next`, `_schedule_phase_wakes`, `_wait`, `_wake_after_destruction` |
+| R3 | metodo | `_EngagementRun._draw` | `_draw(self, rng)` | `:2612` | Una estrazione dallo stream indicato (default l'`rng` di sessione; `pass_rng` per i passaggi dal secondo in poi), validata in `[0, 1)`. | `_detect_direction`, `_detect_passes`, `_on_resolve` |
+| R3 | metodo | `_EngagementRun._touch` | `_touch(self, time)` | `:2620` | Aggiorna `t_end` al massimo istante visto. | `_on_launch`, `_on_resolve` |
+| R12 | metodo | `_EngagementRun._activity_end_time` | `_activity_end_time(self, asset_id)` | `:2625` | Istante dal quale l'asset non lancia più, `None` se nessuno. | `_on_launch`, `_schedule_next` |
+| R12 | metodo | `_EngagementRun._targets_destroyed_at` | `_targets_destroyed_at(self, criteria)` | `:2639` | Istante in cui tutti i bersagli del criterio sono distrutti, `None` se qualcuno no. | `_check_activity` |
+| R12 | metodo | `_EngagementRun._check_activity` | `_check_activity(self, time, targets_only)` | `:2655` | Verifica i criteri di fine di attività (danno, winchester, bersagli distrutti) e registra quelli scattati. | `__init__`, `_on_launch`, `_on_resolve` |
+| R12 | metodo | `_EngagementRun._end_activity` | `_end_activity(self, time, asset_id, reason)` | `:2691` | Registra la fine di attività e annulla il lancio programmato se è già in vigore. | `_check_activity` |
+| R5 | metodo | `_EngagementRun._engaged_shooters` | `_engaged_shooters(self, target_id, force_id, exclude)` | `:2706` | Quanti altri tiratori del dominio sono impegnati ora su `target_id`. | `_schedule_next` |
+| R4 | metodo | `_EngagementRun._schedule_next` | `_schedule_next(self, shooter_id, t_earliest)` | `:2727` | Decide il prossimo lancio del tiratore e lo accoda con payload congelato (D83). | `run`, `_on_decide`, `_on_launch`, `_on_wake` |
+| R5 | metodo | `_EngagementRun._force_shots_on` | `_force_shots_on(self, target_id, force_id)` | `:2929` | Generatore delle salve del dominio dirette a `target_id`: in volo o schedulate. | `_coverage`, `_wait` |
+| R5 | metodo | `_EngagementRun._coverage` | `_coverage(self, target_id, force_id)` | `:2949` | Probabilità che le salve già dirette dal dominio distruggano il bersaglio. | `_blocked` |
+| R5 | metodo | `_EngagementRun._rounds_in_flight` | `_rounds_in_flight(self, shooter_id, target_id)` | `:2962` | Colpi in volo del tiratore contro il bersaglio. | `_blocked` |
+| R5 | metodo | `_EngagementRun._blocked` | `_blocked(self, shooter, target_id, exempt_from_saturation)` | `:2966` | Il tiratore non deve aggiungere salve (tetto o saturazione). | `_schedule_next` |
+| R5 | metodo | `_EngagementRun._wait` | `_wait(self, shooter, pool, t_earliest)` | `:2981` | Tutti i bersagli bloccati: ridecisione al primo impatto previsto. | `_schedule_next` |
+| R4 | metodo | `_EngagementRun._gone` | `_gone(self, target)` | `:3003` | Il bersaglio non è raggiungibile perché la sua forza ha rotto il contatto (salvo aerei a terra). | `_on_launch`, `_schedule_next` |
+| R2 | metodo | `_EngagementRun._grounded_in` | `_grounded_in(self, asset_id, window)` | `:3012` | L'asset è a terra nella finestra (stato al punto medio). | `_detect_direction` |
+| R7 | metodo | `_EngagementRun._is_designated` | `_is_designated(self, rules, target, time)` | `:3021` | Il bersaglio è designato dalla missione del tiratore a `time` (id o area). | `_designated_first`, `_fire_control`, `_is_deferred` |
+| R7 | metodo | `_EngagementRun._is_hostile` | `_is_hostile(self, shooter, target_id)` | `:3038` | Il bersaglio ha già lanciato contro il dominio del tiratore (`return_fire`). | `_fire_control`, `_is_deferred` |
+| R7 | metodo | `_EngagementRun._attack_pass_time` | `_attack_pass_time(self, shooter_id, rules)` | `:3044` | Istante in cui il tiratore ha raggiunto e superato il punto ATTACK, `None`; memoizzato. | `_attack_over`, `_schedule_phase_wakes` |
+| R7 | metodo | `_EngagementRun._designated_destroyed` | `_designated_destroyed(self, rules)` | `:3071` | Tutti i bersagli designati per id sono distrutti. | `_attack_over`, `_wake_after_destruction` |
+| R7 | metodo | `_EngagementRun._attack_over` | `_attack_over(self, shooter_id, rules, time)` | `:3084` | Fine dell'attacco di `priority_designated` a `time`. | `_fire_control`, `_is_deferred` |
+| R7 | metodo | `_EngagementRun._is_deferred` | `_is_deferred(self, shooter, target, time)` | `:3093` | La regola di bersaglio esclude il bersaglio ora per una ragione che dipende dal tempo. | `_schedule_next` |
+| R7 | metodo | `_EngagementRun._designated_first` | `_designated_first(self, shooter, viable)` | `:3108` | I candidati designati e a portata, solo con ROE `priority_designated`. | `_schedule_next` |
+| R7 | metodo | `_EngagementRun._react_to_hostile` | `_react_to_hostile(self, time, launcher, target_force_id)` | `:3122` | Riesamina dopo il `refire_interval` i tiratori `return_fire` del dominio che hanno il nuovo ostile fra i candidati. | `_on_launch` |
+| R7 | metodo | `_EngagementRun._schedule_phase_wakes` | `_schedule_phase_wakes(self)` | `:3146` | Risveglio dei tiratori `priority_designated` al passaggio sul punto ATTACK. | `run` |
+| R7 | metodo | `_EngagementRun._wake_after_destruction` | `_wake_after_destruction(self, time)` | `:3160` | Dopo una risoluzione, risveglia una volta i tiratori il cui designato è distrutto. | `_on_resolve` |
+| R7 | metodo | `_EngagementRun._on_wake` | `_on_wake(self, time, shooter_id)` | `:3171` | Riesame di un tiratore dopo un cambio di fase o un nuovo ostile. | `run` |
+| R4 | metodo | `_EngagementRun._fire_control` | `_fire_control(self, shooter, target, time, altitudes)` | `:3182` | La fire control sulla coppia (con le quote all'istante se `altitudes`), ristretta dalle regole di bersaglio del tiratore. | `_altitude_deferral`, `_in_range_at`, `_schedule_next` |
+| R4 | metodo | `_EngagementRun._call_fire_control` | `_call_fire_control(self, shooter, target, time, altitudes)` | `:3197` | Chiama la fire control iniettata, con le estensioni `target_grounded` per un aereo a terra (F4c) e `altitudes` (VA; `(None, None)` = quote ignote). | `_fire_control` |
+| R6 | metodo | `_EngagementRun._is_launcher_against` | `_is_launcher_against(self, asset_id, force_id)` | `:3249` | L'asset ha lanciato armi aria-superficie contro il dominio della forza (L2). | `_register_launcher`, `_schedule_next` |
+| R6 | metodo | `_EngagementRun._in_range_at` | `_in_range_at(self, shooter, index, candidate, t_fire)` | `:3253` | Il candidato è ingaggiabile (arma con scorta, entro portata e fascia) a `t_fire`, senza effetti sul candidato; un rinvio VA-2.1 non è «a portata adesso». | `_designated_first`, `_register_launcher`, `_schedule_next` |
+| R6 | metodo | `_EngagementRun._register_launcher` | `_register_launcher(self, time, launcher, target_force_id)` | `:3277` | Primo lancio aria-superficie di un aereo contro una forza: i difensori ridecidono dopo il `refire_interval` (L3). | `_on_launch` |
+| R6 | metodo | `_EngagementRun._on_decide` | `_on_decide(self, time, shooter_id, generation)` | `:3329` | Fine della valutazione dopo una prelazione: nuova decisione con lo stato attuale. | `run` |
+| R4 | metodo | `_EngagementRun._options` | `_options(result)` | `:3338` | Metodo statico: le opzioni di una risposta della fire control (`None`, una `ShotSpec` o una sequenza). | `_first_with_stock`, `apply_target_rules` |
+| R4 | metodo | `_EngagementRun._first_with_stock` | `_first_with_stock(self, shooter, result)` | `:3356` | `(ShotSpec, colpi)` della prima opzione con scorta per almeno un colpo, o `None`. | `_in_range_at`, `_schedule_next` |
+| R4 | metodo | `_EngagementRun._range_entry` | `_range_entry(self, shooter_id, candidate, max_range, t_from, band)` | `:3375` | Primo istante con il bersaglio entro la portata (con VA e `band`: sfera ∩ fascia), o `None`; memoizzato. | `_in_range_at`, `_schedule_next` |
+| R4 | metodo | `_EngagementRun._band_of` | `_band_of(self, spec)` | `:3419` | La fascia/tetto `(min_altitude, max_altitude, max_target_z)` della `ShotSpec`; `None` a VA spenta o con i tre campi `None`. | `_altitude_deferral`, `_in_range_at`, `_schedule_next` |
+| R4 | metodo | `_EngagementRun._altitudes_at` | `_altitudes_at(self, shooter_id, target_id, time)` | `:3429` | `(z_tiratore, z_bersaglio)` all'istante dato, dai tratti; `None` a VA spenta, se la fire control non dichiara `altitudes` o senza tratti (VA-2 (d)). | `_altitude_deferral`, `_call_fire_control` |
+| R4 | metodo | `_EngagementRun._altitude_deferral` | `_altitude_deferral(self, shooter, candidate, t_fire)` | `:3460` | Rinvio della decisione fuori fascia (VA-2.1): `(istante, None)` col primo ingresso in sfera ∩ fascia, `(None, (spec, colpi))` se l'ingresso è già a `t_fire`, `(None, None)` se nessuna arma entrerà (D132). | `_in_range_at`, `_schedule_next` |
+| R4 | metodo | `_EngagementRun._refire_interval` | `_refire_interval(self, shooter_id, spec)` | `:3513` | Intervallo fra due salve: `cycle_time` della `ShotSpec` o `refire_interval` del profilo. | `_on_launch` |
+| R8 | metodo | `_EngagementRun._on_launch` | `_on_launch(self, time, shooter_id, payload)` | `:3516` | Esegue un lancio programmato: consumo, `Salvo`, evento d'impatto, reazioni (D84). | `run` |
+| R8 | metodo | `_EngagementRun._on_impact` | `_on_impact(self, time, force_id, salvo)` | `:3611` | Raggruppa le salve che atterrano sulla forza entro la finestra e accoda la risoluzione. | `run` |
+| R9 | metodo | `_EngagementRun._position_at` | `_position_at(self, shadow, t)` | `:3621` | Posizione `(x, y, z)` a `t`, dai tratti di rotta o dalla posizione dell'asset; `None` se ignota. | `_is_designated`, `_may_intercept`, `_round_track_time` |
+| R9 | metodo | `_EngagementRun._interception_zone` | `_interception_zone(self, shadow)` | `:3636` | Zona d'intercettazione V_I come (raggio, quota base, quota tetto) relativi; memoizzata. | `_may_intercept` |
+| R9 | metodo | `_EngagementRun._ad_domain` | `_ad_domain(self, shadow)` | `:3656` | Dominio di difesa aerea dell'intercettore (BI-5): `naval` per una nave (`Ship`), altrimenti `land`; memoizzato in `ad_domain_cache`. | `_admissible` |
+| R9 | metodo | `_EngagementRun._admissible` | `_admissible(self, shadow, salvo)` | `:3663` | Filtro BI: vero se `BI_AD_TARGET_RULE` è spento o la `ShotSpec` non dichiara i domini; altrimenti solo se il dominio dell'intercettore è fra gli `intercept_domains` della salva. Nessuna estrazione. | `_on_resolve` |
+| R9 | metodo | `_EngagementRun._may_intercept` | `_may_intercept(self, shadow, salvo)` | `:3671` | Regola L1: il punto di lancio della salva è fuori dal V_I dell'intercettore. | `_on_resolve` |
+| R9 | metodo | `_EngagementRun._detection_time_of` | `_detection_time_of(self, observer_id, target_id, at)` | `:3696` | R-INT, FP-5 (d): il rilevamento dell'osservatore **nel passaggio che contiene `at`** (il lancio), `None` se non visto; senza tratti l'ultimo rilevamento in lista. | `_in_time` |
+| R9 | metodo | `_EngagementRun._air_detection_range` | `_air_detection_range(self, shadow)` | `:3721` | Raggio di rilevamento aereo dell'intercettore [m]; memoizzato. | `_round_track_time` |
+| R9 | metodo | `_EngagementRun._round_track_time` | `_round_track_time(self, shadow, salvo)` | `:3738` | Istante in cui l'intercettore scopre dalla geometria un colpo di cui non ha visto il lancio. | `_in_time` |
+| R9 | metodo | `_EngagementRun._in_time` | `_in_time(self, shadow, salvo)` | `:3776` | Regola R-INT: l'intercettore ha traccia e tempo di reagire prima dell'impatto; il lancio è «osservato» solo con un rilevamento nel passaggio che lo contiene (FP-5 (d)). | `_on_resolve` |
+| R10 | metodo | `_EngagementRun._on_resolve` | `_on_resolve(self, time, force_id)` | `:3803` | Risolve un evento-salva: intercettazione, danno per colpo, dottrina (D85). | `run` |
+| R11 | metodo | `_EngagementRun._check_doctrine` | `_check_doctrine(self, time, state, shock, erosion, operative_left, salvo_losses, withdrawable)` | `:3980` | Confronta le perdite con la dottrina del lato per la forza intera. | `_on_resolve` |
+| R1 | metodo | `_EngagementRun._init_breakpoints` | `_init_breakpoints(self)` | `:4031` | Tempra, morale, stima a priori e postura di ogni forza con dottrina. | `__init__` |
+| R11 | metodo | `_EngagementRun._morale_of` | `_morale_of(self, state)` | `:4068` | Morale della forza in `[0, 1]`, `None` se ignoto o fuori intervallo. | `_init_breakpoints` |
+| R11 | metodo | `_EngagementRun._enemy_estimate_of` | `_enemy_estimate_of(self, state)` | `:4084` | Stima a priori della forza nemica, `None` se ignota o non valida. | `_init_breakpoints` |
+| R11 | metodo | `_EngagementRun._stationary` | `_stationary(self, state)` | `:4100` | `True` se tutti gli asset con tratti sono fermi, `None` se nessuno ne ha. | `_init_breakpoints` |
+| R11 | metodo | `_EngagementRun._is_enemy` | `_is_enemy(self, state, shadow)` | `:4118` | L'ombra è un nemico della forza (lato diverso o lato ignoto). | `_perceived_ratio` |
+| R11 | metodo | `_EngagementRun._perceived_ratio` | `_perceived_ratio(self, time, state)` | `:4126` | Rapporto di forze percepito rho, `None` se non definito. | `_breakpoint` |
+| R11 | metodo | `_EngagementRun._surface_weight` | `_surface_weight(self, shadow)` | `:4171` | Peso di minaccia di un asset di superficie, memoizzato. | `_perceived_ratio` |
+| R11 | metodo | `_EngagementRun._unanswered_fraction` | `_unanswered_fraction(self, state)` | `:4180` | Quota delle perdite causate da tiratori non rilevati dal dominio. | `_breakpoint` |
+| R11 | metodo | `_EngagementRun._breakpoint` | `_breakpoint(self, time, state)` | `:4191` | Soglia di rottura B(t) = logistica della mediana modulata, con la tempra della forza. | `_check_doctrine` |
+| R3 | metodo | `_EngagementRun.run` | `run(self)` | `:4238` | Ciclo principale: rilevamento, prime decisioni, svuotamento della coda con dispatch per tipo. | `resolve_engagement` |
+| R3 | metodo | `_EngagementRun._result` | `_result(self)` | `:4263` | Costruisce `ForceOutcome` ed `EngagementResult` dalle liste di esito. | `run` |
+| B | funzione | `_id_set` | `_id_set(label, value)` | `:948` | `frozenset` di id (stringhe non vuote) da un iterabile. | `TargetRules.__post_init__` |
+| B | funzione | `rules_defer` | `rules_defer(rules, designated, hostile, air_target, after_attack)` | `:1032` | Funzione pura: la regola esclude il bersaglio per una ragione che dipende dal tempo. | `_is_deferred`, `apply_target_rules` |
+| B | funzione | `apply_target_rules` | `apply_target_rules(rules, result, designated, hostile, air_target, after_attack)` | `:1045` | Funzione pura: la risposta della fire control ristretta dalle regole di un tiratore. | `_fire_control` |
+| P | funzione | `_check_factor` | `_check_factor(factor)` | `:1191` | Valida un fattore di rilevamento in `[0, 1]`. | `_detect_direction`, `detection_probability`, `detection_radius`, `recon_detection_factor_fn`, `recon_unseen_factor` |
+| P | funzione | `_check_dwell` | `_check_dwell(value)` | `:1201` | Periodo di rivisita validato (D-5): `None` o 0 → `None`; `TypeError`/`ValueError` per valori non validi. | `dwell_factor`, `_dwell_of` |
+| P | funzione | `detection_probability` | `detection_probability(distance, sensor_range, factor)` | `:1215` | Pd di un sensore contro un bersaglio a `distance`: legge di quarta potenza, stima dichiarata. | `_detect_direction`; `ARM` (import locale, `Air_Route_Manager.py:1103`) |
+| P | funzione | `detection_radius` | `detection_radius(draw, sensor_range, factor)` | `:1245` | Inversa di `detection_probability`: raggio al quale l'estrazione produce il rilevamento. | `_detect_direction` |
+| P | funzione | `dwell_factor` | `dwell_factor(exposure_s, dwell_time_s)` | `:1277` | Fattore di permanenza D-5 `min(1, permanenza / dwell)` (1.0 senza dwell); scelta di progetto [S], nessuna costante. | `_detect_direction`, `_detect_passes`; `ARM:Path.compute_detection_metrics` (fuori dal core) |
+| P | funzione | `registry_dwell_time` | `registry_dwell_time(observer, target, mode)` | `:1302` | Lettore di default del dwell: `observer.detection_dwell_time(mode)`; `None` senza modo o senza il metodo. | passata come valore da `SS:engage` (`:2793`, solo con `D5_DWELL_TIME` acceso) e chiamata come `dwell_time_for` da `_dwell_of` |
+| P | funzione | `_join_passes` | `_join_passes(intervals, max_gap)` | `:1319` | Unione FP-10: gli intervalli separati da un'uscita ≤ `max_gap` (+ `TIME_EPS`) diventano un passaggio; `None` = nessuna unione. | `_own_passes` |
+| P | funzione | `_detection_time_in_pass` | `_detection_time_in_pass(passes, times, at)` | `:1344` | R-INT con i passaggi (FP-5 (d)): primo rilevamento dentro il primo passaggio che contiene `at`; `None` altrimenti. | `_detection_time_of` |
+| F | funzione | `weather_detection_factor` | `weather_detection_factor(conditions)` | `:1365` | Fattore di degradazione della Pd da notte e meteo avverso. | `weather_detection_factor_fn` |
+| F | funzione | `weather_detection_factor_fn` | `weather_detection_factor_fn(conditions)` | `:1415` | La callable `(observer, target) -> float` per le condizioni meteo date. | `meteo_detection_factor` |
+| F | funzione | `meteo_detection_factor` | `meteo_detection_factor(region_name, date, time)` | `:1432` | Come la precedente, leggendo le condizioni da `Meteo_Analysis`. | nessun chiamante nel core (v. D78) |
+| F | funzione | `_block_attribute` | `_block_attribute(asset, name)` | `:1456` | `asset.block.<name>`, `None` se l'asset non ha blocco o il blocco non ha l'attributo. | `recon_detection_factor_fn` (funzione interna `detection_factor`, `:1238`, `:1241`, `:1244`) |
+| F | funzione | `_check_side` | `_check_side(side)` | `:1462` | Valida un lato fra `Blue`, `Red`, `Neutral`. | `recon_detection_factor_fn`, `region_recon_detection_factor` |
+| F | funzione | `recon_detection_factor_fn` | `recon_detection_factor_fn(seen_block_ids, observer_side, unseen_factor, seen_factor)` | `:1469` | La callable della nebbia di guerra di un lato, dall'istantanea dei blocchi visti. | `region_recon_detection_factor` |
+| F | funzione | `combine_detection_factors` | `combine_detection_factors(*fns)` | `:1509` | Una sola callable dal prodotto di più fattori. | nessun chiamante nel core (v. D78) |
+| F | funzione | `recon_unseen_factor` | `recon_unseen_factor(recon_efficiency, unseen_factor, seen_factor, relief)` | `:1546` | Fattore dei bersagli non visti, modulato dall'efficienza di ricognizione. | `region_recon_detection_factor` |
+| F | funzione | `side_recon_efficiency` | `side_recon_efficiency(region, side)` | `:1578` | Efficienza di ricognizione di un lato in una regione: il massimo fra le sue `Military`. | `region_recon_detection_factor` |
+| F | funzione | `region_recon_detection_factor` | `region_recon_detection_factor(region, observer_side, unseen_factor, seen_factor, relief)` | `:1619` | `recon_detection_factor_fn` per un lato, dall'istantanea di ricognizione della regione. | nessun chiamante nel core (v. D78) |
+| S | funzione | `_domain_id` | `_domain_id(obj)` | `:1797` | Identificativo di dominio di un asset o di una forza (`id`, poi `name`). | `_build_forces`, `_interceptors_of`, `apply_engagement_result` |
+| S | funzione | `_can_disengage` | `_can_disengage(force)` | `:1808` | La forza ha diritto a una politica di disingaggio (`Military` sì, `Block` non militare no). | `_build_forces` |
+| G | funzione | `accepts_keyword` | `accepts_keyword(fire_control, name)` | `:1839` | Vera se la fire control accetta la keyword data (o `**kwargs`); firma non leggibile → falso. | `accepts_target_grounded`, `accepts_altitudes` |
+| G | funzione | `accepts_target_grounded` | `accepts_target_grounded(fire_control)` | `:1861` | La fire control accetta la keyword `target_grounded` (o `**kwargs`), per introspezione della firma. | `_call_fire_control`; `FCO:restrict_by_policy` |
+| G | funzione | `accepts_altitudes` | `accepts_altitudes(fire_control)` | `:1866` | La fire control accetta la keyword `altitudes` (VA), per introspezione della firma. | `_altitudes_at`; `FCO:restrict_by_policy` |
+| G | funzione | `engagement_intervals` | `engagement_intervals(legs_shooter, legs_target, max_range, band)` | `:1885` | Intervalli in cui il bersaglio è nel volume d'ingaggio: sfera di raggio `max_range` (`range_intervals`); con `band` (VA) intersecata con la fascia di quota (`altitude_intervals`, `intersect_intervals`). | `_range_entry` (via `self.engagement_intervals`, assegnato in `__init__`) |
+| G | funzione | `engagement_intervals_without_legs` | `engagement_intervals_without_legs(t_cpa, distance_cpa, t_end, max_range)` | `:1918` | Ripiego senza tratti di rotta: dal solo CPA. | `_range_entry` |
+| A | funzione | `resolve_engagement` | `resolve_engagement(force_a, force_b, contacts, fire_control, rng, extra_forces, legs, committed, thresholds, reaction_profile_for, detection_factor, salvo_window, provenance, breakpoint_rng, morale_for, enemy_estimate_for, fire_doctrine, rwr_catalogue, coordination_of, grounded, activity_criteria, target_rules, dwell_time_for, pass_rng)` | `:4294` | Risolve un ingaggio fra due o più forze in un'unica timeline, senza mutare asset (D81). | `SS:run_session` (funzione interna `engage`, `:2800`) |
+| A | funzione | `_call_with_weapon` | `_call_with_weapon(consume, amount, weapon)` | `:4476` | `consume(amount, weapon=weapon)`, o la chiamata storica `consume(amount)` senza arma. | `apply_engagement_result` |
+| A | funzione | `apply_engagement_result` | `apply_engagement_result(result, *forces)` | `:4488` | Applica danni e consumi di un esito agli asset reali e ritorna un riepilogo (D86). | `SS:run_session` (funzioni interne `engage` `:2790`, `fire_area` `:2486`) |
 
 ### Limiti e domande
 
@@ -1457,3 +1568,9 @@ eventualmente citato in questo file (cercati per nome del file: nessuno oltre ai
 
 **Nota 2026-11-05 (dopo `efa8f353`, blocco C della D-4b: siti EWR fissi).** Il blocco C tocca solo `Asset/Vehicle_Data.py` (sette record e un marcatore), `Logic/Air_Route_Manager.py` (un commento, +1 riga) e i test (`git diff 6dee967b efa8f353 -- Code`): **nessun modulo del core** di questa parte cambia, i `:riga` a `Contact_Scheduler`, `Fire_Control` ed `Engagement_Resolver` restano validi e **nessun diagramma cambia**
 (D70 compreso: lo scheduler legge le portate dei sette siti con la stessa chiamata `detection_range(mode, range_type)`, capitolo 3 §3.5). Il riferimento a `Logic/Air_Route_Manager.py` (import locale di `detection_probability`) era `:1099` dopo il 2026-11-04 e **ora è `:1103`** (+4: +3 per il commit `ed8d0fa3`, solo commenti e docstring, +1 per `efa8f353`, solo commento); aggiornato nei tre punti in cui compare.
+
+**Nota 2026-11-13 (D-5, BI, VA, FP: il risolutore, la fire control e lo scheduler cambiano).** Da `f009eb43` (con la BI aggiunta il 2026-11-10) a `a389cadb` cambiano tre moduli di questa parte, **in contrasto con le note del 2026-11-04 e 2026-11-05 qui sopra, che restano vere alla loro data**: `Engagement_Resolver.py` (+697 righe, 3872 → 4569: D-5, VA, FP, più la BI già riportata), `Fire_Control.py` (+129, 1088 → 1217: BI e VA) e `Contact_Scheduler.py` (+84, 1578 → 1662: due primitive della VA).
+Le **tabelle di fondo dei tre moduli sono rigenerate** con `inventario.py --tabella` (righe di `a389cadb`: 146, 36 e 63 righe; 17 simboli nuovi nel risolutore, 2 nello scheduler, nessuno nella fire control dopo la BI); i «Che cosa fa» e i «Chiamata da» dei 19 simboli nuovi sono scritti sul codice (i chiamanti con un'estrazione `ast` dei nomi chiamati, per i moduli del core letti; `ARM` = `Air_Route_Manager`, fuori dal core, usa `dwell_factor`).
+**Diagrammi toccati**: D82 riscritto, D133 nuovo, D76/D77/D79/D83/D68 aggiornati nei nodi; **non toccati** D78, D80, D81, D84-D87, D67, D69-D75: i loro `:riga` nel testo restano a f009eb43 (sfasati). **Costanti**: nessuna costante FP (l'interruttore `FP_PER_PASS_DETECTION` è stato eliminato il 2026-11-13); `D5_DWELL_TIME`, `BI_AD_TARGET_RULE`, `VA_ENGAGEMENT_ALTITUDE_BAND` sono in §10A.4.
+- **`registry_dwell_time` non è chiamata da nessuno nel core**: `Session_Simulator.engage` la passa **come valore** (`extra['dwell_time_for'] = ER.registry_dwell_time`, `:2793`) solo con `D5_DWELL_TIME` acceso, e la chiama il risolutore dietro il nome `dwell_time_for` (`_dwell_of`, `:2493`). Il «Chiamata da» della tabella lo dice così.
+- **Differenza fra conteggi**: il testo di §10A.4 dava 127 simboli a `f009eb43` mentre la tabella ne aveva 129 (la BI ne aggiunge due: `_ad_domain`, `_admissible`); ora il testo e la tabella dicono 146.

@@ -42,6 +42,10 @@ dell'atlante non è stata verificata dallo strumento ma con il confronto `git di
 (`git diff 6dee967b HEAD -- Code/` non compare per `Contact_Scheduler`, `Engagement_Resolver`, `Fire_Control`, `Fuel_Model`, `Mission_Adapter` né `Session_Simulator`) e **nessun diagramma cambia**. Unica correzione di riga: il riferimento a `Air_Route_Manager.py` di `11a_Atlante_Risolutore.md` (import locale di `detection_probability`) passa da `:1099` a **`:1103`**, nei tre punti in cui compare. Capitolo 3 §3.5, capitolo 7 §7.12, capitolo 8 §8.13 e capitolo 9 §9.1 descrivono il blocco.
 **Non rieseguito** `_strumenti/inventario.py` per questo aggiornamento (nessun blocco Mermaid né identificatore del core è stato toccato).
 
+**Nota 2026-11-13 (D-5, BI, VA, FP; codice `a389cadb`).** Quattro dei moduli del core cambiano: `Engagement_Resolver` (3872 → 4569 righe), `Fire_Control` (1088 → 1217), `Contact_Scheduler` (1578 → 1662, un'unica inserzione di 84 righe dopo `_merge_intervals`) e `Session_Simulator` (3163 → 3198, quattro inserzioni: docstring, `PASS_EVENT_TAG`, `pass_event_id`, due righe in `engage`). **Diagrammi**: **cinque nuovi** (**D130** flusso dall'arma ai domini di difesa aerea,
+**D131** flusso di `_detect_direction`, **D132** fascia di quota in `_schedule_next`, **D134** R-INT con i passaggi: quattro L4 nel capitolo 4; **D133** sequenza di `_detect_passes`: L3 in `11a`), più il **D82 riscritto** (la sequenza di `_detect_direction`) e i nodi aggiornati di D4, D68, D76, D77, D79, D83, D126; l'Elenco passa a **D1-D134** (D88 e D89 non usati). Il numero **D130** è assegnato al diagramma che nel capitolo 4 §4.24 era «non numerato nell'atlante». **Righe**: la tabella di §10.4 e
+la tabella di §10.5.1 (`Session_Simulator`) sono aggiornate (righe a `a389cadb`: per `Session_Simulator` l'offset è +11 da 730, +14 da 794, +26 da 1030, +35 da 2765; verificato su ogni riga della tabella con `def`); i `:riga` delle sequenze 10.6.1-10.6.3 sono stati spostati con lo stesso offset (97 riferimenti, controllo a campione); **non** ricalcolati i riferimenti ai moduli non toccati. **Controllo con `_strumenti/inventario.py --controlla`** (rieseguito il 2026-11-13 su `05`, `07`, `11` e `11a`, prima e dopo, ignorando i numeri di riga): nessun identificatore nuovo non trovato nel core, salvo parole non-codice (`None`, `t_traccia`, `t_impatto`).
+
 ## 10.2 Tabella-atlante
 
 I link portano al capitolo che contiene il diagramma; il titolo di ogni D1-D56 è quello dell'«Elenco dei diagrammi» di `Manuale_Motore_DES.md`.
@@ -103,7 +107,7 @@ le eccezioni sono segnate (D1 → L1; D8 → L3; D29, D55, D56 fuori scala; `sta
 
 | Tipo                  | Diagrammi (capitolo)                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `flowchart` di regola | D10, D12, D13, D22, D23, D24, D26, D27, D32, D33, D34, D37, D43, D46 ([4](05_Strato2_Risolutore_Ingaggio.md)); D38 ([5](06_Strato3_Applicazione_Stato.md)); D19, D20, D21, D31, D35, D36, D42, D48, D49, D52, D53 ([6](07_Orchestratore_Session_Simulator.md)); D15 ([7](08_Supporto_Trasversale.md), pianificatore d'attacco: **satellite**, fuori dal perimetro del core); D18 ([2](03_Strato0_Contratto_Porte.md), i due assi postura/tipo di missione: è un diagramma di concetto) |
+| `flowchart` di regola | D10, D12, D13, D22, D23, D24, D26, D27, **D130, D131, D132, D134** (nuovi 2026-11-13), D32, D33, D34, D37, D43, D46 ([4](05_Strato2_Risolutore_Ingaggio.md)); D38 ([5](06_Strato3_Applicazione_Stato.md)); D19, D20, D21, D31, D35, D36, D42, D48, D49, D52, D53 ([6](07_Orchestratore_Session_Simulator.md)); D15 ([7](08_Supporto_Trasversale.md), pianificatore d'attacco: **satellite**, fuori dal perimetro del core); D18 ([2](03_Strato0_Contratto_Porte.md), i due assi postura/tipo di missione: è un diagramma di concetto) |
 | `stateDiagram-v2`     | D6 ([4](05_Strato2_Risolutore_Ingaggio.md)); D7 ([5](06_Strato3_Applicazione_Stato.md)); D41 ([6](07_Orchestratore_Session_Simulator.md)); D44 ([4](05_Strato2_Risolutore_Ingaggio.md))                                                                                                                                                                                                                                                                                                |
 
 **Fuori scala** (non descrivono il motore): D29 (fasi del piano F0-F9, [9](10_Limiti_Estensioni_Divergenze.md)), D55 e D56 (sequenze degli scenari S30, [8](09_Validazione.md)).
@@ -189,11 +193,12 @@ Il pilota copriva due moduli. Le tre parti seguenti estendono i livelli L2 e L3 
 | D74 | L'involucro `restrict_by_policy`: dalla politica d'armi alla chiamata nel risolutore | `sequenceDiagram` | `Fire_Control` | [10A.3](11a_Atlante_Risolutore.md) |
 | D75 | L'arma per il fuoco su posizione: `area_fire_weapon` e `area_fire_pk` | `sequenceDiagram` | `Fire_Control` | [10A.3](11a_Atlante_Risolutore.md) |
 | D81 | `resolve_engagement`: validazione, costruzione della run e ciclo principale | `sequenceDiagram` | `Engagement_Resolver` | [10A.4](11a_Atlante_Risolutore.md) |
-| D82 | `_detect_direction`: una estrazione di rilevamento | `sequenceDiagram` | `Engagement_Resolver` | [10A.4](11a_Atlante_Risolutore.md) |
+| D82 | `_detect_direction`: dai passaggi nel volume proprio all'estrazione e al candidato (**riscritto 2026-11-13**) | `sequenceDiagram` | `Engagement_Resolver` | [10A.4](11a_Atlante_Risolutore.md) |
 | D83 | `_schedule_next`: l'ordine delle chiamate della scelta del tiro | `sequenceDiagram` | `Engagement_Resolver` | [10A.4](11a_Atlante_Risolutore.md) |
 | D84 | `_on_launch`: dal lancio alla salva in volo | `sequenceDiagram` | `Engagement_Resolver` | [10A.4](11a_Atlante_Risolutore.md) |
 | D85 | `_on_resolve`: intercettazione, danno per colpo e dottrina | `sequenceDiagram` | `Engagement_Resolver` | [10A.4](11a_Atlante_Risolutore.md) |
 | D86 | `apply_engagement_result`: danni e consumi sugli asset reali | `sequenceDiagram` | `Engagement_Resolver` | [10A.4](11a_Atlante_Risolutore.md) |
+| D133 (nuovo 2026-11-13) | `_detect_passes`: un'estrazione per passaggio, permanenza D-5, CPA e candidato per passaggio | `sequenceDiagram` | `Engagement_Resolver` | [10A.4](11a_Atlante_Risolutore.md) |
 | D95 | `Mission.__post_init__`: l'ordine delle validazioni alla costruzione | `sequenceDiagram` | `Mission_Types` | [10B.2](11b_Atlante_Missione_Carburante.md) |
 | D96 | Dalla costruzione della Missione alla porta di sessione: `SessionOrder`, `_check_missions`, `validate_session` | `sequenceDiagram` | `Mission_Types` | [10B.2](11b_Atlante_Missione_Carburante.md) |
 | D97 | Dagli esiti per asset all'esito di sessione: `_mission_outcome`, `operation_outcome`, `assemble_session_outcome` | `sequenceDiagram` | `Mission_Types` | [10B.2](11b_Atlante_Missione_Carburante.md) |
@@ -415,7 +420,7 @@ Lettura: nessun modulo fuori da `Session_Campaign` e `Session_Validator` importa
 
 ### Tabella modulo → responsabilità → righe → capitolo
 
-Righe da `grep -c ''` sul codice a `f009eb43`. «Importa» e «importato da» sono nel perimetro del core (le 15 righe qui sotto).
+Righe da `grep -c ''` sul codice a `f009eb43`, **tranne i quattro moduli cambiati da D-5, BI, VA e FP, aggiornati a `a389cadb`** (Contact_Scheduler 1662, Engagement_Resolver 4569, Fire_Control 1217, Session_Simulator 3198). «Importa» e «importato da» sono nel perimetro del core (le 15 righe qui sotto).
 
 | Modulo | Responsabilità (una riga) | Righe | Importa | Importato da | Capitolo |
 |---|---|---|---|---|---|
@@ -423,14 +428,14 @@ Righe da `grep -c ''` sul codice a `f009eb43`. «Importa» e «importato da» so
 | `Command/Mission_Types` | Tipi di dominio di Missione, Operazione, esiti e validazioni strutturali (`check_mission_assets`) | 1387 | 0 | 5 | [2](03_Strato0_Contratto_Porte.md) §2.6 |
 | `Command/Campaign_Types` | Regole di finestra, registro di campagna, record di prontezza, violazioni | 406 | 0 | 3 | [2](03_Strato0_Contratto_Porte.md) §2.10 |
 | `Utility/Session_Rng` | Seme deterministico per sessione/missione/evento/contatore; unica sorgente di casualità | 113 | 0 | 1 | [7](08_Supporto_Trasversale.md) §7.1 |
-| `Logic/Contact_Scheduler` | Strato 1: quando — finestre di contatto, tratti di rotta, CPA/TCPA, potatura per blocco | 1578 | 0 | 5 | [3](04_Strato1_Scheduler_Contatti.md) |
-| `Logic/Engagement_Resolver` | Strato 2: come finisce un ingaggio — `resolve_engagement`, salve, danno, disingaggio, `apply_engagement_result` | 3872 | 2 | 5 | [4](05_Strato2_Risolutore_Ingaggio.md) |
-| `Logic/Fire_Control` | Selezione dell'arma dai registri, politica d'armi, arma per il fuoco su posizione | 1088 | 1 | 3 | [4](05_Strato2_Risolutore_Ingaggio.md) §4.16, §4.33-4.34 |
+| `Logic/Contact_Scheduler` | Strato 1: quando — finestre di contatto, tratti di rotta, CPA/TCPA, potatura per blocco | 1662 | 0 | 5 | [3](04_Strato1_Scheduler_Contatti.md) |
+| `Logic/Engagement_Resolver` | Strato 2: come finisce un ingaggio — `resolve_engagement`, salve, danno, disingaggio, `apply_engagement_result` | 4569 | 2 | 5 | [4](05_Strato2_Risolutore_Ingaggio.md) |
+| `Logic/Fire_Control` | Selezione dell'arma dai registri, politica d'armi, arma per il fuoco su posizione | 1217 | 1 | 3 | [4](05_Strato2_Risolutore_Ingaggio.md) §4.16, §4.33-4.34 |
 | `Logic/Damage_Model` | `DamageEvent` e la sua applicazione a un asset | 288 | 0 | 5 | [5](06_Strato3_Applicazione_Stato.md) §5.1 |
 | `Logic/Fuel_Model` | Carburante: `FuelEvent` per tratto, esaurimento, planata, bingo, consumo in ingaggio | 1576 | 1 | 3 | [5](06_Strato3_Applicazione_Stato.md) §5.2 |
 | `Logic/Mission_Adapter` | Dalla `Mission` a rotta, partenza, velocità, tratti, postura e forza d'ingaggio per asset | 2000 | 5 | 4 | [6](07_Orchestratore_Session_Simulator.md) §6.10-6.16, §6.19, §6.22 |
 | `Logic/Area_Fire` | Fuoco su posizione: ordini di fuoco, tiro, impatto | 326 | 5 | 1 | [6](07_Orchestratore_Session_Simulator.md) §6.23 |
-| `Logic/Session_Simulator` | Orchestratore: `run_session` e i suoi passi (forze, tratti, episodi, carburante, esiti) | 3163 | 9 | 2 | [6](07_Orchestratore_Session_Simulator.md) |
+| `Logic/Session_Simulator` | Orchestratore: `run_session` e i suoi passi (forze, tratti, episodi, carburante, esiti) | 3198 | 9 | 2 | [6](07_Orchestratore_Session_Simulator.md) |
 | `Logic/Session_Validator` | Validatore di sessione: `validate_session`, `check_session` | 269 | 6 | 1 | [6](07_Orchestratore_Session_Simulator.md) §6.25 |
 | `Logic/Readiness` | Prontezza degli asset e processi fra sessioni | 357 | 2 | 1 | [6](07_Orchestratore_Session_Simulator.md) §6.26 |
 | `Logic/Session_Campaign` | Conduttore minimo del ciclo di campagna e posizione persistente | 154 | 6 | 0 | [6](07_Orchestratore_Session_Simulator.md) §6.27 |
@@ -440,16 +445,16 @@ Righe da `grep -c ''` sul codice a `f009eb43`. «Importa» e «importato da» so
 Per gli altri moduli del core il livello L2 è già in un diagramma di classi esistente (tabella di §10.2): `Session_Types` D2; `Mission_Types` D16 e D17; `Campaign_Types` D51;
 `Contact_Scheduler` D3; `Engagement_Resolver` D4 e D47; `Fuel_Model` D39; `MissionForce` D30. Mancano le **tabelle complete** di funzioni e metodi di quei moduli (§10.7).
 
-### 10.5.1 `Logic/Session_Simulator` (3163 righe)
+### 10.5.1 `Logic/Session_Simulator` (3198 righe a `a389cadb`; 3163 a `fa5fbf1e`)
 
-Il modulo ha **tre soli tipi interni**, tutti `dataclass` congelate (`FuelEnd`, `BingoEnd` e, a metà modulo, `ActivityPlan`), 45 funzioni di primo livello e 8 funzioni locali dentro `run_session`. Non ha altre classi.
-Le costanti del modulo (`:785-919`): i tre tipi di evento di sessione `ENGAGEMENT_EVENT` = 0, `AREA_FIRE_EVENT` = 1, `MOVEMENT_EVENT` = 2 (`:785-787`, «nell'ordine di risoluzione a parità d'istante»);
-i tag dell'event_id `ENGAGEMENT_EVENT_TAG` (`:790`) e `TEMPER_EVENT_TAG` (`:793`); i regimi `CRUISE_REGIME` (`:796`) e `COMBAT_REGIME` (`:797`); i **15 interruttori** (`:807-908`, capitolo 6 §6.21); `EPISODE_GAP` (`:914`, = `FM.DISENGAGE_TIME`);
-gli esiti di esaurimento `FUEL_HALT`, `FUEL_GLIDE`, `FUEL_CRASH` (`:917-919`); e due tabelle private, `_ACTIVITY_ORDER` (`:1679`) e `_ABORT_REASON_OF` (`:1685`).
+Il modulo ha **tre soli tipi interni**, tutti `dataclass` congelate (`FuelEnd`, `BingoEnd` e, a metà modulo, `ActivityPlan`), 46 funzioni di primo livello (45 a `fa5fbf1e`, più `pass_event_id`) e 8 funzioni locali dentro `run_session`. Non ha altre classi.
+Le costanti del modulo (`:796-933`): i tre tipi di evento di sessione `ENGAGEMENT_EVENT` = 0, `AREA_FIRE_EVENT` = 1, `MOVEMENT_EVENT` = 2 (`:796-798`, «nell'ordine di risoluzione a parità d'istante»);
+i tag dell'event_id `ENGAGEMENT_EVENT_TAG` (`:801`), `TEMPER_EVENT_TAG` (`:804`) e, dal 2026-11-11, `PASS_EVENT_TAG` (`:807`, `'detection_pass'`, FP); i regimi `CRUISE_REGIME` (`:810`) e `COMBAT_REGIME` (`:811`); i **15 interruttori** (`:821-922`, capitolo 6 §6.21); `EPISODE_GAP` (`:928`, = `FM.DISENGAGE_TIME`);
+gli esiti di esaurimento `FUEL_HALT`, `FUEL_GLIDE`, `FUEL_CRASH` (`:931-933`); e due tabelle private, `_ACTIVITY_ORDER` (`:1705`) e `_ABORT_REASON_OF` (`:1711`).
 
-La **coda** della sessione non è una classe: è una tupla `(time, kind, key, sequence, payload)` messa in un `heapq` (`:2919`, `:2924`, `:2959`, `:2963`; estratta a `:2929` e `:2984`). Con i default
-(`G4_EPISODES` acceso) la coda con `heapq` serve **solo** al passo finale del carburante (`:2954-2963`); gli ingaggi sono una lista `pending` di episodi (`:2874`). La coda mista ENGAGEMENT/AREA_FIRE con
-`heapq` (`:2913-2936`) è il ramo con `G4_EPISODES` spento. Nel diagramma la tupla è una «voce di coda» disegnata come pseudo-classe (`VoceDiCoda`) e i tre tipi come `TipiDiEvento`: **non esistono classi con questi nomi**, sono un modo di mostrare una struttura che nel codice è una tupla.
+La **coda** della sessione non è una classe: è una tupla `(time, kind, key, sequence, payload)` messa in un `heapq` (`:2954`, `:2959`, `:2994`, `:2998`; estratta a `:2964` e `:3019`). Con i default
+(`G4_EPISODES` acceso) la coda con `heapq` serve **solo** al passo finale del carburante (`:2989-2998`); gli ingaggi sono una lista `pending` di episodi (`:2909`). La coda mista ENGAGEMENT/AREA_FIRE con
+`heapq` (`:2948-2971`) è il ramo con `G4_EPISODES` spento. Nel diagramma la tupla è una «voce di coda» disegnata come pseudo-classe (`VoceDiCoda`) e i tre tipi come `TipiDiEvento`: **non esistono classi con questi nomi**, sono un modo di mostrare una struttura che nel codice è una tupla.
 
 *Diagramma D61 — `Session_Simulator`: i tipi interni, la voce di coda e i tipi di evento, con i tipi esterni che li producono o li consumano (livello L2, verificato a f009eb43).*
 
@@ -528,8 +533,8 @@ classDiagram
     VoceDiCoda --> TipiDiEvento : kind
 ```
 
-Note a D61: `FuelEnd.kind` vale `FUEL_HALT`, `FUEL_GLIDE` o `FUEL_CRASH` (`:926-931`); `BingoEnd.reason` è `BINGO` o, dal G4b, `DISENGAGED` (`:955`); `BingoEnd.exits` è l'uscita di scena (`:957`).
-`ActivityPlan` è il piano di fine attività di un asset: `_activity_criteria` lo traduce in `ER.ActivityCriteria` (`winchester_weapons`, `damage_threshold`, `target_ids`, `destroyed_targets`, `until`, `reference_health`, `:1856-1873`).
+Note a D61: `FuelEnd.kind` vale `FUEL_HALT`, `FUEL_GLIDE` o `FUEL_CRASH` (`:940-945`); `BingoEnd.reason` è `BINGO` o, dal G4b, `DISENGAGED` (`:969`); `BingoEnd.exits` è l'uscita di scena (`:971`).
+`ActivityPlan` è il piano di fine attività di un asset: `_activity_criteria` lo traduce in `ER.ActivityCriteria` (`winchester_weapons`, `damage_threshold`, `target_ids`, `destroyed_targets`, `until`, `reference_health`, `:1882-1899`).
 Il payload della voce di coda dipende da `kind`: `(force_ids, group)` per un ENGAGEMENT del ramo con `G4_EPISODES` spento, un `EngagementResult` per l'ENGAGEMENT del passo finale, un `AF.FireOrder` per AREA_FIRE, `(asset, legs)` per MOVEMENT.
 
 *Diagramma D62 — `Session_Simulator`: i gruppi di funzioni per ruolo; `run_session` le chiama tutte, e `_domain_id`/`_as_block`/le chiavi RNG (gruppo B) servono a molti (livello L2, verificato a f009eb43).*
@@ -537,7 +542,7 @@ Il payload della voce di coda dipende da `kind`: `(force_ids, group)` per un ENG
 ```mermaid
 flowchart TD
     RUN["K - run_session<br/>e 8 funzioni locali<br/>fire_area, fire_due, replan, engage, reschedule"]
-    B["B - identita e chiavi RNG<br/>_domain_id, _as_block,<br/>engagement_event_id, temper_event_id"]
+    B["B - identita e chiavi RNG<br/>_domain_id, _as_block, engagement_event_id,<br/>temper_event_id, pass_event_id"]
     C["C - raccolta e validazione<br/>_session_horizon, _collect_forces,<br/>session_blocks, _check_missions"]
     D["D - forze d'ingaggio<br/>_engagement_forces,<br/>_engagement_committed"]
     E["E - contatti in episodi<br/>_group_windows, _episodes,<br/>_trim_busy, _connected_components"]
@@ -564,73 +569,74 @@ flowchart TD
     I --> B
 ```
 
-Lettura: G dipende da F perché `_return_end` usa `_moving_speed` (`:1559`, `:1415`); C, D, E, H e I chiamano le funzioni di identità del gruppo B (`_domain_id`, `engagement_event_id`, `_as_block`). `_mission_outcome` (J) non chiama nessuna funzione privata del modulo: legge gli esiti già calcolati che `run_session` gli passa (`:2049-2158`).
+Lettura: G dipende da F perché `_return_end` usa `_moving_speed` (`:1585`, `:1441`); C, D, E, H e I chiamano le funzioni di identità del gruppo B (`_domain_id`, `engagement_event_id`, `_as_block`). `_mission_outcome` (J) non chiama nessuna funzione privata del modulo: legge gli esiti già calcolati che `run_session` gli passa (`:2075-2184`).
 
 **Tabella completa delle funzioni di `Logic/Session_Simulator`** (riga di definizione; firma abbreviata ai nomi dei parametri; «da» = chi la chiama nel core).
 
 | Gruppo | Funzione | Riga | Che cosa fa | Da |
 |---|---|---|---|---|
-| tipo | `FuelEnd` | `:923` | Fine del movimento per esaurimento del carburante, calcolata a monte (F6-A) | `_exhaustion_end` |
-| tipo | `BingoEnd` | `:944` | Rientro di un aereo al bingo (F6-B2, F6-B2bis; dal G4b anche per disingaggio) | `_return_end` |
-| tipo | `ActivityPlan` | `:1693` | Criteri di fine attività di un asset di missione (F6-B1) | `_activity_plans` |
-| B | `_domain_id(obj)` | `:973` | Id di dominio: `id`, poi `name` (stesso criterio di risolutore e scheduler) | molte |
-| B | `_as_block(item)` | `:988` | `Block` da `Block` o `BlockItem` (`.block`) | `_collect_forces` |
-| B | `engagement_event_id(*force_ids)` | `:993` | `event_id` dell'RNG per l'ingaggio fra le forze date | `_episodes`, `run_session`, `temper_event_id` |
-| B | `temper_event_id(*force_ids)` | `:1017` | `event_id` del flusso della tempra (soglia di rottura) | `run_session` |
-| C | `_session_horizon(order, horizon)` | `:1032` | Durata [s] della sessione; `ValueError` se mancante o incoerente | `run_session` |
-| C | `_collect_forces(order, forces_a, forces_b)` | `:1054` | Normalizza i lati, costruisce `blocks` e `{asset: (lato, blocco)}` | `run_session`, `session_blocks` |
-| C | `session_blocks(order, forces_a, forces_b)` | `:1108` | I blocchi per id con le stesse verifiche di `run_session` | `Session_Validator` |
-| C | `_check_missions(order, blocks)` | `:1931` | Blocco passato, asset del blocco, regola A, loadout, `mission_id` diverso dagli id di blocco | `run_session` |
-| D | `_engagement_forces(order, blocks, block_owner)` | `:1960` | Una `MissionForce` per missione più la vista residua; `(forces, owner)` | `run_session` |
-| D | `_engagement_committed(order, forces)` | `:2006` | `committed` di blocco tradotto per forza d'ingaggio | `run_session` |
-| E | `_group_windows(windows, owner)` | `:1124` | Finestre raggruppate per coppia (forza A, forza B) | `run_session` |
-| E | `_connected_components(groups, domain_of)` | `:1149` | Componenti connesse del grafo delle forze (ramo con `G4_EPISODES` spento) | `run_session` |
-| E | `_episodes(groups, domain_of, gap)` | `:1217` | Episodi d'ingaggio (G4a) con le loro finestre, in ordine di tempo | `run_session` |
-| E | `_trim_busy(left, busy_until, legs)` | `:1291` | Forza occupata: ritaglia sul posto le finestre non ancora risolte | `run_session` |
-| F | `_consuming_legs(asset_id, legs, grounded)` | `:1395` | Tratti che consumano (esclude sosta a terra e tratti degeneri) | `run_session` |
-| F | `_moving_speed(legs, time)` | `:1415` | Velocità del tratto di movimento in corso a `time` | `_exhaustion_end`, `_return_end` |
-| F | `_fuel_end(asset, asset_id, domain, consuming, grounded, air_bases, fuel)` | `:1428` | Esaurimento sui tratti e suo esito, o `None` | `run_session` |
-| F | `_exhaustion_end(asset, asset_id, domain, time, point, consuming, grounded, air_bases)` | `:1442` | Esito dell'esaurimento in un punto: fermo, planata o perso | `_fuel_end`, `run_session` |
-| F | `_truncate_at_fuel_end(legs, end, t0, session_end)` | `:1475` | Tratti di presenza fino all'esaurimento, poi l'esito | `_fuel_truncated` |
-| F | `_grounded_after_fuel(grounded, ends)` | `:1491` | Programma degli aerei a terra corretto per gli esaurimenti | `run_session` |
-| F | `_fuel_truncated(presence, moving, end, t0, session_end)` | `:1522` | `(presenza, movimento)` dell'asset con l'esaurimento | `run_session` |
-| F | `_postures_after_fuel(postures, ends, domains, mission_types, grounded, session_end)` | `:1534` | Postura finale degli asset a secco | `run_session` |
-| G | `_return_end(asset, asset_id, consuming, found)` | `:1559` | `BingoEnd` di un rientro già deciso (`BingoPoint` o `BingoDecision`) | `_bingo_end`, `_decision_end`, `run_session` |
-| G | `_bingo_end(asset, asset_id, consuming, air_bases, rule)` | `:1570` | Bingo sui tratti che consumano e suo rientro (regole F6-B2, F6-B2bis) | `run_session` |
-| G | `_decision_end(asset, asset_id, mission, movement, consuming, air_bases)` | `:1582` | Decisione al bingo del G2 e suo rientro | `run_session` |
-| G | `_return_legs(end)` | `:1602` | Tratti del rientro lungo `end.route` a velocità costante | `_legs_after_bingo` |
-| G | `_legs_after_bingo(legs, end, t0, session_end, park)` | `:1623` | Tratti fino al bingo, poi il rientro | `run_session` |
-| G | `_grounded_after_bingo(grounded, ends)` | `:1638` | Programma a terra corretto per i rientri | `run_session` |
-| G | `_postures_after_bingo(postures, ends, mission_types, grounded, session_end)` | `:1658` | Postura finale degli aerei rientrati | `run_session` |
-| H | `_restrict_to_asset_ids(mission, members)` | `:1714` | Ristringe a `Target.asset_ids` se dichiarati (F7a) | `_mission_target_ids` |
-| H | `_mission_target_ids(mission, blocks, mission_of, assets)` | `:1730` | Asset bersaglio della missione per il criterio `target_destroyed` | `_activity_plans` |
-| H | `_winchester_weapons(asset, asset_id, domain, categories)` | `:1767` | Voci della scorta nelle categorie del criterio winchester | `_activity_plans` |
-| H | `_activity_plans(order, movement_of, mission_of, assets, blocks)` | `:1796` | Piani di fine attività (vuoti con `F6_END_CRITERIA` spento o senza criteri) | `run_session` |
-| H | `_known_destructions(results, assets, t0, fuel_ends)` | `:1842` | `{asset: istante}` delle distruzioni note, anche per carburante | `run_session` |
-| H | `_activity_criteria(plans, known, reference_health)` | `:1856` | I piani nella forma del risolutore (`ER.ActivityCriteria`) | `run_session` |
-| H | `_targets_destroyed_time(target_ids, destroyed)` | `:1876` | Istante in cui tutti i bersagli sono distrutti | `_activity_ends` |
-| H | `_activity_ends(plans, movement_of, results, destroyed)` | `:1885` | Fine di attività di ogni asset con un piano | `run_session` |
-| H | `_destruction_times(results, assets, t0)` | `:2029` | `{asset: istante di distruzione}` dagli ingaggi | `_known_destructions`, `run_session` |
-| I | `_legs_distance(legs)` | `:1114` | Lunghezza del tragitto | `run_session` |
-| I | `_engaged_assets(result)` | `:1327` | Asset che hanno combattuto in un ingaggio | `run_session` |
-| I | `_engagement_instants(result)` | `:1344` | Istante della prima partecipazione di ogni asset (G3) | `run_session` |
-| I | `_build_fuel(asset, distance, time, regime, provenance)` | `:1367` | `build_fuel_event` con ricaduta su 'nominal' | `run_session` |
-| I | `_build_leg_fuel(asset, leg, regime, provenance)` | `:1380` | `build_leg_fuel_event` con la stessa ricaduta | `run_session` |
-| J | `_mission_outcome(mission, movements, assets, destroyed, session_end, fuel_ends, activity_ends, target_declared, target_time, bingo_ends)` | `:2049` | Esito di missione a regola unica (D19) | `run_session` |
-| K | `run_session(order, forces_a, forces_b, fire_control, horizon, margin, range_type, thresholds, reaction_profile_for, detection_factor, provenance, morale_for, enemy_estimate_for, fire_doctrine)` | `:2163` | Esegue la sessione e restituisce il `SessionOutcome`; muta gli asset (dopo `forces_a`, `forces_b`, `fire_control`: solo parametri con nome, `:2164`) | `Session_Campaign` |
+| tipo | `FuelEnd` | `:937` | Fine del movimento per esaurimento del carburante, calcolata a monte (F6-A) | `_exhaustion_end` |
+| tipo | `BingoEnd` | `:958` | Rientro di un aereo al bingo (F6-B2, F6-B2bis; dal G4b anche per disingaggio) | `_return_end` |
+| tipo | `ActivityPlan` | `:1719` | Criteri di fine attività di un asset di missione (F6-B1) | `_activity_plans` |
+| B | `_domain_id(obj)` | `:987` | Id di dominio: `id`, poi `name` (stesso criterio di risolutore e scheduler) | molte |
+| B | `_as_block(item)` | `:1002` | `Block` da `Block` o `BlockItem` (`.block`) | `_collect_forces` |
+| B | `engagement_event_id(*force_ids)` | `:1007` | `event_id` dell'RNG per l'ingaggio fra le forze date | `_episodes`, `run_session`, `temper_event_id` |
+| B | `temper_event_id(*force_ids)` | `:1031` | `event_id` del flusso della tempra (soglia di rottura) | `run_session` |
+| B | `pass_event_id(*force_ids)` | `:1044` | `event_id` del flusso dei passaggi di rilevamento (FP, tag `'detection_pass'`) | `run_session` (funzione locale `engage`, `:2798`) |
+| C | `_session_horizon(order, horizon)` | `:1058` | Durata [s] della sessione; `ValueError` se mancante o incoerente | `run_session` |
+| C | `_collect_forces(order, forces_a, forces_b)` | `:1080` | Normalizza i lati, costruisce `blocks` e `{asset: (lato, blocco)}` | `run_session`, `session_blocks` |
+| C | `session_blocks(order, forces_a, forces_b)` | `:1134` | I blocchi per id con le stesse verifiche di `run_session` | `Session_Validator` |
+| C | `_check_missions(order, blocks)` | `:1957` | Blocco passato, asset del blocco, regola A, loadout, `mission_id` diverso dagli id di blocco | `run_session` |
+| D | `_engagement_forces(order, blocks, block_owner)` | `:1986` | Una `MissionForce` per missione più la vista residua; `(forces, owner)` | `run_session` |
+| D | `_engagement_committed(order, forces)` | `:2032` | `committed` di blocco tradotto per forza d'ingaggio | `run_session` |
+| E | `_group_windows(windows, owner)` | `:1150` | Finestre raggruppate per coppia (forza A, forza B) | `run_session` |
+| E | `_connected_components(groups, domain_of)` | `:1175` | Componenti connesse del grafo delle forze (ramo con `G4_EPISODES` spento) | `run_session` |
+| E | `_episodes(groups, domain_of, gap)` | `:1243` | Episodi d'ingaggio (G4a) con le loro finestre, in ordine di tempo | `run_session` |
+| E | `_trim_busy(left, busy_until, legs)` | `:1317` | Forza occupata: ritaglia sul posto le finestre non ancora risolte | `run_session` |
+| F | `_consuming_legs(asset_id, legs, grounded)` | `:1421` | Tratti che consumano (esclude sosta a terra e tratti degeneri) | `run_session` |
+| F | `_moving_speed(legs, time)` | `:1441` | Velocità del tratto di movimento in corso a `time` | `_exhaustion_end`, `_return_end` |
+| F | `_fuel_end(asset, asset_id, domain, consuming, grounded, air_bases, fuel)` | `:1454` | Esaurimento sui tratti e suo esito, o `None` | `run_session` |
+| F | `_exhaustion_end(asset, asset_id, domain, time, point, consuming, grounded, air_bases)` | `:1468` | Esito dell'esaurimento in un punto: fermo, planata o perso | `_fuel_end`, `run_session` |
+| F | `_truncate_at_fuel_end(legs, end, t0, session_end)` | `:1501` | Tratti di presenza fino all'esaurimento, poi l'esito | `_fuel_truncated` |
+| F | `_grounded_after_fuel(grounded, ends)` | `:1517` | Programma degli aerei a terra corretto per gli esaurimenti | `run_session` |
+| F | `_fuel_truncated(presence, moving, end, t0, session_end)` | `:1548` | `(presenza, movimento)` dell'asset con l'esaurimento | `run_session` |
+| F | `_postures_after_fuel(postures, ends, domains, mission_types, grounded, session_end)` | `:1560` | Postura finale degli asset a secco | `run_session` |
+| G | `_return_end(asset, asset_id, consuming, found)` | `:1585` | `BingoEnd` di un rientro già deciso (`BingoPoint` o `BingoDecision`) | `_bingo_end`, `_decision_end`, `run_session` |
+| G | `_bingo_end(asset, asset_id, consuming, air_bases, rule)` | `:1596` | Bingo sui tratti che consumano e suo rientro (regole F6-B2, F6-B2bis) | `run_session` |
+| G | `_decision_end(asset, asset_id, mission, movement, consuming, air_bases)` | `:1608` | Decisione al bingo del G2 e suo rientro | `run_session` |
+| G | `_return_legs(end)` | `:1628` | Tratti del rientro lungo `end.route` a velocità costante | `_legs_after_bingo` |
+| G | `_legs_after_bingo(legs, end, t0, session_end, park)` | `:1649` | Tratti fino al bingo, poi il rientro | `run_session` |
+| G | `_grounded_after_bingo(grounded, ends)` | `:1664` | Programma a terra corretto per i rientri | `run_session` |
+| G | `_postures_after_bingo(postures, ends, mission_types, grounded, session_end)` | `:1684` | Postura finale degli aerei rientrati | `run_session` |
+| H | `_restrict_to_asset_ids(mission, members)` | `:1740` | Ristringe a `Target.asset_ids` se dichiarati (F7a) | `_mission_target_ids` |
+| H | `_mission_target_ids(mission, blocks, mission_of, assets)` | `:1756` | Asset bersaglio della missione per il criterio `target_destroyed` | `_activity_plans` |
+| H | `_winchester_weapons(asset, asset_id, domain, categories)` | `:1793` | Voci della scorta nelle categorie del criterio winchester | `_activity_plans` |
+| H | `_activity_plans(order, movement_of, mission_of, assets, blocks)` | `:1822` | Piani di fine attività (vuoti con `F6_END_CRITERIA` spento o senza criteri) | `run_session` |
+| H | `_known_destructions(results, assets, t0, fuel_ends)` | `:1868` | `{asset: istante}` delle distruzioni note, anche per carburante | `run_session` |
+| H | `_activity_criteria(plans, known, reference_health)` | `:1882` | I piani nella forma del risolutore (`ER.ActivityCriteria`) | `run_session` |
+| H | `_targets_destroyed_time(target_ids, destroyed)` | `:1902` | Istante in cui tutti i bersagli sono distrutti | `_activity_ends` |
+| H | `_activity_ends(plans, movement_of, results, destroyed)` | `:1911` | Fine di attività di ogni asset con un piano | `run_session` |
+| H | `_destruction_times(results, assets, t0)` | `:2055` | `{asset: istante di distruzione}` dagli ingaggi | `_known_destructions`, `run_session` |
+| I | `_legs_distance(legs)` | `:1140` | Lunghezza del tragitto | `run_session` |
+| I | `_engaged_assets(result)` | `:1353` | Asset che hanno combattuto in un ingaggio | `run_session` |
+| I | `_engagement_instants(result)` | `:1370` | Istante della prima partecipazione di ogni asset (G3) | `run_session` |
+| I | `_build_fuel(asset, distance, time, regime, provenance)` | `:1393` | `build_fuel_event` con ricaduta su 'nominal' | `run_session` |
+| I | `_build_leg_fuel(asset, leg, regime, provenance)` | `:1406` | `build_leg_fuel_event` con la stessa ricaduta | `run_session` |
+| J | `_mission_outcome(mission, movements, assets, destroyed, session_end, fuel_ends, activity_ends, target_declared, target_time, bingo_ends)` | `:2075` | Esito di missione a regola unica (D19) | `run_session` |
+| K | `run_session(order, forces_a, forces_b, fire_control, horizon, margin, range_type, thresholds, reaction_profile_for, detection_factor, provenance, morale_for, enemy_estimate_for, fire_doctrine)` | `:2189` | Esegue la sessione e restituisce il `SessionOutcome`; muta gli asset (dopo `forces_a`, `forces_b`, `fire_control`: solo parametri con nome, `:2164`) | `Session_Campaign` |
 
 **Funzioni locali di `run_session`** (chiusure sulle variabili della funzione, non importabili):
 
 | Funzione | Riga | Che cosa fa |
 |---|---|---|
-| `position_of(asset_id, time)` | `:2439` | Posizione di un asset a `time` da `all_legs` (`CS.position_on_legs`) |
-| `inactive_from(asset_id)` | `:2443` | Istante dal quale l'asset non spara più (distrutto, passivo, fine nota a monte, a secco) |
-| `fire_area(fire_order)` | `:2467` | Risolve un fuoco su posizione (`AF.resolve_area_fire`) e lo applica a tutti i blocchi |
-| `fire_due(before)` | `:2488` | Risolve i fuochi con impatto anteriore a `before`, o tutti quelli rimasti con `None` |
-| `replan(result)` | `:2516` | Ri-pianifica gli aerei coinvolti a fine episodio (G4b); restituisce `{asset: istante}` dei tratti cambiati |
-| `engage(time, force_ids, group, event_id)` | `:2702` | Risolve un episodio: criteri, regole di bersaglio, `ER.resolve_engagement`, applicazione, stato di forza occupata |
-| `reschedule(changed, t_r, left, pairs_of)` | `:2823` | Ricalcola i contatti degli aerei ri-pianificati (`only_assets`) |
-| `charge(asset, time)` | `:2973` | Consumo istantaneo d'ingaggio (G3) applicato all'asset |
+| `position_of(asset_id, time)` | `:2465` | Posizione di un asset a `time` da `all_legs` (`CS.position_on_legs`) |
+| `inactive_from(asset_id)` | `:2469` | Istante dal quale l'asset non spara più (distrutto, passivo, fine nota a monte, a secco) |
+| `fire_area(fire_order)` | `:2493` | Risolve un fuoco su posizione (`AF.resolve_area_fire`) e lo applica a tutti i blocchi |
+| `fire_due(before)` | `:2514` | Risolve i fuochi con impatto anteriore a `before`, o tutti quelli rimasti con `None` |
+| `replan(result)` | `:2542` | Ri-pianifica gli aerei coinvolti a fine episodio (G4b); restituisce `{asset: istante}` dei tratti cambiati |
+| `engage(time, force_ids, group, event_id)` | `:2728` | Risolve un episodio: criteri, regole di bersaglio, `ER.resolve_engagement`, applicazione, stato di forza occupata |
+| `reschedule(changed, t_r, left, pairs_of)` | `:2858` | Ricalcola i contatti degli aerei ri-pianificati (`only_assets`) |
+| `charge(asset, time)` | `:3008` | Consumo istantaneo d'ingaggio (G3) applicato all'asset |
 
 ### 10.5.2 `Logic/Mission_Adapter` (2000 righe)
 
@@ -763,7 +769,7 @@ I punti in cui il flusso **non** è quello che ci si aspetterebbe:
 
 ### 10.6.1 Preparazione e validazione
 
-*Diagramma D64 — `run_session` 1/3: dai controlli di tipo ai piani di fine attività (`:2221-2381`) (livello L3, verificato a f009eb43).*
+*Diagramma D64 — `run_session` 1/3: dai controlli di tipo ai piani di fine attività (`:2247-2407`) (livello L3, verificato a f009eb43).*
 
 ```mermaid
 sequenceDiagram
@@ -827,14 +833,14 @@ sequenceDiagram
     RS->>RS: _activity_plans(order, movement_of, mission_of, assets_by_id, blocks)
 ```
 
-Righe: controlli `:2221-2228`; `_session_horizon` `:2230`; `_collect_forces` `:2234`; `_check_missions` `:2235` (dentro: `check_mission_assets` `:1942`, `MA.check_mission_speed` `:1944`); `_engagement_forces` `:2236`
-(dentro: `MA.MissionForce.of_mission` `:1987`, `MA.MissionForce.unassigned` `:1989`); `coordination_domains` `:2237`; `air_base_points` `:2240`; `mission_movements` `:2243`; `mission_planned_end` e il warning E4 `:2249-2254`;
-`session_movements` `:2255`; `grounded_schedule` `:2258`; `weapon_policies`/`restrict_by_policy` `:2273-2277`; `target_rules` `:2279`; `movement_legs(presence=False)` `:2293`; bingo `:2305-2335`
-(con `F6_BINGO_DISENGAGE_RESERVE` acceso, `_decision_end` `:2316`; spento, `_bingo_end` `:2322` o `:2328`); `_grounded_after_bingo` `:2337`; esaurimento `:2339-2353`; tratti di presenza `:2365-2374`; `_grounded_after_fuel` `:2379`; `_activity_plans` `:2381`.
+Righe: controlli `:2247-2254`; `_session_horizon` `:2256`; `_collect_forces` `:2260`; `_check_missions` `:2261` (dentro: `check_mission_assets` `:1968`, `MA.check_mission_speed` `:1970`); `_engagement_forces` `:2262`
+(dentro: `MA.MissionForce.of_mission` `:2013`, `MA.MissionForce.unassigned` `:2015`); `coordination_domains` `:2263`; `air_base_points` `:2266`; `mission_movements` `:2269`; `mission_planned_end` e il warning E4 `:2275-2280`;
+`session_movements` `:2281`; `grounded_schedule` `:2284`; `weapon_policies`/`restrict_by_policy` `:2299-2303`; `target_rules` `:2305`; `movement_legs(presence=False)` `:2319`; bingo `:2331-2361`
+(con `F6_BINGO_DISENGAGE_RESERVE` acceso, `_decision_end` `:2342`; spento, `_bingo_end` `:2348` o `:2354`); `_grounded_after_bingo` `:2363`; esaurimento `:2365-2379`; tratti di presenza `:2391-2400`; `_grounded_after_fuel` `:2405`; `_activity_plans` `:2407`.
 
 ### 10.6.2 Il ciclo: contatti, episodi, risolutore, stato e ri-pianificazione
 
-*Diagramma D65 — `run_session` 2/3: dallo scheduler al fine degli episodi, con i fuochi su posizione e la ri-pianificazione (`:2384-2910`, ramo con `G4_EPISODES` acceso) (livello L3, verificato a f009eb43).*
+*Diagramma D65 — `run_session` 2/3: dallo scheduler al fine degli episodi, con i fuochi su posizione e la ri-pianificazione (`:2410-2945`, ramo con `G4_EPISODES` acceso) (livello L3, verificato a f009eb43).*
 
 ```mermaid
 sequenceDiagram
@@ -865,7 +871,7 @@ sequenceDiagram
             RS->>ER: apply_engagement_result(result, tutti i blocchi)
         end
         RS->>RS: engage: _known_destructions e _activity_criteria se ci sono piani di attivita
-        RS->>ER: resolve_engagement(forza 1, forza 2, group, fire_control, rng, breakpoint_rng, extra_forces, legs, committed, coordination_of, grounded, ...)
+        RS->>ER: resolve_engagement(forza 1, forza 2, group, fire_control, rng, breakpoint_rng, pass_rng, extra_forces, legs, committed, coordination_of, grounded, ...)
         ER-->>RS: EngagementResult
         RS->>ER: apply_engagement_result(result, forze dell'episodio)
         RS->>RS: aggiorna hostile_of, busy_until, passive_from
@@ -886,17 +892,17 @@ sequenceDiagram
     RS->>AF: fire_due() per i fuochi rimasti
 ```
 
-Righe: `schedule_contacts` `:2385`; `_group_windows` `:2388`; `static_legs` `:2404`; `_engagement_committed` `:2407`; ordini di fuoco `:2494-2510` (`fire_orders` `:2499`, `plan_shot` `:2500`, `impact_time` `:2507`);
-`_episodes` `:2874`; ciclo `while pending` `:2878`; `fire_due` `:2881` (dentro, `fire_area` `:2467`: `resolve_area_fire` `:2474`, `apply_engagement_result` `:2486`); `engage` `:2882` (corpo `:2702-2821`: `_known_destructions`/`_activity_criteria` `:2714-2715`,
-`ER.resolve_engagement` `:2765`, `ER.apply_engagement_result` `:2790`, `hostile_of` `:2794`, `busy_until`/`passive_from` `:2802-2819`); `replan` `:2894` (corpo `:2516-2700`: `FM.engagement_fuel` `:2537`, `FM.fuel_at` `:2587`,
-`MA.mission_bingo_decision` `:2621`, `:2632`); `reschedule` `:2898` (corpo `:2823-2861`: `CS.schedule_contacts(only_assets=...)` `:2832`, `CS.trim_contact_window` `:2844`); `_trim_busy` `:2899`, `:2906`; `fire_due()` finale `:2910`.
-Il RNG di `resolve_engagement` è `order.rng(mission_id=None, event_id=event_id, counter=counter)` (`:2766`) e quello della tempra `order.rng(mission_id=None, event_id=temper_event_id(*force_ids), counter=counter)` (`:2774-2776`);
-quello del fuoco su posizione `order.rng(mission_id=fire_order.mission_id, event_id=event_id, counter=0)` (`:2475`). Il ramo con `G4_EPISODES` spento (`:2911-2936`) mette ingaggi per componente e fuochi nella stessa coda `heapq`
-(`_connected_components` `:2916`) e non ri-pianifica: non è nel diagramma. Un ordine di fuoco senza arma, portata o posizione utilizzabili è scartato con un warning (`:2502-2505`).
+Righe: `schedule_contacts` `:2411`; `_group_windows` `:2414`; `static_legs` `:2430`; `_engagement_committed` `:2433`; ordini di fuoco `:2520-2536` (`fire_orders` `:2525`, `plan_shot` `:2526`, `impact_time` `:2533`);
+`_episodes` `:2909`; ciclo `while pending` `:2913`; `fire_due` `:2916` (dentro, `fire_area` `:2493`: `resolve_area_fire` `:2500`, `apply_engagement_result` `:2512`); `engage` `:2917` (corpo `:2728-2856`: `_known_destructions`/`_activity_criteria` `:2740-2741`,
+`ER.resolve_engagement` `:2800`, `ER.apply_engagement_result` `:2825`, `hostile_of` `:2829`, `busy_until`/`passive_from` `:2837-2854`); `replan` `:2929` (corpo `:2542-2726`: `FM.engagement_fuel` `:2563`, `FM.fuel_at` `:2613`,
+`MA.mission_bingo_decision` `:2647`, `:2658`); `reschedule` `:2933` (corpo `:2858-2896`: `CS.schedule_contacts(only_assets=...)` `:2867`, `CS.trim_contact_window` `:2879`); `_trim_busy` `:2934`, `:2941`; `fire_due()` finale `:2945`.
+Il RNG di `resolve_engagement` è `order.rng(mission_id=None, event_id=event_id, counter=counter)` (`:2801`), quello della tempra `order.rng(mission_id=None, event_id=temper_event_id(*force_ids), counter=counter)` (`:2809-2811`) e, dal 2026-11-11, quello dei passaggi di rilevamento `order.rng(mission_id=None, event_id=pass_event_id(*force_ids), counter=counter)` (`:2798`, passato a `resolve_engagement` come `pass_rng`, capitolo 6 §6.4);
+quello del fuoco su posizione `order.rng(mission_id=fire_order.mission_id, event_id=event_id, counter=0)` (`:2501`). Il ramo con `G4_EPISODES` spento (`:2946-2971`) mette ingaggi per componente e fuochi nella stessa coda `heapq`
+(`_connected_components` `:2951`) e non ri-pianifica: non è nel diagramma. Un ordine di fuoco senza arma, portata o posizione utilizzabili è scartato con un warning (`:2528-2531`).
 
 ### 10.6.3 Chiusura: passo finale del carburante, esiti e `assemble_session_outcome`
 
-*Diagramma D66 — `run_session` 3/3: dal passo finale del carburante all'`assemble_session_outcome` (`:2938-3163`) (livello L3, verificato a f009eb43).*
+*Diagramma D66 — `run_session` 3/3: dal passo finale del carburante all'`assemble_session_outcome` (`:2973-3198`) (livello L3, verificato a f009eb43).*
 
 ```mermaid
 sequenceDiagram
@@ -941,10 +947,10 @@ sequenceDiagram
     ST-->>RS: SessionOutcome
 ```
 
-Righe: coda `:2954-2963`; ciclo `:2983`; ramo ENGAGEMENT `:2986-3006` (`_engaged_assets` `:2990`, `_engagement_instants` `:2997`, `charge` `:2973` con `FM.build_engagement_fuel_event` `:2975` e `FM.apply_fuel_event` `:2978`);
-ramo MOVEMENT `:3007-3072` (con `F6_FUEL_PER_LEG` acceso: `_consuming_legs` `:3022`, `_build_leg_fuel` `:3034`, `FM.apply_fuel_event` `:3037`; spento: `_build_fuel` `:3063`); `latest` `:3075-3091`;
-`_destruction_times` `:3093`; `_activity_ends` `:3095`; `_mission_outcome` `:3098` (`MA.waypoint_times` a `:2067`); `apply_damage` `:3120`; `session_postures` `:3123`; `_postures_after_bingo` `:3124`;
-`_postures_after_fuel` `:3127`; `DESTROYED_POSTURE` `:3132-3139`; `final_positions` `:3144-3151`, `movement_ends` `:3153`, `operation_outcome` `:3154`; `assemble_session_outcome` `:3158-3163`.
+Righe: coda `:2989-2998`; ciclo `:3018`; ramo ENGAGEMENT `:3021-3041` (`_engaged_assets` `:3025`, `_engagement_instants` `:3032`, `charge` `:3008` con `FM.build_engagement_fuel_event` `:3010` e `FM.apply_fuel_event` `:3013`);
+ramo MOVEMENT `:3042-3107` (con `F6_FUEL_PER_LEG` acceso: `_consuming_legs` `:3057`, `_build_leg_fuel` `:3069`, `FM.apply_fuel_event` `:3072`; spento: `_build_fuel` `:3098`); `latest` `:3110-3126`;
+`_destruction_times` `:3128`; `_activity_ends` `:3130`; `_mission_outcome` `:3133` (`MA.waypoint_times` a `:2093`); `apply_damage` `:3155`; `session_postures` `:3158`; `_postures_after_bingo` `:3159`;
+`_postures_after_fuel` `:3162`; `DESTROYED_POSTURE` `:3167-3174`; `final_positions` `:3179-3186`, `movement_ends` `:3188`, `operation_outcome` `:3189`; `assemble_session_outcome` `:3193-3198`.
 
 ### 10.6.4 Il quarto diagramma: `run_campaign_session` che richiama il motore
 

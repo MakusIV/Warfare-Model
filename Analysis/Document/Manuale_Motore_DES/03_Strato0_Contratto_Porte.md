@@ -715,12 +715,12 @@ mai un `SessionOutcome`, è un'eccezione `SessionValidationError` (§2.10) solle
 Il **`mission_id` entra nell'RNG di sessione dalla F4b, ma attraverso l'`event_id` dell'ingaggio**, non
 attraverso lo slot `mission_id` di `order.rng(...)`: l'ingaggio è fra più forze (missioni di entrambi i lati) e
 nessuna ne possiede lo stream, quindi `run_session` chiama ancora `order.rng(mission_id=None, event_id=...)`
-(`Logic/Session_Simulator.py:2766`, `:2774-2776`), ma l'`event_id` è `['engagement', id ordinati delle forze]` con
+(`Logic/Session_Simulator.py:2801`, `:2809-2811`; dal 2026-11-11 anche `:2798` per il flusso dei passaggi di rilevamento, `pass_event_id`, capitolo 6 §6.4), ma l'`event_id` è `['engagement', id ordinati delle forze]` con
 gli id delle **missioni** e, dal G4a, il `counter` è l'**ordinale dell'episodio** fra quelli con lo stesso insieme di
 forze (capitolo 6 §6.4). Lo slot `mission_id` di `Session_Rng` era libero per le
 estrazioni che appartengono a una sola missione (nessuna fino alla F7a); **dalla F7b lo usa il fuoco su posizione**, che appartiene a
 UNA missione: `order.rng(mission_id=<missione>, event_id='area_fire|<missione>|<asset>|<wp>|<azione>', counter=0)`
-(`Logic/Session_Simulator.py:2475`, capitolo 6 §6.23). Alla F3 il `mission_id` non entrava affatto
+(`Logic/Session_Simulator.py:2501`, capitolo 6 §6.23). Alla F3 il `mission_id` non entrava affatto
 (fotografia identica, capitolo 8 §8.7); l'ingresso nell'RNG ha cambiato le estrazioni, e per questo la fotografia
 è stata rigenerata in F4b (capitolo 8 §8.7).
 

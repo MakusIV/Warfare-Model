@@ -5,6 +5,15 @@ discreti (DES, *discrete event simulation*) che risolve le **sessioni virtuali**
 cioè i turni sintetici eseguiti senza un giocatore DCS (e, per costruzione, anche quelli con un
 giocatore: il core non distingue i due casi, v. capitolo 1).
 
+> **Aggiornamento 2026-11-13 — D-5, BI, VA e FP: il manuale arriva allo stato finale del codice di oggi.** Branch `analysis/dce-dcs-persistence`, HEAD `f1ca800f` (2026-11-13); **codice descritto: `a389cadb`** (ultimo commit che tocca un sorgente sotto `Code/`; `3b5edf49` tocca solo la fotografia). *(Le modifiche del manuale di questo aggiornamento sono nel working tree, non committate.)*
+> Quattro funzioni erano già nel codice e **non descritte**: la **permanenza nel volume D-5** (`D5_DWELL_TIME`), i **bersagli intercettabili dalle difese aeree BI** (`BI_AD_TARGET_RULE`), la **quota nel volume d'ingaggio VA** (`VA_ENGAGEMENT_ALTITUDE_BAND`) e il **rilevamento per passaggio nella portata propria FP**, che è **senza interruttore dal 2026-11-13**
+> (la costante `FP_PER_PASS_DETECTION` e i rami `pass_rng is None` sono stati eliminati: `Proposta_FP_Pulizia_Interruttore.md`). **Interruttori del risolutore oggi: tre, tutti `False`** (capitolo 6 §6.21); nessun codice di produzione li accende. **Suite: `Ran 4914` test, `OK (skipped=7)`; confronto con la fotografia: `UNCHANGED (1103)`, 0 cambiate; fotografia di non regressione: 1103 esecuzioni** (conteggio fatto sul file;
+> i numeri di suite e confronto sono quelli dichiarati dalla Proposta della pulizia e da `F4_Differenze_Scenari.md`, **NON rieseguiti** per questo aggiornamento). Cambiano: capitolo 3 (§3.2: `altitude_intervals`, `intersect_intervals`; nota sullo scheduler), **capitolo 4** (nuove **§4.35 FP, §4.36 D-5, §4.37 VA**; riscritte §4.2, §4.11, §4.12, §4.17, §4.24 BI, §4.26; righe di `ShotSpec` e `Detection`; D4), capitolo 6 (§6.4 **tre stream per episodio**,
+> `pass_event_id`; §6.21 interruttori del risolutore), capitolo 7 (§7.8, §7.12), **capitolo 8** (nuova **§8.14** S32-DWELL, S33-PASSES, S34-BAND, S35-ADTGT; fotografia e cronologia in §8.7), **capitolo 9** (§9.1: limiti di FP — con il limite storico «una sola estrazione per finestra con più passaggi nel volume minore» **superato** —, D-5 e VA; §9.3, §9.4; **voci 30-33 di §9.6**) e l'**atlante** (`11`, `11a`, `11c`: D82 riscritto, D133 nuovo, tabelle dei simboli
+> rigenerate). **Diagrammi**: cinque nuovi (D130-D134, Elenco D1-D134); il D130 è il diagramma della regola BI che nel §4.24 era «non numerato nell'atlante».
+> **Riferimenti `:riga`**: **verificati sul codice a `a389cadb`** nelle sezioni nuove o riscritte e nelle tabelle dei simboli dell'atlante; **NON ricalcolati nel resto del manuale**, dove restano quelli indicati nel capitolo («`dcedc541`», «`fa5fbf1e`», «`f009eb43`»): per `Session_Simulator.py` la correzione è semplice e dichiarata in capitolo 6 (+11 da 730, +14 da 794, +26 da 1030, +35 da 2765), per `Contact_Scheduler.py` è +84 dalla riga 955
+> (capitolo 3), per `Engagement_Resolver.py` e `Fire_Control.py` i riferimenti non riscritti sono **sfasati di centinaia di righe**: si cerchi il simbolo per nome o si usi la tabella dell'atlante. **Discrepanze trovate fra codice e documenti**: capitolo 9 §9.6, voci 30-33.
+>
 > **Aggiornato al commit `f33902ba`** (2026-11-05, `git rev-parse --short HEAD` al momento dell'aggiornamento; le modifiche del manuale di questo aggiornamento sono nel working tree, non ancora committate), branch `analysis/dce-dcs-persistence`.
 > L'ultimo commit che tocca `Code/` è `efa8f353` (D-4b, blocco C, 2026-11-05). **Aggiornamento 2026-11-05 — siti EWR fissi (blocco C della D-4b, `efa8f353`)**: *dati e un marcatore, nessuna regola nuova, nessun interruttore.* Sette radar di installazione fissa (AN-FPS-117, Chain-Home, AMES-Type-7, AMES-Type-80, Wassermann, Mammut, P-14-Lena) nel registro `Vehicle_Data` come `Vehicle` **immobile**
 > (velocità 0 nei tre regimi, `range` 1 km = **segnaposto di schema**, non un'autonomia), con il marcatore `fixed_site: bool = False` che **nessuna regola del motore legge**; **AN/FPS-20 escluso** (fonte contraddittoria). Gli EWR del registro sono **15**, i record **79**. Portate in km: 330 / 160 / 140 / 390 / 190 / 300 (**stima**) / 400 (**stima**); antenne dedotte 73 / 37 / 11,4 m
@@ -267,7 +276,7 @@ parametro `grounded`.
 - Dove il manuale e la wiki di progetto (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/`)
   divergono, prevale il codice; le divergenze trovate sono raccolte nel capitolo 9 (§9.2 per la wiki,
   §9.6 per i documenti di progetto della Missione e delle regole SAM, con lo stato di ciascuna voce).
-- I diagrammi hanno un numero progressivo `D1`-`D129` (elenco in fondo; D88 e D89 non sono usati): D1-D56 nei capitoli 1-8, D57-D129 nel capitolo 10 (atlante, parti 10, 10A, 10B, 10C); le didascalie sono nel capitolo
+- I diagrammi hanno un numero progressivo `D1`-`D134` (elenco in fondo; D88 e D89 non sono usati): D1-D56 nei capitoli 1-8, D57-D129 nel capitolo 10 (atlante, parti 10, 10A, 10B, 10C), **D130-D132 e D134 nel capitolo 4** (§4.24, §4.35, §4.37, §4.26: aggiunti il 2026-11-13) e **D133 nell'atlante `11a`**; le didascalie sono nel capitolo
   che li contiene. Il capitolo 10 assegna ogni diagramma a un livello di dettaglio (L0-L4).
 
 ## Indice dei capitoli
@@ -287,7 +296,7 @@ parametro `grounded`.
 3. [Lo strato 1: lo scheduler dei contatti](04_Strato1_Scheduler_Contatti.md) —
    `Logic/Contact_Scheduler.py`: rotta↔cilindro, CPA/TCPA, potatura gerarchica,
    `ContactWindow`; dal 2026-10-11 il parametro `grounded` per gli aerei a terra (§3.5-3.6); **dal 2026-10-12/17**
-   `GroundedSchedule` (§3.7), `legs` e `only_assets` (§3.6), `trim_contact_window` (§3.8); **dal 2026-11-04** la composizione dei tre sensori (`radar`, `TVD`, `visual`) in `Mobile.detection_range` e l'interruttore `D4C_VISUAL_SENSOR` (§3.5); **dal 2026-11-05** una nota sulle portate dei siti EWR fissi, senza orizzonte nel DES (§3.5).
+   `GroundedSchedule` (§3.7), `legs` e `only_assets` (§3.6), `trim_contact_window` (§3.8); **dal 2026-11-04** la composizione dei tre sensori (`radar`, `TVD`, `visual`) in `Mobile.detection_range` e l'interruttore `D4C_VISUAL_SENSOR` (§3.5); **dal 2026-11-05** una nota sulle portate dei siti EWR fissi, senza orizzonte nel DES (§3.5). **Dal 2026-11-13** due primitive nuove di intervalli, `altitude_intervals` e `intersect_intervals` (VA, §3.2), e la precisazione che i passaggi successivi al primo nel volume dell'osservatore con la portata minore li conta il risolutore (§4.35), non la finestra.
 4. [Lo strato 2: il risolutore d'ingaggio](05_Strato2_Risolutore_Ingaggio.md) —
    `Logic/Engagement_Resolver.py`: rilevamento, latenze di reazione, salva di Hughes,
    saturazione, disingaggio, ingaggi a N forze; `Logic/Fire_Control.py` (selezione dell'arma dai
@@ -302,7 +311,7 @@ parametro `grounded`.
    terra e la postura continua (§4.30, esteso dalla F5 al tempo); **dal 2026-10-12**: la fine di attività dei
    criteri di missione (§4.31); **dal 2026-10-18/20 (fase F7 della Missione)**: le regole di bersaglio di missione nel risolutore
    (§4.32), la politica d'armi per tipo di missione come involucro della fire control (§4.33) e l'arma per il fuoco su posizione
-   (§4.34).
+   (§4.34); **dal 2026-11-06/13**: la permanenza nel volume D-5 (§4.36), i bersagli intercettabili dalle difese aeree BI (§4.24), il rilevamento per passaggio nella portata propria FP (§4.35, **senza interruttore dal 2026-11-13**), la quota nel volume d'ingaggio VA (§4.37) e R-INT legata al passaggio (§4.26).
 5. [Lo strato 3: applicazione dello stato](06_Strato3_Applicazione_Stato.md) —
    `Logic/Damage_Model.py`, `Asset.apply_damage`, `Logic/Fuel_Model.py` (riscritta: carburante per tratto, planata, bingo,
    riserva di disimpegno, albero di decisione, consumo in ingaggio, §5.2), `apply_engagement_result`.
@@ -314,7 +323,7 @@ parametro `grounded`.
    attività, bingo e validatori, consumo in ingaggio / episodi / ri-pianificazione / uscita di scena, interruttori e default;
    **nuove §6.22-6.23 (F7)**: le regole d'ingaggio di missione in sessione e il fuoco su posizione (`Logic/Area_Fire.py`, terzo
    tipo di evento di sessione); **nuove §6.24-6.27 (F8)**: l'esito per la campagna (`final_positions`, `movement_ends`, `operation_outcomes`, stato `IN_PROGRESS`), il validatore di sessione
-   (`Logic/Session_Validator.py`), la prontezza degli asset e i processi fra sessioni (`Logic/Readiness.py`), il conduttore di campagna e la posizione persistente (`Logic/Session_Campaign.py`).
+   (`Logic/Session_Validator.py`), la prontezza degli asset e i processi fra sessioni (`Logic/Readiness.py`), il conduttore di campagna e la posizione persistente (`Logic/Session_Campaign.py`); **dal 2026-11-13**: i tre stream per episodio — ingaggio, tempra e passaggi di rilevamento (§6.4) — e gli interruttori del risolutore D-5, BI, VA, tutti spenti (§6.21).
 7. [Moduli di supporto trasversali](08_Supporto_Trasversale.md) — `Session_Rng`, `Doctrine`,
    `Reaction_Profile`, le dimensioni militari di `Military`, munizioni/carburante su
    `Mobile`/`Aircraft` (con `fuel_capacity_kg` e `emergency_fuel_flow`), i punti di iniezione meteo (`detection_factor`) e arma
@@ -325,17 +334,17 @@ parametro `grounded`.
    come ingresso ricavato dalle missioni (§7.7); il pianificatore di rotta aerea con volumi di rilevamento e
    intercettazione distinti (§7.8, `Logic/Air_Route_Manager.py`) e il pianificatore d'attacco
    a monte del motore (§7.9, `Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`); **nuova §7.13 (F8)**: i tempi di turnaround e riparazione in `Context/Context.py`
-   con la provenienza e il livello di verifica di ogni valore, e `Context/Campaign_State.py` (`restore_position`, `add_ledger`/`get_ledger`).
+   con la provenienza e il livello di verifica di ogni valore, e `Context/Campaign_State.py` (`restore_position`, `add_ledger`/`get_ledger`). **Dal 2026-11-13** (§7.8, §7.12): la permanenza D-5 nelle metriche del pianificatore, i dati `dwell_time_s` dei 10 EWR, i campi BI dei 52 `MISSILES_ASM` e l'estensione `altitudes` della `fire_control`.
 8. [Validazione](09_Validazione.md) — determinismo, test di agnosticismo come test di
    contratto (esteso alle porte della Missione), la batteria di scenari S1-S31 (§8.4), la
    migrazione alle missioni e la regola A negli scenari, lo strumento di non regressione
    `Test/Scenario_Baseline.py` con il processo di non regressione e la cronologia della fotografia fino a 1009 esecuzioni
    (§8.7), i test aggiunti (§8.8), gli scenari della fase F4 (§8.9), gli scenari S22-S27 e i test delle fasi F5, F6 e
-   G1-G5 (§8.10), gli scenari S28-S29 e i test della fase F7 (§8.11), gli scenari S30-CAMPAIGN e S30-ABSENT e i test della fase F8 (§8.12); **lo scenario S31-VISUAL e i test dei sensori D-4c e D-4b (§8.13, con i 15 test dei siti fissi del 2026-11-05)**.
+   G1-G5 (§8.10), gli scenari S28-S29 e i test della fase F7 (§8.11), gli scenari S30-CAMPAIGN e S30-ABSENT e i test della fase F8 (§8.12); **lo scenario S31-VISUAL e i test dei sensori D-4c e D-4b (§8.13, con i 15 test dei siti fissi del 2026-11-05)**. **Dal 2026-11-13** (§8.7, **nuova §8.14**): gli scenari **S32-DWELL** (D-5), **S35-ADTGT** (BI), **S34-BAND** (VA) e **S33-PASSES** (FP), la fotografia fino a **1103** esecuzioni, suite `Ran 4914`.
 9. [Limiti noti, punti di estensione e divergenze codice/wiki](10_Limiti_Estensioni_Divergenze.md) —
    limiti nuovi e superati (compresi quelli della fase F4, delle fasi F5, F6, G1-G5, della fase F7, con le costanti STIMATE
    del fuoco su posizione, e **della campagna, F8**, con i tempi non tarati e l'assenza di logistica), stato del piano della Missione F0-F9 e dei passi G1-G5 (§9.5, F8a-F8c e F8-R fatte,
-   F8d non fatta, F6-B3 chiuso), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce: voci 7, 11 e 23 chiuse, voci 24-27 nate con la F8 e chiuse il 2026-10-29, **voci 28-29 nate il 2026-11-04 e chiuse il 2026-11-05**); **dal 2026-11-04** la sezione dei limiti dei sensori EWR e visivo (§9.1), estesa il 2026-11-05 con i limiti dei siti fissi (immobilità non imposta, copertura angolare, torri).
+   F8d non fatta, F6-B3 chiuso), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce: voci 7, 11 e 23 chiuse, voci 24-27 nate con la F8 e chiuse il 2026-10-29, **voci 28-29 nate il 2026-11-04 e chiuse il 2026-11-05**); **dal 2026-11-04** la sezione dei limiti dei sensori EWR e visivo (§9.1), estesa il 2026-11-05 con i limiti dei siti fissi (immobilità non imposta, copertura angolare, torri). **Dal 2026-11-13**: limiti della FP (con il limite storico «una sola estrazione per finestra» superato), della D-5 (dwell dichiarato solo per i 10 EWR, DW-9 aperto) e della VA (§9.1), tre righe in §9.3, il riepilogo in §9.4 e le **voci 30-33 di §9.6** (commenti del codice rimasti indietro).
 10. [Atlante dei diagrammi](11_Atlante_Diagrammi.md) — la scala dei livelli L0-L4 (contesto, architettura, moduli, interazione, algoritmo), la tabella-atlante di tutti i diagrammi
     e lo stato di copertura per modulo; i diagrammi nuovi **D57-D66**: contesto del core (D57), grafo reale degli import in tre parti (D58-D60), `Session_Simulator` e `Mission_Adapter` (tipi, gruppi di funzioni e
     tabelle complete con `:riga`, D61-D63), la sequenza di chiamate di `run_session` in tre parti (D64-D66). Verificato a `f009eb43`.
@@ -343,7 +352,7 @@ parametro `grounded`.
     [`11a_Atlante_Risolutore.md`](11a_Atlante_Risolutore.md) (`Contact_Scheduler`, `Fire_Control`, `Engagement_Resolver`, D67-D87), **parte B**
     [`11b_Atlante_Missione_Carburante.md`](11b_Atlante_Missione_Carburante.md) (`Mission_Types`, `Fuel_Model`, `Area_Fire`, D90-D109), **parte C**
     [`11c_Atlante_Porte_Campagna.md`](11c_Atlante_Porte_Campagna.md) (`Session_Types`, `Campaign_Types`, `Session_Validator`, `Session_Campaign`, `Readiness`,
-    `Damage_Model`, `Session_Rng` e la mappa dei dati, D110-D129). Ogni parte ha una sezione «Limiti e domande» con le cose non ovvie trovate nel codice.
+    `Damage_Model`, `Session_Rng` e la mappa dei dati, D110-D129). Ogni parte ha una sezione «Limiti e domande» con le cose non ovvie trovate nel codice. **Dal 2026-11-13**: cinque diagrammi nuovi (D130-D134), D82 riscritto, tabelle dei simboli di `Engagement_Resolver`, `Fire_Control` e `Contact_Scheduler` rigenerate (righe di `a389cadb`), D126 con il quarto stream.
 
 ## Elenco dei diagrammi
 
@@ -430,7 +439,7 @@ parametro `grounded`.
 | D79 | I metodi di `_EngagementRun` per ruolo 1/2: costruzione, rilevamento, scelta del tiro (livello L2) | `flowchart TD` | 10 |
 | D80 | I metodi di `_EngagementRun` per ruolo 2/2: risoluzione, intercettazione, disingaggio, regole F7a (livello L2) | `flowchart TD` | 10 |
 | D81 | `resolve_engagement`: validazione, costruzione della run e ciclo principale (livello L3) | `sequenceDiagram` | 10 |
-| D82 | `_detect_direction`: una estrazione di rilevamento (livello L3) | `sequenceDiagram` | 10 |
+| D82 | `_detect_direction`: dai passaggi nel volume proprio all'estrazione e al candidato (livello L3; **riscritto il 2026-11-13**, prima «una estrazione di rilevamento») | `sequenceDiagram` | 10 |
 | D83 | `_schedule_next`: l'ordine delle chiamate della scelta del tiro (livello L3) | `sequenceDiagram` | 10 |
 | D84 | `_on_launch`: dal lancio alla salva in volo (livello L3) | `sequenceDiagram` | 10 |
 | D85 | `_on_resolve`: intercettazione, danno per colpo e dottrina (livello L3) | `sequenceDiagram` | 10 |
@@ -476,6 +485,11 @@ parametro `grounded`.
 | D127 | Mappa dei dati: il percorso in una sessione, dagli argomenti di `run_session` al `SessionOutcome` (frecce = dati) (livello L1) | `flowchart LR` | 10 |
 | D128 | Mappa dei dati: le versioni del `CampaignLedger` e i dati in un passo di `run_campaign_session` (frecce = dati) (livello L2) | `flowchart LR` | 10 |
 | D129 | Mappa dei dati: i campi del `SessionOutcome`, chi li produce e chi li legge (frecce = dati) (livello L2) | `flowchart LR` | 10 |
+| D130 | Dall'arma ai domini di difesa aerea che ne possono intercettare il colpo: `munition_class` e `intercept_domains_for` (regola BI; livello L4) | `flowchart TD` | 4 |
+| D131 | `_detect_direction`: dal calcolo dei passaggi nel volume proprio alle estrazioni (rilevamento per passaggio, FP; livello L4) | `flowchart TD` | 4 |
+| D132 | Dove agisce la fascia di quota in `_schedule_next`: decisione, rinvio e controllo di portata (VA; livello L4) | `flowchart TD` | 4 |
+| D133 | `_detect_passes`: un'estrazione per passaggio, permanenza D-5, CPA e candidato per passaggio (livello L3) | `sequenceDiagram` | 10 (11a) |
+| D134 | Regola R-INT con il rilevamento per passaggio: `_detection_time_of` e `_in_time` (FP-5 (d); livello L4) | `flowchart TD` | 4 |
 
 I diagrammi D30-D36 sono quelli della fase F4 (a `84a47670`). **Aggiornati a `a784a9e7`**: D1 (il carburante è dell'orchestratore,
 non del risolutore), D2 (`postures`), D3 (`GroundedSchedule`), D4 (`ActivityCriteria`, `ActivityEnd`, `activity_ends`), D8 e D9
@@ -503,3 +517,6 @@ D19 (ramo `IN_PROGRESS`), D29 (F8a-F8c e F8-R fatte, F6-B3 chiuso, F8d non fatta
 `detection_range(mode, range_type)` è chiamata con la stessa firma. **Non è stato controllato alcun diagramma con un renderer** (non ce n'è uno in questo ambiente): non essendo stata toccata alcuna sintassi Mermaid, non c'è nulla da controllare in Obsidian per questo aggiornamento.
 
 **Aggiornamento 2026-11-05** (blocco C della D-4b, siti EWR fissi): **nessun diagramma nuovo o modificato**; l'Elenco resta D1-D129 (D88 e D89 non usati). Il blocco C cambia solo dati del registro, un commento e test: nessun modulo del core descritto dai diagrammi cambia (D14 e D70 compresi: `mutual_detection_ranges` chiama `detection_range(mode, range_type)` come prima). **Non è stato controllato alcun diagramma con un renderer**; non essendo stata toccata alcuna sintassi Mermaid, non c'è nulla da controllare per questo aggiornamento. L'unica correzione di riga nell'atlante è `Air_Route_Manager.py:1103` in `11a_Atlante_Risolutore.md` (era `:1099`).
+
+**Aggiornamento 2026-11-13** (D-5, BI, VA, FP): **cinque diagrammi nuovi**, D130-D134 (D130, D131, D132 e D134 nel capitolo 4, D133 in `11a`); **D82 riscritto** (la sequenza di `_detect_direction` con i passaggi); **aggiornati nei nodi o nei campi**: D4 (campi di `ShotSpec` e `Detection`), D68 (`altitude_intervals`, `intersect_intervals`), D76 (campi della run), D77 (gruppi P, G e nodo dello scheduler), D79 (R2, R4), D83 (rinvio di quota e `band`), D8 (`pass_rng`, `dwell_time_for`), D62 (`pass_event_id`), D126 (quarto stream). L'Elenco è **D1-D134** (D88 e D89 non usati). **Non è stato controllato alcun diagramma con un renderer** (non ce n'è uno in questo ambiente): i blocchi sono stati scritti nella sintassi già usata dagli altri diagrammi del manuale
+e gli identificatori sono stati controllati con `_strumenti/inventario.py --controlla` (prima e dopo, nessun identificatore di codice nuovo non trovato); la sintassi Mermaid va ricontrollata in Obsidian.

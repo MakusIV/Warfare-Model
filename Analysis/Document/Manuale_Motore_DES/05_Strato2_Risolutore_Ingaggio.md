@@ -1,12 +1,36 @@
 # Capitolo 4 — Lo strato 2: il risolutore d'ingaggio
 
-Modulo: `Logic/Engagement_Resolver.py`. È il modulo più esteso del motore (**3872 righe a `dcedc541`**, 3445 a
+Modulo: `Logic/Engagement_Resolver.py`. È il modulo più esteso del motore (**4569 righe a `a389cadb`**, 3872 a `dcedc541`, 3445 a
 `a784a9e7`, 3160 a `84a47670`, 2858 a `533cd1f5`, 2063 a `6754bf1c`) e il primo punto in cui entra la casualità, sempre e
 solo attraverso l'RNG di sessione passato dal chiamante (`Logic/Engagement_Resolver.py:9-10`).
-Tutti i riferimenti `:riga` di questo capitolo, se non diversamente indicato, valgono per questo
-file a `dcedc541`, che è anche il suo stato a `fa5fbf1e`: **`Logic/Engagement_Resolver.py` e `Logic/Fire_Control.py` non sono cambiati nella fase F8**
-(non compaiono in `git diff dcedc541..HEAD -- Code`); sono stati ricalcolati solo i riferimenti ai moduli che cambiano (`Session_Simulator`,
-`Mission_Types`, `Context`).
+
+> **Stato del capitolo dopo l'aggiornamento 2026-11-13.** Il capitolo descrive il codice a `a389cadb` (ultimo commit che tocca un sorgente
+> sotto `Code/`; `3b5edf49` tocca solo la fotografia). Le sezioni **nuove o riscritte** — **§4.35 (FP), §4.36 (D-5), §4.37 (VA)**, §4.2, §4.11, §4.12,
+> §4.17, §4.24 (sottosezione BI e diagramma D130), §4.26 e le righe di `ShotSpec` e `Detection` in §4.4 e §4.13 — hanno i riferimenti `:riga` **verificati
+> sul codice a `a389cadb`** (`Engagement_Resolver.py` 4569 righe, `Fire_Control.py` 1217, `Contact_Scheduler.py` 1662, `Session_Simulator.py` 3198).
+> **Le sezioni rimaste identiche** (§4.3, §4.5-§4.10, §4.14, §4.15, §4.16bis, §4.18-§4.23, §4.25, §4.27-§4.34) avevano i `:riga` di `dcedc541` (file invariato a `fa5fbf1e`) o, per la BI, di `d7813251`; da allora il risolutore ha guadagnato la D-5 (`8943b292`),
+> la BI (`0f275d55`), la VA (`585dbc65`) e la FP (da `c1f39787` alla pulizia `2c89ca88`), circa 700 righe sparse. **In queste sezioni i riferimenti a `Logic/Engagement_Resolver.py` sono stati ricalcolati il 2026-11-13** con la mappa delle righe `dcedc541` → `a389cadb` (confronto riga per riga dei due file con `difflib`: si sposta solo una riga rimasta identica, e solo se
+> l'identificatore citato vicino al riferimento compare nella riga o nella funzione, sia prima sia dopo): **132 riferimenti rimappati automaticamente e 26 corretti a mano** (righe riscritte o riferimenti già errati a `dcedc541`: `STATIONARY_EPS`, le costanti dell'ingresso di ricognizione); i riferimenti di quelle sezioni ad altri moduli (`Doctrine`, `Air_Defense_Efficacy`, `Weapon_Stores`, `Weapon_Delivery`, `Context`),
+> che non sono cambiati, restano quelli di prima; per `Fire_Control.py` ne sono stati rimappati 11 (§4.16bis, §4.20, §4.33, §4.34). **Restano quelli di `dcedc541` e sono sfasati** i riferimenti delle sezioni **parzialmente riscritte** non nominate sopra fra le «nuove o riscritte» (§4.1, §4.4, §4.13, §4.16: la tabella `ShotSpec` e i punti che ho toccato sono corretti, il resto no) e i pochi riferimenti per cui il controllo
+> dell'identificatore non ha dato un esito univoco (circa 60 su 260, per lo più a moduli non cambiati; non ho potuto distinguerli tutti dagli errori a mano). Per ritrovare un simbolo si cerchi per nome, o si usi la tabella dei simboli dell'atlante (`11a_Atlante_Risolutore.md`, §10A.4, righe di `a389cadb`).
+
+**Aggiornamento 2026-11-13 (D-5, BI, VA, FP: le quattro funzioni già nel codice e finora non descritte).** Il risolutore ha acquisito, in quest'ordine, quattro funzioni.
+Tre sono **regole di modello** con un **interruttore proprio** letto da `Engagement_Resolver` (D-5, BI, VA, tutti **spenti** di default, nessun codice di produzione li accende);
+la quarta, la **FP**, è una regola **senza interruttore** (l'interruttore temporaneo `FP_PER_PASS_DETECTION`, acceso il 2026-11-12, è stato **eliminato il 2026-11-13** insieme ai rami
+`pass_rng is None`, `Proposta_FP_Pulizia_Interruttore.md`: la costante non esiste più nel codice). In nessuno dei casi cambia il numero o l'ordine delle estrazioni dello stream `rng` dell'ingaggio.
+
+| Funzione | Cosa cambia | Interruttore (riga a `a389cadb`) | Commit | Sezione |
+|---|---|---|---|---|
+| **D-5** permanenza nel volume | Pd moltiplicata per `min(1, permanenza / dwell_time_s)` per i sensori che dichiarano un periodo di rivisita (oggi solo 10 radar EWR) | `D5_DWELL_TIME = False` (`:591`) | `8943b292` (blocco A) | §4.36 |
+| **BI** bersagli intercettabili | un intercettore ferma un colpo solo se il suo dominio (`land`/`naval`) è fra gli `intercept_domains` della `ShotSpec` | `BI_AD_TARGET_RULE = False` (`:597`) | `61df9437`, `0f275d55`, `8ac1b0f7` | §4.24 |
+| **VA** quota nel volume d'ingaggio | volume d'ingaggio = sfera ∩ fascia di quota, valutato nel tempo; quote all'istante della decisione; rinvio della decisione | `VA_ENGAGEMENT_ALTITUDE_BAND = False` (`:608`) | `585dbc65` (blocco 1), `5d87f03d` (blocco 2) | §4.37 |
+| **FP** rilevamento per passaggio | un'occasione di rilevamento per ogni passaggio nel volume **proprio** dell'osservatore, non una per finestra | **nessuno** (regola sempre attiva) | `c1f39787`, `fb1dc1f7`, `770cdb2b`, `a22b3930`; interruttore acceso `28df28b8`, eliminato `2c89ca88` | §4.35 |
+
+Numeri di verifica (dichiarati da `Proposta_FP_Pulizia_Interruttore.md` e da `F4_Differenze_Scenari.md`, **non rieseguiti** per questo aggiornamento): suite `Ran 4914`, `OK (skipped=7)`;
+fotografia di non regressione di **1103 esecuzioni** (installata il 2026-11-13, `3b5edf49`; conteggio fatto sul file: 1103 chiavi, `errors` vuoto); la pulizia dell'interruttore FP ha dato 0 esecuzioni cambiate
+(`UNCHANGED (1103)`). Capitolo 8 §8.14 per gli scenari S32-DWELL, S33-PASSES, S34-BAND, S35-ADTGT.
+
+**Riferimenti.** Un riferimento `:riga` senza percorso vale per `Logic/Engagement_Resolver.py` salvo diversa indicazione nella sezione.
 
 Il capitolo copre anche `Logic/Fire_Control.py` (§4.16-4.17, §4.16bis, §4.20), un modulo satellite
 che **non modifica** il contratto del risolutore: fornisce una `fire_control` reale, dai registri
@@ -89,8 +113,8 @@ vecchia `_capacity`, §4.5) il testo lo dice.
 esecuzioni della fotografia esistente restano identiche; il filtro viene chiamato ma risponde sempre «ammesso»), e anche
 acceso il filtro **non estrae nulla**.
 Il campo nuovo `ShotSpec.intercept_domains` lo dichiara la fire control (§4.4, §4.16); la regola è in §4.24.
-I riferimenti di riga **di questo aggiornamento** sono stati verificati sul codice il 2026-11-10; quelli del resto del
-capitolo, e le sezioni del capitolo 4 non nominate qui, restano al riferimento indicato nella loro sezione.
+I riferimenti di riga della sottosezione BI di §4.24 e delle righe `intercept_domains` di §4.4 erano stati verificati il 2026-11-10 e **sono stati riverificati il 2026-11-13** sul codice a `a389cadb`
+(dopo VA e FP le righe del risolutore si erano spostate di circa 470); quelli del resto del capitolo restano al riferimento indicato nella loro sezione (v. il blocco «Stato del capitolo» in testa).
 
 | Meccanismo | Commit | Sezione |
 |---|---|---|
@@ -103,7 +127,10 @@ capitolo, e le sezioni del capitolo 4 non nominate qui, restano al riferimento i
 Per due o più forze in contatto, la catena è (`:12-75`, docstring del modulo):
 
 1. **Pd — chi rileva davvero** (§4.2). Un'estrazione contro `detection_probability(d_cpa,
-   portata)` decide sia *se* sia *a che distanza* avviene il rilevamento, e quindi *quando*.
+   portata)` decide sia *se* sia *a che distanza* avviene il rilevamento, e quindi *quando*. Dal 2026-11-11 l'estrazione
+   è **una per ogni passaggio** del bersaglio nel volume di rilevamento *proprio* dell'osservatore dentro la finestra di contatto
+   (non una per finestra e direzione): con i tratti delle rotte, `d_cpa` è la distanza minima **del passaggio** (§4.35); con
+   la D-5 accesa la Pd è ridotta dalla permanenza del passaggio (§4.36).
 2. **Latenza di reazione — chi spara per primo** (§4.3). Dal rilevamento al primo lancio passa
    `ReactionProfile.total`; le salve successive sono separate da `refire_interval`.
 3. **Dottrina di fuoco / ROE — se e con cosa si spara** (§4.4). `fire_control(shooter, target)`,
@@ -141,31 +168,42 @@ bersagli di superficie.
 
 ## 4.2 Percezione: la legge di Pd
 
-`detection_probability(distance, sensor_range, factor=1.0)` (`:1041-1068`):
+`detection_probability(distance, sensor_range, factor=1.0)` (`:1215-1242`):
 
 ```
 Pd(d) = factor * (1 - (1 - PD_AT_ACQUISITION_RANGE) * (d / R)^4)    per d <= R
 Pd(d) = 0                                                            per d > R
 ```
 
-**STIMA DICHIARATA di forma** (`:1047-1050`): 1 a distanza nulla, `PD_AT_ACQUISITION_RANGE = 0.5`
+**STIMA DICHIARATA di forma** (`:1220-1223`): 1 a distanza nulla, `PD_AT_ACQUISITION_RANGE = 0.5`
 sul bordo della portata dichiarata dal registro (la più prudente delle due convenzioni con cui si
 dichiara la portata di un radar — Pd 0.5 o 0.9 a quella distanza —, da ricalibrare,
-`:451-454`), decrescente con la quarta potenza della distanza (`PD_RANGE_EXPONENT = 4`, la
+`:545-549`), decrescente con la quarta potenza della distanza (`PD_RANGE_EXPONENT = 4`, la
 dipendenza R⁴ dell'equazione radar, SNR ∝ 1/R⁴; la curva Pd(SNR) reale di Swerling è sigmoide,
-questa legge ne è una semplificazione monotona, `:456-459`). `factor` in [0, 1] è la degradazione
-(meteo, notte, disturbo) applicata dal chiamante, v. capitolo 7, §7.4.
+questa legge ne è una semplificazione monotona, `:551-554`). `factor` in [0, 1] è la degradazione
+(meteo, notte, disturbo) applicata dal chiamante, v. capitolo 7, §7.4; dalla D-5 (§4.36) il
+fattore passato alla legge è, per i sensori con periodo di rivisita dichiarato, il prodotto del
+fattore ambientale e del fattore di permanenza `dwell_factor`.
 
-`detection_radius(draw, sensor_range, factor=1.0)` (`:1071-1100`) è l'**inversa**: il rilevamento
+`detection_radius(draw, sensor_range, factor=1.0)` (`:1245-1274`) è l'**inversa**: il rilevamento
 avviene quando `draw < Pd(d)`, cioè quando il bersaglio entra nel raggio restituito. Così **una
 sola** estrazione decide sia se il sensore rileva sia quando, senza campionare la finestra nel
-tempo (`:1074-1078`).
+tempo (`:1248-1252`). Quell'«una sola» è **per occasione di rilevamento**: dal 2026-11-11 l'occasione è il
+**passaggio** del bersaglio nel volume proprio dell'osservatore (§4.35), non più l'intera finestra di contatto
+(la finestra usa la portata *maggiore* delle due parti, `Contact_Scheduler.ContactWindow`, `Logic/Contact_Scheduler.py:197-240`:
+un osservatore con la portata minore può vedere il bersaglio uscire e rientrare dal proprio volume dentro la stessa finestra).
 
-L'istante esatto del rilevamento (`_detection_time`, `:2081-2107`) usa i `Leg` di entrambe le
-rotte se disponibili (primo istante in cui la distanza scende sotto il raggio estratto, via
-`Contact_Scheduler.range_intervals`, esatto); senza, ricade sull'istante geometrico della
-finestra (`t_start` se la propria portata è la maggiore, `t_mutual_start` altrimenti, ultimo
-ripiego `t_cpa`).
+L'istante esatto del rilevamento usa i `Leg` di entrambe le rotte se disponibili (primo istante in cui la
+distanza scende sotto il raggio estratto, via `Contact_Scheduler.range_intervals`, esatto): `_detection_time`
+(`:2434-2459`) per l'estrazione unica di una finestra, `_pass_detection_time` (`:2540-2548`) dentro un
+passaggio (§4.35). Senza tratti, ricade sull'istante geometrico della finestra (`t_start` se la propria portata è
+la maggiore, `t_mutual_start` altrimenti, ultimo ripiego `t_cpa`).
+
+**Dove si calcola la Pd, in una riga.** `_detect_direction` (`:2301-2384`) legge il fattore ambientale
+(`detection_factor`, `:2314`), il periodo di rivisita del sensore (`_dwell_of`, `:2319`), calcola i passaggi
+(`_own_passes`, `:2325`) e: con due o più passaggi delega a `_detect_passes` (`:2550-2604`), con zero o uno fa
+**una** estrazione con la distanza minima della finestra (`:2354-2356`). Il percorso completo, con la FP, la D-5 e il
+ripiego senza tratti, è in §4.35 (diagramma D131) e nell'atlante (D82, D133).
 
 ## 4.3 Latenze di reazione
 
@@ -182,7 +220,7 @@ chiamante**, non implementata dal risolutore (`Logic/Engagement_Resolver.py:24-3
 ordine di preferenza: il risolutore prova le opzioni nell'ordine dato e sceglie la prima la cui
 arma ha ancora scorta (`_first_with_stock`, `:2822-2839`, v. §4.19); una `ShotSpec` singola resta
 un valore valido (sequenza di un elemento), quindi una `fire_control` scritta prima di questa
-data non cambia comportamento. `ShotSpec` (`:600-672`, riverificato il 2026-11-10 dopo la BI) trasporta:
+data non cambia comportamento. `ShotSpec` (`:673-763`, riverificata il 2026-11-13 dopo la VA) trasporta:
 
 | Campo | Significato |
 |---|---|
@@ -195,20 +233,31 @@ data non cambia comportamento. `ShotSpec` (`:600-672`, riverificato il 2026-11-1
 | `cycle_time` | Intervallo fra due salve del tiratore; `None` = `refire_interval` del profilo di reazione. |
 | `max_range` | Portata massima dell'arma [m] (distanza 3D tiratore-bersaglio); `None` = nessun vincolo di portata (comportamento precedente al 2026-09-24, v. §4.17). |
 | `stock_per_round` | Unità di scorta consumate da UN colpo della salva (decisione A3, 2026-09-26, v. §4.19): 1 per missili/bombe/proietti singoli, i colpi di una raffica per le armi a tiro rapido (il cui "colpo" è una raffica, v. §4.16). |
-| `intercept_domains` | Dalla BI (2026-11-08): i domini di difesa aerea (`'land'` \| `'naval'`) che possono considerare il colpo un **bersaglio** (regola BI, §4.24). `frozenset` (anche **vuoto** = nessun dominio) oppure `None` = non dichiarato, nessun vincolo. Ultimo campo, default `None` (`:635`): ogni `ShotSpec` costruita prima (la tabella `SHOTS` di `Scenario_Fixtures`, `:802-817`, con le armi `test:*`, non lo valorizza) resta valida e non cambia comportamento. `__post_init__` solleva `ValueError` se non è `None` o un `frozenset` incluso in `AD_DOMAINS` (`:538`, `:668-671`): un `set` semplice è rifiutato. Lo valorizza la fire control (`intercept_domains_for`, §4.16), come `interceptable`; il risolutore lo legge **solo** con l'interruttore `BI_AD_TARGET_RULE` acceso. |
+| `intercept_domains` | Dalla BI (2026-11-08): i domini di difesa aerea (`'land'` \| `'naval'`) che possono considerare il colpo un **bersaglio** (regola BI, §4.24). `frozenset` (anche **vuoto** = nessun dominio) oppure `None` = non dichiarato, nessun vincolo. Campo con default `None` (`:713`; dopo la VA non è più l'ultimo): ogni `ShotSpec` costruita prima (la tabella `SHOTS` di `Scenario_Fixtures`, `:802-817`, con le armi `test:*`, non lo valorizza) resta valida e non cambia comportamento. `__post_init__` solleva `ValueError` se non è `None` o un `frozenset` incluso in `AD_DOMAINS` (`:611`, `:749-752`): un `set` semplice è rifiutato. Lo valorizza la fire control (`intercept_domains_for`, §4.16), come `interceptable`; il risolutore lo legge **solo** con l'interruttore `BI_AD_TARGET_RULE` acceso. |
+| `min_altitude`, `max_altitude` | Dalla VA (2026-11-10): fascia di quota del bersaglio **relativa al tiratore** [m] (armi di superficie: il registro dichiara `min_altitude`/`max_altitude` «m AGL», cioè sopra il sito, senza terreno). `None` = nessun limite da quel lato. Default `None` (`:714-715`); `ValueError` se non sono numeri (bool escluso) o se `min_altitude > max_altitude` (`:754-763`). Il risolutore li legge **solo** con `VA_ENGAGEMENT_ALTITUDE_BAND` acceso (§4.37). |
+| `max_target_z` | Dalla VA: quota **assoluta** massima del bersaglio [m] (armi d'aereo: `max_height` del registro, in km, convertito in metri; nessuna quota minima nel registro). Default `None` (`:716`). Letto dal risolutore solo con `VA_ENGAGEMENT_ALTITUDE_BAND` acceso (§4.37). |
+
+I tre campi di quota li copia nella `ShotSpec` la fire control (`shot_spec_for`, `Logic/Fire_Control.py:824-882`, §4.16) **sempre**, anche a VA spenta: è il risolutore a leggerli solo con l'interruttore acceso.
 
 **Estensione facoltativa del protocollo: `target_grounded` (F4c).** La firma storica è
 `fire_control(shooter, target)`. Se il bersaglio è un **aereo a terra** (§4.30) il risolutore chiama
 `fire_control(shooter, target, target_grounded=True)`, **ma solo se** la fire control dichiara quel parametro
 keyword (o `**kwargs`): lo decide per introspezione della firma (`accepts_target_grounded`,
-`Logic/Engagement_Resolver.py:1575-1594`, costante `TARGET_GROUNDED_KEYWORD` a `:1572`), una volta per run
-(`_call_fire_control`, `:2691-2717`; dalla F7a `_fire_control`, `:2676-2689`, la chiama e poi applica le regole di bersaglio di
+`Logic/Engagement_Resolver.py:1861-1863`, costante `TARGET_GROUNDED_KEYWORD` a `:1832`), una volta per run
+(`_call_fire_control`, `:3197-3247`; dalla F7a `_fire_control`, `:3182-3195`, la chiama e poi applica le regole di bersaglio di
 missione, §4.32). Per ogni altro bersaglio la chiamata resta `(shooter, target)`: una fire control
 scritta prima della F4c, o priva del parametro, non cambia comportamento. Se non lo dichiara e il bersaglio è a
 terra, la chiamata è quella di sempre e il risolutore emette **un warning per run** (la fire control classificherà
 l'aereo a terra come un aereo in volo). Una firma non leggibile (builtin, oggetti C) vale "non lo dichiara".
 `Fire_Control.make_registry_fire_control` e la fire control di riferimento di `Scenario_Fixtures` lo dichiarano
 (§4.30).
+
+**Seconda estensione facoltativa: `altitudes` (VA, 2026-11-10).** Con `VA_ENGAGEMENT_ALTITUDE_BAND` acceso e i tratti delle rotte di entrambi, il risolutore chiama
+`fire_control(shooter, target, altitudes=(z_tiratore, z_bersaglio))` con le **quote all'istante della decisione** (interpolate sui tratti, `_altitudes_at`, `:3429-3457`), **ma solo se** la fire control
+dichiara il parametro keyword `altitudes` (o `**kwargs`): introspezione della firma come per `target_grounded` (`accepts_altitudes`, `:1866`, costante `ALTITUDES_KEYWORD` a `:1836`, letto una volta per run in
+`fire_control_knows_altitudes`). Una quota `None` nella coppia vuol dire «quota ignota: nessun filtro per quel confronto» (`Fire_Control` «Quota»). Se il bersaglio è anche a terra la chiamata porta entrambe le
+keyword (`_call_fire_control`, `:3197-3247`). `Fire_Control.make_registry_fire_control` la dichiara (parametro `altitudes`, `Logic/Fire_Control.py:934-935`) e `restrict_by_policy` la inoltra
+(quattro varianti dell'involucro secondo le keyword della fire control avvolta, `Logic/Fire_Control.py:1083-1108`); le fire control di test (`Scenario_Fixtures.SHOTS`) non la dichiarano e quindi non cambiano. Dettaglio in §4.37.
 
 **Cosa il risolutore non fa da sé** (`:396-419`, docstring del modulo): non seleziona l'arma dai registri —
 `fire_control` resta sempre **iniettata**, il contratto non è cambiato; una fire control che la
@@ -233,7 +282,7 @@ tutta la scorta di un'arma prima del primo impatto (§4.25).
 
 ## 4.5 Salva e saturazione — modello di Hughes
 
-Ogni evento-salva (`SalvoResolution`, prodotto da `_on_resolve`, `:3133-3303`) confronta i colpi
+Ogni evento-salva (`SalvoResolution`, prodotto da `_on_resolve`, `:3803-3978`) confronta i colpi
 **intercettabili** in arrivo con la capacità di intercettazione disponibile in quell'istante, con la stessa
 formula di `Military.salvo_interception_capacity` (v. capitolo 7, §7.5) ma calcolata sullo stato **ombra**:
 
@@ -243,14 +292,14 @@ capacity = Σ_i min(canali_i − spesi_i, scorta_i)     sugli intercettori opera
 
 **Cambio della F4b++ (2026-10-11): `_capacity` non esiste più.** Fino a `533cd1f5` un metodo
 `_EngagementRun._capacity(state)` sommava `min(canali, scorta)` sugli intercettori *della forza colpita*
-(`state.interceptors`). Dalla F4b++ il calcolo è in linea dentro `_on_resolve` (`:3182-3191`) e gli intercettori
+(`state.interceptors`). Dalla F4b++ il calcolo è in linea dentro `_on_resolve` (`:3856-3865`) e gli intercettori
 sono quelli del **dominio di coordinamento** della forza colpita (`domain_interceptors`, §4.29); `spesi_i` sono
 i canali già impegnati *nello stesso istante* per altre forze del dominio (§4.29). Senza `coordination_of` il
 dominio è la forza stessa, `spesi_i` è sempre 0, e la formula coincide con la vecchia `_capacity`.
 
 **Dal 2026-09-28 `capacity` è un tetto, non più il numero di colpi fermabili.** Fino a quella data
 `intercepted = min(interceptable_rounds, capacity)`: tutti gli intercettori della forza potevano
-fermare ogni colpo. Oggi l'allocazione è **per salva** (`:3172-3217`, regola L1 della proposta SAM,
+fermare ogni colpo. Oggi l'allocazione è **per salva** (`:3846-3892`, regola L1 della proposta SAM,
 `Analysis/Document/Proposta_Regole_Allocazione_SAM.md` §7.9): le salve dell'evento, nell'ordine
 `(impatto, salva)`, scorrono gli intercettori del dominio nell'ordine della regola F (soli cannoni
 prima, poi per id, v. §4.24); ogni intercettore può fermare i colpi di una salva solo se
@@ -259,31 +308,31 @@ prima, poi per id, v. §4.24); ogni intercettore può fermare i colpi di una sal
 2. ha ancora canali e scorta liberi nell'evento (`min(canali, scorta)` totale per evento, non per
    salva), e
 3. il punto di lancio della salva è **fuori** dal suo volume d'intercettazione (`_may_intercept`,
-   `:3019-3042`, regola L1), e
-4. ha una traccia del colpo e il tempo di reagire prima dell'impatto (`_in_time`, `:3107-3131`,
+   `:3671-3694`, regola L1), e
+4. ha una traccia del colpo e il tempo di reagire prima dell'impatto (`_in_time`, `:3776-3801`,
    regola R-INT, §4.26).
 
 **Dalla BI (2026-11-08) c'è una condizione in più, valutata subito dopo (2) e prima di (3)**, ma **solo con
 `BI_AD_TARGET_RULE` acceso** (spento di default: la lista sopra è allora esattamente quella di prima): il dominio
 dell'intercettore (`'land'` | `'naval'`) deve essere fra gli `intercept_domains` della salva (`_admissible`,
 `Logic/Engagement_Resolver.py:3196-3202`, §4.24). Nella condizione del ciclo di allocazione l'ordine è
-`free <= 0 or not _admissible or not _may_intercept or not _in_time` (`:3396-3397`); con la regola accesa anche il
-conteggio di `SalvoResolution.interceptable_rounds` non include le salve a domini vuoti (`:3333-3337`), mentre
+`free <= 0 or not _admissible or not _may_intercept or not _in_time` (`:3881-3882`); con la regola accesa anche il
+conteggio di `SalvoResolution.interceptable_rounds` non include le salve a domini vuoti (`:3818-3822`), mentre
 `capacity` resta la somma delle disponibilità di **tutti** gli intercettori del dominio, non filtrata per dominio.
 
 I colpi fermati sono quindi `Σ_salve (colpi − residuo)`, mai più di `min(interceptable_rounds,
 capacity)`; coincide con quel minimo solo se nessun intercettore è escluso da (3) e (4) (v. il
-commento a `:3177-3182`: senza vincoli geometrici il risultato coincide con l'allocazione sul totale
+commento a `:3851-3856`: senza vincoli geometrici il risultato coincide con l'allocazione sul totale
 usata fino al 2026-09-28). Il *quale* intercettore ferma *quale* salva è ora tracciato internamente
 (`used` per intercettore, `stopped` per salva), ma l'`InterceptionEvent` resta per intercettore e
 arma, e la sua `salvo_ids` referenzia **tutte** le salve dell'evento (non quella specifica, v. §4.13). Dalla
 F4b++ l'`InterceptionEvent` porta come `asset_id` l'intercettore (che può appartenere a un'altra forza del
-dominio) e come `force_id` la forza **difesa**, cioè quella colpita (`:3237-3239`, §4.29).
+dominio) e come `force_id` la forza **difesa**, cioè quella colpita (`:3912-3914`, §4.29).
 
 Ogni intercettazione consuma la scorta di **intercettori** dell'asset che intercetta
 (`Mobile.interceptor_stock`), un contatore **distinto per scopo** dalle munizioni offensive
 (`Mobile.ammunition`) — due tipi di evento diversi, `InterceptionEvent` mai un `AmmunitionEvent`
-(`:683-738`) — ma dal 2026-09-26 (decisione A1, v. §4.19) **la stessa voce di scorta per arma**
+(`:843-898`) — ma dal 2026-09-26 (decisione A1, v. §4.19) **la stessa voce di scorta per arma**
 quando l'asset ha armi AD modellate per arma (`Mobile.stores`/`Asset/Weapon_Stores.py`): un
 missile antiaereo che intercetta e uno sparato offensivamente sono lo stesso oggetto fisico, e
 scalano la stessa voce del dizionario `{modello_arma: quantità}`. La vecchia regola del "SAM
@@ -292,23 +341,23 @@ missile-solo) è stata **eliminata**: non serve più un caso speciale, la condiv
 costruzione su qualunque asset con scorta per arma (v. §4.19 per il dettaglio e per l'ordine di
 consumo, regola F dentro l'asset: prima i cannoni, poi i missili).
 
-Il consumo è applicato per intercettore, nell'ordine F, dopo l'allocazione (`:3219-3239`): un
+Il consumo è applicato per intercettore, nell'ordine F, dopo l'allocazione (`:3894-3914`): un
 `InterceptionEvent` per intercettore **e per arma** (un asset che ha esaurito i cannoni e prosegue
 coi missili nello stesso evento ne produce due).
 
-Il **raggruppamento in evento-salva** avviene in `_on_impact` (`:2974-2982`): impatti entro
+Il **raggruppamento in evento-salva** avviene in `_on_impact` (`:3611-3619`): impatti entro
 `salvo_window` secondi da un impatto già in coda per la stessa forza finiscono nello stesso
 `_PendingGroup`; default `salvo_window=0.0` (solo impatti simultanei — la scelta più
-conservativa, un punto aperto di modello da decidere con la taratura, `:3626`, `:3674-3676`).
+conservativa, un punto aperto di modello da decidere con la taratura, `:4301`, `:4351-4353`).
 
 ## 4.6 Danno per singolo colpo
 
 Ogni colpo non intercettato passa da `Damage_Model.build_damage_event` con un `draw` estratto qui
 (`:3252-3255`). Nessuna reimplementazione del contratto del danno — dettaglio in capitolo 5, §5.1.
 Un colpo che arriva su un bersaglio già distrutto (payload congelato, salva già partita) non
-genera un'estrazione: viene contato come `wasted` (`:3243-3250`). Dal 2026-09-29, quando un colpo
+genera un'estrazione: viene contato come `wasted` (`:3918-3925`). Dal 2026-09-29, quando un colpo
 porta un bersaglio da operativo a non operativo, il risolutore registra **chi** l'ha messo fuori
-combattimento (`state.loss_shooters[target_id] = (shooter_id, time)`, `:3262-3264`): serve al
+combattimento (`state.loss_shooters[target_id] = (shooter_id, time)`, `:3937-3939`): serve al
 "fuoco senza risposta" della soglia di rottura (§4.21).
 
 ## 4.7 Disingaggio: soglie P1 + R2, con soglia di rottura stocastica
@@ -324,10 +373,10 @@ capitolo 7, §7.2), dopo **ogni** evento-salva:
   deciso nello stesso istante — la forza è stata distrutta mentre rompeva il contatto, da salve
   già in volo, `:3321-3329`);
 - altrimenti, per una forza con dottrina e senza esito già deciso, si calcola la **soglia di
-  rottura** B(t) della forza (`_breakpoint`, `:3516-3559`, §4.21) e l'esito è `DISENGAGED` se
+  rottura** B(t) della forza (`_breakpoint`, `:4191-4234`, §4.21) e l'esito è `DISENGAGED` se
   - `erosion >= B(t)` (trigger `TRIGGER_EROSION`), **oppure**
   - la salva ha tolto almeno `shock_min_losses` asset **e** `shock >= (shock_mediana /
-    erosion_mediana) × B(t)` (trigger `TRIGGER_SHOCK`) — `:3334-3344`. I due trigger possono
+    erosion_mediana) × B(t)` (trigger `TRIGGER_SHOCK`) — `:4009-4019`. I due trigger possono
     scattare insieme.
 
 **Cambiamento rispetto a `6754bf1c`** (2026-09-29, `72c7f7c8`): prima la soglia di erosione era un
@@ -338,19 +387,19 @@ ritiravano per un carro perso in 7 repliche su 8 (`Analysis/Document/Proposta_So
 (§4.21). Una dottrina che dichiara le sole chiavi `erosion`/`shock` riproduce esattamente le soglie
 fisse precedenti (`Context/Doctrine.py:110-113`, modalità deterministica usata da test e scenari
 "ad oltranza"); `erosion = 1.0` resta "combatte fino all'annientamento", senza modulazione
-(`_breakpoint`, `:3521-3524`).
+(`_breakpoint`, `:4196-4199`).
 
-**Solo le forze militari possono disingaggiarsi** (`_can_disengage`, `:1548-1568`, decisione di
+**Solo le forze militari possono disingaggiarsi** (`_can_disengage`, `:1808-1828`, decisione di
 progetto 2026-09-23): un `Block` non-`Military` (Transport, Storage, Urban, Production, o un
 `Block` generico con `category` 'Logistic'/'Civilian') non può fisicamente rompere il contatto e
 ripiegare — riceve `thresholds=None` incondizionatamente, senza il warning di dottrina mancante
 (non manca nulla: è una scelta di modello, non un dato assente). Un oggetto che non è affatto un
 `Block` (stub duck-typed nei test, adapter futuri) resta trattato come forza combattente. Il
 controllo è sulla gerarchia di classe (`validate_class`), non su un campo testuale come
-`category` (docstring `:65-75`).
+`category` (docstring `:71-81`).
 
-**Una forza può dichiarare `can_disengage` (F4b).** `_can_disengage` (`:1548-1568`) legge prima un attributo
-booleano `can_disengage` della forza: se c'è, è **preso in parola** (`:1560-1563`). È l'adattatore della vista di
+**Una forza può dichiarare `can_disengage` (F4b).** `_can_disengage` (`:1808-1828`) legge prima un attributo
+booleano `can_disengage` della forza: se c'è, è **preso in parola** (`:1820-1823`). È l'adattatore della vista di
 missione `MissionForce`, che non è né una `Military` né un `Block` e quindi non supererebbe il controllo di
 classe: la vista calcola `can_disengage` sul **suo blocco** con la stessa regola (`Military` sì, `Block` non
 militare no; capitolo 6 §6.12). Così una missione di un blocco `Military` ha la propria politica di
@@ -360,13 +409,13 @@ controllo di classe.
 **Aerei a terra (F4c).** Il disingaggio guarda solo chi **può ritirarsi** (v. §4.30 per le ragioni):
 
 - una forza i cui asset impegnati sono **tutti a terra** non ha dottrina (`thresholds=None`, come un blocco non
-  militare, `_build_forces`, `:1823-1826`): subisce fino alla fine, `HELD` e poi `DESTROYED`;
+  militare, `_build_forces`, `:2138-2141`): subisce fino alla fine, `HELD` e poi `DESTROYED`;
 - in una forza **mista** (la vista residua di una base con difese e aerei parcheggiati) `_on_resolve` passa a
-  `_check_doctrine` l'erosione e lo shock calcolati **sui soli asset non a terra** (`:3286-3302`), mentre
+  `_check_doctrine` l'erosione e lo shock calcolati **sui soli asset non a terra** (`:3961-3977`), mentre
   `operative_left` conta **tutti** gli asset impegnati: l'annientamento (`operative_left == 0`) prevale e conta
   anche gli aerei; senza combattenti ancora operativi (`withdrawable=False`) non c'è nessuno da ritirare e si
   verifica solo l'annientamento (`:3331`);
-- se la forza disingaggia, gli aerei a terra **restano bersagli** (`_gone`, `:2497-2504`): non si ritirano con la
+- se la forza disingaggia, gli aerei a terra **restano bersagli** (`_gone`, `:3003-3010`): non si ritirano con la
   forza;
 - `ForceOutcome.committed`/`lost`/`erosion` e `SalvoResolution` contano comunque **tutti** gli asset.
 
@@ -411,7 +460,7 @@ nuovo payload.
 
 **Re-scheduling delle finestre NON implementato *dentro il risolutore* (R4, seconda parte)**: una forza
 che si disingaggia è solo *segnalata* nell'esito di quella run; il nuovo instradamento e il ricalcolo delle
-finestre di contatto non sono mai fatti da `resolve_engagement` (`:374-377`: il docstring del modulo, ripulito il
+finestre di contatto non sono mai fatti da `resolve_engagement` (`:461-464`: il docstring del modulo, ripulito il
 2026-10-19 da `d1686b28`, dice «non li fa questo modulo: dal G4b li fa la sessione»; prima diceva «rimandato ... a un livello
 superiore (C2/campagna)»). **Dal G4b li fa però l'orchestratore, *fra* un episodio e il successivo**: `Session_Simulator` risolve
 ogni episodio d'ingaggio con una chiamata separata, ri-pianifica gli aerei interessati dall'esito e ricalcola con lo
@@ -421,7 +470,7 @@ V. la nota di divergenza col testo originale della decisione wiki nel capitolo 9
 
 ## 4.10 Stato ombra: `_Shadow`
 
-Il risolutore **non muta gli asset**: lavora su una copia di lavoro (`_Shadow`, `:1409-1482`) —
+Il risolutore **non muta gli asset**: lavora su una copia di lavoro (`_Shadow`, `:1669-1742`) —
 salute e scorte evolvono lì, non sull'asset — e restituisce gli eventi in un `EngagementResult`
 immutabile. Applicarli è un passo separato ed esplicito, `apply_engagement_result`
 (capitolo 5, §5.3): è la stessa separazione calcolo/applicazione già scelta da `Damage_Model`.
@@ -429,11 +478,11 @@ immutabile. Applicarli è un passo separato ed esplicito, `apply_engagement_resu
 per duck typing (`:1411-1413`).
 
 Dal 2026-09-26 (decisione A1, v. §4.19) `_Shadow` porta anche una **copia** della scorta per
-modello d'arma dell'asset reale (`stores: Optional[Dict[str, int]]`, `:1434-1439`), con lo stesso
+modello d'arma dell'asset reale (`stores: Optional[Dict[str, int]]`, `:1694-1699`), con lo stesso
 schema di `Mobile`: il pool anonimo `anonymous` (usato solo quando `stores` è `None`, per gli
 stub duck-typed senza scorta per arma), le armi non modellate `unmodelled` (mitragliatrici/CIWS
 contate a unità nei registri, senza vincolo), le armi AD `interceptor_weapons` su cui
-`interceptor_stock` è una **vista** (`:1458-1460`), e il pool anonimo di intercettori
+`interceptor_stock` è una **vista** (`:1718-1720`), e il pool anonimo di intercettori
 `anonymous_interceptors`, usato solo quando la vista non è attiva. La contabilità è quella
 **condivisa** con l'asset reale, `Asset/Weapon_Stores.py` (v. §4.19): così `apply_engagement_result`
 ritrova sull'asset esattamente i consumi che l'ombra ha concesso, per costruzione, senza una
@@ -444,32 +493,32 @@ per arma, per ogni asset che ha armi AD modellate.
 
 ### Le altre strutture interne, come cambiate dopo `6754bf1c`
 
-- **`_Candidate`** (`:1485-1499`): un bersaglio rilevato da un tiratore, ingaggiabile in `[t_ready, t_end]`;
+- **`_Candidate`** (`:1745-1759`): un bersaglio rilevato da un tiratore, ingaggiabile in `[t_ready, t_end]`;
   porta `t_cpa`/`distance_cpa` (ripiego del controllo di portata senza tratti di rotta) e `not_before`
   (istante di ingresso in portata quando il tiro è rimandato, §4.17). Invariata nei campi.
-- **`_ForceState`** (`:1502-1526`): oltre a `force_id`, `side`, `committed`, `thresholds`, `interceptors`,
+- **`_ForceState`** (`:1762-1786`): oltre a `force_id`, `side`, `committed`, `thresholds`, `interceptors`,
   `outcome`, `time`, `triggers`, `max_shock`, porta dal 2026-09-29 lo stato della soglia di rottura
   (`force`, `air`, `temper`, `temper_z`, `morale`, `enemy_estimate`, `stationary`, `loss_shooters`,
   `breakpoint`, `force_ratio`, `unanswered_fraction`, §4.21), la dottrina di tiro di lato (`fire`, §4.25) e,
-  dalla F4b, `block_id` (il blocco di una vista di missione, `:1527-1528`; riportato in `ForceOutcome.block_id`).
-- **`_EngagementRun`** (`:1642-3616`, costruttore `:1645-1767`): nuovi ingressi `breakpoint_rng`,
+  dalla F4b, `block_id` (il blocco di una vista di missione, `:1787-1788`; riportato in `ForceOutcome.block_id`).
+- **`_EngagementRun`** (`:1939-4291`, costruttore `:1942-2082`): nuovi ingressi `breakpoint_rng`,
   `morale_for`, `enemy_estimate_for`, `fire_doctrine`, `rwr_catalogue`; nuovo stato di percezione
   (`seen_by`, `identified_by`, `rwr_class`, `class_weights`, `surface_weights`: §4.21, §4.23), della prelazione
   (`launchers_against`, `launch_generation`, `pending_decide`, `may_intercept_cache`: §4.24) e dell'R-INT
   (`detected_at`, `air_range_cache`, `in_time_cache`, `zone_cache`: §4.26). **Dalla F4b+/F4b++/F4c** il
   costruttore riceve anche `coordination_of` e `grounded` (`:1437-1440`) e porta lo stato del dominio di
   coordinamento (`domain_of`, `domain_interceptors`, `instant_interceptions`, `:1677-1685`: §4.28-4.29) e degli
-  aerei a terra (`grounded`, `fire_control_knows_grounded`, `:1667-1670`: §4.30); `seen_by`, `identified_by` e
+  aerei a terra (`grounded`, `fire_control_knows_grounded`, `:1964-1967`: §4.30); `seen_by`, `identified_by` e
   `rwr_class` sono chiavati **per dominio**, non per forza (§4.28). Subito dopo `_build_forces` il costruttore
-  chiama `_build_domains(coordination_of)` (`:1753`); `_init_breakpoints()` è chiamato
-  alla fine della costruzione se la run è utilizzabile (`:1755-1756`). Il ciclo `run()` (`:3563-3586`) esegue
+  chiama `_build_domains(coordination_of)` (`:2068`); `_init_breakpoints()` è chiamato
+  alla fine della costruzione se la run è utilizzabile (`:2070-2071`). Il ciclo `run()` (`:4238-4261`) esegue
   `_detect()`, poi `_schedule_next` per ogni tiratore con candidati, dalla F7a `_schedule_phase_wakes()` (§4.32), poi
-  svuota la coda gestendo anche il quarto tipo `_DECIDE` e il quinto, `_WAKE` (F7a, `:3563-3586`).
+  svuota la coda gestendo anche il quarto tipo `_DECIDE` e il quinto, `_WAKE` (F7a, `:4238-4261`).
 
 ## 4.11 Ordine delle estrazioni RNG (parte del contratto)
 
-(`:385-390`) Prima **tutte** le estrazioni di rilevamento, nell'ordine canonico delle finestre
-`(t_start, id_a, id_b, t_end)` e per ognuna la direzione a→b poi b→a; poi un'estrazione per colpo
+(docstring del modulo, «Vincoli di progetto»: l'ordine delle estrazioni «fa parte del contratto») Prima **tutte** le estrazioni di rilevamento, nell'ordine canonico delle finestre
+`(t_start, id_a, id_b, t_end)` e per ognuna la direzione a→b poi b→a (e, dalla FP, dentro la direzione, per **passaggio**: §4.35); poi un'estrazione per colpo
 non intercettato, nell'ordine degli eventi. La coda eventi ha tie-break deterministico
 `(t, tipo, id, sequenza)`, con i tipi nell'ordine `LANCIO(0) < IMPATTO(1) < RISOLUZIONE(2) <
 RIDECISIONE(3) < RIESAME(4)`: a parità di istante tutti i lanci leggono lo stato *prima* dei danni (risoluzione
@@ -482,7 +531,7 @@ regola di bersaglio che dipende dal tempo.
 Due precisazioni dal 2026-09-29/30, che **non** spostano le estrazioni di `rng`:
 
 - la **tempra** delle forze (§4.21) è estratta da un flusso **separato**, `breakpoint_rng`, una
-  sola volta per forza, in `_init_breakpoints` (`:3356-3391`) nell'ordine di ingresso delle forze e
+  sola volta per forza, in `_init_breakpoints` (`:4031-4065`) nell'ordine di ingresso delle forze e
   prima di ogni rilevamento: non consuma estrazioni di `rng`;
 - le regole R-INT (§4.26) e L1 (§4.24), la saturazione e il tetto di tiro (§4.25) e la percezione
   RWR (§4.23) sono **deterministiche**: nessuna estrazione, quindi l'ordine di quelle esistenti
@@ -495,7 +544,7 @@ Tre precisazioni dalla F4 (2026-10-05/11):
   non aggiungono né tolgono estrazioni, cambiano solo *chi spara a chi* e *chi intercetta cosa* (verificato dai
   test `test_the_sharing_draws_no_extra_numbers` e `test_same_detection_draws`);
 - un **aereo a terra come osservatore non estrae** (§4.30): `_detect_direction` esce prima della `_draw()`
-  (`:1991-1994`), quindi con `grounded` non vuoto il numero di estrazioni di rilevamento è inferiore di una per
+  (`:2306-2309`), quindi con `grounded` non vuoto il numero di estrazioni di rilevamento è inferiore di una per
   ogni direzione "dal parcheggiato" (nei test: `test_grounded_observer_draws_nothing`). Con `grounded` vuoto
   l'ordine e il numero sono quelli di prima;
 - le estrazioni dell'ingaggio non sono più chiavate per blocco ma per **missione**: l'`event_id` dello stream
@@ -509,17 +558,26 @@ le estrazioni successive dello stesso ingaggio (la regola delle estrazioni è pe
 eventi), ma senza regole (`target_rules` vuoto) ogni percorso è quello di prima. Il fuoco su posizione (F7b) non passa
 dal risolutore: ha un proprio stream (capitolo 6 §6.23).
 
+Una precisazione dal 2026-11-11 (FP, §4.35): le estrazioni di rilevamento sono **per passaggio**, non per finestra, e i passaggi **dal secondo in poi** non estraggono dallo stream `rng`
+ma da un flusso **separato**, `pass_rng` (decisione FP-2 = O3), nell'ordine canonico seguito dall'indice del passaggio (finestra canonica, direzione a→b poi b→a, passaggio). Il **primo** passaggio di una
+direzione estrae da `rng` esattamente nella posizione dell'estrazione unica di prima (`_draw()` senza argomento, `:2354`; per il primo passaggio di una direzione a più passaggi, `:2575`), quindi: (1) lo stream `rng`
+ha lo **stesso numero di estrazioni di rilevamento** di prima per ogni direzione, qualunque sia il numero di passaggi, e le estrazioni di danno che seguono restano nello stesso ordine; (2) l'unico stream
+che cresce è `pass_rng`, e solo per le direzioni con almeno due passaggi; (3) con zero o un passaggio `pass_rng` non è mai estratto e **può mancare** (in sessione c'è sempre, ma non viene toccato); (4) con almeno due
+passaggi e `pass_rng` mancante `_detect_passes` solleva `ValueError` **prima di ogni estrazione** (`:2560-2562`): è un errore di chiamata, non un ripiego. Per la sessione il flusso dei passaggi ha la sua chiave
+(`pass_event_id`, tag `'detection_pass'`, stesso `counter` dell'episodio: capitolo 6 §6.4). La D-5 (§4.36), la BI (§4.24) e la VA (§4.37) **non estraggono nulla** e non spostano nessuna estrazione, in nessuno dei due stati
+dei loro interruttori: cambiano una soglia (D-5), chi ferma un colpo (BI) o quando e con che arma si spara (VA).
+
 ## 4.12 `apply_engagement_result` e `resolve_engagement`: le due funzioni pubbliche
 
 `resolve_engagement(force_a, force_b, contacts, fire_control, rng, *, extra_forces=(), legs=None,
 committed=None, thresholds=None, reaction_profile_for=None, detection_factor=None,
 salvo_window=0.0, provenance=DM.DERIVED, breakpoint_rng=None, morale_for=None,
 enemy_estimate_for=None, fire_doctrine=None, rwr_catalogue=None, coordination_of=None,
-grounded=None, activity_criteria=None, target_rules=None)` (`:3619-3779`) costruisce una
-`_EngagementRun` e ne esegue `run()` (`:3563-3586`). Restituisce `None` (con un log) se meno di due
-forze hanno asset impegnabili (`_build_forces`, `:1850-1853`; `resolve_engagement`, `:3776-3777`).
-I nove parametri dopo `provenance` sono tutti facoltativi, con default che
-riproducono il comportamento precedente. I primi cinque sono del 2026-09-29/30: `breakpoint_rng` (flusso separato per la tempra, §4.21),
+grounded=None, activity_criteria=None, target_rules=None, dwell_time_for=None, pass_rng=None)` (`:4294-4473`) costruisce una
+`_EngagementRun` e ne esegue `run()` (`:4238-4261`). Restituisce `None` (con un log) se meno di due
+forze hanno asset impegnabili (`_build_forces`, `:2086`; `resolve_engagement`, `:4470-4471`).
+I **undici** parametri dopo `provenance` sono tutti facoltativi, con default che
+riproducono il comportamento precedente (gli ultimi due, `dwell_time_for` e `pass_rng`, sono del 2026-11-06 e del 2026-11-11: v. sotto). I primi cinque sono del 2026-09-29/30: `breakpoint_rng` (flusso separato per la tempra, §4.21),
 `morale_for` e `enemy_estimate_for` (ingressi della soglia di rottura, §4.21), `fire_doctrine`
 (dottrina di tiro, tabella al posto di `Doctrine.DEFAULT_FIRE_DOCTRINE`, `{}` = nessuna regola,
 §4.25), `rwr_catalogue` (emettitori per il peso di classe della RWR, §4.23). Gli ultimi due sono del
@@ -529,28 +587,31 @@ missioni: `coordination_of` (`{force_id: chiave di dominio}`, il dominio di coor
 F5 anche un `Contact_Scheduler.GroundedSchedule` o una mappa `{id: [(lo, hi)]}`, non solo un iterabile di id;
 `None` o vuoto = nessuno). L'ottavo, `activity_criteria` (`{asset_id: ActivityCriteria}`, F6-B1, §4.31), è
 anch'esso ricavato dalla sessione, dai criteri di fine dichiarati dalle missioni (`TypeError` se non è una mappa di
-`ActivityCriteria`, `:3748-3756`). Il nono, `target_rules` (`{asset_id: TargetRules}`, F7a, §4.32), è ricavato dalla sessione
-dalle regole e dal bersaglio delle missioni (`TypeError` se non è una mappa di `TargetRules`, `:3759-3766`); `None` o vuoto =
-comportamento precedente. `run_session` (capitolo 6 §6.1) passa `breakpoint_rng` (costruito da
-`order.rng(event_id=temper_event_id(...), counter=ordinale)`), `morale_for`, `enemy_estimate_for` e
+`ActivityCriteria`, `:4442-4450`). Il nono, `target_rules` (`{asset_id: TargetRules}`, F7a, §4.32), è ricavato dalla sessione
+dalle regole e dal bersaglio delle missioni (`TypeError` se non è una mappa di `TargetRules`, `:4452-4459`); `None` o vuoto =
+comportamento precedente. Il **decimo**, `dwell_time_for` (D-5, §4.36), è un lettore `(observer, target, mode) -> float | None` del periodo di rivisita [s] del sensore
+(`TypeError` se non è chiamabile, `:4436-4437`); in sessione lo passa `Session_Simulator` (`registry_dwell_time`) **solo** con `D5_DWELL_TIME` acceso; `None` = legge di sola distanza. L'**undicesimo**,
+`pass_rng` (FP, §4.35), è un flusso casuale **separato** per i passaggi di rilevamento dal secondo in poi (`TypeError` se non espone `.random()`, `:4439-4440`); necessario solo se una direzione ha almeno due passaggi
+(altrimenti mai estratto); `None` con una direzione a più passaggi = `ValueError`; in sessione lo passa **sempre** `Session_Simulator` (`pass_event_id`). `run_session` (capitolo 6 §6.1) passa `breakpoint_rng` (costruito da
+`order.rng(event_id=temper_event_id(...), counter=ordinale)`, `Session_Simulator.py:2809-2811`), `morale_for`, `enemy_estimate_for` e
 `fire_doctrine`, più `coordination_of`, `grounded` e, quando ve ne sono (criteri dichiarati, fine nota a monte per un rientro,
-passività derivata da un episodio precedente: capitolo 6 §6.20), `activity_criteria` (`Session_Simulator.py:2742-2743`) e,
+passività derivata da un episodio precedente: capitolo 6 §6.20), `activity_criteria` (`Session_Simulator.py:2768-2769`) e,
 quando qualche missione dichiara una ROE diversa da `weapon_free` o armi designate (capitolo 6 §6.22), `target_rules`
-(`Session_Simulator.py:2745-2763`);
+(`Session_Simulator.py:2771-2789`), più **sempre** `pass_rng` (`:2798`, FP) e `dwell_time_for` solo con `D5_DWELL_TIME` acceso (`:2791-2793`, D-5);
 **non** passa `rwr_catalogue`, disponibile solo chiamando
 `resolve_engagement` direttamente (capitolo 9 §9.6). Nuovi errori: `TypeError` se `coordination_of` non è una
-mappa di stringhe, `ValueError` se due forze di lati diversi stanno nello stesso dominio (lanciati da `_build_domains`, `:1862-1901`; dichiarati nel docstring a `:3719-3726`).
+mappa di stringhe, `ValueError` se due forze di lati diversi stanno nello stesso dominio (lanciati da `_build_domains`, `:2177-2217`; dichiarati nel docstring a `:4408-4413`, che dal 2026-11-11 elenca anche `pass_rng` mancante con una direzione a più passaggi).
 
-`apply_engagement_result(result, *forces)` (`:3794-3872`) applica un `EngagementResult` agli
+`apply_engagement_result(result, *forces)` (`:4488-4569`) applica un `EngagementResult` agli
 asset reali: `DamageEvent` con `Damage_Model.apply_damage_event` (nell'ordine di produzione, i
 cui delta sono coerenti con quell'ordine), `AmmunitionEvent` con `Mobile.consume_ammunition(rounds,
 weapon=...)`, `InterceptionEvent` con `Mobile.consume_interceptor_stock(interceptions,
 weapon=...)`. Dal 2026-09-26 i due tipi di evento portano il campo `weapon` (v. §4.19): i consumi
 si riapplicano nell'ordine temporale con cui lo stato ombra li ha prodotti — a parità di istante
-prima i lanci poi le intercettazioni (`:3836-3845`) — perché con la scorta per arma un consumo
+prima i lanci poi le intercettazioni (`:4533-4542`) — perché con la scorta per arma un consumo
 sull'aggregato e un'intercettazione sulla stessa voce non commutano quando la voce si esaurisce.
 Un asset non trovato è registrato e saltato, non un errore. La funzione costruisce la mappa degli asset
-sull'**unione** di tutte le forze passate (`:3814-3821`): per questo, con la difesa di salva per dominio
+sull'**unione** di tutte le forze passate (`:4511-4518`): per questo, con la difesa di salva per dominio
 (§4.29), un `InterceptionEvent` il cui intercettore appartiene a un'altra forza del dominio viene applicato
 correttamente purché il chiamante passi tutte le forze della run (`run_session` passa `*component`, capitolo 6
 §6.1). La funzione non cambia con la F4: nessuna riga nuova, solo un chiamante che le passa viste di missione
@@ -571,7 +632,10 @@ forza **difesa**; dalla F4b++ i due possono appartenere a forze diverse dello st
 `SalvoResolution` il campo `capacity` è, dal 2026-09-28, un **tetto** (§4.5) e `intercepted` può
 essere minore di `min(interceptable_rounds, capacity)`. Dalla F6-B1 (`15ac3d3d`) `EngagementResult` porta anche
 `activity_ends` (le **fini di attività** scattate nella run, `ActivityEnd`, `:780-785`) e il risolutore riceve
-`ActivityCriteria` (`:742-776`): v. §4.31.
+`ActivityCriteria` (`:742-776`): v. §4.31. **Dal 2026-11-06/11/10** (D-5, FP, VA, `a389cadb`): `Detection` porta sei campi in più, tutti con default `None` (`:767-789`): `exposure_s` e
+`dwell_time_s` (permanenza e periodo di rivisita usati dalla legge D-5, §4.36; `None` se la legge non è stata applicata a quell'estrazione) e i quattro campi del rilevamento per passaggio
+`pass_index`, `pass_count`, `pass_start`, `pass_end` (indice del passaggio, passaggi della direzione nella finestra, inizio e fine del passaggio ritagliati alla finestra; `None` per l'estrazione unica di
+una direzione con zero o un passaggio, §4.35); `ShotSpec` porta i tre campi di quota della VA, `min_altitude`, `max_altitude`, `max_target_z` (§4.4, §4.37).
 
 ```mermaid
 classDiagram
@@ -586,6 +650,9 @@ classDiagram
         +float max_range
         +int stock_per_round
         +frozenset intercept_domains
+        +float min_altitude
+        +float max_altitude
+        +float max_target_z
     }
 
     class Detection {
@@ -597,6 +664,12 @@ classDiagram
         +float draw
         +bool detected
         +float time
+        +float exposure_s
+        +float dwell_time_s
+        +int pass_index
+        +int pass_count
+        +float pass_start
+        +float pass_end
     }
 
     class Salvo {
@@ -883,7 +956,8 @@ l'unità (plausibilmente migliaia di USD), non vanno quindi normalizzati.
 
 La quota corrente è `asset.position.z` [m]: il motore non aggiorna `position` durante la sessione
 (le rotte sono consumate dal `Contact_Scheduler`, non scritte sull'asset), quindi per un aereo in
-rotta a quota costante coincide con la quota di volo di partenza. Unità verificate per registro:
+rotta a quota costante coincide con la quota di volo di partenza. **Questo vale a VA spenta** (default):
+con `VA_ENGAGEMENT_ALTITUDE_BAND` acceso il risolutore passa invece le quote **all'istante della decisione**, ricavate dai tratti, attraverso la keyword facoltativa `altitudes` (§4.4, §4.37). Unità verificate per registro:
 `Ground_Weapon_Data`/`Ship_Weapon_Data` — `min_altitude`/`max_altitude` in **metri**, relativi al
 tiratore; `Aircraft_Weapon_Data` — `max_height` in **km**, quota assoluta. Armi senza dato di
 quota (CIWS, cannoni navali, autocannoni, HMG): il vincolo diventa geometrico — una traiettoria
@@ -909,7 +983,7 @@ entrambi — **STIMA DICHIARATA**: si assume l'ingaggio a metà portata
 calcola il risolutore, dopo); altrimenti `DEFAULT_TIME_OF_FLIGHT_S` per categoria (`:234`, ordini
 di grandezza non tarati).
 
-### Campi derivati della `ShotSpec` (`:111-150`, `shot_spec_for`, `:819-865`; righe riverificate il 2026-11-10 dopo la BI)
+### Campi derivati della `ShotSpec` (`:111-150`, `shot_spec_for`, `:824-882`; righe di `shot_spec_for` riverificate il 2026-11-13 dopo la VA)
 
 - `weapon`: nome del modello d'arma — dal 2026-09-26 anche la chiave della scorta consumata (v.
   §4.19).
@@ -923,16 +997,20 @@ di grandezza non tarati).
   portata solo le tre bombe senza dati di rilascio (KGBU-2AO/2PTAB/96r, D4 — chiusa il 2026-09-28: oggi nessuna) e i
   casi senza posizione nota di tiratore o bersaglio.
 - `interceptable`: `True` per missili e bombe guidate (`type == 'Guided bombs'`); `False` per
-  proiettili, razzi non guidati, bombe a caduta libera e siluri (calcolo in `shot_spec_for`, `:837-842`,
+  proiettili, razzi non guidati, bombe a caduta libera e siluri (calcolo in `shot_spec_for`, `:842-848`,
   **invariato** dalla BI: `interceptable` dice se il colpo è un'arma intercettabile in generale, `intercept_domains`
   da **chi** può considerarlo un bersaglio).
 - `intercept_domains` (BI, 2026-11-08; regola dell'utente del 2026-11-07, §4.24): `intercept_domains_for(weapon)`
-  (`:799-816`), valorizzato **sempre** (è un dato dell'arma, come `interceptable`: nessuna cache della fire control dipende
-  dall'interruttore). `None` se la classe di munizione dell'arma non è nota (`munition_class`, `:761-796`); altrimenti i
-  domini `'land'` e/o `'naval'` della classe (`AD_TARGET_DOMAINS`, `:294`) più il dominio navale per le classi
-  `anti_ship`, `arm`, `tactical` (`AD_SIZE_GATED_NAVAL`, `:295`) se il flag `ad_detectable` del registro (o il suo
-  default di classe, `AD_DETECTABLE_DEFAULT`, `:297`, **STIMA** [S]) è vero. Una classe nota dà sempre un `frozenset`, anche
+  (`:804-821`), valorizzato **sempre** (è un dato dell'arma, come `interceptable`: nessuna cache della fire control dipende
+  dall'interruttore). `None` se la classe di munizione dell'arma non è nota (`munition_class`, `:766-801`); altrimenti i
+  domini `'land'` e/o `'naval'` della classe (`AD_TARGET_DOMAINS`, `:299`) più il dominio navale per le classi
+  `anti_ship`, `arm`, `tactical` (`AD_SIZE_GATED_NAVAL`, `:300`) se il flag `ad_detectable` del registro (o il suo
+  default di classe, `AD_DETECTABLE_DEFAULT`, `:302`, **STIMA** [S]) è vero. Una classe nota dà sempre un `frozenset`, anche
   vuoto. Tabella completa in §4.24.
+- `min_altitude`, `max_altitude`, `max_target_z` (VA, 2026-11-10; §4.37), nel blocco a `Logic/Fire_Control.py:864-873`, valorizzati **sempre** (anche a VA spenta; li legge il risolutore solo con l'interruttore acceso): per un
+  **bersaglio aereo** (`is_air`) e un'arma di dominio `ground` o `ship` con `min_alt` e `max_alt` entrambi dichiarati dal registro, la fascia **relativa al tiratore** `(min_altitude, max_altitude)` = `(min_alt, max_alt)` [m]; per un
+  bersaglio aereo e un'arma di dominio `air`, il tetto **assoluto** `max_target_z` = `max_height_m` (il `max_height` del registro, km → m: `_Weapon.__init__`, `:395`); altrimenti i tre campi restano `None`. Nessuna quota minima
+  nel registro delle armi d'aereo (decisione VA-3 (b)).
 - `rounds`/`cycle_time`: per le armi a tiro rapido (`fire_rate >= AUTOMATIC_FIRE_RATE_RPM = 200`
   colpi/min) un colpo della `ShotSpec` è una **raffica** di `GUN_BURST_ROUNDS = 50` colpi; per le
   armi a tiro singolo un colpo è un proietto; per missili/bombe/razzi/siluri `rounds =
@@ -1030,31 +1108,32 @@ verificato sul registro `AIR_WEAPONS`), mentre lo toglie a una SEAD (task `SEAD`
 
 ## 4.17 Controllo di portata: `ShotSpec.max_range` e il rimando `not_before` (D11)
 
-Decisione utente 2026-09-24 (`Logic/Engagement_Resolver.py:112-136`). Prima di questa data il tiro
+Decisione utente 2026-09-24 (docstring del modulo, «Controllo di portata», `Logic/Engagement_Resolver.py:118-142`). Prima di questa data il tiro
 partiva al primo istante utile dopo rilevamento + latenza, **qualunque fosse la distanza**: una
 fire control che restituiva un'arma da 20 km faceva sparare un aereo rilevato a 60 km. Ora, se
 `ShotSpec.max_range` è dichiarato, il **lancio** parte solo quando la distanza 3D
 tiratore-bersaglio è ≤ `max_range`.
 
 La geometria "bersaglio entro la portata" è isolata (primo caso dei futuri "volumi d'ingaggio",
-v. il commento a `:1597-1607`) in due funzioni sostituibili, senza toccare la schedulazione:
+v. il commento a `:1871-1880`) in due funzioni sostituibili, senza toccare la schedulazione:
 
-- **`engagement_intervals(legs_shooter, legs_target, max_range)`** (`:1611-1618`): con i tratti
-  di rotta di entrambi, è esattamente `Contact_Scheduler.range_intervals` — la stessa geometria
+- **`engagement_intervals(legs_shooter, legs_target, max_range, band=None)`** (`:1885-1915`): con i tratti
+  di rotta di entrambi e senza `band`, è esattamente `Contact_Scheduler.range_intervals` — la stessa geometria
   esatta già usata per il rilevamento (sfera di raggio `max_range` centrata sul tiratore,
   soluzione esatta di `|dr + dv·s| <= R` su ogni sottointervallo a velocità relativa costante).
-- **`engagement_intervals_without_legs(t_cpa, distance_cpa, t_end, max_range)`** (`:1621-1637`):
+- **`engagement_intervals_without_legs(t_cpa, distance_cpa, t_end, max_range)`** (`:1918-1936`):
   ripiego quando `resolve_engagement` è chiamato senza `legs` — la sola `ContactWindow` non
   ricostruisce la distanza nel tempo, il solo dato certo è il massimo avvicinamento: `distance_cpa`
   ignota → nessun vincolo (`[(-inf, +inf)]`); `distance_cpa > max_range` → mai in portata (`[]`);
   altrimenti `[(t_cpa, t_end)]` (prima del CPA il tiro aspetta il CPA, dopo il CPA la distanza non
   è verificabile e il tiro è ammesso fino a fine finestra).
 
-`_EngagementRun._range_entry(shooter_id, candidate, max_range, t_from)` (`:2841-2874`) usa una
+`_EngagementRun._range_entry(shooter_id, candidate, max_range, t_from, band=None)` (`:3375-3417`) usa una
 delle due per trovare il primo istante ≥ `t_from` con il bersaglio in portata, memoizzato per
-`(tiratore, bersaglio, max_range)` in `self.range_cache` (`:1734`).
+`(tiratore, bersaglio, max_range)` (con la VA acquisita anche la `band`) in `self.range_cache` (`:2043`). Il candidato vale fino a `candidate.t_end`: con la FP, per l'osservatore
+con la portata minore, è la **fine del passaggio** e non la fine della finestra (§4.35).
 
-`_schedule_next` (`:2230-2419`, il controllo di portata a `:2400-2414`) applica il controllo al
+`_schedule_next` (`:2727-2925`, il controllo di portata a `:2904-2920`) applica il controllo al
 momento della scelta del tiro, **dopo** aver scelto l'arma con scorta (v. §4.19: la fire control
 è consultata e la prima opzione con scorta è già fissata prima del controllo di portata, non il
 contrario — v. il limite dichiarato più sotto):
@@ -1062,7 +1141,7 @@ contrario — v. il limite dichiarato più sotto):
 - `t_in_range is None` → il candidato è **esaurito** (`candidate.exhausted = True`), come un
   `fire_control` che restituisce `None`, ma solo per quella coppia/finestra;
 - `t_in_range > t_fire` → il candidato è **rimandato** (`candidate.not_before = t_in_range`, campo
-  di `_Candidate`, `:1499`) e la scelta si ripete: il tiratore, nel frattempo, può ingaggiare un
+  di `_Candidate`, `:1759`) e la scelta si ripete: il tiratore, nel frattempo, può ingaggiare un
   altro bersaglio già in portata;
 - `t_in_range <= t_fire` → il lancio parte a `t_fire`.
 
@@ -1081,6 +1160,10 @@ il candidato è rimandato o esaurito **anche se** un'opzione successiva della st
 già in portata: il tiratore non "scende" alla seconda opzione per motivi di portata, solo per
 motivi di scorta. Non è stato corretto: richiederebbe che `_first_with_stock` conoscesse anche la
 geometria della finestra, oggi calcolata solo dopo la scelta dell'arma.
+
+**Dalla VA (2026-11-10, §4.37) il volume del controllo non è più sempre la sola sfera.** Con `VA_ENGAGEMENT_ALTITUDE_BAND` acceso la `ShotSpec` può dichiarare, oltre a `max_range`, una fascia di quota
+(`min_altitude`/`max_altitude`, relative al tiratore) o un tetto assoluto (`max_target_z`): `engagement_intervals` riceve allora una `band` e restituisce **sfera ∩ fascia**, `_range_entry` la usa come chiave di memoizzazione
+e `_schedule_next` passa `band=self._band_of(spec)` (`:2911-2912`). Spenta, `_band_of` dà sempre `None` e il percorso è quello descritto sopra, identico.
 
 Per isolare il solo controllo di portata, il diagramma mostra la fire control come se
 restituisse direttamente la `ShotSpec` scelta: il passo intermedio "prima opzione con scorta"
@@ -1125,7 +1208,7 @@ secondo la propria ricognizione) e **statica**: l'istantanea è presa **prima** 
 sessione — sposta solo la soglia di `detection_probability`, l'estrazione di rilevamento avviene
 comunque, una per direzione, nell'ordine del contratto (`:1184-1191`).
 
-### `recon_detection_factor_fn(seen_block_ids, observer_side, unseen_factor, seen_factor=1.0)` (`:1209-1246`)
+### `recon_detection_factor_fn(seen_block_ids, observer_side, unseen_factor, seen_factor=1.0)` (`:1469-1506`)
 
 La callable `(observer, target) -> float` di un lato: `seen_factor` se il blocco del bersaglio è
 nell'istantanea `seen_block_ids` oppure è dello stesso lato dell'osservatore (le proprie forze
@@ -1134,13 +1217,13 @@ senza blocco). Per un osservatore di lato diverso da `observer_side` (o senza bl
 fattore è `1.0`: la nebbia di un lato non tocca l'altro — per applicarla a entrambi si combinano
 due fattori.
 
-### `combine_detection_factors(*fns)` (`:1249-1283`)
+### `combine_detection_factors(*fns)` (`:1509-1543`)
 
 Un solo `detection_factor` dal **prodotto** di più componenti (meteo, nebbia Blue, nebbia Red),
 ognuno riportato in [0, 1] prima del prodotto: serve a passare a `resolve_engagement` un'unica
 callable quando più degradazioni si applicano insieme.
 
-### `region_recon_detection_factor(region, observer_side, ...)` (`:1359-1404`)
+### `region_recon_detection_factor(region, observer_side, ...)` (`:1619-1664`)
 
 Costruisce il fattore per un lato dall'istantanea di ricognizione di una `Region`, con la
 **stessa ricetta** di `Region.update_military_priorities(use_recon=True)`:
@@ -1153,21 +1236,21 @@ seen = Tactical_Analysis.build_recon_cp_snapshot(
 
 L'istantanea è scattata **qui**, una sola volta, prima di lanciare la sessione (`:1394`).
 `unseen_factor` è poi modulato dall'efficienza di ricognizione dell'osservatore
-(`recon_unseen_factor`, `:1286-1315`):
+(`recon_unseen_factor`, `:1546-1575`):
 
 ```
 e      = side_recon_efficiency(region, observer_side)     # in [0,1], 0.0 se assente
 unseen = UNSEEN_DETECTION_FACTOR + (seen_factor - UNSEEN_DETECTION_FACTOR) × RECON_EFFICIENCY_FOG_RELIEF × e
 ```
 
-con `UNSEEN_DETECTION_FACTOR = 0.5` e `RECON_EFFICIENCY_FOG_RELIEF = 0.5` (`:427-440`, **STIME
+con `UNSEEN_DETECTION_FACTOR = 0.5` e `RECON_EFFICIENCY_FOG_RELIEF = 0.5` (`:569-583`, **STIME
 DICHIARATE**, nessuna fonte del progetto le fornisce, da ricalibrare). Con ricognizione nulla
 (`e=0`) il fattore resta `0.5`; con ricognizione massima (`e=1.0`) sale a `0.75` — **mai** fino a
 `1.0`: anche la ricognizione migliore non rende un blocco NON confermato equivalente a uno
 confermato, ne dimezza solo lo svantaggio (razionale dichiarato: cueing su settori coperti/tracce
 parziali, non conferma).
 
-`side_recon_efficiency(region, side)` (`:1318-1356`) è l'efficienza di ricognizione di un **lato**,
+`side_recon_efficiency(region, side)` (`:1578-1616`) è l'efficienza di ricognizione di un **lato**,
 aggregata come il **massimo** fra le sue `Military` nella regione
 (`Military.get_recon_efficiency()`, mediana per blocco degli asset con ruolo `RECONNAISSANCE`).
 Scelta deliberata: basta un buon sensore per "illuminare" l'area — una regione con cinque
@@ -1183,7 +1266,7 @@ illumina tutta la regione, ovunque sia).
 `update_military_priorities`): warning e fattore neutro, `1.0` ovunque (`:1389-1392`).
 
 Blocchi osservatori/osservati selezionati come in `Region.get_recon_reports`
-(`get_blocks_by_criteria(side, category='Military')`, `:1334`, `:1341`): osservatori e osservati seguono
+(`get_blocks_by_criteria(side, category='Military')`, `:1594`, `:1601`): osservatori e osservati seguono
 quindi la stessa regola — **ma** v. il bug noto su questo filtro in capitolo 9, §9.1, che impatta
 sia questa funzione sia `get_recon_reports`.
 
@@ -1284,9 +1367,9 @@ consume_interceptor_stock`, `Mobile.py:1023-1056`).
 
 ### Come lo consuma il risolutore: `_first_with_stock` e `_on_launch`
 
-Allo **scheduling** (`_schedule_next`, `:2230-2419`), il risolutore chiede alla `fire_control`
+Allo **scheduling** (`_schedule_next`, `:2727-2925`), il risolutore chiede alla `fire_control`
 tutte le opzioni adatte (v. §4.16) e prende la **prima** la cui arma ha scorta per almeno un
-colpo (`_first_with_stock`, `:2822-2839`):
+colpo (`_first_with_stock`, `:3356-3373`):
 
 ```
 colpi = min(spec.rounds, scorta_disponibile // spec.stock_per_round)     con scorta vincolante
@@ -1297,7 +1380,7 @@ Se nessuna opzione ha scorta, il candidato è trattato come se la fire control a
 `None`: quel bersaglio non verrà più ingaggiato da questo tiratore (v. §4.16). Il numero di colpi
 così calcolato viaggia **congelato** nel payload del lancio, insieme alla `ShotSpec` (R4, §4.9).
 
-Al **lancio** (`_on_launch`, `:2879-2970`), il consumo effettivo è `rounds * spec.stock_per_round`
+Al **lancio** (`_on_launch`, `:3516-3607`), il consumo effettivo è `rounds * spec.stock_per_round`
 unità dalla voce dell'arma scelta (`:2922-2935`); se la scorta si è erosa fra scheduling e lancio
 — può succedere quando un'intercettazione nel frattempo ha consumato la stessa voce, v. sopra — il
 lancio è annullato come un bersaglio già fuori combattimento, difendendo l'invariante "la scorta
@@ -1342,7 +1425,7 @@ differenza di quota fra tiratore e bersaglio (`shooter_z - target_z`, entrambe d
 la stessa fonte del filtro di quota di §4.16), letta anche per un tiratore aereo contro un
 bersaglio di superficie — prima di B6 le quote si leggevano solo per bersagli **aerei** (filtro
 d'inviluppo); ora anche per questo caso (`bomber = not is_air and shooter_key[0] == 'Aircraft'`).
-La **velocità** è `attack.speed` del loadout assegnato (`_attack_speed_kmh`, `:793-801`), `None`
+La **velocità** è `attack.speed` del loadout assegnato (`_attack_speed_kmh`, `:885-893`), `None`
 se il loadout non dichiara un profilo `attack` (nessuna bomba, o loadout senza dati) — in quel
 caso `bomb_engagement_estimate` usa il centro della finestra di velocità dell'arma.
 
@@ -1378,7 +1461,7 @@ Documento di decisione: `Analysis/Document/Proposta_Soglia_Rottura_Stocastica.md
 disingaggio (§4.7) con una **distribuzione**: "forze analoghe cedono a livelli di perdita molto
 diversi" (proposta §1). Il disingaggio resta per **forza intera** (decisione P1).
 
-### La formula (`_breakpoint`, `:3516-3559`; dottrina in `Context/Doctrine.py:60-178`)
+### La formula (`_breakpoint`, `:4191-4234`; dottrina in `Context/Doctrine.py:60-178`)
 
 ```
 B(t)      = logistic( logit(mu_eff(t)) + dispersion * z )            z = Phi^-1(u)
@@ -1388,14 +1471,14 @@ mu_eff(t) = clamp( erosion * M * R(t) * U(t) * P ,  median_bounds )
 | Simbolo | Cosa | Dove nel codice |
 |---|---|---|
 | `erosion` | **mediana** della soglia di rottura (default 0.30); `1.0` = "combatte fino all'annientamento", nessuna modulazione (`:3521-3524`) | `Doctrine.py:161`, `:132` |
-| `u`, `z` | **tempra** della forza: quantile `u` estratto **una volta** per forza e per ingaggio, `z = Phi^-1(u)` (`statistics.NormalDist().inv_cdf`), `u` limitato a `[1e-9, 1-1e-9]`; estratta solo se `dispersion > 0` **e** `breakpoint_rng` è fornito, altrimenti `z = 0` (soglia alla mediana modulata) | `_init_breakpoints`, `:3356-3391` |
+| `u`, `z` | **tempra** della forza: quantile `u` estratto **una volta** per forza e per ingaggio, `z = Phi^-1(u)` (`statistics.NormalDist().inv_cdf`), `u` limitato a `[1e-9, 1-1e-9]`; estratta solo se `dispersion > 0` **e** `breakpoint_rng` è fornito, altrimenti `z = 0` (soglia alla mediana modulata) | `_init_breakpoints`, `:4031-4066` |
 | `dispersion` | σ della logit-normale (default 0.5: circa 90% delle soglie fra 0.16 e 0.49 attorno a 0.30, `Doctrine.py:123-124`) | `Doctrine.py:163` |
-| `M` | morale: `1 + morale_weight × (2m − 1)`, neutro se `morale_for` è `None` o dà `None` (default `morale_weight = 0.3`) | `_morale_of`, `:3393-3407`; `:3529-3530` |
-| `R(t)` | rapporto di forze percepito: `clamp(rho ** force_ratio_exponent, force_ratio_bounds)` (esponente 0.5, limiti 0.6-1.5); neutro se `rho` non è definito | `_perceived_ratio`, `:3451-3494`; `:3532-3538` |
-| `U(t)` | fuoco senza risposta: `1 − unanswered_fire_weight × frazione` (peso 0.3) | `_unanswered_fraction`, `:3505-3514`; `:3540-3541` |
-| `P` | postura: `defensive_posture_factor` (1.2) se tutti gli asset con tratti di rotta sono fermi per tutto l'ingaggio | `_stationary`, `:3425-3441`; `:3543-3544` |
+| `M` | morale: `1 + morale_weight × (2m − 1)`, neutro se `morale_for` è `None` o dà `None` (default `morale_weight = 0.3`) | `_morale_of`, `:4068-4082`; `:4204-4205` |
+| `R(t)` | rapporto di forze percepito: `clamp(rho ** force_ratio_exponent, force_ratio_bounds)` (esponente 0.5, limiti 0.6-1.5); neutro se `rho` non è definito | `_perceived_ratio`, `:4126-4169`; `:4207-4213` |
+| `U(t)` | fuoco senza risposta: `1 − unanswered_fire_weight × frazione` (peso 0.3) | `_unanswered_fraction`, `:4180-4189`; `:4215-4216` |
+| `P` | postura: `defensive_posture_factor` (1.2) se tutti gli asset con tratti di rotta sono fermi per tutto l'ingaggio | `_stationary`, `:4100-4116`; `:4218-4219` |
 | `median_bounds` | limiti di `mu_eff` (0.05, 0.95), applicati **solo** se il prodotto dei fattori ≠ 1 | `:3546-3550` |
-| `shock` | resta una soglia alla mediana (0.20): durante l'ingaggio vale `(shock/erosion) × B(t)` e scatta solo se la salva ha tolto almeno `shock_min_losses` asset (default 2) | `_check_doctrine`, `:3334-3344` |
+| `shock` | resta una soglia alla mediana (0.20): durante l'ingaggio vale `(shock/erosion) × B(t)` e scatta solo se la salva ha tolto almeno `shock_min_losses` asset (default 2) | `_check_doctrine`, `:4009-4019` |
 
 `B(t)` è ricalcolata a **ogni** risoluzione di salva contro la forza (docstring del modulo,
 `:108`), perché `R(t)` e `U(t)` dipendono da ciò che la forza ha percepito entro `t`. Tutti i valori
@@ -1439,13 +1522,13 @@ esponente 0, peso del fuoco senza risposta 0, postura 1, perdite minime dello sh
   le parti (§4.30).
 - **Percezione dei nemici** (`seen_by[dominio][asset] = primo istante`, chiavato per **dominio di
   coordinamento** dalla F4b+, §4.28; senza `coordination_of` il dominio è la forza): alimentata dal
-  rilevamento dei sensori di una qualunque forza del dominio (`_perceive`, `:2033-2037`, chiamata in
-  `_detect_direction`, `:2010`) e, per una forza aerea, dalla RWR (§4.23).
+  rilevamento dei sensori di una qualunque forza del dominio (`_perceive`, `:2386-2390`, chiamata in
+  `_detect_direction`, `:2363`) e, per una forza aerea, dalla RWR (§4.23).
 - **Fuoco senza risposta**: `loss_shooters` registra, per ogni asset messo fuori combattimento, il
   tiratore e l'istante (`:3262-3264`); la frazione è la quota di quei tiratori **non ancora
-  percepiti** dal dominio della forza al momento della perdita (`:3505-3514`).
+  percepiti** dal dominio della forza al momento della perdita (`:4180-4189`).
 - **Postura**: `_stationary` è `True` se ogni asset impegnato con tratti di rotta ha tutti i tratti
-  fermi (tolleranza `STATIONARY_EPS = 1e-6` m, `:453`), `None` se nessuno ha tratti. Si legge **dai tratti di
+  fermi (tolleranza `STATIONARY_EPS = 1e-6` m, `:624`), `None` se nessuno ha tratti. Si legge **dai tratti di
   rotta** (`self.legs`), non dalla postura continua della F4c: la postura `Defense` dichiarata sulla vista
   residua (§4.30) non entra in questo fattore; un'unità ferma senza missione ha comunque tratti fermi
   (`static_legs`) e quindi `P` si applica come prima.
@@ -1589,8 +1672,8 @@ dice **quando** la minaccia è percepita:
 | solo `track`/`guidance` (es. SPO-10) | `PERCEIVED_AT_LAUNCH`: al lancio contro l'aereo (approssimazione dichiarata: il tracciamento comincia qualche istante prima) |
 | nessuna | mai |
 
-Nel risolutore: `_detect_direction` (`:2017-2019`) chiama `_perceive_rwr` all'istante di
-rilevamento; `_on_launch` (`:2957-2961`) al lancio. `_perceive_rwr` (`:2039-2046`) mette l'emettitore in
+Nel risolutore: `_detect_direction` (`:2370-2372`) chiama `_perceive_rwr` all'istante di
+rilevamento; `_on_launch` (`:3594-3598`) al lancio. `_perceive_rwr` (`:2392-2399`) mette l'emettitore in
 `seen_by` del **dominio** della forza dell'aereo (conta nel rapporto di forze e rende "con risposta" le perdite
 che causa) e registra la **classe** RWR in cui cade (`rwr_class_of`, `:652-663`), anch'essa chiavata per dominio
 (`rwr_class`, F4b+, §4.28). Un aereo **a terra** ha l'RWR spento: le due condizioni sopra non valgono per lui
@@ -1600,9 +1683,9 @@ che causa) e registra la **classe** RWR in cui cade (`rwr_class_of`, `:652-663`)
 
 Un emettitore percepito **solo** dall'RWR è noto per classe, non per sistema: lo SPO-15 mette
 lo Shilka e il Tunguska nella stessa classe, lo SPO-10 vede un "SAM" generico. Il suo peso nel
-rapporto di forze (`_air_threat`, `:2048-2079`):
+rapporto di forze (`_air_threat`, `:2401-2432`):
 
-1. **identificato** dai sensori del **dominio** della forza entro `t` (`identified_by`, `:2011-2012`) → E(N) del
+1. **identificato** dai sensori del **dominio** della forza entro `t` (`identified_by`, `:2364-2365`) → E(N) del
    **sistema esatto**;
 2. altrimenti, se l'RWR lo ha percepito → E(N) **media della classe**: la classe più fine fra
    quelle degli aerei illuminati entro `t` (`min(classi, key=(len, sorted))`, `:2070`: la
@@ -1742,7 +1825,7 @@ stesse difese invece di essere ripartiti (proposta §7.10).
 
 Documenti: `Analysis/Document/Proposta_Bersagli_Intercettabili_Difesa_Aerea.md` (regole R-BI, decisioni BI-1..BI-12 del
 2026-11-07 e P-1..P-7 del 2026-11-08) e, per i dati dei missili, `Proposta_Dati_Bersagli_Intercettabili.md` (decisioni
-D1-D6). Righe di codice riverificate il 2026-11-10.
+D1-D6). Righe di codice riverificate il 2026-11-13 (a `a389cadb`; prima erano quelle del 2026-11-10, spostate dalla VA e dalla FP).
 
 **La regola dell'utente (2026-11-07, riportata nella sostanza).** Una difesa antiaerea (SAM o AAA) può considerare un
 **missile** bersaglio solo se (1) appartiene alle categorie dei missili **balistici** e/o **cruise**, chiunque li lanci, e/o
@@ -1752,16 +1835,16 @@ aereo, di un cruise o di un balistico). Ne discende che: tutti i missili aria-su
 compatibili; **tutte le bombe e tutti i razzi** sono esclusi da difese terrestri e navali. Questo **restringe** la regola
 (2) del 2026-09-28 (sopra), che dichiarava legittimi «le armi autonome lanciate a distanza considerevole»: prima della BI
 era «arma autonoma» ogni missile e ogni bomba guidata (`kind == 'missile'` o bombe `Guided bombs`,
-`Logic/Fire_Control.py:837-842`). **Lo è solo con l'interruttore acceso**: `BI_AD_TARGET_RULE = False`
-(`Logic/Engagement_Resolver.py:535`) riproduce il comportamento precedente (è il default, e nessun codice di produzione lo
+`Logic/Fire_Control.py:842-845`). **Lo è solo con l'interruttore acceso**: `BI_AD_TARGET_RULE = False`
+(`Logic/Engagement_Resolver.py:597`) riproduce il comportamento precedente (è il default, e nessun codice di produzione lo
 accende: solo i test, con `patch.object`; `S35` lo fa dentro la propria `run_variant`). Il valore è letto **una volta per run**,
-in `_EngagementRun.__init__` (`self.ad_target_rule`, `:1833`).
+in `_EngagementRun.__init__` (`self.ad_target_rule`, `:2010`).
 
 **Chi decide che cosa (decisione BI-9).** La **fire control**, che conosce l'arma, dichiara in `ShotSpec.intercept_domains`
 quali domini possono considerare il colpo un bersaglio; il **risolutore** si limita a filtrare l'intercettore per dominio.
 Il core non conosce né classi né dimensioni.
 
-1. **Classe di munizione** (`munition_class(weapon)`, `Logic/Fire_Control.py:761-796`). Dichiarata nel registro
+1. **Classe di munizione** (`munition_class(weapon)`, `Logic/Fire_Control.py:766-801`). Dichiarata nel registro
    (`data['munition_class']`, stringa) per i **52 `MISSILES_ASM`** (44 aerei in `Asset/Aircraft_Weapon_Data.py`, 8 navali in
    `Asset/Ship_Weapon_Data.py`): 10 `cruise` (i 9 aerei Kh-55, Kh-101, Kh-555, Kh-65, KD-20, KD-63, KD-63B, Kh-59, Kh-59M e il
    Tomahawk), 17 `anti_ship` (10 aerei e 7 navali), 7 `arm`, 18 `tactical` (conteggi letti eseguendo i registri il
@@ -1776,13 +1859,13 @@ Il core non conosce né classi né dimensioni.
    lunghezza è esclusa) e sono verificati solo dai test dei dati. Il **Maverick** (AGM-65D, AGM-65K, RB-75T) è `False` per
    decisione dell'utente (BI-6), contro ogni difesa. Classi e flag sono **stime di progetto [S]** su fonti aperte, non dati
    tarati (capitolo 9, «Bersagli intercettabili»).
-3. **Domini** (`intercept_domains_for(weapon)`, `:799-816`): `None` se la classe è ignota (arma non a registro o non
+3. **Domini** (`intercept_domains_for(weapon)`, `:804-821`): `None` se la classe è ignota (arma non a registro o non
    classificabile: nessun vincolo, comportamento precedente, BI-8); altrimenti l'insieme di `AD_TARGET_DOMAINS` per la
-   classe (`:294`: `ballistic` e `cruise` → `{'land', 'naval'}`, nessuna altra classe), più `'naval'` se la classe è in
-   `AD_SIZE_GATED_NAVAL` (`:295`: `anti_ship`, `arm`, `tactical`) **e** il flag `ad_detectable` del registro è vero (se il
-   registro non lo dichiara, vale `AD_DETECTABLE_DEFAULT`, `:297`: `True` per `cruise`, `ballistic`, `anti_ship`, `False` per
+   classe (`:299`: `ballistic` e `cruise` → `{'land', 'naval'}`, nessuna altra classe), più `'naval'` se la classe è in
+   `AD_SIZE_GATED_NAVAL` (`:300`: `anti_ship`, `arm`, `tactical`) **e** il flag `ad_detectable` del registro è vero (se il
+   registro non lo dichiara, vale `AD_DETECTABLE_DEFAULT`, `:302`: `True` per `cruise`, `ballistic`, `anti_ship`, `False` per
    `arm` e `tactical`, **stima [S]**; sui registri veri il default non è mai usato: tutte le 52 voci dichiarano il flag).
-   Una classe nota dà **sempre** un `frozenset`, anche vuoto. `shot_spec_for` lo passa a `ShotSpec` (`:865`).
+   Una classe nota dà **sempre** un `frozenset`, anche vuoto. `shot_spec_for` lo passa a `ShotSpec` (`:880`).
 
 | Classe | Domini che possono fermarla | Voci a registro | Nota |
 |---|---|---|---|
@@ -1793,7 +1876,7 @@ Il core non conosce né classi né dimensioni.
 | `tactical` | navale se `ad_detectable` | 18 | Maverick `False`: mai bersaglio, contro nessuna difesa |
 | `aam`, `sam`, `atgm`, `guided_bomb`, `bomb`, `rocket`, `gun`, `torpedo` | nessuno (`frozenset` vuoto) | derivate | piccoli, non balistici né cruise; «tutte le bombe e tutti i razzi» (BI-4) |
 
-*Diagramma — dall'arma ai domini che ne possono intercettare il colpo (`munition_class` e `intercept_domains_for`, §4.24; non numerato nell'atlante).*
+*Diagramma D130 — dall'arma ai domini che ne possono intercettare il colpo (`munition_class` e `intercept_domains_for`, §4.24; livello L4, verificato a `a389cadb`).*
 
 ```mermaid
 flowchart TD
@@ -1810,12 +1893,12 @@ flowchart TD
     N --> OUT
 ```
 
-4. **Filtro nel risolutore.** `_ad_domain(shadow)` (`Logic/Engagement_Resolver.py:3189`, decisione BI-5) classifica
+4. **Filtro nel risolutore.** `_ad_domain(shadow)` (`Logic/Engagement_Resolver.py:3656`, decisione BI-5) classifica
    l'**intercettore**: `'naval'` se è una nave (`validate_class(shadow.asset, 'Ship')`), altrimenti `'land'`; il valore è
-   memoizzato per id in `ad_domain_cache` (`:1834`). `_admissible(shadow, salvo)` (`:3196-3202`) è vero se l'interruttore è
+   memoizzato per id in `ad_domain_cache` (`:2011`). `_admissible(shadow, salvo)` (`:3663-3669`) è vero se l'interruttore è
    spento o se `salvo.spec.intercept_domains is None`; altrimenti solo se il dominio dell'intercettore è fra quelli della
    salva. È chiamata nel ciclo di allocazione di `_on_resolve` **dopo** il controllo di canali e scorta e **prima** di L1 e
-   R-INT (`:3396-3397`): per una coppia (salva, intercettore) esclusa L1 e R-INT non sono nemmeno valutate (nessun effetto
+   R-INT (`:3881-3882`): per una coppia (salva, intercettore) esclusa L1 e R-INT non sono nemmeno valutate (nessun effetto
    sugli esiti: né l'una né l'altra estrae). Nessuna estrazione, in entrambi gli stati dell'interruttore: cambia **chi** ferma
    un colpo, e dove cambia cambia il numero di colpi che arrivano al danno (e quindi le estrazioni di danno successive, come
    per L1 e R-INT).
@@ -1823,7 +1906,7 @@ flowchart TD
 **Che cosa non cambia.** La regola D (chi può intercettare), L1 e R-INT (meccanismo), la saturazione di Hughes, le scorte
 (un missile antiaereo non speso su un colpo escluso resta per le salve offensive), L2 e L3 (non leggono `interceptable`).
 Cambia il conteggio `SalvoResolution.interceptable_rounds`, che con la regola accesa non include le salve a domini vuoti
-(`:3333-3337`); `capacity` resta invece la somma delle disponibilità di tutti gli intercettori, non filtrata per dominio.
+(`:3818-3822`); `capacity` resta invece la somma delle disponibilità di tutti gli intercettori, non filtrata per dominio.
 
 **Effetti tipici (interruttore acceso).** Un Tor (terrestre) non ferma più i Maverick (`tactical`): era il caso di S19AD
 `tor_rear` (la sonda B-1 del blocco 2 ha verificato che, accendendo l'interruttore, cambiano **esattamente** le sei esecuzioni
@@ -1833,7 +1916,7 @@ bersagli, per nessun dominio. **Il criterio di dimensione vale solo per le difes
 BI-12 (a), scelta di progetto [S]): per le terrestri contano solo le classi `cruise` e `ballistic`, quindi un Kh-29 o un Kh-58
 (`tactical`/`arm`, con `ad_detectable` vero) può essere fermato da una nave ma mai da un Buk, anche se di taglia simile al
 Kh-59 (che lo è perché `cruise`): limite dichiarato nel capitolo 9 e nel commento sopra le costanti `AD_*`
-(`Logic/Fire_Control.py:288-292`).
+(`Logic/Fire_Control.py:293-297`).
 
 **Verifica: lo scenario S35-ADTGT** (`Test/Test_Session_Scenarios_S35.py`, classe `TestS35AirDefenceTargets`, 15 test: 12
 asserzioni e 3 premesse non vacue; 8 varianti x 4 semi `S35-ADTGT-0..3` = 32 esecuzioni nuove nella fotografia; dettaglio in
@@ -1925,24 +2008,24 @@ validazione `validate_fire_doctrine`, `:348-383`; lettura `get_fire_doctrine`, `
 Un lato assente dalla tabella, o una chiave `None`, non ha la regola (comportamento precedente al
 2026-09-29); `fire_doctrine={}` la disattiva per tutti.
 
-### Come agisce (`_schedule_next`, `:2363-2373`)
+### Come agisce (`_schedule_next`, `:2860-2870`)
 
-1. **Bersagli bloccati** (`_blocked`, `:2460-2473`): il tiratore esclude dal pool i bersagli su cui
-   ha già `max_rounds_in_flight` colpi in volo (`_rounds_in_flight`, `:2456-2458`: solo salve **già
+1. **Bersagli bloccati** (`_blocked`, `:2966-2979`): il tiratore esclude dal pool i bersagli su cui
+   ha già `max_rounds_in_flight` colpi in volo (`_rounds_in_flight`, `:2962-2964`: solo salve **già
    partite** dello stesso tiratore sullo stesso bersaglio, non quelle schedulate) e quelli saturi per
    il suo dominio. La soglia di saturazione è quella della dottrina del lato **del tiratore**
-   (`self.force_states[shooter.force_id].fire`, `:2462`).
-2. **Saturazione** (`_coverage`, `:2443-2454`): `P_cov = 1 − Π_s (1 − accuracy_s × destroy_capacity_s)^{colpi_s}`
+   (`self.force_states[shooter.force_id].fire`, `:2968`).
+2. **Saturazione** (`_coverage`, `:2949-2960`): `P_cov = 1 − Π_s (1 − accuracy_s × destroy_capacity_s)^{colpi_s}`
    sulle salve del dominio (di tutte le sue forze, §4.28) dirette al bersaglio, **in volo o schedulate e non
    ancora lanciate**
-   (`_force_shots_on`, `:2423-2441`; un lancio schedulato il cui istante è già passato senza
+   (`_force_shots_on`, `:2929-2947`; un lancio schedulato il cui istante è già passato senza
    esecuzione non conta). `accuracy × destroy_capacity` è la probabilità di esito KILL del modello di
    danno per colpo, colpi indipendenti; le **intercettazioni possibili sono ignorate** (O5: stima
    ottimistica, il bersaglio torna scoperto al primo impatto fallito). I lanciatori prioritari (L2) sono
    **esenti dalla saturazione** (O4), non dal tetto.
-3. **Attesa** (`_wait`, `:2475-2495`): se tutti i bersagli del pool sono bloccati, il tiratore aspetta il
+3. **Attesa** (`_wait`, `:2981-3001`): se tutti i bersagli del pool sono bloccati, il tiratore aspetta il
    primo impatto previsto su uno di essi — anche di una salva di un'altra forza del dominio
-   (`_force_shots_on`, `:2486-2488`) — (più `salvo_window`) e ridecide con un evento `_DECIDE`;
+   (`_force_shots_on`, `:2992-2994`) — (più `salvo_window`) e ridecide con un evento `_DECIDE`;
    l'attesa non accorcia mai il ciclo di tiro (`max(primo impatto, t_earliest, now)`). Se non c'è
    nessun impatto da aspettare (caso non atteso) il tiratore procede senza il filtro, per non fermarsi
    per sempre.
@@ -1994,25 +2077,25 @@ rilevato né il colpo né il lanciatore e senza il tempo di reagire. Un Tor che 
 finito il proprio ciclo RIV+VAL+COM+ATT sul lanciatore (5-8 s) fermava comunque un Maverick in
 arrivo; con `time_of_flight = 0` si intercettava un colpo che non aveva mai volato.
 
-### La regola (`_in_time`, `:3107-3131`)
+### La regola (`_in_time`, `:3776-3801`)
 
 Un intercettore `I` può fermare i colpi della salva `S` (lanciata a `t_L`, impatto a `t_I`) solo se,
 **oltre a L1**: `t_traccia(I, S) + tau(I, S) <= t_I`.
 
 | Caso | `t_traccia` | `tau` |
 |---|---|---|
-| **Lancio osservato**: `I` aveva già rilevato il lanciatore a `t_L` (una `Detection` di `I` sul lanciatore con `time <= t_L`, `_detection_time_of`, `:3044-3050`) | `t_L` | `refire_interval` (VAL+COM+ATT) del profilo di reazione di `I` |
-| **Colpo scoperto dalla geometria** (lancio non osservato) | primo istante in cui il colpo entra nel raggio di rilevamento aereo di `I` (`_round_track_time`, `:3069-3105`) | `total` (RIV+VAL+COM+ATT) |
+| **Lancio osservato**: `I` aveva già rilevato il lanciatore a `t_L`; **dalla FP (§4.35), con i tratti delle rotte**, vale solo un rilevamento di `I` sul lanciatore **nel passaggio** del lanciatore nel volume di `I` che contiene `t_L` (`_detection_time_of(observer, target, at)`, `:3696-3719`); senza tratti, l'ultimo rilevamento in ordine di lista | `t_L` | `refire_interval` (VAL+COM+ATT) del profilo di reazione di `I` |
+| **Colpo scoperto dalla geometria** (lancio non osservato) | primo istante in cui il colpo entra nel raggio di rilevamento aereo di `I` (`_round_track_time`, `:3738-3774`) | `total` (RIV+VAL+COM+ATT) |
 
 Il rilevamento geometrico è **deterministico** (decisione Q2): nessuna estrazione, il flusso RNG non
 cambia. Il colpo vola in linea retta a velocità costante dal punto di lancio (posizione del
 lanciatore a `t_L`) alla posizione del bersaglio a `t_I`; l'intercettore è fermo nella posizione di
 `t_L`; la soluzione è analitica (equazione di secondo grado dell'ingresso del segmento nella sfera
-di raggio `detection_range('air')`, `_air_detection_range`, `:3052-3067`). Se il colpo non entra mai
+di raggio `detection_range('air')`, `_air_detection_range`, `:3721-3736`). Se il colpo non entra mai
 nel raggio, `I` non lo vede e non può fermarlo (`None`). Dato mancante (raggio o posizioni non noti) e
 lancio non osservato: `t_traccia = t_L`, `tau = total`. Il vincolo di tempo è **sempre** attivo: un
 colpo con tempo di volo nullo non si intercetta mai. Il risultato è memoizzato per
-`(intercettore, salva)` (`in_time_cache`, `:1710`). Un intercettore che non soddisfa R-INT è saltato
+`(intercettore, salva)` (`in_time_cache`, `:2007`). Un intercettore che non soddisfa R-INT è saltato
 come uno escluso da L1: il colpo passa al successivo nell'ordine F (§4.24).
 
 ### Semplificazioni dichiarate (proposta §4)
@@ -2026,8 +2109,46 @@ come uno escluso da L1: il colpo passa al successivo nell'ordine F (§4.24).
 4. **Rilevamento per asset, non per forza né per dominio**: la traccia del lanciatore ottenuta da un altro asset
    della stessa forza non basta (nessun collegamento dati, Fase 0 C2 non fatta). Vale **anche dopo la F4b+**:
    la percezione condivisa del dominio (§4.28) alimenta `seen_by` e `identified_by`, ma R-INT legge i
-   rilevamenti del *singolo intercettore* (`_detection_time_of`, `:3044-3050`, dalle `Detection` di
+   rilevamenti del *singolo intercettore* (`_detection_time_of`, `:3696-3719`, dalle `Detection` di
    quell'asset), quindi non anticipa la traccia.
+
+### Dal 2026-11-11: il lancio è «visto» solo dentro il passaggio (FP-5 (d))
+
+Prima del rilevamento per passaggio, «`I` aveva già rilevato il lanciatore» voleva dire: **l'ultimo** rilevamento in ordine di lista di `I` su quel lanciatore, da qualunque finestra
+e in qualunque momento (`detected_at`, `:2005`). Con una traccia persa e ripresa quel rilevamento poteva appartenere a un passaggio precedente, già concluso al momento del lancio.
+Ora, con i tratti delle rotte, la regola ha un **significato legato al passaggio** (decisione FP-5 = (d)):
+
+1. `_detect_direction` registra, per ogni coppia `(osservatore, bersaglio)`, i **passaggi** (uniti, FP-10) del bersaglio nel volume dell'osservatore, `own_passes_of` (`:2021`, riempito a `:2329-2330`);
+   i tempi di rilevamento della coppia stanno in `detection_times_of` (`:2022`, costruito alla prima richiesta, `:3712-3717`).
+2. `_detection_time_of(observer_id, target_id, at)` (`at` = l'istante del lancio, **obbligatorio**) trova il **primo passaggio che contiene `at`** (estremi entro `TIME_EPS`) e restituisce il **primo rilevamento
+   dentro quel passaggio** (`_detection_time_in_pass`, `:1344-1362`); `None` se nessun passaggio contiene `at` o se in quel passaggio non c'è rilevamento.
+3. `_in_time` considera il lancio **osservato** solo se il risultato non è `None` ed è `<= t_L` (più `TIME_EPS`): `t_traccia = t_L`, `tau = refire_interval`. Altrimenti il colpo è una traccia nuova (`_round_track_time`, `tau = total`).
+
+Un lancio che cade **fuori da ogni passaggio** dell'intercettore sul lanciatore è quindi «non visto», anche se l'intercettore aveva rilevato il lanciatore in un passaggio precedente (traccia persa all'uscita dal volume).
+**Ripiego senza tratti** (chiamate dirette a `resolve_engagement` senza `legs`: i passaggi non sono calcolati, `key not in own_passes_of`, `:3709`): l'ultimo rilevamento in lista, la regola precedente. **Nessuna estrazione**:
+la funzione legge solo `Detection` già prodotte. Con `BI_AD_TARGET_RULE` acceso R-INT conta solo per i colpi che il filtro BI ammette. Effetto misurato (sonda P-1, 2026-11-11, da `F4_Differenze_Scenari.md`): **0 decisioni R-INT cambiate su 407** nelle esecuzioni
+della fotografia di allora; FP-5 (d) non è esercitata da nessuno scenario in sessione (nessuno ha un intercettore che rileva un lanciatore in rientro), ma da test unitari (`TestDetectionPerPass`, `Test/Test_Engagement_Resolver.py:3987`).
+
+*Diagramma D134 — la regola R-INT con il rilevamento per passaggio: `_detection_time_of` e `_in_time` (§4.26, livello L4, verificato a `a389cadb`).*
+
+```mermaid
+flowchart TD
+    A["_in_time(I, S): lancio a t_L"] --> B["_detection_time_of(I, lanciatore, at = t_L)"]
+    B --> C{"passaggi della coppia calcolati?<br/>(key in own_passes_of: tratti di entrambi)"}
+    C -->|no, senza tratti| D["ultimo rilevamento in lista<br/>(regola precedente)"]
+    C -->|si| E{"un passaggio contiene t_L?<br/>(estremi entro TIME_EPS)"}
+    E -->|no| N["None: lancio NON visto"]
+    E -->|si| F{"rilevamento di I<br/>dentro quel passaggio?"}
+    F -->|no| N
+    F -->|si| G["primo rilevamento del passaggio"]
+    D --> H{"istante <= t_L (+ TIME_EPS)?"}
+    G --> H
+    N --> J["colpo = traccia nuova:<br/>_round_track_time, tau = total"]
+    H -->|si| K["lancio osservato:<br/>t_traccia = t_L, tau = refire_interval"]
+    H -->|no| J
+    K --> L["t_traccia + tau <= t_impatto?"]
+    J --> L
+```
 
 Misura della proposta (§8, S19 su 16 seed, con e senza la regola): esiti **identici**; il Tor ha in
 traccia gli A-10C molto prima dei lanci (radar di 25 km) e reagisce in pochi secondi contro circa 20 s di
@@ -2065,11 +2186,11 @@ per missione, `Mission_Adapter.MissionForce` (capitolo 6 §6.12), che espone sol
 | Attributo | Dove lo usa il risolutore | Nella vista di missione |
 |---|---|---|
 | `id` / `name` | `_domain_id` (id, poi name): chiave di `committed`, dei `ForceOutcome`, di `seen_by`, dell'`event_id` RNG | `mission_id` (vista residua: id del blocco) |
-| `side` | dottrina di disingaggio e di tiro (`Doctrine`), amico/nemico nella percezione (`_is_enemy`, `:3443-3449`) | lato del blocco |
+| `side` | dottrina di disingaggio e di tiro (`Doctrine`), amico/nemico nella percezione (`_is_enemy`, `:4118-4124`) | lato del blocco |
 | `assets` | tutto: ombre, scorte, rilevamento, nebbia di guerra, RWR, carburante, danno | gli asset *reali* del blocco ristretti a quelli della missione (nessuna copia) |
-| `salvo_interceptors()` | difesa di salva (`_interceptors_of`, `:1934-1955`) | quella del blocco ristretta agli asset della missione |
-| `can_disengage` (booleano, facoltativo) | `_can_disengage`, `:1548-1568`: se dichiarato è preso in parola | calcolato sul blocco (`Military` sì, `Block` non militare no) |
-| `block_id` (stringa, facoltativo) | `_build_forces`, `:1836-1840` → `_ForceState.block_id` (`:1527-1528`) → `ForceOutcome.block_id` (`:721`) | id di dominio del blocco |
+| `salvo_interceptors()` | difesa di salva (`_interceptors_of`, `:2249-2270`) | quella del blocco ristretta agli asset della missione |
+| `can_disengage` (booleano, facoltativo) | `_can_disengage`, `:1808-1828`: se dichiarato è preso in parola | calcolato sul blocco (`Military` sì, `Block` non militare no) |
+| `block_id` (stringa, facoltativo) | `_build_forces`, `:2151-2155` → `_ForceState.block_id` (`:1787-1788`) → `ForceOutcome.block_id` (`:721`) | id di dominio del blocco |
 | la forza intera | passata tale e quale a `morale_for`/`enemy_estimate_for` (`state.force`) | la vista, con `owner_block` che espone il blocco (nessun chiamante di produzione fornisce quei due ingressi) |
 
 Il risolutore **non legge `mission`**, `mission_id`, `postures` né `grounded` della vista (verificato con una
@@ -2078,7 +2199,7 @@ ricerca sul modulo): `grounded` gli arriva da `run_session` come parametro (§4.
 
 **Che cosa resta *per forza* (cioè per missione).** La tempra estratta una volta (`_init_breakpoints`,
 `:3356-3391`), la soglia di rottura B(t) e il suo rapporto di forze (la forza propria è l'insieme dei soli asset
-della missione, `_perceived_ratio`, `:3451-3494`), il disingaggio (`broken_forces`, §4.8), `committed`
+della missione, `_perceived_ratio`, `:4126-4169`), il disingaggio (`broken_forces`, §4.8), `committed`
 (chiavato per id di forza: la sessione traduce `SessionOrder.committed`, chiavato per blocco, intersecandolo con
 gli asset di ogni missione, capitolo 6 §6.12) e l'esito (`ForceOutcome`, uno per missione, con `block_id`). Cosa
 invece è condiviso fra le missioni è nel §4.28.
@@ -2117,17 +2238,17 @@ calcola `Mission_Adapter.coordination_domains` (capitolo 6 §6.13) e lo passa `r
 `:1862-1901`: `ValueError` se due forze di lati diversi hanno la stessa chiave, `TypeError` se la mappa non è
 `{str: str}` non vuota). Senza mappa, o per una forza assente, **il dominio è la forza stessa** e il
 comportamento è esattamente quello precedente: è così che le chiamate dirette al risolutore e tutti i test
-precedenti restano invariati. `_same_domain` (`:1903-1904`) è il confronto.
+precedenti restano invariati. `_same_domain` (`:2218-2219`) è il confronto.
 
 **Che cosa si condivide** (tutto *istantaneo*: dall'istante in cui il fatto avviene, senza latenza):
 
 | Cosa | Dove | Effetto |
 |---|---|---|
-| ripartizione del fuoco | `_engaged_shooters` (`:2209-2228`) conta i tiratori del *dominio* già impegnati su un bersaglio | le missioni del dominio si dividono i bersagli (round-robin) |
-| saturazione | `_force_shots_on` (`:2423-2441`), `_coverage` (`:2443-2454`), `_blocked` (`:2460-2473`) contano le salve in volo o schedulate di tutte le forze del dominio | un bersaglio già condannato dalle salve di un'altra missione non riceve altre salve |
-| attesa | `_wait` (`:2475-2495`) aspetta il primo impatto fra quelli del dominio | |
-| lanciatori prioritari (L2/L3) | `launchers_against` chiavato per dominio (`_is_launcher_against` `:2719-2721`, `_register_launcher` `:2743-2793`) | un aereo che attacca una missione è prioritario (ed esente dalla saturazione) per i tiratori di tutte le missioni del dominio **che lo hanno fra i propri candidati** |
-| percezione | `seen_by` (`_perceive`, `:2033-2037`), `identified_by` (`:2011`), `rwr_class` (`_perceive_rwr`, `:2039-2046`) chiavati per dominio | un rilevamento (o una percezione RWR) di una forza vale per tutte le forze del dominio; ne dipendono il rapporto percepito (`_perceived_ratio`, `:3461`), il fuoco senza risposta (`_unanswered_fraction`, `:3510`) e il peso di classe R-CLS (`_air_threat`, `:2058`) |
+| ripartizione del fuoco | `_engaged_shooters` (`:2706-2725`) conta i tiratori del *dominio* già impegnati su un bersaglio | le missioni del dominio si dividono i bersagli (round-robin) |
+| saturazione | `_force_shots_on` (`:2929-2947`), `_coverage` (`:2949-2960`), `_blocked` (`:2966-2979`) contano le salve in volo o schedulate di tutte le forze del dominio | un bersaglio già condannato dalle salve di un'altra missione non riceve altre salve |
+| attesa | `_wait` (`:2981-3001`) aspetta il primo impatto fra quelli del dominio | |
+| lanciatori prioritari (L2/L3) | `launchers_against` chiavato per dominio (`_is_launcher_against` `:3249-3251`, `_register_launcher` `:3277-3327`) | un aereo che attacca una missione è prioritario (ed esente dalla saturazione) per i tiratori di tutte le missioni del dominio **che lo hanno fra i propri candidati** |
+| percezione | `seen_by` (`_perceive`, `:2386-2390`), `identified_by` (`:2364`), `rwr_class` (`_perceive_rwr`, `:2392-2399`) chiavati per dominio | un rilevamento (o una percezione RWR) di una forza vale per tutte le forze del dominio; ne dipendono il rapporto percepito (`_perceived_ratio`, `:4136`), il fuoco senza risposta (`_unanswered_fraction`, `:4185`) e il peso di classe R-CLS (`_air_threat`, `:2411`) |
 | difesa di salva | `domain_interceptors` (§4.29) | |
 
 **Che cosa NON si condivide.** La tempra, il rapporto di forze (ogni forza lo confronta con i *propri* asset),
@@ -2182,9 +2303,9 @@ la ripristina estendendo la difesa al dominio (deviazione 8c del piano, conferma
   (`:1896`) e li riordina con la chiave globale della regola F, `(rango F, id)` (`:1898-1901`): l'ordine è
   **indipendente dall'ordine di passaggio delle forze**; con un dominio di una sola forza coincide con l'ordine
   di `_interceptors_of` (§4.24);
-- `_on_resolve` (`:3133-3303`) usa questa lista al posto di `state.interceptors` (`:3157-3158`);
-- restano **per intercettore** e invariati: la geometria L1 (`_may_intercept`, `:3019-3042`), i tempi R-INT
-  (`_in_time`, `:3107-3131`, sul rilevamento del singolo intercettore: la percezione condivisa non anticipa la
+- `_on_resolve` (`:3803-3978`) usa questa lista al posto di `state.interceptors` (`:3831-3832`);
+- restano **per intercettore** e invariati: la geometria L1 (`_may_intercept`, `:3671-3694`), i tempi R-INT
+  (`_in_time`, `:3776-3801`, sul rilevamento del singolo intercettore: la percezione condivisa non anticipa la
   traccia), il numero di canali, la scorta di intercettori (R3) e l'ordine di consumo;
 - l'`InterceptionEvent` porta come `asset_id` l'intercettore (anche di un'altra forza) e come `force_id` la
   forza *difesa* (`:3237-3239`); `SalvoResolution.capacity` è la somma delle disponibilità degli intercettori
@@ -2194,7 +2315,7 @@ la ripristina estendendo la difesa al dominio (deviazione 8c del piano, conferma
 Due forze dello stesso dominio risolte nello **stesso istante** (entro `TIME_EPS`) sono servite dagli stessi
 canali: `instant_interceptions[dominio] = (istante, {forza colpita: {intercettore: canali spesi}})` registra
 quelli già spesi (`:3159-3163`, `:3225-3228`) e la risoluzione di un'altra forza dello stesso dominio nello
-stesso istante li sottrae (`spent`, `:3165-3170`, `:3188`). La scorta, invece, è già scalata dal consumo
+stesso istante li sottrae (`spent`, `:3839-3844`, `:3862`). La scorta, invece, è già scalata dal consumo
 dell'ombra. Le risoluzioni successive di una *stessa* forza restano a canali pieni, come prima. Verificato da un
 test per mutazione: senza il contabile per istante le intercettazioni salgono da 3 a 6 con due trasporti
 colpiti nello stesso istante (`test_channels_are_not_counted_twice_in_the_same_instant`).
@@ -2256,14 +2377,14 @@ cui si applica* (docstring del modulo, `:255-272`):
 
 | Regola | Istante letto | Dove |
 |---|---|---|
-| rilevamento come osservatore; RWR al rilevamento | punto medio della **finestra** (lo scheduler spezza le finestre a decollo e atterraggio, quindi lo stato è costante su ognuna) | `_grounded_in`, `:2506-2513`; `_detect_direction`, `:1991`, `:2017` |
-| tiro | istante di tiro previsto | `_schedule_next`, `:2340` |
-| classificazione verso la fire control | istante del **lancio**: una salva già partita contro un aereo che decolla nel frattempo arriva comunque con l'arma scelta al lancio (payload congelato, R4) e il danno è applicato all'impatto | `_fire_control(shooter, target, time)`, `:2676-2716` |
-| RWR al lancio; lanciatori L2/L3 | istante del lancio | `_on_launch`, `:2959`, `:2964-2967` |
-| intercettazione | istante della risoluzione della salva | `_on_resolve`, `:3186` |
-| peso di minaccia e dottrina di disingaggio (erosione e shock dei soli combattenti) | istante della valutazione | `_perceived_ratio`, `:3464-3466`; `_on_resolve`, `:3286`, `:3296` |
-| `_gone` (un aereo a terra non si ritira con la sua forza) | istante corrente della run | `:2497-2504` |
-| **sempre a terra** (`GroundedSchedule.always`: gli aerei senza missione) | tutta la sessione, **fin dalla costruzione della run** | `_build_forces`, `:1823`; `_interceptors_of`, `:1945`; `_schedule_next`, `:2296`; "forza aerea" in `_init_breakpoints`, `:3374` |
+| rilevamento come osservatore; RWR al rilevamento | punto medio della **finestra** (lo scheduler spezza le finestre a decollo e atterraggio, quindi lo stato è costante su ognuna) | `_grounded_in`, `:3012-3019`; `_detect_direction`, `:2306`, `:2370` |
+| tiro | istante di tiro previsto | `_schedule_next`, `:2837` |
+| classificazione verso la fire control | istante del **lancio**: una salva già partita contro un aereo che decolla nel frattempo arriva comunque con l'arma scelta al lancio (payload congelato, R4) e il danno è applicato all'impatto | `_fire_control(shooter, target, time, altitudes=None)`, `:3182-3247` |
+| RWR al lancio; lanciatori L2/L3 | istante del lancio | `_on_launch`, `:3596`, `:3601-3604` |
+| intercettazione | istante della risoluzione della salva | `_on_resolve`, `:3860` |
+| peso di minaccia e dottrina di disingaggio (erosione e shock dei soli combattenti) | istante della valutazione | `_perceived_ratio`, `:4139-4141`; `_on_resolve`, `:3961`, `:3971` |
+| `_gone` (un aereo a terra non si ritira con la sua forza) | istante corrente della run | `:3003-3010` |
+| **sempre a terra** (`GroundedSchedule.always`: gli aerei senza missione) | tutta la sessione, **fin dalla costruzione della run** | `_build_forces`, `:2138`; `_interceptors_of`, `:2260`; `_schedule_next`, `:2793`; "forza aerea" in `_init_breakpoints`, `:4049` |
 
 La distinzione ha una conseguenza voluta: un aereo a terra *solo per un tratto* è un aereo — la sua forza resta
 aerea, ha la dottrina del lato, conta nel rapporto di forze quando è in volo — mentre un aereo *sempre* a terra
@@ -2272,14 +2393,14 @@ aerea, ha la dottrina del lato, conta nel rapporto di forze quando è in volo �
 **Che cosa cambia nel risolutore per un aereo a terra** (regole della F4c, ora tutte condizionate allo stato
 dell'istante):
 
-- **Non osserva** (`_detect_direction`, `:1991-1994`): esce prima dell'estrazione, quindi nessun consumo di RNG
+- **Non osserva** (`_detect_direction`, `:2306-2309`): esce prima dell'estrazione, quindi nessun consumo di RNG
   come osservatore (lo scheduler gli dà già portata `None`, ma il controllo vale anche per finestre costruite dal
   chiamante). Come **bersaglio** può essere rilevato come ogni altro, ma lo scheduler lo interroga nel modo
   `'ground'` (capitolo 3 §3.5).
-- **Non spara** (`_schedule_next`, `:2296`, `:2340`) e **non intercetta** (`_interceptors_of`, `:1945`; `_on_resolve`,
+- **Non spara** (`_schedule_next`, `:2793`, `:2837`) e **non intercetta** (`_interceptors_of`, `:2260`; `_on_resolve`,
   `:3186`): è passivo.
 - **RWR spenta**: non percepisce chi lo illumina (`:2017`) né chi gli spara (`:2959`).
-- **È un bersaglio di superficie per la fire control**: `_fire_control` (`:2676-2716`) passa
+- **È un bersaglio di superficie per la fire control**: `_fire_control` (`:3182-3195`, con `_call_fire_control`, `:3197-3247`) passa
   `target_grounded=True` se la fire control lo dichiara (§4.4). Nei registri (`Fire_Control.make_registry_fire_control`)
   la chiave di efficacia è quella *esistente* di un aereo parcheggiato: il tipo d'aereo
   (`PARKED_TYPE_BY_AIR_TYPE`, `Logic/Fire_Control.py:287-297`) è tradotto in un tipo `Context.Parked_Asset_Type`
@@ -2290,9 +2411,9 @@ dell'istante):
   usa la quota *reale* del bersaglio (`position.z`, B6, §4.20).
 - **Chi lo attacca è un lanciatore aria-superficie** per L2/L3 (`:2964-2967`): le difese della base lo
   prioritizzano.
-- **Peso di minaccia nullo da entrambe le parti** (`_perceived_ratio`, `:3451-3466`): escluso dai nemici percepiti
+- **Peso di minaccia nullo da entrambe le parti** (`_perceived_ratio`, `:4126-4141`): escluso dai nemici percepiti
   (non è una minaccia per chi lo vede) e dalla forza propria (non è forza combattente). La forza "aerea" si
-  decide sui soli asset non *sempre* a terra (`_init_breakpoints`, `:3372-3377`): una base con difese e aerei
+  decide sui soli asset non *sempre* a terra (`_init_breakpoints`, `:4047-4052`): una base con difese e aerei
   parcheggiati è una forza di superficie.
 - **Disingaggio** (§4.7): una forza di soli aerei sempre a terra non ha dottrina; in una forza mista la dottrina
   conta solo chi può ritirarsi; l'annientamento li conta tutti; se la forza disingaggia, restano bersagli (`_gone`).
@@ -2358,24 +2479,24 @@ dichiarati (`Session_Simulator._activity_plans` / `_activity_criteria`, capitolo
 
 **Che cosa fa il risolutore.**
 
-- **Niente nuovi lanci dalla fine**: `_schedule_next` esce se `t_earliest >= activity_end` (`:2304-2308`) e scarta un
+- **Niente nuovi lanci dalla fine**: `_schedule_next` esce se `t_earliest >= activity_end` (`:2801-2805`) e scarta un
   tiro previsto dopo la fine (`:2336-2338`); un lancio già schedulato per un istante non anteriore alla fine è
-  annullato in `_on_launch` (`:2902-2907`) e dalla *generazione* di lancio incrementata da `_end_activity` (come la
+  annullato in `_on_launch` (`:3539-3544`) e dalla *generazione* di lancio incrementata da `_end_activity` (come la
   prelazione L3, §4.24; `:2194-2207`). Le salve **già partite arrivano comunque** (payload congelato, R4).
 - **Tutto il resto continua**: l'asset rileva e condivide i rilevamenti, percepisce con l'RWR, conta nel rapporto di
   forze e nella dottrina della sua forza, e **intercetta** le salve dirette al suo dominio (la difesa di salva non è
   un ingaggio offensivo: scelta dichiarata).
-- **Valutazione deterministica, nessuna estrazione** (`_check_activity`, `:2158-2192`): dopo ogni lancio (`:2951-2952`)
+- **Valutazione deterministica, nessuna estrazione** (`_check_activity`, `:2655-2689`): dopo ogni lancio (`:3588-3589`)
   e ogni risoluzione di salva (`:3282-3284`), per asset in ordine di id, con la precedenza fissa **danno, winchester,
   bersaglio distrutto** (rilevante solo se scattano nello stesso istante); un asset distrutto o già a fine attività non
-  è più valutato. All'avvio (`time = -inf`, `targets_only=True`, `:1767`) si valutano solo i bersagli già distrutti
+  è più valutato. All'avvio (`time = -inf`, `targets_only=True`, `:2082`) si valutano solo i bersagli già distrutti
   fuori dalla run: un winchester già all'inizio lo dichiara il chiamante con `until`.
-- **`_activity_end_time`** (`:2128-2140`) è la prima fra la fine scattata nella run e `until`; è ciò che
-  `_schedule_next` e `_on_launch` consultano. `_targets_destroyed_at` (`:2142-2156`) restituisce l'istante in cui tutti
+- **`_activity_end_time`** (`:2625-2637`) è la prima fra la fine scattata nella run e `until`; è ciò che
+  `_schedule_next` e `_on_launch` consultano. `_targets_destroyed_at` (`:2639-2653`) restituisce l'istante in cui tutti
   i bersagli sono distrutti (nella run, via `destroyed_at`, o fuori, via `destroyed_targets`), il primo dei due per
   ciascun bersaglio.
 - **Esito**: le fini scattate sono in `EngagementResult.activity_ends` (`ActivityEnd(time, asset_id, reason)`, con
-  `reason` in `ACTIVITY_REASONS = (damage, winchester, target_destroyed)`, `:518-521`), nell'ordine in cui sono
+  `reason` in `ACTIVITY_REASONS = (damage, winchester, target_destroyed)`, `:641-644`), nell'ordine in cui sono
   scattate. Senza criteri (default) ogni percorso è quello di prima: stesse estrazioni, stessi esiti.
 
 ```mermaid
@@ -2422,7 +2543,7 @@ fire control, stesse estrazioni, stessi esiti.
 
 | Campo | Significato |
 |---|---|
-| `roe` | una delle ROE (`ROE_LEVELS`, `:529-534`): `weapon_free` (default), `priority_designated`, `only_designated`, `return_fire`, `weapon_hold`. Sono gli stessi *valori* di `Command.Mission_Types.AIR_ROE`/`SURFACE_ROE`, ripetuti come stringhe perché il risolutore non importa `Command` (come `ACTIVITY_*`); un test ne verifica l'uguaglianza |
+| `roe` | una delle ROE (`ROE_LEVELS`, `:652-657`): `weapon_free` (default), `priority_designated`, `only_designated`, `return_fire`, `weapon_hold`. Sono gli stessi *valori* di `Command.Mission_Types.AIR_ROE`/`SURFACE_ROE`, ripetuti come stringhe perché il risolutore non importa `Command` (come `ACTIVITY_*`); un test ne verifica l'uguaglianza |
 | `designated_ids` | id degli asset **nemici** designati dalla missione (bersaglio `ASSET` o `GROUP`, già filtrati per lato dalla sessione) |
 | `designated_area` | `(x, y, raggio)` [m] orizzontali dell'area designata (bersaglio `POINT`/`AREA`/`ZONE`); il raggio è quello *efficace* (v. capitolo 6 §6.22); `None` = nessuna area |
 | `designated_weapons` | modelli d'arma designati (v. sotto) |
@@ -2431,14 +2552,14 @@ fire control, stesse estrazioni, stessi esiti.
 | `attack_point` | `(x, y, z)` [m] del punto `ATTACK` della missione sulla rotta *dell'asset* (con l'offset di formazione), per la fine dell'attacco di `priority_designated`; `None` = nessun punto `ATTACK` |
 | `known_destroyed_ids` | designati già distrutti negli episodi precedenti (fine dell'attacco per distruzione) |
 
-**Dove si applica.** `_fire_control` (`:2676-2689`) chiama `_call_fire_control` (§4.4) e poi `apply_target_rules`
+**Dove si applica.** `_fire_control` (`:3182-3195`) chiama `_call_fire_control` (§4.4) e poi `apply_target_rules`
 (`:885-924`) sulla risposta. Poiché ogni punto in cui il risolutore interroga la fire control passa da `_fire_control` — la
 scelta del bersaglio in `_schedule_next`, il controllo di portata `_in_range_at` (§4.17), la prelazione L2/L3 (§4.24) — la
 regola vale ovunque, nello stesso punto dei filtri della fire control. `apply_target_rules` è una **funzione pura**
 (`rules`, `result`, e quattro booleani: `designated`, `hostile`, `air_target`, `after_attack`): restituisce `None` (il tiratore
 non ingaggia), `result` stesso se tutte le opzioni restano, oppure la tupla delle opzioni tenute nello stesso ordine.
 
-**Designato.** `_is_designated` (`:2515-2530`): il bersaglio è fra gli id designati, oppure — con un'area — la sua posizione
+**Designato.** `_is_designated` (`:3021-3036`): il bersaglio è fra gli id designati, oppure — con un'area — la sua posizione
 orizzontale all'istante del tiro è entro il raggio efficace (`designated_area`); posizione ignota = non designato. Un
 bersaglio non *rilevato* dal tiratore non è un candidato: **la designazione non dà rilevamento** (nessun cueing, come per
 il resto del modulo, capitolo 9 §9.1).
@@ -2449,7 +2570,7 @@ il resto del modulo, capitolo 9 §9.1).
 |---|---|
 | `weapon_free` | nessuna restrizione (sulle ROE; le armi designate si applicano comunque, v. sotto) |
 | `weapon_hold` | nessun tiro: `None` per ogni coppia (le *intercettazioni* di salva restano: `_on_resolve` non interroga la fire control, è un atto difensivo) |
-| `return_fire` | solo contro tiratori **ostili**: quelli che hanno già lanciato una salva contro il dominio di coordinamento del tiratore (`hostile_by_domain`, aggiornato in `_on_launch` a `:2945-2947`, o `known_hostile_ids` degli episodi precedenti). Contro un non ostile il candidato è *rimandato* (sotto) |
+| `return_fire` | solo contro tiratori **ostili**: quelli che hanno già lanciato una salva contro il dominio di coordinamento del tiratore (`hostile_by_domain`, aggiornato in `_on_launch` a `:3582-3584`, o `known_hostile_ids` degli episodi precedenti). Contro un non ostile il candidato è *rimandato* (sotto) |
 | `only_designated` | solo i designati; **esenzione** dell'autodifesa aria-aria: un aereo nemico in volo si ingaggia anche se non designato, se `air_self_defence` |
 | `priority_designated` (solo aerei) | due fasi (sotto); i bersagli aerei (autodifesa e combattimento aria-aria) non cambiano |
 
@@ -2464,17 +2585,17 @@ della missione).
   aereo che sorvola una colonna andando al bersaglio non spara, non consuma armi e carburante d'ingaggio né apre un episodio;
   il designato si ingaggia quando è rilevato e a portata.
 - **Dopo l'attacco**: le opportunità sono ammesse con le armi residue (le armi designate restano riservate, v. sotto); il
-  designato ha la **precedenza** (`_designated_first`, `:2602-2614`, applicata a `:2366`: `pool = priority or
+  designato ha la **precedenza** (`_designated_first`, `:3108-3120`, applicata a `:2863`: `pool = priority or
   self._designated_first(shooter, viable) or viable`, cioè dopo la priorità L2 e prima del round-robin) **solo se è rilevato
   e a portata**; altrimenti si spara alle opportunità (non si resta in attesa).
-- **Fine dell'attacco** (`_attack_over`, `:2578-2585`): il designato distrutto (`_designated_destroyed`, `:2565-2576`: *tutti*
+- **Fine dell'attacco** (`_attack_over`, `:3084-3091`): il designato distrutto (`_designated_destroyed`, `:3071-3082`: *tutti*
   gli id designati distrutti, nella run o in `known_destroyed_ids`) **oppure** l'aereo ha *effettivamente* raggiunto e superato
-  il punto `ATTACK` lungo i suoi tratti **reali** (`_attack_pass_time`, `:2538-2563`): attese, ritardi e ri-pianificazioni
+  il punto `ATTACK` lungo i suoi tratti **reali** (`_attack_pass_time`, `:3044-3069`): attese, ritardi e ri-pianificazioni
   compresi, non l'ETA pianificata. L'istante è la fine dell'ultimo tratto fermo sul punto dopo l'arrivo; il tratto "finisce
-  sul punto" se dista al più `ATTACK_POINT_TOLERANCE_M = 1,0` m (`:525`, rumore di arrotondamento delle coordinate, *non* un
+  sul punto" se dista al più `ATTACK_POINT_TOLERANCE_M = 1,0` m (`:648`, rumore di arrotondamento delle coordinate, *non* un
   margine fisico). Senza punto `ATTACK`, o con un punto mai raggiunto sui tratti reali (aereo ri-pianificato prima, tratti
   troncati), **l'attacco non finisce mai**: l'aereo resta in avvicinamento (comportamento conservativo, dichiarato). Il
-  risultato è memoizzato per run (`attack_pass`, `:1657`).
+  risultato è memoizzato per run (`attack_pass`, `:1954`).
 
 **Armi designate** (`designated_weapons`, in `apply_target_rules`): sul bersaglio designato si tengono **solo** le opzioni con
 un'arma designata, *nessun ripiego* (esaurite quelle, il tiratore non ingaggia il designato); su un bersaglio non designato
@@ -2484,20 +2605,20 @@ fire control (le opzioni in ordine di preferenza): se ne restano tutte, `result`
 **Candidati rimandati, non esauriti.** Un `None` della fire control segna il candidato `exhausted` per la finestra (§4.17):
 giusto per ciò che non cambia (arma inadatta, `weapon_hold`, designazione fissa). Ma due esclusioni dipendono dal **tempo**:
 `return_fire` contro un non ostile (che può diventare ostile) e `priority_designated` in avvicinamento contro un'opportunità
-di superficie (che sarà ammessa dopo l'attacco). Per queste `_schedule_next` consulta `_is_deferred` (`:2587-2600`, a `:2347`)
+di superficie (che sarà ammessa dopo l'attacco). Per queste `_schedule_next` consulta `_is_deferred` (`:3093-3106`, a `:2844`)
 *prima* di chiamare la fire control: il candidato è escluso dalla scelta ma **non** marcato `exhausted`, e il tiratore è
-riesaminato da un evento `_WAKE` (tipo 4, `:544`; nessuna estrazione RNG) nei tre casi seguenti:
+riesaminato da un evento `_WAKE` (tipo 4, `:667`; nessuna estrazione RNG) nei tre casi seguenti:
 
-1. **un nuovo ostile** lancia contro il suo dominio (`_react_to_hostile`, `:2616-2638`, chiamata da `_on_launch` a
+1. **un nuovo ostile** lancia contro il suo dominio (`_react_to_hostile`, `:3122-3144`, chiamata da `_on_launch` a
    `:2969-2970`): dopo il `refire_interval` del tiratore, il tempo di valutare la minaccia come nella reazione L3; solo per i
    `return_fire` del dominio colpito che hanno il lanciatore fra i candidati non esauriti, e non per chi ha già un lancio
    programmato o una ridecisione pendente (lo riesaminerà dopo il lancio);
-2. **l'istante di passaggio sul punto `ATTACK`** (`_schedule_phase_wakes`, `:2640-2652`, a inizio run, dopo il primo
-   `_schedule_next` di ogni tiratore, `:3569`);
-3. **la distruzione del designato** (`_wake_after_destruction`, `:2654-2663`, a fine risoluzione di salva `:3279-3280`, una
+2. **l'istante di passaggio sul punto `ATTACK`** (`_schedule_phase_wakes`, `:3146-3158`, a inizio run, dopo il primo
+   `_schedule_next` di ogni tiratore, `:4244`);
+3. **la distruzione del designato** (`_wake_after_destruction`, `:3160-3169`, a fine risoluzione di salva `:3954-3955`, una
    volta per tiratore).
 
-`_on_wake` (`:2665-2674`) non tocca i lanci già programmati: richiama `_schedule_next(tiratore, istante)`.
+`_on_wake` (`:3171-3180`) non tocca i lanci già programmati: richiama `_schedule_next(tiratore, istante)`.
 
 *Diagramma D43 — come `_fire_control` e `_schedule_next` applicano le regole di bersaglio.*
 
@@ -2564,7 +2685,7 @@ sequenceDiagram
 
 **Memoria degli episodi.** Il risolutore non ricorda nulla fra una run e l'altra: sono gli *ingressi* a portare la storia.
 `known_hostile_ids` e `known_destroyed_ids` li ricava la sessione prima di ogni episodio (capitolo 6 §6.22); dentro la stessa run
-il risolutore tiene `hostile_by_domain` (`:1654`) e reagisce al lancio di un nuovo ostile come descritto sopra.
+il risolutore tiene `hostile_by_domain` (`:1951`) e reagisce al lancio di un nuovo ostile come descritto sopra.
 
 **Limiti dichiarati.**
 
@@ -2614,23 +2735,23 @@ sulla CAS lo impone l'arma *designata* (`MissionAsset.weapons`, §4.32), non que
 **Le classi di bersaglio.** `Fire_Control.target_class(target, grounded=False)` (`Logic/Fire_Control.py:593-611`) legge il tipo
 da `type(target).__name__`, come il resto del modulo: `air` = aereo in volo; `ship` = `Ship`; `air_defence` = `Vehicle` con
 `isSAM`, `isAAA` o `isEWR` (le navi con SAM restano `ship`); `surface` = ogni altro bersaglio di superficie, **compresi gli aerei
-a terra** (`grounded` True, F4c, §4.30). `weapon_tasks(domain, model)` (`:338-350`) restituisce i task del modello nel registro
+a terra** (`grounded` True, F4c, §4.30). `weapon_tasks(domain, model)` (`:359-371`) restituisce i task del modello nel registro
 del dominio di missione (`'air'|'ground'|'sea'`), `None` se il modello non è a registro (arma non modellata, per esempio
 `test:*`), insieme vuoto se è a registro senza elenco `task` valido.
 
-**`WeaponPolicy`** (`:881-923`, dataclass immutabile: `mission_id`, `domain`, `rules` come mappa immutabile, `self_escort`) e il
-suo metodo `allows(weapon, target_class_name)` (`:900-923`), nell'ordine: arma assente dai registri → **`True`**, nessun vincolo
+**`WeaponPolicy`** (`:989-1031`, dataclass immutabile: `mission_id`, `domain`, `rules` come mappa immutabile, `self_escort`) e il
+suo metodo `allows(weapon, target_class_name)` (`:1008-1031`), nell'ordine: arma assente dai registri → **`True`**, nessun vincolo
 (stessa politica "non modellato = nessun vincolo" di munizioni e carburante); classe senza regola → `False`; `any` → `True`;
 `self_defence` → `self_escort`; insieme di task → intersezione non vuota con i task dell'arma.
 
-**`restrict_by_policy(fire_control, policy_of)`** (`:926-981`) è l'involucro. `policy_of` è `{asset_id: WeaponPolicy}`:
+**`restrict_by_policy(fire_control, policy_of)`** (`:1034-1110`) è l'involucro. `policy_of` è `{asset_id: WeaponPolicy}`:
 - tiratore **senza** politica → il risultato della base, lo *stesso oggetto*;
 - altrimenti le opzioni della base (`None`, una `ShotSpec` o una sequenza) sono filtrate con
   `policy.allows(spec.weapon, target_class(target, grounded))`: tutte tenute → lo stesso oggetto della base (memoizzazione e
   identità invariate); nessuna → `None`; alcune → la tupla delle tenute, nello stesso ordine; una risposta non valida della base
   passa tale e quale (la rifiuta il risolutore);
 - la firma dell'involucro dichiara `target_grounded` **solo se la base lo dichiara**
-  (`Engagement_Resolver.accepts_target_grounded`, `:1575-1594`), così l'introspezione del risolutore resta la stessa, e
+  (`Engagement_Resolver.accepts_target_grounded`, `:1861-1863`, su `accepts_keyword`, `:1839-1858`), così l'introspezione del risolutore resta la stessa, e
   inoltra `target_grounded=True` alla base solo quando il risolutore lo passa; `TypeError` se `fire_control` non è chiamabile o
   `policy_of` non è una mappa.
 
@@ -2672,16 +2793,16 @@ unitari, non negli scenari (nessun loadout reale lo esercita dopo la correzione 
 ## 4.34 Arma per il fuoco su posizione: `area_fire_weapon` e `area_fire_pk` (F7b, `dcedc541`)
 
 Il fuoco su posizione (capitolo 6 §6.23) **non passa dalla `fire_control` iniettata** né dal risolutore: non c'è un bersaglio
-rilevato. Usa due funzioni di `Logic/Fire_Control.py`, che leggono gli stessi registri (docstring: `:160-171`).
+rilevato. Usa due funzioni di `Logic/Fire_Control.py`, che leggono gli stessi registri (docstring: `:170-181`).
 
-- **`AREA_FIRE_TASKS = {'Artillery', 'Naval_Gunfire_Support', 'Land_Attack'}`** (`:989`): i task d'arma dei registri che
+- **`AREA_FIRE_TASKS = {'Artillery', 'Naval_Gunfire_Support', 'Land_Attack'}`** (`:1118`): i task d'arma dei registri che
   identificano il fuoco indiretto su una posizione (artiglieria di terra in `Ground_Weapon_Data`; fuoco navale d'appoggio e
   attacco a terra in `Ship_Weapon_Data`). Le armi di kind `missile` sono **escluse** (decisione 15e): il fuoco su posizione di un
   missile, intercettabile e guidato, non è modellato.
-- **`AreaWeapon`** (`:992-1010`, dataclass immutabile): `model`, `caliber_mm` (dal registro, `None` se non dichiarato o non
-  positivo), `max_range_m` (la maggiore fra tiro diretto e indiretto per le armi terrestri, `_range_m`, `:396-409`; `None` = nessun
+- **`AreaWeapon`** (`:1121-1139`, dataclass immutabile): `model`, `caliber_mm` (dal registro, `None` se non dichiarato o non
+  positivo), `max_range_m` (la maggiore fra tiro diretto e indiretto per le armi terrestri, `_range_m`, `:417-430`; `None` = nessun
   vincolo), `time_of_flight`, `stock_per_round` e `entry` (il record candidato `_Weapon`, per le righe d'efficacia).
-- **`area_fire_weapon(shooter, distance_m, weapon=None, stock_of=None)`** (`:1013-1055`): solo tiratori `Vehicle` e `Ship` (un
+- **`area_fire_weapon(shooter, distance_m, weapon=None, stock_of=None)`** (`:1142-1184`): solo tiratori `Vehicle` e `Ship` (un
   aereo non spara su posizione nella F7b, decisione 15a). Fra le armi candidate (stesso ordine di `_candidate_weapons`,
   `:458-521`) esclusi i `missile`: con `weapon` dichiarata (`params['weapon']` dell'azione) **solo quel modello**, qualunque siano i
   suoi task; altrimenti la prima con almeno un task in `AREA_FIRE_TASKS`. Fra queste la prima la cui portata copre `distance_m`
@@ -2689,7 +2810,7 @@ rilevato. Usa due funzioni di `Logic/Fire_Control.py`, che leggono gli stessi re
   scorta per almeno un colpo. Senza `stock_of` la scorta non è considerata (la sessione lo usa per stimare l'istante d'impatto che
   *ordina* l'evento). `time_of_flight` e `stock_per_round` sono quelli di `shot_spec_for` (`:745-790`, §4.16: tempo di volo =
   `ENGAGEMENT_RANGE_FRACTION` x portata / velocità; un'arma a tiro lento ha `stock_per_round = 1`).
-- **`area_fire_pk(weapon, target, grounded=False)`** (`:1058-1077`): la `destroy_capacity` della riga del template per la
+- **`area_fire_pk(weapon, target, grounded=False)`** (`:1187-1206`): la `destroy_capacity` della riga del template per la
   classe del bersaglio, con la stessa catena `target_key` / `_cell` della fire control (§4.16); `None` se il bersaglio non è
   classificabile, non ha riga, ha Pk (accuracy x destroy_capacity) nulla, **oppure è un aereo in volo** (un impatto al suolo non
   lo colpisce). Un aereo a terra è un bersaglio di superficie, come nella fire control.
@@ -2739,3 +2860,206 @@ classDiagram
 ```
 
 *Diagramma D47 — i tipi nuovi della F7 e chi li consuma (§4.32-4.34).*
+
+## 4.35 Rilevamento per passaggio nella portata propria (FP, 2026-11-11; senza interruttore dal 2026-11-13)
+
+Documenti: `Analysis/Document/Proposta_Finestre_Per_Passaggio_Portata_Propria.md` (decisioni FP-1..FP-10 dell'utente, 2026-11-07/08) e `Proposta_FP_Pulizia_Interruttore.md` (eliminazione dell'interruttore).
+Commit: `c1f39787` (blocco 1A), `fb1dc1f7` (1B, passaggi e `pass_rng`), `770cdb2b` (1C, R-INT), `a22b3930` (1D, cablaggio in sessione), `f97f2738` (blocco 2, scenario S33); regola **accesa** il 2026-11-12 (`28df28b8`) e
+**senza interruttore** dalla pulizia (`2c89ca88`, testi `a389cadb`): la costante `FP_PER_PASS_DETECTION` **non esiste più** nel codice, né i rami `pass_rng is None`.
+
+**La regola dell'utente (2026-11-06, vincolante).** Per una coppia di asset nemici il rilevamento di un osservatore si valuta **per singolo passaggio del bersaglio nel volume di rilevamento proprio dell'osservatore**,
+indipendentemente dalla finestra dell'altro asset. Se il bersaglio esce e rientra nel volume dell'osservatore sono **due passaggi distinti**, ciascuno con la sua permanenza, la sua estrazione di rilevamento e (se
+differente) la sua finestra d'ingaggio; **mai la somma delle permanenze**. **Il difetto che la regola corregge.** Una `ContactWindow` ha il suo intervallo `[t_start, t_end]` sulla portata **maggiore** delle due parti
+(`Logic/Contact_Scheduler.py:197-240`, §3.5). L'osservatore con la portata **minore** (tipicamente un SAM o un'AAA contro un aereo con radar a lungo raggio) può vedere il bersaglio entrare nel proprio volume, uscirne e
+rientrare **dentro la stessa finestra**: prima della FP il risolutore faceva comunque **una sola estrazione per finestra e direzione**, con la distanza minima dell'intera finestra, e il candidato al tiro valeva fino alla
+fine della finestra (cioè anche dopo l'uscita dal volume dell'osservatore). La sonda P-0 (2026-11-07) non trovò nessuna direzione con più passaggi nelle 1009 esecuzioni della fotografia di allora (il caso nasce solo da
+rotte con virate: un tratto rettilineo attraversa al più una volta un volume convesso), ma trovò **44 esecuzioni** in cui il candidato valeva oltre l'uscita dal volume, cambiate poi dalla regola (v. sotto e §8.14).
+
+**Termini.** *Finestra* = la `ContactWindow` (portata maggiore). *Passaggio* = intervallo continuo in cui il bersaglio è entro la portata **propria** dell'osservatore, dopo l'unione di FP-10. *Passaggio unito* = due o più intervalli
+consecutivi separati da un'uscita non più lunga del `dwell_time_s` del sensore, trattati come uno solo (dall'inizio del primo alla fine dell'ultimo). *Finestra d'ingaggio* = l'intervallo di validità del candidato al tiro
+(`_Candidate.t_end`, §4.10).
+
+### Come si calcolano i passaggi
+
+Tutto dai tratti di rotta (`Leg`) di entrambi gli asset, nel risolutore (decisione FP-1 = B-R: né lo scheduler né la finestra cambiano). Le funzioni, in ordine di chiamata:
+
+| Funzione | Riga | Cosa fa |
+|---|---|---|
+| `_EngagementRun._dwell_of(window, observer, target)` | `:2493` | Periodo di rivisita [s] del sensore dell'osservatore contro il bersaglio, o `None`: senza lettore (`dwell_time_for` `None`, cioè D-5 spenta in sessione) o senza dato. Il modo di rilevamento è `GROUNDED_DETECTION_MODE` se il bersaglio è a terra, altrimenti `detection_mode_for(target.asset)`. Il valore passa da `_check_dwell` (`:1201`: `None` o 0 → `None`; `TypeError`/`ValueError` per valori non validi). |
+| `_EngagementRun._own_intervals(observer_id, target_id, own_range, radius=None)` | `:2476` | Intervalli in cui il bersaglio è nella **sfera di raggio `own_range`** (o `radius`, il raggio estratto, per l'istante di rilevamento) centrata sull'osservatore: `Contact_Scheduler.range_intervals` sui tratti. `None` se manca il tratto di uno dei due. È l'**unico punto di chiamata del volume proprio** nel risolutore (decisione VA-6 (a)): un volume di rilevamento diverso dalla sfera si sostituisce qui senza toccare la logica dei passaggi (deve restare contenuto nella sfera di raggio `own_range`, perché le finestre dello scheduler sono costruite su quella). |
+| `_join_passes(intervals, max_gap)` (funzione di modulo) | `:1319` | Unione FP-10: due intervalli consecutivi con `inizio_successivo − fine_precedente <= max_gap + TIME_EPS` (l'uguaglianza unisce) diventano uno. `max_gap` `None` = nessuna unione. |
+| `_EngagementRun._own_passes(window, observer_id, target_id, own_range, dwell=None)` | `:2504` | Lista ordinata di `(lo, hi, start, end)`: `(start, end)` è il passaggio (unito) che **tocca** la finestra, `[lo, hi]` lo stesso ritagliato alla finestra. `None` senza i tratti di entrambi (ripiego). |
+
+### Che cosa fa `_detect_direction` (`:2301-2384`)
+
+Chiamata due volte per finestra (a→b poi b→a) da `_detect` (`:2280`), nell'ordine canonico delle finestre. Dopo le due uscite senza estrazione (portata assente o non positiva; osservatore a terra, `:2303-2309`),
+legge il fattore ambientale (`:2314`) e il `dwell` (`:2319`), poi `passes = self._own_passes(...)` (`:2325`):
+
+| Caso | Che cosa succede | Estrazioni |
+|---|---|---|
+| `passes is None` (manca un tratto: chiamata diretta senza `legs`) | **ripiego senza tratti**: l'estrazione unica di prima, con distanza minima della finestra, candidato fino a `t_end`, permanenza D-5 da `_exposure_time` (`:2462`, solo con `dwell`); i passaggi della coppia **non** sono registrati | una, da `rng` |
+| nessun passaggio tocca la finestra (lista vuota) | permanenza D-5 **0** (`pass_exposure = 0.0`, `:2337`, FP-6: prima la dava `_exposure_time`, sempre 0 con i tratti); l'estrazione e la Pd sono quelle della finestra (distanza minima oltre la portata propria: Pd 0) | una, da `rng` |
+| **un** passaggio | permanenza D-5 = `min(end, window.t_end) − start`, **non** tagliata all'inizio della finestra (`:2342`); **FP-3 (a)** (sotto): se `other_range` è definita e positiva e `own_range < other_range`, il candidato vale fino a `hi`, la fine del passaggio (`:2344-2348`); `Detection` senza `pass_index` | una, da `rng` |
+| **due o più** passaggi | delega a `_detect_passes` (`:2332-2334`) e **esce** | una per passaggio |
+
+In tutti i casi con i tratti i passaggi della coppia sono registrati in `own_passes_of[(osservatore, bersaglio)]` (`:2329-2330`): serviranno a R-INT (FP-5 (d), §4.26). Con un passaggio solo la distanza minima della finestra coincide con quella del
+passaggio: se il bersaglio entra mai nel volume proprio, il massimo avvicinamento dell'intera finestra cade dentro quell'unico passaggio.
+
+### Un'estrazione per passaggio: `_detect_passes` (`:2550-2604`)
+
+Per ogni passaggio `(lo, hi, start, end)`, nell'ordine di tempo (indice 0, 1, …):
+
+1. **Controllo**: se `self.pass_rng is None` solleva `ValueError` (`:2560-2562`) **prima di ogni estrazione**: è un errore di chiamata, non un ripiego (decisione U-2 della pulizia). La direzione non estrae nulla.
+2. **Permanenza D-5 del proprio passaggio** (FP-6 = (a)): con `dwell` non `None`, `exposure = max(0, min(end, window.t_end) − start)` e `pass_factor = factor × dwell_factor(exposure, dwell)` (`:2569-2573`); mai la somma delle permanenze.
+3. **Estrazione** (`:2575`): il passaggio **0** estrae da `self.rng` (lo stream dell'ingaggio, nella posizione dell'estrazione unica di prima); i passaggi **dal secondo in poi** estraggono da `self.pass_rng` (decisione FP-2 = O3).
+4. **Distanza del passaggio** (FP-4 = (a)): `_pass_cpa(window, osservatore, bersaglio, lo, hi)` (`:2528-2538`) ricalcola il CPA sui tratti ritagliati a `[lo, hi]` (`clamp_legs` + `closest_point_of_approach`): `(t_cpa, distanza)`; per un passaggio unito
+   il massimo avvicinamento dell'unione. Se il CPA non è calcolabile (non atteso) ricade su quello della finestra, con un `logger.debug`.
+5. **Pd e rilevamento**: `probability = detection_probability(distanza, own_range, pass_factor)` se la distanza è entro la portata, altrimenti 0; `detected = draw < probability`. Se rileva: `detection_radius` e
+   `_pass_detection_time` (`:2540-2548`: primo istante, **dentro il passaggio**, in cui la distanza scende sotto il raggio estratto, via `_own_intervals(..., radius)`; ripiego il CPA del passaggio), poi percezione
+   (`_perceive`, `identified_by`, RWR) come in `_detect_direction`.
+6. **FP-3 (a): fine del tiro all'uscita dal volume** (`:2594-2598`): il candidato nasce se `t_ready <= hi + TIME_EPS` ed è valido **fino a `hi`**, la fine del passaggio ritagliata alla finestra: all'uscita dal volume proprio la traccia è persa;
+   al rientro serve un nuovo rilevamento (il passaggio successivo). Le salve **già lanciate** non cambiano: arrivano comunque (R4). Il candidato porta `t_cpa` e `distance_cpa` **del passaggio**.
+7. **`Detection`** (`:2600-2604`): sempre una per passaggio, anche se non rilevato, con `pass_index`, `pass_count` (passaggi della direzione), `pass_start = lo`, `pass_end = hi` ed `exposure_s`/`dwell_time_s` se la D-5 è applicata.
+
+*Diagramma D131 — `_detect_direction`: dal calcolo dei passaggi alle estrazioni (§4.35; livello L4, verificato a `a389cadb`; la sequenza di chiamate è D82, quella di `_detect_passes` D133).*
+
+```mermaid
+flowchart TD
+    S["_detect_direction(finestra, osservatore, bersaglio,<br/>own_range, other_range)"] --> G{"own_range assente o non positiva,<br/>oppure osservatore a terra?"}
+    G -->|si| X["esce: nessuna estrazione"]
+    G -->|no| F["factor = detection_factor, se iniettato<br/>dwell = _dwell_of (None senza D-5 o senza dato)"]
+    F --> P["passes = _own_passes(...)<br/>intervalli nel volume proprio,<br/>uniti se l'uscita non supera il dwell (FP-10)"]
+    P --> T{"passes e None?<br/>(manca un tratto)"}
+    T -->|si| R["ripiego senza tratti:<br/>distanza e CPA della finestra,<br/>candidato fino a t_end,<br/>permanenza = _exposure_time (solo con dwell)"]
+    T -->|no| O["own_passes_of della coppia += passaggi<br/>(serve a R-INT, FP-5 d)"]
+    O --> N{"quanti passaggi toccano la finestra?"}
+    N -->|"due o piu"| M["_detect_passes: ValueError se pass_rng e None,<br/>una estrazione per passaggio (D133),<br/>candidato fino a hi del passaggio (FP-3 a)"]
+    N -->|"nessuno"| Z["permanenza 0"]
+    N -->|"uno"| U["permanenza del passaggio;<br/>FP-3 a: candidato fino a hi<br/>se la portata propria e la minore"]
+    Z --> E["una estrazione da rng,<br/>Pd con la distanza minima della finestra"]
+    U --> E
+    R --> E
+    E --> D["se rileva: istante, percezione, RWR, candidato;<br/>sempre: Detection"]
+```
+
+### FP-10: i passaggi ravvicinati si uniscono
+
+Un'uscita **non più lunga** del periodo di rivisita (`dwell_time_s`) del sensore non interrompe la traccia: il tracciamento è predittivo, e i due intervalli sono **un** passaggio (una estrazione, CPA e permanenza del passaggio unito). **L'unione avviene solo se il
+dwell è noto**, cioè con la D-5 accesa e un sensore che lo dichiara (oggi solo i 10 EWR, §4.36): senza dwell `_join_passes` non unisce e un'uscita di pochi secondi crea un passaggio nuovo e un'estrazione in più (limite, capitolo 9). In sessione la
+cosa non è esercitata dalla fotografia: S33 accende D-5 con un dwell di test di 2 s [S] sulla ZSU-57-2, ma le uscite fra i passaggi (100-130 s) sono molto più lunghe e **non si uniscono**; l'unione effettiva è provata solo dai test unitari.
+
+### Effetti sugli altri meccanismi
+
+- **R-INT** (§4.26, FP-5 (d)): il lancio è «visto» solo se l'intercettore ha rilevato il lanciatore **nel passaggio che contiene il lancio**.
+- **D-5** (§4.36, FP-6 (a)): la permanenza è quella del **proprio** passaggio, mai la somma; nessun passaggio = 0.
+- **Candidati e portata d'arma** (§4.17): `t_end` del candidato è la fine del passaggio (FP-3 (a)); `_range_entry` lo usa come limite, quindi l'osservatore con la portata minore non lancia salve **nuove** dopo l'uscita.
+- **Ordine delle estrazioni** (§4.11): `rng` invariato in numero e posizione; `pass_rng` cresce solo con direzioni a più passaggi.
+- **Pianificatore di rotta** (decisione FP-9 = (a)): non cambia (`Path.max_detection_probability` resta il peggiore degli attraversamenti, non la probabilità cumulativa che il DES dà con più passaggi; limite, capitolo 9).
+
+### Cosa è stato cambiato dalla regola (storia, dalla fotografia) e cosa è verificato
+
+Con la regola accesa (2026-11-12) la differenza rispetto alla fotografia precedente fu di **44 esecuzioni cambiate su 1009** (965 identiche), **tutte per FP-3 (a)** (153 salve della difesa in meno, mai in aumento; in diverse esecuzioni un aereo perso in meno); nessuna per
+passaggi multipli (0 direzioni a più passaggi nella fotografia), nessuna per FP-5 (d), nessuna per FP-6/FP-10 (D-5 spenta): dettaglio in `F4_Differenze_Scenari.md`, sezione FP. La pulizia (eliminazione dell'interruttore) ha dato **0 esecuzioni cambiate**
+(`UNCHANGED (1103)`). Copertura: i test unitari `TestDetectionPerPass` (24 test, `Test/Test_Engagement_Resolver.py:3987`; conteggio dei metodi `test_` letto nel file) e `TestDwellTimeInTheResolver`, `TestPerPassDetectionStream` (2 test: `pass_rng` sempre passato e `pass_event_id` distinto e indipendente dall'ordine) in `Test/Test_Session_Simulator.py:269` e lo scenario
+S33-PASSES (capitolo 8 §8.14). **Limiti** (capitolo 9, da Proposta FP §5.2): senza tratti nessun passaggio; fine del tiro all'uscita dal volume (le salve già lanciate proseguono); R-INT «non visto» fuori dal passaggio; passaggi tangenti o di durata nulla contano; passaggio
+diviso da un decollo/atterraggio = due finestre = due estrazioni; unione solo con D-5 e dwell; finestre e pianificatore con la tolleranza numerica; il numero di estrazioni non è visibile nel confronto con la fotografia.
+
+## 4.36 Permanenza nel volume (D-5, 2026-11-06; interruttore `D5_DWELL_TIME` spento)
+
+Documento: `Analysis/Document/Proposta_Dwell_Time_Rilevamento.md` (decisioni DW-1..DW-9 dell'utente, 2026-11-06). Commit `8943b292` (blocco A: dato, legge, interruttore, scenario S32) ed `effb0dcf` (blocco B: il pianificatore usa la stessa legge nelle metriche di rilevamento, dietro lo stesso interruttore).
+
+**Il problema.** Un sensore che scandisce (un radar EWR che ruota) offre al bersaglio **un'occasione di rilevamento a ogni passaggio del fascio**, cioè ogni `dwell_time_s` [s] (periodo di rivisita = 60 / giri al minuto). Se il bersaglio resta nel volume meno di
+un periodo, può non essere mai illuminato. La legge precedente (`detection_probability`) dipende solo dalla distanza.
+
+**La legge** (`dwell_factor(exposure_s, dwell_time_s)`, `:1277-1299`):
+
+```
+g = min(1, permanenza / dwell_time_s)           Pd = g * Pd(d_cpa)
+```
+
+`g` è la probabilità che almeno un'occasione (fase dell'antenna uniforme) cada nella permanenza. **Forma: scelta di progetto [S]** con giustificazione geometrica, **nessuna costante**. Si riduce esattamente alla legge precedente per permanenza ≥ periodo o per periodo non
+dichiarato (`dwell_time_s` `None` o 0 → `g = 1.0`). È un **fattore** moltiplicato per quello ambientale (`factor × dwell_factor`), quindi `detection_radius` resta la sua inversa esatta. `TypeError` per argomenti non numerici o booleani, `ValueError` per permanenza
+negativa o non finita.
+
+**Il dato.** `dwell_time_s` è una chiave **opzionale** del dizionario del sensore nel registro (`radar`, `TVD` o `visual`); oggi è dichiarata solo nel `radar` di **10 dei 15 radar EWR** di `Asset/Vehicle_Data.py` (`:4659-5058`; periodi in secondi: SCR-270 60; P-12 e P-18 6; P-37,
+1L13, 55Zh6, AN/TPS-43 e P-14 10; AMES Type 7 7,5; AMES Type 80 15), ricavata dai giri al minuto della fonte con una **regola di progetto [S]** (DW-2: regime normale se la fonte lo cita, altrimenti la rotazione più veloce). Il **P-12** ha una contraddizione di fonte (10 contro
+2-6 giri/min); l'**AMES Type 80** (15 s) poggia su un'interpretazione [S] della fonte («4, fino a 6» letto come regime normale 4: con la lettura «più veloce» sarebbe 10 s). Chain Home non lo dichiara per scelta esplicita (antenna fissa a illuminazione continua); FuMG-80-Freya, AN-FPS-117,
+Wassermann e Mammut non lo dichiarano e il codice non ne dà la ragione (nessun dato di rotazione nella ricerca: `Test/Test_EWR_Data.py:475`). **SAM, AAA, radar d'aereo, navi, TVD e vista non hanno nessun valore** (decisione DW-9: solo il meccanismo ora; valori a questi sensori quando
+la ricerca sarà completa). Lettori: `Mobile.detection_dwell_time(mode, range_type)` (`Asset/Mobile.py:1692`: il dwell del sensore con la portata **massima**, a parità il primo di `DETECTION_SENSORS`; esclude il visivo con `D4C_VISUAL_SENSOR` spento; `None` se non dichiarato) e il suo
+helper `_sensor_dwell_s` (`:1572`, mai un'eccezione); nel risolutore il lettore di default `registry_dwell_time(observer, target, mode)` (`Engagement_Resolver.py:1302`).
+
+**Chi la attiva.** Solo il chiamante che passa `dwell_time_for` a `resolve_engagement`: in sessione lo fa `Session_Simulator.engage` **solo con `D5_DWELL_TIME` acceso** (`Session_Simulator.py:2791-2793`). L'interruttore è `D5_DWELL_TIME = False` (`Engagement_Resolver.py:591`),
+**spento di default**, e **nessun codice di produzione lo accende** (lo leggono `Session_Simulator`, `Air_Route_Manager` e i test, che lo sostituiscono con `patch.object`). A interruttore spento la chiamata è quella di prima e `_dwell_of` dà sempre `None`: nessun `dwell_factor`,
+nessuna unione dei passaggi (FP-10), `Detection.exposure_s` e `dwell_time_s` restano `None`.
+
+**La permanenza** (calcolata prima della `_draw`, **senza estrarre nulla**). Dai tratti, la permanenza del **passaggio** in portata propria a cui l'estrazione appartiene (`_own_passes`, unito se separato da uscite ≤ dwell, FP-10), **mai la somma** (FP-6 = (a)); 0 se nessun passaggio tocca la
+finestra. **Non è tagliata all'inizio della finestra** (DW-4): l'intervallo che la contiene conta dal suo inizio vero, così spezzare una finestra (decollo/atterraggio, ritaglio d'episodio) non riduce la Pd per un artefatto. Senza tratti (chiamate dirette), `_exposure_time(window, own_range, other_range)`
+(`:2462-2474`) è il **solo ripiego**: tutta la finestra se la portata propria è la maggiore (o l'altra è `None`), altrimenti l'intervallo reciproco `t_mutual_end − t_mutual_start` se esiste, altrimenti 0. `Detection.exposure_s` e `dwell_time_s` registrano i due valori usati.
+
+**RNG.** Numero e ordine delle estrazioni sono invariati in ogni stato dell'interruttore: cambia solo la soglia, come per `detection_factor`.
+
+**Il pianificatore la replica.** `Air_Route_Manager.Path.compute_detection_metrics` (`Logic/Air_Route_Manager.py:1098-1211`, capitolo 7 §7.8) calcola la `detection_probability` di ogni tratto con la **stessa** legge, compresa la permanenza D-5 quando `D5_DWELL_TIME` è acceso e il `dwell_time_s`
+della minaccia non è `None` (i tratti contigui dello stesso volume sono un solo attraversamento, come una finestra del DES, anche su più edge); a interruttore spento le metriche sono identiche a prima. È una **metrica di pianificazione**, non un vincolo.
+
+**Limiti** (Proposta §5.2, capitolo 9): la D-5 **non accorcia le rotte contro gli EWR** (con periodi di 6-60 s la corda a Pd ridotta è di pochi km: l'effetto «volo basso non visto» richiederebbe un orizzonte radar nel DES, assente: blocco C rimandato, DW-7); **solo riduzione** (nessun
+cumulo di scansioni su permanenze lunghe); **un solo sensore per asset** (quello della portata massima); permanenza sui tratti, non sullo stato; **nessun dwell sul tracciamento dei colpi** (R-INT, `_round_track_time`); **dwell dichiarato solo per i 10 EWR** (DW-9 aperto: finché mancano i dati per SAM e AAA la legge non
+cambia nessun esito di tiro dei registri, quindi con i soli dati dei registri la D-5 non produce effetti visibili nelle sessioni della fotografia: affermazione della Proposta §5.1, **non riverificata qui**); una volta estesi i dati, accendere l'interruttore cambierebbe la fotografia e il confronto andrebbe riletto.
+
+**Verifica**: scenario **S32-DWELL** (capitolo 8 §8.14: `off`, `long`, `short`, `ewr_off`, `ewr_on`, 5 varianti × 4 semi = 20 esecuzioni nella fotografia), `TestDwellFactor` (6 test) e `TestDwellTimeInTheResolver` (12 test) in `Test/Test_Engagement_Resolver.py`, `Test/Test_Mobile.py`
+(lettori), `Test/Test_EWR_Data.py:475-490` (valori), `TestDwellTimeSwitch` (2 test: lettore passato solo con l'interruttore acceso) in `Test/Test_Session_Simulator.py:235`.
+
+## 4.37 Quota nel volume d'ingaggio (VA, 2026-11-10; interruttore `VA_ENGAGEMENT_ALTITUDE_BAND` spento)
+
+Documento: `Analysis/Document/Proposta_Allineamento_Volumi_DES_Pianificatore.md` (decisioni VA-1..VA-8, VA-2.1 e VA-8r dell'utente, 2026-11-07). Commit `585dbc65` (blocco 1: primitive dello scheduler, risolutore, fire control), `5d87f03d` (blocco 2: scenario S34-BAND).
+
+**Il problema.** Nel pianificatore di rotta le minacce contraeree sono **cilindri** con quota minima e massima (i dati dei sistemi contraerei distinguono l'altezza massima dalla distanza massima); nel DES il volume d'ingaggio dell'arma era una **sfera** (`max_range`, distanza 3D) e il filtro
+di quota della fire control era **statico** (sulla posizione di partenza degli asset). Un'arma con fascia 25-5000 m e portata 10 km non poteva essere modellata né nel tempo né nella quota.
+
+**La regola, a interruttore acceso.** Il volume d'ingaggio è **sfera ∩ fascia**, valutato **nel tempo** sui tratti delle rotte:
+
+1. **Quote all'istante della decisione (VA-2 (d))**: la fire control che dichiara la keyword `altitudes` (§4.4) riceve le quote di tiratore e bersaglio **all'istante `t_fire`**, interpolate dai tratti (`_altitudes_at`, `:3429-3457`), invece della posizione di partenza.
+2. **Sfera ∩ fascia nel controllo di portata (VA-1, VA-3 (b))**: `_range_entry(..., band)` usa `engagement_intervals(legs_shooter, legs_target, max_range, band)` (`:1885-1915`): `range_intervals` (sfera) intersecata con `altitude_intervals` per la fascia **relativa al tiratore**
+   (`min_altitude`/`max_altitude`) e, se dichiarato, per il tetto **assoluto** `max_target_z` (`relative=False`), con `intersect_intervals` (`Logic/Contact_Scheduler.py:955` e `:1013`, nuove con la VA: sui sottointervalli a velocità costante di `range_intervals` la quota è lineare nel tempo,
+   quindi ogni sottointervallo dà al più un intervallo). La `band` è `(min_altitude, max_altitude, max_target_z)` della `ShotSpec` (`_band_of`, `:3419-3427`: `None` a VA spenta o con i tre campi `None`).
+3. **Rinvio della decisione (VA-2.1 (i))**: un bersaglio **aereo** fuori fascia all'istante della decisione **non esaurisce** il candidato se un'arma adatta entrerà in sfera ∩ fascia più tardi nella finestra d'ingaggio: `_altitude_deferral` (`:3460-3510`) interroga la fire control con
+   `altitudes=(None, None)` (quote ignote: nessun filtro di quota), cerca fra le opzioni con scorta e `max_range` il primo ingresso in sfera ∩ fascia e, se è dopo `t_fire`, imposta `candidate.not_before` a quell'istante (la decisione si ripete lì); se l'ingresso è già a `t_fire` (bordo della
+   fascia: stessa disuguaglianza, arrotondamento diverso) restituisce direttamente quella opzione; altrimenti il candidato è esaurito come prima.
+
+La disuguaglianza è **una sola** (quella di `Fire_Control.in_altitude_envelope`, `Logic/Fire_Control.py:649-677`), valutata in **due istanti**: la fire control la applica all'istante della decisione (sceglie l'arma), il risolutore la stessa sui tratti dall'istante della decisione in poi
+(sceglie l'istante di lancio), con gli **stessi dati di registro**, copiati nella `ShotSpec`. L'interruttore è letto **una volta per run** (`self.altitude_band`, `:2048`), così un test lo sostituisce nel modulo. **Dove agisce in `_schedule_next`**: sulla chiamata della fire control (`:2887`),
+sul rinvio (`:2889-2895`) e sul controllo di portata (`:2911-2912`); e in `_in_range_at` (`:3253`, regola L2: un rinvio **non** è «a portata adesso» e non muta il candidato).
+
+**A interruttore spento** (default): `_band_of` e `_altitudes_at` dànno sempre `None`, la fire control riceve la chiamata di sempre, la chiave della cache di `_range_entry` resta quella di prima e il filtro di quota della fire control resta statico sulla posizione di partenza. **Nessuna estrazione nuova né spostata in nessuno dei due stati.**
+**Ripiego senza tratti** (chiamate dirette a `resolve_engagement` senza `legs`): nessuna quota all'istante (`_altitudes_at` → `None`), la fascia è ignorata, come la portata.
+
+**Allineamento col pianificatore (VA-4 (a))**: per involucro: sfera ∩ fascia ⊆ cilindro del pianificatore, quindi «sicuro» per il pianificatore è sicuro anche per il DES; il pianificatore non cambia (è conservativo negli angoli del cilindro: vede pericolo dove il DES non spara).
+
+*Diagramma D132 — dove agisce la fascia di quota in `_schedule_next`: decisione, rinvio e controllo di portata (§4.37; livello L4, verificato a `a389cadb`).*
+
+```mermaid
+flowchart TD
+    A["_schedule_next: t_fire scelto per il candidato"] --> B["_fire_control(tiratore, bersaglio, t_fire)<br/>con altitudes all'istante t_fire,<br/>se VA acceso e la fire control le dichiara"]
+    B --> C{"_first_with_stock:<br/>un'opzione con scorta?"}
+    C -->|si| H["spec e colpi"]
+    C -->|no| D["_altitude_deferral(tiratore, candidato, t_fire)"]
+    D --> E{"VA acceso, tratti e keyword altitudes,<br/>bersaglio aereo non a terra?"}
+    E -->|no| X["nessun rinvio:<br/>candidato esaurito come prima"]
+    E -->|si| F["fire control con altitudes = None, None<br/>(nessun filtro di quota):<br/>opzioni con scorta e max_range"]
+    F --> G{"qualche opzione entra in sfera e fascia<br/>nella finestra (_range_entry con band)?"}
+    G -->|no| X
+    G -->|"si, dopo t_fire"| R["not_before = primo ingresso:<br/>decisione rinviata"]
+    G -->|"si, gia a t_fire"| I["si usa quell'opzione<br/>(bordo della fascia)"]
+    I --> H
+    H --> M{"spec.max_range dichiarato?"}
+    M -->|no| L["lancio a t_fire"]
+    M -->|si| N["_range_entry(.., band = _band_of(spec)):<br/>sfera e fascia nel tempo"]
+    N -->|"mai"| X2["candidato esaurito"]
+    N -->|"ingresso dopo t_fire"| R2["not_before = ingresso:<br/>candidato rimandato"]
+    N -->|"entro t_fire"| L
+```
+
+**Limiti** (Proposta §5.2, capitolo 9): **prima arma con scorta, senza ripiego per la portata** (fuori dal rinvio di quota, se l'arma preferita non entra mai nella propria sfera il candidato si esaurisce anche se un'altra potrebbe ingaggiare: è il limite del §4.17); sfera ∩ fascia è una
+**prima approssimazione** (gli inviluppi reali hanno portata ridotta a bassa quota e vicino al tetto e una zona morta interna: nessun dato nel registro); **portata minima e cono di silenzio** non modellati; quota relativa al tiratore (armi di superficie) o assoluta (armi d'aereo), **senza terreno**
+(`altitude_reference='AGL'` dei punti di missione non è letto); il **rilevamento** resta sferico nel DES e cilindrico nel pianificatore; le `ShotSpec` di test (`Scenario_Fixtures.SHOTS`) non hanno portata né fascia e non dichiarano `altitudes`, quindi la regola non le tocca; una `ShotSpec`
+con fascia o tetto ma **senza** `max_range` non riceve nessun controllo nel tempo (il rinvio salta le opzioni senza `max_range`: la regola «una disuguaglianza, due istanti» vale lì solo all'istante della fire control). **Verifica**: scenario **S34-BAND** (capitolo 8 §8.14), `TestEngagementAltitude`
+(14 test) in `Test/Test_Engagement_Resolver.py:2041`, `TestAltitudeIntervals` (5) e `TestIntersectIntervals` (2) in `Test/Test_Contact_Scheduler.py`, `TestFireControlAltitude` e `TestAltitudeBand` in `Test/Test_Fire_Control.py` (conteggi dei metodi `test_` letti nei file).

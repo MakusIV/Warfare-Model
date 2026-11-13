@@ -2,6 +2,12 @@
 
 Modulo: `Logic/Contact_Scheduler.py`.
 
+> **Aggiornamento 2026-11-13 (VA, codice `585dbc65`; riverificato a `a389cadb`): il modulo CAMBIA di nuovo.** `Logic/Contact_Scheduler.py` passa da 1578 a **1662 righe** con **un'unica inserzione di 84 righe** dopo `_merge_intervals`: le due primitive nuove `altitude_intervals` (`:955`) e
+> `intersect_intervals` (`:1013`) della VA (capitolo 4 §4.37), cioè la «fascia di quota» e il combinatore «intersezione» della Attività D (`Piano_Lavori_2026_09_24.md`). Sono geometria pura (nessun RNG, nessuna dipendenza nuova) e le usa **solo il risolutore** (`engagement_intervals`); il percorso di produzione dello scheduler
+> (`schedule_contacts`, `contact_windows`, `ContactWindow`) **non cambia**. **Per i riferimenti `:riga` a questo file in tutto il manuale: riga ≤ 954 invariata; riga ≥ 955 → +84** (`git diff -U0 dcedc541 HEAD`: un solo hunk, `@@ -954,0 +955,84 @@`). Le note datate sotto («non cambia») erano vere alla loro data.
+> **Una precisazione che il lavoro sulla FP ha reso necessaria**: `[t_mutual_start, t_mutual_end]` di una `ContactWindow` è il **primo** intervallo nella portata minore che cade nella finestra, ritagliato ad essa (`_first_contained`, `:1201`; usata da `contact_windows` a `:1170` e da `trim_contact_window` a `:1243`); se il bersaglio esce e rientra nel volume dell'osservatore con la portata minore **dentro la stessa finestra**,
+> i passaggi successivi al primo **non** sono nella finestra: li conta il risolutore dai tratti (capitolo 4 §4.35), non lo scheduler.
+>
 > **Aggiornamento 2026-11-04 (codice `37816355` D-4c e `cbc75634` D-4b; manuale riverificato a `b171f6a5`).** `Logic/Contact_Scheduler.py` **non cambia** (nessuna riga toccata: i riferimenti `:riga` a questo file restano validi);
 > cambia la **fonte** delle portate che `mutual_detection_ranges` chiede ai due asset: `Mobile.detection_range` compone ora **tre** sensori (`radar`, `TVD`, `visual`) e il terzo sta dietro un interruttore, v. §3.5 («Composizione dei sensori»). Nessuna
 > logica dello scheduler è nuova; cambiano i dati e il punto di lettura nel registro.
@@ -79,6 +85,10 @@ Per il rilevamento non basta il solo CPA (dice *quanto* ci si è avvicinati, non
 quando* si è stati a tiro): `range_intervals` risolve l'equazione completa
 `|Δr + Δv s|² = R²` su ogni sottointervallo, e fonde gli intervalli disgiunti risultanti
 (due rotte che si incrociano più volte entrano e escono dal raggio più volte, `:873-934`).
+
+Dalla **VA** (2026-11-10, capitolo 4 §4.37) il modulo espone altre due primitive di intervalli: **`altitude_intervals(legs_a, legs_b, z_min, z_max, relative=True)`** (`:955`), gli intervalli in cui la quota di B è in `[z_min, z_max]` (`None` = nessun limite da quel lato), **relativa** ad A (`z_b − z_a`) se `relative`, **assoluta** (`z_b`)
+altrimenti; usa gli stessi sottointervalli a velocità costante di `range_intervals` (`_breakpoints`), su cui la quota è lineare nel tempo, quindi ogni sottointervallo dà al più un intervallo (`ValueError` se `z_min > z_max`); e **`intersect_intervals(first, second)`** (`:1013`), l'intersezione di due liste ordinate di
+intervalli disgiunti (due intervalli che si toccano entro `TIME_EPS` danno un intervallo di durata nulla). Il risolutore le compone con `range_intervals` per ottenere sfera ∩ fascia (`engagement_intervals`, `Logic/Engagement_Resolver.py:1885`).
 
 ### C — Potatura gerarchica a livello `Block`
 
