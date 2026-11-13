@@ -2738,10 +2738,10 @@ come in §5.4.1; nomi dei semi.
   interruttori: tenerlo solo se lo stato precedente e' un'alternativa valida).
 - Il pianificatore di rotta non modella l'intercettazione delle munizioni.
 
-## FP — rilevamento per passaggio nella portata propria (interruttore ACCESO il 2026-11-12)
+## FP — rilevamento per passaggio nella portata propria (interruttore ACCESO il 2026-11-12, ELIMINATO il 2026-11-13)
 
 Proposta: `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`; sonde in `Rapporti/Sonde_Finestre_Passaggio/` (`esito_p1.txt`).
-`Engagement_Resolver.FP_PER_PASS_DETECTION = True` per decisione dell'utente dopo la sonda P-1.
+`Engagement_Resolver.FP_PER_PASS_DETECTION = True` per decisione dell'utente dopo la sonda P-1; l'interruttore e' stato poi eliminato (v. "Pulizia dell'interruttore").
 
 ### Differenze della fotografia (rispetto a quella installata fino al 2026-11-11, regola precedente)
 Il 2026-11-12 l'utente ha fatto installare la fotografia nuova (1113 esecuzioni, FP accesa): le differenze sotto sono quelle fra la vecchia e la nuova.
@@ -2763,10 +2763,18 @@ Esempio tracciato (`S21-3/parked`): lo Shilka (volume 20 km) spara a `str0` fino
 `str0` e' uscita dal suo volume a 176,9 s; con la FP si ferma a 174,9 s (4 salve) e `str0` si salva. Gli scenari che cambiano hanno fire control
 di prova senza inviluppo d'arma (S13, S14, S21) o tiro dichiarato (S26): con un'arma reale la portata limitava gia' il tiro.
 
-### S33-PASSES (20 esecuzioni nuove)
+### S33-PASSES (20 esecuzioni nuove; storico, ora 10: v. "Pulizia dell'interruttore")
 ZSU-57-2 (volume visivo 6 km) contro 4 A-10C; varianti `off`/`cas_off` (FP e D-5 spente) e `on`/`cas_on` (FP e D-5 accese, dwell ZSU 2 s [S]).
 Rientro (due passaggi a ~230 s e ~410 s) e CAS (due passaggi, pausa ~104 s). Con la FP: 8 estrazioni della ZSU per esecuzione invece di 4;
 salve della ZSU `reentry` 18 (spento) contro 20 (acceso) su 5 semi, `cas` 30 e 30; A-10C persi uguali nei due stati. Non prova FP-5, l'unione FP-10 ne' g < 1 (test unitari).
 
+### Pulizia dell'interruttore (2026-11-13)
+`Proposta_FP_Pulizia_Interruttore.md`: eliminati `FP_PER_PASS_DETECTION` e i rami `pass_rng is None`; `Session_Simulator` passa sempre `pass_rng`;
+`ValueError` con una direzione a >= 2 passaggi senza `pass_rng`. **0 esecuzioni cambiate** (confronto `UNCHANGED (1103)`, nessuna `CHANGED`).
+S33-PASSES passa da 20 a 10 esecuzioni (tolte le varianti `off` e `cas_off`, che provavano lo stato spento): le 10 `MISSING` sono sparite con la
+fotografia di **1103 esecuzioni**, installata il 2026-11-13 su richiesta dell'utente. Il paragrafo S33-PASSES qui sopra resta come storico.
+Suite `Ran 4914`, `OK (skipped=7)`.
+
 ### Stato
-Interruttore temporaneo: la fotografia nuova e' installata (2026-11-12); resta da fare il blocco di pulizia che lo elimina (Proposta §4.3 punto 3).
+FP eseguita, accesa e senza interruttore; fotografia di 1103 esecuzioni installata (2026-11-13).
+

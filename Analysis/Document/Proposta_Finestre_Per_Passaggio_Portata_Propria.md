@@ -1,5 +1,9 @@
 # Proposta: un'occasione di rilevamento per ogni passaggio nel volume di rilevamento PROPRIO dell'osservatore (FP)
 
+**Stato aggiornato (2026-11-13): FP ESEGUITA, ACCESA E SENZA INTERRUTTORE.** Il testo che segue e' il piano storico
+(scritto con l'interruttore `FP_PER_PASS_DETECTION`): l'interruttore e' stato eliminato dalla pulizia
+(`Proposta_FP_Pulizia_Interruttore.md`, §4.3 punto 3); il codice di oggi non contiene piu' la costante.
+
 **Stato: TUTTE LE DECISIONI PRESE (2026-11-08).** FP-1..FP-4 decise dall'utente il 2026-11-07 (**FP-1 = B-R**,
 **FP-2 = O3**, **FP-3 = (a)**, **FP-4 = (a)**); FP-5..FP-10 decise dall'utente il 2026-11-08 (**FP-5 = (d)**, **FP-6 =
 (a)**, **FP-7 = (a), interruttore TEMPORANEO**, **FP-8 modificata** a 4 varianti x 5 semi, **FP-9 = (a)**, **FP-10 =
@@ -111,7 +115,7 @@ D-5** e **non e' dichiarato** nel manuale.
 | Distanza per passaggio (FP-4, DECISA 2026-11-07: **(a)**) | **CPA del passaggio** | nessuno |
 | Istante di rilevamento per R-INT (FP-5, DECISA 2026-11-08: **(d)**) | regola accesa: il lancio e' "visto" solo se l'intercettore ha rilevato il lanciatore **nel passaggio che contiene il lancio**; spenta: l'ultimo rilevamento in ordine di lista, come oggi | nessuno spento; acceso: da misurare in P-1 (`RINT_D`, §4.3) |
 | D-5 senza FP (FP-6, DECISA 2026-11-08: **(a)**) | con la D-5 accesa la permanenza e' **il passaggio che contiene `t_cpa`** (in subordine il piu' lungo), mai la somma, in ogni stato dell'interruttore FP; con FP acceso la permanenza del proprio passaggio | nessuno (D-5 spenta nella fotografia; S32 a un passaggio) |
-| Interruttore (FP-7, DECISA 2026-11-08: **(a), TEMPORANEO**) | `Engagement_Resolver.FP_PER_PASS_DETECTION = False`; `Session_Simulator` passa `pass_rng` solo se acceso; si elimina con un blocco di pulizia dopo P-1 e la fotografia nuova installata dall'utente | **1009 identiche** |
+| Interruttore (FP-7, DECISA 2026-11-08: **(a), TEMPORANEO**; **ELIMINATO il 2026-11-13**, v. §4.3 punto 3) | `Engagement_Resolver.FP_PER_PASS_DETECTION = False`; `Session_Simulator` passa `pass_rng` solo se acceso; si elimina con un blocco di pulizia dopo P-1 e la fotografia nuova installata dall'utente | **1009 identiche** |
 | Scenario (FP-8, DECISA 2026-11-08, **modificata**; D-5 in S33 confermata la sera) | S33-PASSES, 4 varianti x 5 semi = **20 nuove** (`off`, `on` rientro; `cas_off`, `cas_on` CAS); `off`/`cas_off` tutto spento (stato precedente); `on`/`cas_on` = configurazione finale, **FP e D-5 accese** con il dwell della ZSU 2 s [S] (g = 1, nessuna unione FP-10); niente varianti con dwell lunghi | +20 nuove |
 | Pianificatore (FP-9, DECISA 2026-11-08: **(a)**) | nessun cambio; limite dichiarato: `max_detection_probability` e' il peggiore degli attraversamenti, non la probabilita' cumulativa del DES | nessuno |
 | Passaggi ravvicinati (FP-10, DECISA 2026-11-08: **(c)**) | passaggi separati da un'uscita **<= dwell** del sensore osservatore si **uniscono** (una estrazione, CPA e permanenza del passaggio unito); solo con FP e D-5 accese e il dwell dichiarato | nessuno |
@@ -425,6 +429,11 @@ della FP senza tratti.
 
 ### 2.7 Interazione con la D-5 (FP-6) — DECISA dall'utente il 2026-11-08: (a)
 
+> **Dopo la pulizia (2026-11-13)**: la scelta "passaggio che contiene `t_cpa`, in subordine il piu' lungo" valeva solo
+> a FP spenta ed e' stata tolta con il ramo spento. Oggi, con i tratti, ogni estrazione ha la permanenza del proprio
+> passaggio (unito, FP-10) e 0 se nessun passaggio tocca la finestra; `_exposure_time(window, own_range,
+> other_range)` resta solo come ripiego senza tratti. La tabella sotto e' il testo storico della decisione.
+
 | Opzione | Contenuto | Esito |
 |---|---|---|
 | **(a) un passaggio, incondizionata dentro la D-5** | con la D-5 accesa e FP spento la permanenza e' quella del **passaggio che contiene `t_cpa`** della finestra (in subordine il piu' lungo, il primo a pari durata), **mai la somma**; nessun interruttore nuovo (vale in ogni stato di `FP_PER_PASS_DETECTION`, dentro `D5_DWELL_TIME`). Con FP acceso ogni occasione ha la permanenza del proprio passaggio (unito, FP-10) | **DECISA**: la somma viola la regola dell'utente; nessuna esecuzione della fotografia accende la D-5; le 20 di S32 hanno un passaggio per direzione (P-0), quindi restano uguali (verifica in §4.1.6) |
@@ -441,6 +450,9 @@ comportamento gia' committato **senza** l'interruttore FP; e' dentro l'interrutt
 dell'utente. Il commento dell'interruttore FP non dice quindi "spento = tutto come prima" senza questa eccezione.
 
 ### 2.8 Interruttore (FP-7) — DECISA dall'utente il 2026-11-08: (a), TEMPORANEO
+
+> **Interruttore eliminato il 2026-11-13** (`Proposta_FP_Pulizia_Interruttore.md`): `FP_PER_PASS_DETECTION` e i rami
+> `pass_rng is None` non esistono piu'; `Session_Simulator` passa sempre `pass_rng`. La tabella sotto e' storica.
 
 | Opzione | Contenuto | Esito |
 |---|---|---|
@@ -1532,7 +1544,11 @@ registrati).
    `compared 1113 runs: 1060 difference lines`. **Fotografia nuova installata il 2026-11-12 su richiesta dell'utente**
    (`Test/baseline/scenario_baseline.json`, **1113 esecuzioni**, 0 errori di unita', catturata con la regola accesa in 1186 s;
    rispetto alla precedente differisce esattamente per le 44 cambiate di P-1 e per le 104 nuove di S32-S35).
-3. **Blocco di pulizia** (dopo i punti 1-2 e la fotografia nuova; descritto in breve, da pianificare a parte): elimina
+3. **ESEGUITO il 2026-11-13** (`Proposta_FP_Pulizia_Interruttore.md`, 4 blocchi di `oc-developer` su `ai/oc-fp-pulizia`,
+   merge `f46e3982`): suite `Ran 4914`, `OK (skipped=7)`; confronto `UNCHANGED (1103)`, 0 `CHANGED`, `compared 1103 runs:
+   10 difference lines` = le 10 `MISSING` di S33 (`off`/`cas_off`). **Fotografia di 1103 esecuzioni installata il
+   2026-11-13 su richiesta dell'utente** (commit `3b5edf49`). Con i tratti e >= 2 passaggi `pass_rng` e' obbligatorio
+   (`ValueError`). Descrizione di progetto originale: **Blocco di pulizia** (dopo i punti 1-2 e la fotografia nuova; da pianificare a parte): elimina
    `FP_PER_PASS_DETECTION` e i rami `pass_rng is None` (in `_detect_direction` i passaggi si calcolano sempre; in
    `_detection_time_of` resta solo FP-5 (d) con il ripiego senza tratti; `Session_Simulator` passa sempre `pass_rng`);
    riscrive i test che provano lo stato spento (1, 2, 15 e le meta' "senza `pass_rng`" degli altri) e toglie le
@@ -1613,7 +1629,8 @@ distanza orizzontale nel test S33 6, la forma interna di `probe` nel test S33 13
 ### 5.2 Limiti di modello (da dichiarare nel manuale)
 
 - **Senza tratti** (chiamate dirette) nessun passaggio: un'estrazione per finestra e direzione, candidato fino alla
-  fine della finestra e R-INT con l'ultimo rilevamento, come prima.
+  fine della finestra e R-INT con l'ultimo rilevamento, come prima. **Con i tratti e una direzione a >= 2 passaggi,
+  `pass_rng` e' obbligatorio** (`ValueError` altrimenti, dopo la pulizia del 2026-11-13).
 - **Fine del tiro all'uscita dal volume** (FP-3 (a)): con la regola accesa l'osservatore con la portata minore non
   lancia salve **nuove** dopo la fine del passaggio (unito); una salva **gia' lanciata** prosegue fino all'impatto. Non
   e' modellata una guida che richieda il sensore dopo il lancio. Con la regola spenta resta il limite di oggi (P-0: 151

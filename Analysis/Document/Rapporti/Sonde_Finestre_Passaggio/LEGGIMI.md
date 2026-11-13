@@ -8,6 +8,8 @@ di P-0, 0 `RINT_D`, 0 passaggi di durata zero su 34116, 0 cambiate fra le nuove 
 Nessuno dei due installa una fotografia o scrive nel repository: l'uscita va nella cartella indicata (usare
 `.ai-run/`, fuori dal versionamento). **Mai in parallelo con suite o confronto** (`tools/ai/verifica.sh`).
 
+**Dopo la pulizia (2026-11-13) `probe_switch_on.py` non e' piu' eseguibile**: la costante `FP_PER_PASS_DETECTION` non esiste piu' (la FP e' sempre accesa). Documento storico; `probe_passes.py` (P-0) resta una sonda di sola lettura.
+
 | Sonda | Quando | Cosa | Esito atteso | File |
 |---|---|---|---|---|
 | P-0 | prima di ogni codice (FATTA il 2026-11-07) | conta, per ogni esecuzione, le direzioni di rilevamento con >= 2 passaggi nel volume proprio dentro una finestra (estrazioni in piu'), piu' i contatori di FP-3 (salve dopo il passaggio) e FP-5 (R-INT) | confronto invariato, 0 righe DIFF | `probe_passes.py` |
