@@ -2,30 +2,26 @@
 
 Prosegue S32 (`Test_Session_Scenarios_S32.py`) con la stessa disciplina: si verifica un comportamento QUALITATIVO o
 STRUTTURALE (relazioni fra varianti), mai un numero calibrato. Nel codice (`Analysis/Document/
-Proposta_Finestre_Per_Passaggio_Portata_Propria.md`, blocco 2): con l'interruttore
-`Engagement_Resolver.FP_PER_PASS_DETECTION` acceso il risolutore da' UNA occasione di rilevamento per OGNI passaggio
-del bersaglio nel volume PROPRIO dell'osservatore (non una sola per finestra); con la D-5
+Proposta_Finestre_Per_Passaggio_Portata_Propria.md`, blocco 2): il risolutore da' UNA occasione di rilevamento per
+OGNI passaggio del bersaglio nel volume PROPRIO dell'osservatore (non una sola per finestra); con la D-5
 (`D5_DWELL_TIME`) accesa e un `dwell_time_s` dichiarato dal sensore, la Pd di ogni passaggio e' moltiplicata per
-`min(1, permanenza / dwell)`. Spenti, la legge e' quella di sola distanza di prima.
+`min(1, permanenza / dwell)`.
 
 ## S33-PASSES (`TestS33DetectionPerPass`)
 
-Due geometrie (rientro e CAS), ciascuna con lo stato precedente (FP e D-5 spente, nessun dwell dichiarato) e la
-configurazione finale (FP e D-5 accese, dwell della ZSU dichiarato). Quattro varianti, 5 seed ciascuna (nomi stabili
-nella fotografia, nell'ordine; stesso `session_id` per le 4 varianti di un seed):
+S33 prova la configurazione finale: FP (sempre attiva) e D-5 accesa con il dwell della ZSU 2 s [S]. Due varianti,
+5 seed ciascuna (nomi stabili nella fotografia, nell'ordine):
 
-| Variante  | Geometria | FP + D-5 | dwell della ZSU (dichiarato) | Cosa prova                                             |
-|-----------|-----------|----------|------------------------------|--------------------------------------------------------|
-| `off`     | rientro   | spente   | -                            | riferimento: una sola estrazione per finestra          |
-| `on`      | rientro   | accese   | 2 s [S]                      | due passaggi, due estrazioni; FP sola (g = 1)          |
-| `cas_off` | CAS       | spente   | -                            | riferimento nella geometria CAS a piu' virate          |
-| `cas_on`  | CAS       | accese   | 2 s [S]                      | due passaggi NON contigui; FP sola (g = 1)             |
+| Variante | Geometria | dwell della ZSU (dichiarato) | Cosa prova                                    |
+|----------|-----------|------------------------------|-----------------------------------------------|
+| `on`     | rientro   | 2 s [S]                      | due passaggi, due estrazioni; FP sola (g = 1) |
+| `cas_on` | CAS       | 2 s [S]                      | due passaggi NON contigui; FP sola (g = 1)    |
 
-Le varianti `off` e `cas_off` sono lo stato precedente: FP e D-5 spente, nessun dwell dichiarato. Le varianti `on` e
-`cas_on` sono la configurazione finale: FP e D-5 accese, e la ZSU dichiara (`declare_dwell`, modo 'air') un periodo di
-aggiornamento di 2 s, STIMA [S] dell'utente (2026-11-08: osservatore umano piu' ottica), non un dato. Con passaggi di
-50-67 s il fattore di permanenza e' g = 1 e con uscite di 100-130 s l'unione dei passaggi (FP-10) non unisce: la D-5
-non cambia ne' estrazioni ne' Pd; per questo non ci sono varianti con dwell lunghi.
+La ZSU dichiara (`declare_dwell`, modo 'air') un periodo di aggiornamento di 2 s, STIMA [S] dell'utente (2026-11-08:
+osservatore umano piu' ottica), non un dato. Con passaggi di 50-67 s il fattore di permanenza e' g = 1 e con uscite di
+100-130 s l'unione dei passaggi (FP-10) non unisce: la D-5 non cambia ne' estrazioni ne' Pd; per questo non ci sono
+varianti con dwell lunghi. Le varianti `off` e `cas_off` (FP e D-5 spente) sono state tolte con l'interruttore FP
+(Proposta_FP_Pulizia_Interruttore.md).
 """
 
 import copy
@@ -46,12 +42,10 @@ from Code.Dynamic_War_Manager.Source.Test.Test_Session_Scenarios_S32 import (
     ER_MODULE, ZSU, ZSU_POSITION, build)
 
 SEEDS = [f'S33-PASSES-{index}' for index in range(5)]
-# variante -> (geometria, interruttori FP_PER_PASS_DETECTION e D5_DWELL_TIME, con il dwell ZSU_DWELL_S sulla ZSU)
+# variante -> geometria; in ogni variante D-5 accesa e dwell ZSU_DWELL_S sulla ZSU
 VARIANT_SPEC = {
-    'off': ('reentry', False),
-    'on': ('reentry', True),
-    'cas_off': ('cas', False),
-    'cas_on': ('cas', True),
+    'on': 'reentry',
+    'cas_on': 'cas',
 }
 VARIANTS = tuple(VARIANT_SPEC)
 CAS_IDS = tuple(f'Blue-CAS/cas{index}' for index in range(4))
@@ -67,9 +61,9 @@ CAS_ROUTE = [CAS_TARGETS['ifvA'], CAS_TARGETS['ifvB'], CAS_TARGETS['ifvC'], (-30
 ZSU_VISUAL_RANGE_M = 6_000.0     # portata del registro della ZSU-57-2 contro bersagli aerei (§1.4), per i test di premessa
 A10_GROUND_RANGE_M = 80_000.0    # portata del registro dell'A-10C contro bersagli a terra (§1.4)
 # STIMA [S] dell'utente (2026-11-08): periodo di aggiornamento della traccia della ZSU-57-2 (osservatore umano piu'
-# ottica, "predizione" del cervello). NON e' un dato. Dichiarato sulla ZSU (F.declare_dwell, modo 'air') solo nelle
-# varianti con FP e D-5 accese: soglia di unione FP-10 (le uscite fra i passaggi sono molto piu' lunghe: nessuna unione)
-# e dwell della legge D-5 (passaggi molto piu' lunghi: g = 1).
+# ottica, "predizione" del cervello). NON e' un dato. Dichiarato sulla ZSU (F.declare_dwell, modo 'air') in ogni
+# variante: soglia di unione FP-10 (le uscite fra i passaggi sono molto piu' lunghe: nessuna unione) e dwell della
+# legge D-5 (passaggi molto piu' lunghi: g = 1).
 ZSU_DWELL_S = 2.0
 
 
@@ -86,34 +80,34 @@ def build_cas():
 
 
 def run_variant(session_id: str, variant: str):
-    """Una sessione della variante: `(outcome, [EngagementResult, ...], [pass_rng, ...])`.
+    """Una sessione della variante: `(outcome, [EngagementResult, ...], [(engagement_rng, pass_rng), ...])`.
 
-    Gli interruttori FP e D-5 sono sostituiti INSIEME attorno all'intera esecuzione (costruzione delle forze compresa);
-    i risultati d'ingaggio sono catturati con una spia che chiama l'originale e salva una copia dello stream dei
-    passaggi (`pass_rng`) PRIMA dell'esecuzione (None se assente). `results` e `pass_streams` sono allineati: le sole
-    coppie con risultato non None.
+    La D-5 e' sostituita con True attorno all'intera esecuzione (costruzione delle forze compresa); la FP e' sempre
+    attiva (rilevamento per passaggio, regola senza interruttore) e il dwell della ZSU e' dichiarato in ogni variante. I risultati
+    d'ingaggio sono catturati con una spia che chiama l'originale e salva PRIMA dell'esecuzione una copia dello stream
+    d'ingaggio (`args[4]`) e dello stream dei passaggi (`pass_rng`, sempre presente). `results` e `streams` sono
+    allineati: le sole coppie con risultato non None.
     """
-    geometry, switch = VARIANT_SPEC[variant]
+    geometry = VARIANT_SPEC[variant]
     original = ER.resolve_engagement
     captured = []
-    pass_streams = []
+    streams = []
 
     def spy(*args, **kwargs):
-        stream = copy.deepcopy(kwargs.get('pass_rng'))
+        engagement = copy.deepcopy(args[4])
+        pass_stream = copy.deepcopy(kwargs['pass_rng'])
         result = original(*args, **kwargs)
 
         if result is not None:
             captured.append(result)
-            pass_streams.append(stream)
+            streams.append((engagement, pass_stream))
 
         return result
 
-    with patch.object(ER_MODULE, 'FP_PER_PASS_DETECTION', switch), \
-            patch.object(ER_MODULE, 'D5_DWELL_TIME', switch):
+    with patch.object(ER_MODULE, 'D5_DWELL_TIME', True):
         red, cas = build(with_ewr=False) if geometry == 'reentry' else build_cas()
 
-        if switch:
-            F.declare_dwell(red.assets[ZSU], {'air': ZSU_DWELL_S})
+        F.declare_dwell(red.assets[ZSU], {'air': ZSU_DWELL_S})
 
         route, asset_ids = (REENTRY, IFV_IDS) if geometry == 'reentry' else (CAS_ROUTE, CAS_TARGET_IDS)
         target = Target(kind=TargetKind.GROUP, target_id='Red-Line', asset_ids=asset_ids,
@@ -125,7 +119,7 @@ def run_variant(session_id: str, variant: str):
             outcome = F.run(session_id, [cas], [red], make_registry_fire_control(), duration=DURATION,
                             missions=missions, thresholds=BOTH_HOLD)
 
-    return outcome, captured, pass_streams
+    return outcome, captured, streams
 
 
 def _zsu(results, cas=None):
@@ -156,13 +150,13 @@ class TestS33DetectionPerPass(F.LoggerSilencer, unittest.TestCase):
         super().setUpClass()
         cls.runs = {variant: [] for variant in cls.VARIANTS}
 
-        # Ciclo esterno sui seed, interno sulle 4 varianti nell'ordine di VARIANT_SPEC: stesso `session_id` per le 4
+        # Ciclo esterno sui seed, interno sulle 2 varianti nell'ordine di VARIANT_SPEC: stesso `session_id` per le 2
         # varianti di un seed (la fotografia numera le esecuzioni per occorrenza del session_id nell'unita').
         for session_id in cls.SEEDS:
             for variant in cls.VARIANTS:
                 cls.runs[variant].append(run_variant(session_id, variant))
 
-    # ── geometria di rientro, `off` / `on` ─────────────────────────────────────────────────────────────────────────
+    # ── geometria di rientro, `on` ─────────────────────────────────────────────────────────────────────────────────
 
     def test_premise_two_passes_per_aircraft(self):
         """In `on` ogni A-10C attraversa due volte il volume della ZSU: esattamente 2 rilevamenti, `pass_index` 0 e 1,
@@ -180,25 +174,10 @@ class TestS33DetectionPerPass(F.LoggerSilencer, unittest.TestCase):
                     by_index = {d.pass_index: d for d in detections}
                     self.assertGreater(by_index[1].pass_start - by_index[0].pass_end, ZSU_DWELL_S)
 
-    def test_switch_off_one_draw_per_window(self):
-        """In `off` una sola estrazione per finestra e direzione: esattamente 1 rilevamento della ZSU per A-10C, con
-        `pass_index` None."""
-        for seed, (_, results, _) in zip(self.SEEDS, self.runs['off']):
-            for cas in CAS_IDS:
-                detections = _zsu(results, cas)
-
-                with self.subTest(session=seed, aircraft=cas):
-                    self.assertEqual(len(detections), 1)
-                    self.assertIsNone(detections[0].pass_index)
-
-    def test_the_engagement_stream_is_unchanged(self):
-        """Nel PRIMO episodio il flusso d'ingaggio estrae le stesse uscite con FP acceso: la regola non cambia l'ordine
-        ne' il contenuto delle estrazioni esistenti."""
-        for seed, (_, off, _), (_, on, _) in zip(self.SEEDS, self.runs['off'], self.runs['on']):
-            with self.subTest(session=seed):
-                self.assertTrue(off and on)
-                self.assertEqual([d.draw for d in off[0].detections],
-                                 [d.draw for d in on[0].detections if d.pass_index in (None, 0)])
+    def test_first_passes_draw_from_the_engagement_stream(self):
+        """FP-2 (O3): le estrazioni dei primi passaggi sono, nell'ordine delle `Detection`, le prime uscite dello
+        stream dell'ingaggio (la fase di rilevamento e' la prima del risolutore, `Engagement_Resolver.py:4277-4278`)."""
+        self._assert_first_passes_draw_from_the_engagement_stream(self.runs['on'])
 
     def test_no_launch_after_the_pass_without_a_new_detection(self):
         """FP-3 (a): ogni salva della ZSU nasce da un rilevamento dello stesso bersaglio nello stesso episodio, prima
@@ -211,13 +190,16 @@ class TestS33DetectionPerPass(F.LoggerSilencer, unittest.TestCase):
 
                     self._assert_launch_covered(seed, result, salvo)
 
-    def test_premise_the_zsu_fires_without_the_switch(self):
-        """Premessa non vacua: in `off` la ZSU spara in almeno un seed."""
-        rounds = sum(e.rounds for outcome, _, _ in self.runs['off'] for e in outcome.ammunition_events
-                     if e.asset_id == ZSU)
-        self.assertGreater(rounds, 0)
+    def test_premise_the_zsu_fires(self):
+        """Premessa non vacua: in ogni variante la ZSU spara (somma dei colpi su tutti i semi > 0)."""
+        for variant in self.VARIANTS:
+            rounds = sum(e.rounds for outcome, _, _ in self.runs[variant] for e in outcome.ammunition_events
+                         if e.asset_id == ZSU)
 
-    # ── geometria CAS, `cas_off` / `cas_on` ────────────────────────────────────────────────────────────────────────
+            with self.subTest(variant=variant):
+                self.assertGreater(rounds, 0)
+
+    # ── geometria CAS, `cas_on` ────────────────────────────────────────────────────────────────────────────────────
 
     def test_cas_premise_geometry(self):
         """Le premesse geometriche della CAS (senza sessione): bersagli A e C entro la portata visiva della ZSU, B
@@ -259,36 +241,21 @@ class TestS33DetectionPerPass(F.LoggerSilencer, unittest.TestCase):
                     by_index = {d.pass_index: d for d in detections}
                     self.assertGreater(by_index[1].pass_start - by_index[0].pass_end, 60.0)
 
-    def test_cas_switch_off_one_draw_per_aircraft(self):
-        """In `cas_off` una sola estrazione per finestra: 1 rilevamento della ZSU per A-10C nel primo episodio, con
-        `pass_index` None."""
-        for seed, (_, results, _) in zip(self.SEEDS, self.runs['cas_off']):
-            for cas in CAS_IDS:
-                detections = _first_zsu(results, cas)
-
-                with self.subTest(session=seed, aircraft=cas):
-                    self.assertEqual(len(detections), 1)
-                    self.assertIsNone(detections[0].pass_index)
-
-    def test_cas_first_pass_keeps_the_engagement_stream(self):
-        """Nel PRIMO episodio le estrazioni del flusso d'ingaggio sono le stesse con FP acceso."""
-        for seed, (_, cas_off, _), (_, cas_on, _) in zip(self.SEEDS, self.runs['cas_off'], self.runs['cas_on']):
-            with self.subTest(session=seed):
-                self.assertTrue(cas_off and cas_on)
-                self.assertEqual([d.draw for d in cas_off[0].detections],
-                                 [d.draw for d in cas_on[0].detections if d.pass_index in (None, 0)])
+    def test_cas_first_passes_draw_from_the_engagement_stream(self):
+        """FP-2 (O3), geometria CAS: come il test 3 in `cas_on`."""
+        self._assert_first_passes_draw_from_the_engagement_stream(self.runs['cas_on'])
 
     def test_cas_second_pass_draws_from_the_pass_stream(self):
         """Le estrazioni dei passaggi dal secondo in poi vengono dallo stream separato dei passaggi (`pass_rng`), nel
         loro ordine; ogni A-10C ha almeno un rilevamento nel secondo passaggio."""
         for seed, (_, results, streams) in zip(self.SEEDS, self.runs['cas_on']):
-            for result, stream in zip(results, streams):
-                if stream is None:
-                    continue
+            for result, (_, pass_stream) in zip(results, streams):
+                self.assertIsNotNone(pass_stream)
 
                 second = [d.draw for d in result.detections if d.pass_index not in (None, 0)]
 
                 with self.subTest(session=seed):
+                    stream = copy.deepcopy(pass_stream)
                     self.assertEqual(second, [stream.random() for _ in range(len(second))])
 
             for cas in CAS_IDS:
@@ -305,12 +272,12 @@ class TestS33DetectionPerPass(F.LoggerSilencer, unittest.TestCase):
 
                     self._assert_launch_covered(seed, result, salvo)
 
-    # ── D-5 nelle varianti accese ───────────────────────────────────────────────────────────────────────────────────
+    # ── D-5 ───────────────────────────────────────────────────────────────────────────────────────────────────────────
 
     def test_d5_reads_the_dwell_and_leaves_the_probability_unchanged(self):
         """La D-5 legge il dwell dichiarato e con g = 1 esatto non cambia la Pd (permanenza >= 2 s); gli altri
-        osservatori non dichiarano dwell, e a D-5 spenta nessun campo di permanenza e' valorizzato."""
-        for variant in ('on', 'cas_on'):
+        osservatori non dichiarano dwell e nessun campo di permanenza e' valorizzato."""
+        for variant in self.VARIANTS:
             for seed, (_, results, _) in zip(self.SEEDS, self.runs[variant]):
                 zsu = [d for d in _zsu(results) if d.distance_cpa < ZSU_VISUAL_RANGE_M]
 
@@ -332,32 +299,16 @@ class TestS33DetectionPerPass(F.LoggerSilencer, unittest.TestCase):
                             self.assertIsNone(detection.dwell_time_s)
                             self.assertIsNone(detection.exposure_s)
 
-        for variant in ('off', 'cas_off'):
-            for seed, (_, results, _) in zip(self.SEEDS, self.runs[variant]):
-                for result in results:
-                    for detection in result.detections:
-                        with self.subTest(variant=variant, session=seed, observer=detection.observer_id):
-                            self.assertIsNone(detection.dwell_time_s)
-                            self.assertIsNone(detection.exposure_s)
-
     def test_variant_switches_are_scoped(self):
-        """Gli interruttori FP e D-5 sono sostituiti soltanto durante la variante e ripristinati anche se l'esecuzione
-        solleva; il dwell e' dichiarato sulla ZSU costruita dentro la variante (e solo con FP e D-5 accese)."""
+        """La D-5 e' sostituita soltanto durante la variante e ripristinata anche se l'esecuzione solleva; il dwell e'
+        dichiarato sulla ZSU costruita dentro la variante."""
         def probe(*args, **kwargs):
-            recorded.append((ER_MODULE.FP_PER_PASS_DETECTION,
-                             ER_MODULE.D5_DWELL_TIME,
+            recorded.append((ER_MODULE.D5_DWELL_TIME,
                              args[2][0].assets[ZSU].detection_dwell_time('air')))
             raise RuntimeError('probe')
 
-        expected = {
-            'off': (False, False, None),
-            'on': (True, True, ZSU_DWELL_S),
-            'cas_off': (False, False, None),
-            'cas_on': (True, True, ZSU_DWELL_S),
-        }
-
         for variant in self.VARIANTS:
-            before = (ER.FP_PER_PASS_DETECTION, ER.D5_DWELL_TIME)
+            before = ER.D5_DWELL_TIME
             recorded = []
 
             with self.subTest(variant=variant):
@@ -365,8 +316,8 @@ class TestS33DetectionPerPass(F.LoggerSilencer, unittest.TestCase):
                     with patch.object(F, 'run', side_effect=probe):
                         run_variant('S33-PASSES-0', variant)
 
-                self.assertEqual(recorded, [expected[variant]])
-                self.assertEqual((ER.FP_PER_PASS_DETECTION, ER.D5_DWELL_TIME), before)
+                self.assertEqual(recorded, [(True, ZSU_DWELL_S)])
+                self.assertEqual(ER.D5_DWELL_TIME, before)
 
     # ── aiuti ───────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -383,6 +334,18 @@ class TestS33DetectionPerPass(F.LoggerSilencer, unittest.TestCase):
 
         self.assertTrue(covering, f'seed {seed}: la salva della ZSU su {salvo.target_id} '
                                   f'a t={salvo.t_launch} non ha un rilevamento che la copra')
+
+    def _assert_first_passes_draw_from_the_engagement_stream(self, runs):
+        """Aiuto dei test 3 e 9: in ogni episodio le estrazioni dei primi passaggi sono le prime uscite dello stream
+        dell'ingaggio, nell'ordine delle `Detection`."""
+        for seed, (_, results, streams) in zip(self.SEEDS, runs):
+            for result, (engagement, _) in zip(results, streams):
+                first = [d.draw for d in result.detections if d.pass_index in (None, 0)]
+
+                with self.subTest(session=seed):
+                    self.assertTrue(first)
+                    stream = copy.deepcopy(engagement)
+                    self.assertEqual(first, [stream.random() for _ in first])
 
 
 if __name__ == '__main__':
