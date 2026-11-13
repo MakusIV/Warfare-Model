@@ -1,5 +1,7 @@
 # Capitolo 1 — Scopo e motivazioni
 
+> **Riverifica del 2026-11-13 (codice `a389cadb`).** Dopo `fa5fbf1e` il motore riceve quattro regole nuove, tutte nello strato 2 (capitolo 4 §4.35-§4.37, e §4.24 per la BI): la permanenza nel volume (D-5), i bersagli intercettabili dalle difese aeree (BI), la quota nel volume d'ingaggio (VA) e il rilevamento per passaggio nella portata propria (FP). Le prime tre sono dietro un interruttore del risolutore, **tutti e tre spenti** (`D5_DWELL_TIME`, `BI_AD_TARGET_RULE`, `VA_ENGAGEMENT_ALTITUDE_BAND`, `Logic/Engagement_Resolver.py:591`, `:597`, `:608`); la FP è attiva **senza interruttore** (la pulizia del 2026-11-12 l'ha tolto). Né i quattro strati né i vincoli di §1.3 cambiano; cambia il **numero degli stream** dell'RNG di sessione (v. capitolo 7 e il D126): **tre** per ogni episodio d'ingaggio (ingaggio, tempra e passaggi) e uno per il fuoco su posizione, quindi quattro punti di apertura in tutto. I `:riga` di questo capitolo sono stati riportati a `a389cadb` (le righe del risolutore sono salite: 3872 → 4569 righe; `Contact_Scheduler` 1578 → 1662).
+>
 > **Aggiornato al commit `fa5fbf1e`** (2026-10-23; rispetto a `dcedc541` del 2026-10-20 cambia la **fase F8**, sessione e campagna, v. sotto, e i
 > riferimenti `:riga`). **Dalla F8** attorno al motore c'è un ciclo di campagna *fuori* da `run_session`: un validatore di sessione, la prontezza degli asset
 > (turnaround e riparazione) e un conduttore che esegue una sessione alla volta, applica le posizioni finali e registra la sessione (capitolo 6
@@ -141,21 +143,21 @@ dell'utente registrati"), e si ritrovano nel codice come regole verificabili:
 
 1. **10.000 asset è un limite superiore teorico**, non un caso tipico da ottimizzare al centro
    della distribuzione. La potatura gerarchica a livello `Block`
-   (`Logic/Contact_Scheduler.py:1277-1374`, meccanismo C) esiste proprio per rendere quel limite
+   (`Logic/Contact_Scheduler.py:1361-1458`, meccanismo C) esiste proprio per rendere quel limite
    trattabile senza un confronto O(N²) di tutte le coppie di asset.
 2. **Riproducibilità da seed**, e l'**ordine di risoluzione degli eventi fa parte del
    contratto**: salvare solo il seed non basta, perché un PRNG riproduce la stessa sequenza solo
    a parità di ordine delle chiamate (`Utility/Session_Rng.py:1-9`). Concretamente: le liste di
    `ContactWindow` sono sempre ordinate per tempo e, a parità di tempo, per identificativo di
    dominio (`Logic/Contact_Scheduler.py:58-60`); la coda eventi del risolutore usa un tie-break
-   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:385-390`, `:536-544`); l'RNG di
+   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:472-479`, `:659-667`); l'RNG di
    ogni ingaggio è derivato da una chiave canonica che non dipende dall'ordine di iterazione di
    un dizionario Python (`Logic/Session_Simulator.py:1007-1028`, `engagement_event_id`; `:405-437`).
 3. **Perdite e danni per singolo asset**, mai aggregati. È il motivo per cui esiste
    `Logic/Damage_Model.py` (un `DamageEvent` per colpo risolto, non un delta di forza) e per cui
    `Logic/Tactical_Evaluation.calcFightResult` — il modello aggregato a rapporto di forze
    preesistente — resta un **fallback**, mai il risolutore primario
-   (`Logic/Engagement_Resolver.py:419`).
+   (`Logic/Engagement_Resolver.py:508`).
 4. **Budget di calcolo per sessione: fino a minuti.** Non verificato in questo manuale con
    misure a runtime; lo scenario S8 (capitolo 8) è quello dedicato esplicitamente a misurare il
    tempo di calcolo su una scala di decine di blocchi.

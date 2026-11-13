@@ -296,7 +296,7 @@ altro tipo — aria-aria, aria-suolo, AWACS, tanker, ricognizione — segue la r
 | `BINGO_EXIT` | come `NO_BASE` ma con `exit_scene` (G4b, §5.2.9 e capitolo 6 §6.20): ritroso fino al punto di comparsa, dove l'aereo **esce di scena** senza atterrare |
 
 *Raggiungibile* = il residuo basta per il **solo percorso** alla crociera (la riserva si può consumare nel rientro:
-`rate × lunghezza <= fuel`). Fra più candidate raggiungibili (`_base_options`, `:1450-1481`) vince il percorso più
+`rate × lunghezza <= fuel`). Fra più candidate raggiungibili (`_base_options`, `:1453-1484`) vince il percorso più
 breve; a parità la base di partenza, poi la coppia `(x, y)` minore. Il "punto della rotta più vicino" a una base
 alternativa è il minimo globale della distanza *orizzontale* dalla spezzata dei tratti di movimento
 (`_closest_on_route`, `:1387-1401`).

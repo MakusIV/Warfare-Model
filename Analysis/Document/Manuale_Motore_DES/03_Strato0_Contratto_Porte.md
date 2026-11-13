@@ -4,6 +4,8 @@ Moduli: `Command/Session_Types.py` (le due porte) e, dalla fase F3 del piano del
 (`533cd1f5`), `Command/Mission_Types.py` (i tipi di dominio della Missione che attraversano la porta,
 §2.6) con la tassonomia dei tipi di missione di `Context/Context.py` (§2.7).
 
+> **Riverifica del 2026-11-13 (codice `a389cadb`).** Le porte **non cambiano** dopo `fa5fbf1e`: `Command/Session_Types.py` resta di 712 righe e `Command/Campaign_Types.py` di 406; nessun tipo che attraversa la porta (`ForceOutcome`, `EngagementResult`, `DamageEvent`, `AmmunitionEvent`, `InterceptionEvent`, `FuelEvent`) ha campi nuovi (D-5, BI, VA e FP aggiungono campi ad altri tipi del risolutore, per esempio `Detection`, e non all'esito). `Command/Mission_Types.py` passa da 1387 a **1391** righe per un solo commento (`191b7d37`, quattro righe prima del controllo di `EndCriteria.target_destroyed`, `:1004-1007`). I `:riga` di `Mission_Types` oltre `:1003`, quelli del risolutore (`ForceOutcome`) e di `Session_Simulator` sono stati ricalcolati a `a389cadb`.
+>
 > **Aggiornamento a `fa5fbf1e` (2026-10-23; fase F8 della Missione: sessione e campagna, F8a/F8b/F8c, più i dati F8-R).** Questa volta
 > **le porte cambiano**, ma solo in uscita e solo con campi nuovi a default vuoto: `SessionOutcome` guadagna tre mapping,
 > **`operation_outcomes`**, **`final_positions`** e **`movement_ends`** (§2.3); `assemble_session_outcome` tre parametri omonimi e la
@@ -151,7 +153,7 @@ non va appiattita all'uscita, è la forma che la porta verso il simulatore ricev
 **L'esito di un blocco è un insieme di esiti, non un esito** (F4b, `outcomes_of_block`,
 `Command/Session_Types.py:467-476`). Dalla F4b `ForceOutcome.force_id` è l'id della **forza d'ingaggio**,
 cioè il `mission_id` di una missione; il nuovo campo `ForceOutcome.block_id` dice a quale blocco appartiene
-la missione (`Logic/Engagement_Resolver.py:927-964`, campo a `:963`). Per la **vista residua** degli asset
+la missione (`Logic/Engagement_Resolver.py:1087-1124`, campo a `:1123`). Per la **vista residua** degli asset
 senza missione (capitolo 6 §6.12) `force_id` è l'id del blocco e `block_id` è l'id del blocco; per un
 **blocco senza missioni** (passato al risolutore com'è) `force_id` è l'id del blocco e `block_id` è `None`.
 `outcomes_of_block(block_id)` restituisce gli esiti delle forze d'ingaggio del blocco nell'ordine degli
@@ -223,7 +225,7 @@ limite storico: `Operation.outcome_rule` (`ALL`, `ANY`, `MAIN_MISSION`) e `main_
 calcolava l'esito** (capitolo 9 §9.1). La funzione riceve l'`Operation` e `{mission_id: MissionOutcome}` e restituisce un
 `OperationOutcome` (§2.6) con lo stato aggregato e lo stato di ogni missione. Solleva `ValueError` se manca l'esito di una missione
 dell'Operazione (`:536-538`). **Non** è chiamata da `assemble_session_outcome` (che riporta `operation_outcomes` tali e quali):
-la chiama `run_session` per ogni Operazione dell'ordine (`Logic/Session_Simulator.py:3154`, capitolo 6 §6.24). Regole (`:544-568`):
+la chiama `run_session` per ogni Operazione dell'ordine (`Logic/Session_Simulator.py:3189`, capitolo 6 §6.24). Regole (`:544-568`):
 
 | Regola | `SUCCEEDED` | `IN_PROGRESS` | `FAILED` |
 |---|---|---|---|
@@ -371,49 +373,49 @@ diverso da quello dei bombardieri).
 | `MissionAsset` | `asset_id`, **ruolo = posizione nella formazione**, offset di formazione (`forward_m`, `right_m`, `up_m` nella terna della direzione di marcia), `loadout` e `attack_profile` **per asset** (solo aria). **`weapons`** (F7a, decisione 10 del 2026-10-18, `:752`, **tutti i domini**): le armi *designate*, id di modello del registro d'arma, distinte; sul bersaglio designato si usano solo queste, sui non designati sono *riservate* (escluse). La proprietà `designated_weapons` (`:783-791`) dà `weapons`, altrimenti l'arma di `attack_profile`, altrimenti `()`; se `weapons` e `attack_profile` sono entrambi dichiarati l'arma del profilo deve essere fra le `weapons` (`ValueError`) | `:724-791` |
 | `EndCriteria` | criteri di fine **dichiarati**: `last_waypoint` (default `True`), `max_duration_s`, `bingo` (default `True`), `winchester` (categorie d'arma), `abort_on_threat`, `damage_threshold`, `target_destroyed`; almeno uno fra `last_waypoint` e `max_duration_s`. **Letti dal motore** (F6-B1/B2): `winchester`, `damage_threshold`, `target_destroyed` (bersaglio `ASSET`, o `GROUP` eventualmente ristretto da `Target.asset_ids`, F7a; per `POINT`/`AREA`/`ZONE` il criterio non è rappresentabile — decisione 12 della F7a: non c'è nessun asset da distruggere, nemmeno per una missione di fuoco su posizione — ed è ignorato con un warning), `max_duration_s` e `bingo`; **non letti** `abort_on_threat` (fuori dal piano della F6) e `last_waypoint` (la rotta completata è sempre una fine, anche con `False`); `bingo=False` = la missione non rientra al bingo (capitolo 6 §6.18-6.19) | `:794-869` |
 | `MissionRules` | ROE, stato di allerta, reazione alla minaccia, EMCON, formazione; un campo `None` = default del dominio, risolto da `for_domain`. **Letta dal motore dalla F7a la sola `roe`** (capitolo 4 §4.32); allerta, reazione alla minaccia, EMCON e formazione restano validate e portate dalla porta ma **non lette** da `Logic`. ROE per dominio (`:247-251`): aria `weapon_free`, `priority_designated`, `only_designated`, `return_fire`, `weapon_hold`; terra e mare solo `weapon_free`, `return_fire`, `weapon_hold` | `:875-917` |
-| `Mission` | `mission_id`, `block_id`, `domain`, `mission_type`, asset, bersaglio, priorità, rotta di riferimento (`DataType.Route`) e `MissionWaypoint`, `start_time`, `start_mode`, `activation`, `tot`, regole, criteri di fine, `operation_id`; dalla F7b valida anche le azioni di fuoco su posizione (`_validate_fire_actions`) | `:922-1157` |
-| `Operation` | `operation_id`, scopo, `mission_ids`, `OutcomeRule` (`MAIN_MISSION`, `ALL`, `ANY`), `main_mission_id`; **senza `tot`** (rimosso il 2026-10-12: passare `tot=` è un `TypeError`). `OutcomeRule` e `main_mission_id` sono **letti dalla F8b** da `Session_Types.operation_outcome` (§2.4), non da `Logic/` | `:1192-1233` |
-| `AssetMissionOutcome` | `asset_id`, `AssetState` (`OPERATIONAL`, `DAMAGED`, `DESTROYED`), `AssetEndReason` (**12 valori**: `ROUTE_COMPLETED`, `MAX_DURATION`, `BINGO`, **`DISENGAGED`**, `WINCHESTER`, `DAMAGE`, `THREAT`, `TARGET_DESTROYED`, `MISSION_ABORTED`, `DESTROYED`, `SESSION_END`, **`FUEL_EXHAUSTED`**), istante di fine, **`crew_recovered`** (`Optional[bool]`, G2: `True` per l'aereo *perso per esaurimento del carburante in volo*, `None` altrimenti, comprese le perdite in combattimento — l'equipaggio non è modellato; un valore booleano è ammesso solo con stato `DESTROYED`). Invarianti: `end_reason DESTROYED` richiede `state DESTROYED`; `state DESTROYED` ammette `DESTROYED` (combattimento) o `FUEL_EXHAUSTED` (aereo a secco senza base raggiungibile in planata) | `:1238-1284` |
-| `MissionOutcome` | `MissionStatus` (`COMPLETED`, `ABORTED` con `AbortReason`, `FAILED`, `DESTROYED` e, **dalla F8b, `IN_PROGRESS`**: missione non finita alla fine della sessione, con almeno un asset superstite ancora sulla rotta o sul posto — `:161-168`; senza `reason`, come ogni stato diverso da `ABORTED`), esiti per asset, ETA effettive per waypoint (in sessione gli istanti d'**arrivo** ai punti, attese comprese: N2.b). `AbortReason` ha **7 valori**: `THREAT`, `DAMAGE`, `FUEL`, **`BINGO`**, **`DISENGAGED`**, `AMMUNITION`, `SUPPORT_MISSING` (`THREAT` e `SUPPORT_MISSING` non sono prodotti) | `:1285-1351` |
-| `OperationStatus`, `OperationOutcome` | **F8b.** `OperationStatus` (`SUCCEEDED`, `FAILED`, `IN_PROGRESS`, `:171-176`) e `OperationOutcome(operation_id, status, mission_statuses)`: lo stato aggregato di un'Operazione e `{mission_id: MissionStatus}` delle sue missioni (mapping immutabile, ordinato per id, **non vuoto**, chiavi id di dominio, valori coerciti a `MissionStatus`). Solo struttura e validazione: il calcolo è `Session_Types.operation_outcome` (§2.4) | `:1354-1387` |
+| `Mission` | `mission_id`, `block_id`, `domain`, `mission_type`, asset, bersaglio, priorità, rotta di riferimento (`DataType.Route`) e `MissionWaypoint`, `start_time`, `start_mode`, `activation`, `tot`, regole, criteri di fine, `operation_id`; dalla F7b valida anche le azioni di fuoco su posizione (`_validate_fire_actions`) | `:922-1161` |
+| `Operation` | `operation_id`, scopo, `mission_ids`, `OutcomeRule` (`MAIN_MISSION`, `ALL`, `ANY`), `main_mission_id`; **senza `tot`** (rimosso il 2026-10-12: passare `tot=` è un `TypeError`). `OutcomeRule` e `main_mission_id` sono **letti dalla F8b** da `Session_Types.operation_outcome` (§2.4), non da `Logic/` | `:1196-1237` |
+| `AssetMissionOutcome` | `asset_id`, `AssetState` (`OPERATIONAL`, `DAMAGED`, `DESTROYED`), `AssetEndReason` (**12 valori**: `ROUTE_COMPLETED`, `MAX_DURATION`, `BINGO`, **`DISENGAGED`**, `WINCHESTER`, `DAMAGE`, `THREAT`, `TARGET_DESTROYED`, `MISSION_ABORTED`, `DESTROYED`, `SESSION_END`, **`FUEL_EXHAUSTED`**), istante di fine, **`crew_recovered`** (`Optional[bool]`, G2: `True` per l'aereo *perso per esaurimento del carburante in volo*, `None` altrimenti, comprese le perdite in combattimento — l'equipaggio non è modellato; un valore booleano è ammesso solo con stato `DESTROYED`). Invarianti: `end_reason DESTROYED` richiede `state DESTROYED`; `state DESTROYED` ammette `DESTROYED` (combattimento) o `FUEL_EXHAUSTED` (aereo a secco senza base raggiungibile in planata) | `:1242-1288` |
+| `MissionOutcome` | `MissionStatus` (`COMPLETED`, `ABORTED` con `AbortReason`, `FAILED`, `DESTROYED` e, **dalla F8b, `IN_PROGRESS`**: missione non finita alla fine della sessione, con almeno un asset superstite ancora sulla rotta o sul posto — `:161-168`; senza `reason`, come ogni stato diverso da `ABORTED`), esiti per asset, ETA effettive per waypoint (in sessione gli istanti d'**arrivo** ai punti, attese comprese: N2.b). `AbortReason` ha **7 valori**: `THREAT`, `DAMAGE`, `FUEL`, **`BINGO`**, **`DISENGAGED`**, `AMMUNITION`, `SUPPORT_MISSING` (`THREAT` e `SUPPORT_MISSING` non sono prodotti) | `:1289-1355` |
+| `OperationStatus`, `OperationOutcome` | **F8b.** `OperationStatus` (`SUCCEEDED`, `FAILED`, `IN_PROGRESS`, `:171-176`) e `OperationOutcome(operation_id, status, mission_statuses)`: lo stato aggregato di un'Operazione e `{mission_id: MissionStatus}` delle sue missioni (mapping immutabile, ordinato per id, **non vuoto**, chiavi id di dominio, valori coerciti a `MissionStatus`). Solo struttura e validazione: il calcolo è `Session_Types.operation_outcome` (§2.4) | `:1358-1391` |
 
 La rotta resta **geometrica** (`DataType.Route`, decisione N2.a = C): tempi, ruoli e azioni dei punti
 vivono in `MissionWaypoint`, che *contiene* il waypoint. `route_waypoints(route)` (`:433-449`) dà i
 waypoint nell'ordine di percorrenza (l'ordine di inserimento di `route.edges`; `Route.getWaypoints()` non
 serve, è un heap ordinato per nome).
 
-### Validazioni di `Mission` (`__post_init__`, `:968-1010`, e sottofunzioni)
+### Validazioni di `Mission` (`__post_init__`, `:968-1014`, e sottofunzioni)
 
 - `mission_type` è una chiave di `Context.MISSION_TYPES[domain]` (§2.7);
-- **asset** (`_validate_assets`, `:1012-1032`): almeno uno, id distinti, ruolo ammesso per il dominio
+- **asset** (`_validate_assets`, `:1016-1036`): almeno uno, id distinti, ruolo ammesso per il dominio
   (`MISSION_ASSET_ROLES`), `loadout`/`attack_profile` solo in missioni aeree;
 - **bersaglio coerente con la categoria** (`TARGET_KINDS_BY_CATEGORY`, `:301-307`): `ATTACK` accetta
   asset/gruppo/punto/area/zona; `TRANSPORT` e `POSITIONING` zona/punto/area/gruppo; `SUPPORT`
   zona/punto/nessuno;
-- **rotta e waypoint** (`_validate_route_and_waypoints`, `:1034-1055`): `route_type` ammesso per il dominio
+- **rotta e waypoint** (`_validate_route_and_waypoints`, `:1038-1059`): `route_type` ammesso per il dominio
   (`ROUTE_TYPES_BY_DOMAIN`); se c'è la rotta, i `MissionWaypoint` devono contenere **gli stessi oggetti**
   waypoint, nello stesso ordine; una missione aerea ha sempre waypoint;
-- **partenza** (`_validate_start`, `:1083-1110`): `start_mode` ammesso e di default per dominio (aria:
+- **partenza** (`_validate_start`, `:1087-1114`): `start_mode` ammesso e di default per dominio (aria:
   `PARKING_COLD`, dal parcheggio a motori spenti; terra e mare: `GROUND`); una missione aerea non già in
   volo inizia con un waypoint `DEPARTURE` e **finisce con `LAND`** (D2.c); `ON_EVENT` richiede
   `activation_event` ed è **solo dichiarabile**: nessun esecutore lo esegue (re-scheduling non
   implementato);
-- **tempi** (`_validate_times`, `:1112-1144`): almeno **un istante bloccato** (`start_time`, `tot` o un
+- **tempi** (`_validate_times`, `:1116-1148`): almeno **un istante bloccato** (`start_time`, `tot` o un
   waypoint con `eta_locked`); ETA pianificate strettamente crescenti e non anteriori a `start_time`;
   `tot` non anteriore a `start_time`;
-- **azioni di fuoco su posizione** (`_validate_fire_actions`, `:1057-1080`, F7b, chiamata da `__post_init__` a `:990`): un'azione di
+- **azioni di fuoco su posizione** (`_validate_fire_actions`, `:1061-1084`, F7b, chiamata da `__post_init__` a `:990`): un'azione di
   nome `FIRE_AT_POINT_ACTION` deve essere `TASK`, solo in missioni di **terra o di mare** (mai `air`), con bersaglio `POINT` o
   `AREA`, `params['rounds']` intero ≥ 1 (bool escluso) e `params['weapon']` facoltativo (id di dominio); altrimenti `ValueError`.
   Non dipende da nessun interruttore;
 - le regole sono conservate **già risolte** per il dominio; `target_destroyed` richiede un bersaglio
   distruggibile (non `NONE`/`ZONE`).
 
-`check_mission_assets(mission, block)` (`:1160-1187`) è separata dal costruttore: verifica che il
+`check_mission_assets(mission, block)` (`:1164-1191`) è separata dal costruttore: verifica che il
 blocco sia quello della missione e che ogni asset ne faccia parte, con il criterio d'identità del
 motore (`id`, poi `name`) sugli oggetti, non sulle chiavi del dizionario; la chiama `run_session`
 (capitolo 6 §6.1). `MissionOutcome` impone la coerenza: `reason` obbligatorio se e solo se `ABORTED`;
 `DESTROYED` se e solo se tutti gli asset sono distrutti; ETA effettive non decrescenti
-(`:1286-1351`).
+(`:1290-1355`).
 
 ### Elenchi chiusi
 
@@ -610,7 +612,7 @@ efficacia, **invariata** (salvo il rename `Retrait` → `Retreat`, v. sotto); il
 attributo della Missione, sotto un livello comune `Mission_Category`. Per ora la tabella che collega i
 due assi (`MISSION_TYPE_POSTURES`) è **solo un dato**: nessun modulo di produzione la legge
 (`Context/Context.py:452-467`, verificato con una ricerca sull'albero); l'unico consumatore della
-tassonomia è `Mission.category` (`Command/Mission_Types.py:1148-1153`), che usa `MISSION_TYPE_CATEGORY` per
+tassonomia è `Mission.category` (`Command/Mission_Types.py:1152-1157`), che usa `MISSION_TYPE_CATEGORY` per
 validare la forma del bersaglio. Il secondo stadio "postura → tipi di missione compatibili" andrà
 progettato con il pianificatore.
 
@@ -715,7 +717,7 @@ mai un `SessionOutcome`, è un'eccezione `SessionValidationError` (§2.10) solle
 Il **`mission_id` entra nell'RNG di sessione dalla F4b, ma attraverso l'`event_id` dell'ingaggio**, non
 attraverso lo slot `mission_id` di `order.rng(...)`: l'ingaggio è fra più forze (missioni di entrambi i lati) e
 nessuna ne possiede lo stream, quindi `run_session` chiama ancora `order.rng(mission_id=None, event_id=...)`
-(`Logic/Session_Simulator.py:2801`, `:2809-2811`; dal 2026-11-11 anche `:2798` per il flusso dei passaggi di rilevamento, `pass_event_id`, capitolo 6 §6.4), ma l'`event_id` è `['engagement', id ordinati delle forze]` con
+(`Logic/Session_Simulator.py:2801` per l'ingaggio, `:2809-2811` per la tempra con `temper_event_id` e, dal 2026-11-11, `:2798` per il flusso dei passaggi di rilevamento con `pass_event_id`: tre stream per episodio, capitolo 6 §6.4), ma l'`event_id` dell'ingaggio è `['engagement', id ordinati delle forze]` con
 gli id delle **missioni** e, dal G4a, il `counter` è l'**ordinale dell'episodio** fra quelli con lo stesso insieme di
 forze (capitolo 6 §6.4). Lo slot `mission_id` di `Session_Rng` era libero per le
 estrazioni che appartengono a una sola missione (nessuna fino alla F7a); **dalla F7b lo usa il fuoco su posizione**, che appartiene a

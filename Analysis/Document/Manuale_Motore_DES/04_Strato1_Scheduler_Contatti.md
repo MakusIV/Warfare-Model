@@ -5,6 +5,8 @@ Modulo: `Logic/Contact_Scheduler.py`.
 > **Aggiornamento 2026-11-13 (VA, codice `585dbc65`; riverificato a `a389cadb`): il modulo CAMBIA di nuovo.** `Logic/Contact_Scheduler.py` passa da 1578 a **1662 righe** con **un'unica inserzione di 84 righe** dopo `_merge_intervals`: le due primitive nuove `altitude_intervals` (`:955`) e
 > `intersect_intervals` (`:1013`) della VA (capitolo 4 §4.37), cioè la «fascia di quota» e il combinatore «intersezione» della Attività D (`Piano_Lavori_2026_09_24.md`). Sono geometria pura (nessun RNG, nessuna dipendenza nuova) e le usa **solo il risolutore** (`engagement_intervals`); il percorso di produzione dello scheduler
 > (`schedule_contacts`, `contact_windows`, `ContactWindow`) **non cambia**. **Per i riferimenti `:riga` a questo file in tutto il manuale: riga ≤ 954 invariata; riga ≥ 955 → +84** (`git diff -U0 dcedc541 HEAD`: un solo hunk, `@@ -954,0 +955,84 @@`). Le note datate sotto («non cambia») erano vere alla loro data.
+> **Riverifica del 2026-11-13 (codice `a389cadb`).** In **questo capitolo** i `:riga` sono stati ricalcolati: quelli a `Logic/Contact_Scheduler.py` (≥ 955 → +84), quelli a `Logic/Engagement_Resolver.py` e `Logic/Session_Simulator.py` (nuovi D-5, BI, VA, FP), a `Asset/Mobile.py` (+1 da `:10`, per l'`import math` della D-5, e +22 oltre `:1569`, per il metodo `_sensor_dwell_s` (21 righe) che la D-5 aggiunge subito prima di `detection_range`; i riferimenti del 2026-11-04 erano a `efa8f353`). `Asset/Vehicle_Data.py` e `Asset/Ground_Weapon_Data.py` non spostano i riferimenti citati qui (le aggiunte della BI stanno oltre `:4658`). Sul codice dello scheduler non c'è altro da correggere: le due primitive della VA sono lette sul testo (firma, `ValueError` per `z_min > z_max`, fusione con `_merge_intervals`, combinatore con `TIME_EPS`) e le funzioni descritte nel resto del capitolo sono le stesse di `a784a9e7`. **Non riletto per intero contro il codice** (verificate le righe e le affermazioni sulle primitive VA, sui sensori D-4c e sull'estrazione del rilevamento; le formule dei §3.2-§3.4 e §3.6-§3.8 sono quelle già verificate nelle riletture precedenti).
+>
 > **Una precisazione che il lavoro sulla FP ha reso necessaria**: `[t_mutual_start, t_mutual_end]` di una `ContactWindow` è il **primo** intervallo nella portata minore che cade nella finestra, ritagliato ad essa (`_first_contained`, `:1201`; usata da `contact_windows` a `:1170` e da `trim_contact_window` a `:1243`); se il bersaglio esce e rientra nel volume dell'osservatore con la portata minore **dentro la stessa finestra**,
 > i passaggi successivi al primo **non** sono nella finestra: li conta il risolutore dai tratti (capitolo 4 §4.35), non lo scheduler.
 >
@@ -92,7 +94,7 @@ intervalli disgiunti (due intervalli che si toccano entro `TIME_EPS` danno un in
 
 ### C — Potatura gerarchica a livello `Block`
 
-`block_pair_candidates`/`region_block_pairs` (`:1277-1374`). Valutare il CPA di tutte le coppie
+`block_pair_candidates`/`region_block_pairs` (`:1361-1458`). Valutare il CPA di tutte le coppie
 di asset è O(N²), impraticabile fino al limite dichiarato di 10.000 asset
 (`Logic/Contact_Scheduler.py:41-48`). Si scartano prima le coppie di `Block`/`Military` il cui
 **inviluppo di movimento** nella finestra considerata non può in nessun caso produrre un
@@ -102,11 +104,11 @@ contatto: due blocchi più distanti di
 (v_max_A + v_max_B) * orizzonte + portata_A + portata_B [+ margin]
 ```
 
-non si incontrano, punto (`:1280-1294`). Il test è un confronto fra due numeri per coppia di
+non si incontrano, punto (`:1364-1378`). Il test è un confronto fra due numeri per coppia di
 **blocchi**, ordini di grandezza meno numerosi degli asset. Il criterio è **conservativo**: un
-blocco senza posizione nota non viene mai scartato (`:1292-1294`, l'assenza di dato non è una
+blocco senza posizione nota non viene mai scartato (`:1376-1378`, l'assenza di dato non è una
 prova di lontananza — la stessa logica, applicata al contrario, della memoria
-`feedback_no_visibility_low_priority`). `block_max_speed` (`:1187-1222`) considera anche il ramo
+`feedback_no_visibility_low_priority`). `block_max_speed` (`:1271-1306`) considera anche il ramo
 `off_road` dei veicoli, perché il movimento tattico non avviene su strada e usare solo il regime
 stradale sottostimerebbe l'inviluppo — sottostimare l'inviluppo scarterebbe coppie che si
 sarebbero incontrate, l'unico errore inaccettabile per un filtro conservativo.
@@ -139,29 +141,29 @@ fabbricare una rotta fittizia solo per interrogare lo scheduler (`:444-450`).
 ## 3.5 Da rilevamento geometrico a `ContactWindow`
 
 `contact_windows(asset_a, legs_a, asset_b, legs_b, range_a=None, range_b=None, range_type=...)`
-(`:1023-1100`) è l'uscita principale del modulo verso lo strato 2. Le portate, se non fornite dal
-chiamante, sono ricavate da `mutual_detection_ranges` (`:972-1020`), che interroga ciascun asset
+(`:1107-1184`) è l'uscita principale del modulo verso lo strato 2. Le portate, se non fornite dal
+chiamante, sono ricavate da `mutual_detection_ranges` (`:1056-1104`), che interroga ciascun asset
 **sul dominio dell'altro** — `Mobile.detection_range(mode, range_type=...)`, dove `mode` è
 'ground'/'air'/'sea' a seconda della classe del bersaglio (`DETECTION_MODE_BY_CLASS`,
 `:104-109`) — perché lo stesso radar ha portate diverse contro un carro e contro un aereo.
 `range_type` di default `DEFAULT_DETECTION_RANGE_TYPE = 'acquisition_range'`
-(`Asset/Mobile.py:97`); con `'engagement_range'` la stessa funzione risponde a "quando sono a
-tiro" invece che "quando si vedono" (`:1039-1041`).
+(`Asset/Mobile.py:98`); con `'engagement_range'` la stessa funzione risponde a "quando sono a
+tiro" invece che "quando si vedono" (`:1123-1125`).
 
-**Composizione dei sensori (D-4c, 2026-11-04).** `Mobile.detection_range(mode, sensor=None, range_type=...)` (`Asset/Mobile.py:1570`) è il **punto unico**
-da cui lo scheduler, il risolutore (`_air_detection_range`, `Logic/Engagement_Resolver.py:3052`), la potatura per blocco (`Military.detection_range`,
-`Block/Military.py:773-803`, usata da `block_reach`, `Logic/Contact_Scheduler.py:1226`) e il pianificatore di rotta (capitolo 7 §7.8) leggono la portata di un
-asset. Dal 2026-11-04 i sensori riconosciuti sono tre, `DETECTION_SENSORS = ("radar", "TVD", VISUAL_SENSOR)` con `VISUAL_SENSOR = "visual"` (`Asset/Mobile.py:82-83`):
+**Composizione dei sensori (D-4c, 2026-11-04).** `Mobile.detection_range(mode, sensor=None, range_type=...)` (`Asset/Mobile.py:1592`) è il **punto unico**
+da cui lo scheduler, il risolutore (`_air_detection_range`, `Logic/Engagement_Resolver.py:3721`), la potatura per blocco (`Military.detection_range`,
+`Block/Military.py:773-803`, usata da `block_reach`, `Logic/Contact_Scheduler.py:1310`) e il pianificatore di rotta (capitolo 7 §7.8) leggono la portata di un
+asset. Dal 2026-11-04 i sensori riconosciuti sono tre, `DETECTION_SENSORS = ("radar", "TVD", VISUAL_SENSOR)` con `VISUAL_SENSOR = "visual"` (`Asset/Mobile.py:83-84`):
 
 - **Senza `sensor`** (il caso dello scheduler) la portata è il **massimo** fra quelle dei tre sensori che hanno un valore utilizzabile sul modo e sul tipo di portata
-  richiesti (`Asset/Mobile.py:1636-1653`, in metri): non la somma, perché guardano lo stesso bersaglio. Un sensore assente (`False`/`None`/attributo mancante), cieco su quel
-  modo o con valore nullo dà «nessun raggio» e non solleva nulla (`_sensor_range_km`, `:1533-1568`); se nessun sensore dà un raggio, il risultato è `None`.
-- **Con `sensor='visual'`** si isola il solo sensore visivo. `ValueError` solo per argomenti fuori dominio (`:1614-1618`).
+  richiesti (`Asset/Mobile.py:1658-1675`, in metri): non la somma, perché guardano lo stesso bersaglio. Un sensore assente (`False`/`None`/attributo mancante), cieco su quel
+  modo o con valore nullo dà «nessun raggio» e non solleva nulla (`_sensor_range_km`, `:1534-1569`); se nessun sensore dà un raggio, il risultato è `None`.
+- **Con `sensor='visual'`** si isola il solo sensore visivo. `ValueError` solo per argomenti fuori dominio (`:1636-1640`).
 - **Il campo `visual` esiste solo nei record di `Vehicle_Data`** (argomento `visual: Optional[Dict] = None`, `Asset/Vehicle_Data.py:71`, assegnato a `self.visual`, `:104`) ed
   è valorizzato per due modelli, `ZSU-57-2` e `M163-VADS` (`Asset/Vehicle_Data.py:3729`, `:3850`): nei registri delle navi e degli aerei, e negli altri veicoli, `getattr(record, 'visual', None)` è `None`
-  e `_sensor_range_km` lo scarta (è il caso normale, descritto nel commento di `Asset/Mobile.py:62-81`). Il sensore ha la **stessa forma** di `radar`/`TVD` (`capabilities[modo] = (bool, {...})`), non ha `reliability`
+  e `_sensor_range_km` lo scarta (è il caso normale, descritto nel commento di `Asset/Mobile.py:63-82`). Il sensore ha la **stessa forma** di `radar`/`TVD` (`capabilities[modo] = (bool, {...})`), non ha `reliability`
   e **non entra negli score del registro** (`_TVD_eval`, `_radar_eval`, `_reliability_eval`, `_combat_eval` non lo leggono: commento di `Vehicle_Data.py:102-103`).
-- **Interruttore `Mobile.D4C_VISUAL_SENSOR`** (default **`True`**, `Asset/Mobile.py:92`). È una variabile di modulo **letta a ogni chiamata** di `detection_range` (`:1638-1640`): con l'interruttore
+- **Interruttore `Mobile.D4C_VISUAL_SENSOR`** (default **`True`**, `Asset/Mobile.py:93`). È una variabile di modulo **letta a ogni chiamata** di `detection_range` (`:1660-1662`): con l'interruttore
   spento il sensore `visual` è tolto dall'elenco e `detection_range(..., sensor='visual')` dà `None`, cioè si ritorna al comportamento precedente (ZSU-57-2 e M163-VADS senza portata propria). Essendo letto
   a ogni chiamata, lo si sostituisce nei test con `patch.object(<modulo di Mobile>, 'D4C_VISUAL_SENSOR', False)`; copiarlo in una variabile locale al caricamento lo renderebbe inefficace.
 - **Che cosa c'è nel dato** (`acquisition_range` aria, km): **6 per entrambi i modelli, una STIMA a confidenza bassa** (Howell/DC-3 riportato alle dimensioni di un caccia, intervallo plausibile 3-8 km), dichiarata come tale
@@ -170,36 +172,36 @@ asset. Dal 2026-11-04 i sensori riconosciuti sono tre, `DETECTION_SENSORS = ("ra
   (capitolo 7 §7.4; limite in capitolo 9). Il DES non applica **nessun orizzonte** alla portata (lo applica solo il pianificatore di rotta, capitolo 7 §7.8).
 
 *Effetto nel DES.* Prima della D-4c ZSU-57-2 e M163-VADS non avevano portata propria: `mutual_detection_ranges` dava `None` per loro come osservatori e `_detect_direction` usciva **prima** dell'estrazione
-(`Logic/Engagement_Resolver.py:1988-1989`), quindi non scoprivano né ingaggiavano mai un aereo. Ora vedono a 6 km e, quando rilevano, per loro nasce un candidato al tiro (`:2021-2026`); il tiro resta limitato dalla quota e dalla portata
+(`Logic/Engagement_Resolver.py:2303-2304`), quindi non scoprivano né ingaggiavano mai un aereo. Ora vedono a 6 km e, quando rilevano, per loro nasce un candidato al tiro (`:2374-2379`); il tiro resta limitato dalla quota e dalla portata
 dell'**arma** (`S-68-57mm`: portata diretta 4000 m, quota massima 4000 m AGL; `M61-Vulcan-20mm`: 1200 m e 1000 m AGL; `Asset/Ground_Weapon_Data.py:2254-2300`), perché il rilevamento non estende l'intercettazione. Lo verifica
-lo scenario **S31-VISUAL** (capitolo 8 §8.13). I 6 km sono una stima: la probabilità di rilevamento segue comunque la legge di Pd del risolutore con `R` = 6 km (`detection_probability`, `Logic/Engagement_Resolver.py:1041`).
-**Determinismo.** Per questi due modelli `_detect_direction` ora **supera** il controllo `own_range is None` e arriva all'estrazione `self._draw()` (`:2001`): lo stream dell'RNG di sessione guadagna un'estrazione per finestra con un aereo in cui l'osservatore è uno dei due
-mezzi. Lo stream cambia **solo nelle sessioni che contengono ZSU-57-2 o M163-VADS** (nessuna di quelle della fotografia preesistente: 989 identiche, capitolo 8 §8.7); `_air_detection_range` (`:3052`) restituisce ora 6000 m per i due mezzi ma serve solo agli intercettori
+lo scenario **S31-VISUAL** (capitolo 8 §8.13). I 6 km sono una stima: la probabilità di rilevamento segue comunque la legge di Pd del risolutore con `R` = 6 km (`detection_probability`, `Logic/Engagement_Resolver.py:1215`).
+**Determinismo.** Per questi due modelli `_detect_direction` ora **supera** il controllo `own_range is None` e arriva all'estrazione `self._draw()` (`:2354`): lo stream dell'RNG di sessione guadagna un'estrazione per finestra con un aereo in cui l'osservatore è uno dei due
+mezzi (**dal 2026-11-11, con la FP, l'estrazione è una per direzione e per passaggio nel volume proprio**: il primo passaggio estrae da `rng` nella posizione dell'estrazione unica di prima, solo dal secondo si estrae dallo stream separato `pass_rng`; capitolo 4 §4.35, `Logic/Engagement_Resolver.py:2575`). Lo stream cambia **solo nelle sessioni che contengono ZSU-57-2 o M163-VADS** (nessuna di quelle della fotografia preesistente: 989 identiche, capitolo 8 §8.7); `_air_detection_range` (`:3721`) restituisce ora 6000 m per i due mezzi ma serve solo agli intercettori
 (task `Anti_Missile`), che ZSU-57-2 e M163-VADS non sono secondo i task dei loro cannoni (`Asset/Ground_Weapon_Data.py:2254-2300`: `Anti_Air` e `Infantry_Support`; la deduzione sul ruolo di intercettore è della Proposta §A.4, non riverificata riga per riga).
 
 **Siti EWR fissi (D-4b, blocco C, 2026-11-05).** Nessuna riga di questo modulo né del risolutore cambia: sette record di `Vehicle_Data` (marcatore `fixed_site`, capitolo 7 §7.12) hanno il solo sensore `radar`, con `acquisition_range` aria di 330 (AN-FPS-117), 160 (Chain-Home), 140 (AMES-Type-7), 390 (AMES-Type-80),
 190 (Wassermann), 300 (Mammut) e 400 km (P-14-Lena), e `Mobile.detection_range('air')` le legge come quelle di ogni altro radar, in metri. Che cosa significano per le finestre di contatto:
 
 - **Nessun orizzonte nel DES.** Come per gli otto EWR del blocco B (capitolo 9 §9.1, «Limiti dei sensori EWR e visivo»), la portata del registro vale **anche per un bersaglio radente**: il pianificatore di rotta la taglia con l'orizzonte e con l'altezza d'antenna del record (capitolo 7 §7.8), il DES no. Con 300-400 km di raggio
-  `mutual_detection_ranges` (`:972`) dà a `contact_windows` (`:1023`) finestre con aerei lontanissimi dal sito. **Il costo di calcolo di queste finestre non è stato misurato**: nessuno scenario della fotografia contiene un sito (le 1009 esecuzioni sono identiche proprio per questo), quindi nessuna misura esiste; è un limite dichiarato, non una verifica.
-- **Il sito è fermo.** I tre regimi di velocità del record valgono 0; un sito che non è in nessuna missione è «fermo in posizione» (docstring di `run_session`, `Logic/Session_Simulator.py:2191`) e non produce tratti di movimento. Non consuma carburante: `Fuel_Model.cruise_speed` dà `None` per una velocità 0 (`Logic/Fuel_Model.py:330-343`) e un tratto fermo
+  `mutual_detection_ranges` (`:1056`) dà a `contact_windows` (`:1107`) finestre con aerei lontanissimi dal sito. **Il costo di calcolo di queste finestre non è stato misurato**: nessuno scenario della fotografia contiene un sito (le 1009 esecuzioni sono identiche proprio per questo), quindi nessuna misura esiste; è un limite dichiarato, non una verifica.
+- **Il sito è fermo.** I tre regimi di velocità del record valgono 0; un sito che non è in nessuna missione è «fermo in posizione» (docstring di `run_session`, `Logic/Session_Simulator.py:2217`) e non produce tratti di movimento. Non consuma carburante: `Fuel_Model.cruise_speed` dà `None` per una velocità 0 (`Logic/Fuel_Model.py:330-343`) e un tratto fermo
   di un asset senza crociera nota non consuma (`_leg_equivalent`, `:346-358`). L'autonomia `range` del record (1 km) è un **segnaposto di schema** e nessuna regola la legge per un asset fermo (capitolo 7 §7.12).
 - **Copertura angolare.** Lo scheduler e il risolutore non hanno settori di scoperta: Mammut (fascio su un arco di circa 100 gradi) e Chain-Home (150 gradi) sono trattati come omnidirezionali (capitolo 9 §9.1).
 
 **Aereo a terra (F4c).** `mutual_detection_ranges(asset_a, asset_b, range_type, *, grounded_a=False,
-grounded_b=False)` (`:972-1020`) e `contact_windows(..., *, grounded_a=False, grounded_b=False)` (`:1023-1100`)
+grounded_b=False)` (`:1056-1104`) e `contact_windows(..., *, grounded_a=False, grounded_b=False)` (`:1107-1184`)
 hanno due parametri keyword nuovi che dicono se l'asset è un aereo parcheggiato (nessuna missione, capitolo 4
 §4.30). L'effetto è confinato alla funzione interna `_range(observer, target, observer_grounded,
-target_grounded)` (`:995-1018`):
+target_grounded)` (`:1079-1102`):
 
 - come **osservatore** un aereo a terra non ha portata (`None`: sensori spenti, passivo);
 - come **bersaglio** è interrogato nel modo `GROUNDED_DETECTION_MODE = 'ground'` (`:113`), cioè come un veicolo
   o una struttura, non come un aereo (`'air'`): il suo rilevatore usa la portata contro bersagli di superficie.
 
 Con entrambi i flag `False` (default) il comportamento è quello di prima. I flag valgono solo per le portate
-**derivate**: una portata imposta dal chiamante (`range_a`/`range_b`) resta quella (`:1043-1044`). La finestra
+**derivate**: una portata imposta dal chiamante (`range_a`/`range_b`) resta quella (`:1127-1128`). La finestra
 risultante, quando solo uno dei due ha portata, è **unidirezionale** (`t_mutual_start`/`t_mutual_end` `None`,
-`:1075`, `first_detector` è chi vede). Dalla F5 i due flag non li calcola più `schedule_contacts` da un insieme
+`:1159`, `first_detector` è chi vede). Dalla F5 i due flag non li calcola più `schedule_contacts` da un insieme
 costante ma, per ogni sottointervallo a stato costante di una coppia, da un `GroundedSchedule` (§3.7).
 
 La distinzione fra rilevamento **unidirezionale** e **bidirezionale** è esplicita perché decide
@@ -218,40 +220,40 @@ schedule_contacts(blocks_a, blocks_b, horizon, routes=None, starts=None, speeds=
                   only_assets=None)
 ```
 
-(`Logic/Contact_Scheduler.py:1379-1489`) mette insieme i tre meccanismi nell'ordine che li rende trattabili:
+(`Logic/Contact_Scheduler.py:1463-1573`) mette insieme i tre meccanismi nell'ordine che li rende trattabili:
 prima la potatura a livello blocco (C), poi il CPA solo sulle coppie di asset superstiti (B). Un asset senza
 rotta in `routes` non è ignorato: se ha una posizione, è trattato come **fermo** per tutta la finestra
-(`static_legs`, ricaduta finale di `_asset_legs`, `:1578`) — il caso più comune in campagna (un sito SAM, un
+(`static_legs`, ricaduta finale di `_asset_legs`, `:1662`) — il caso più comune in campagna (un sito SAM, un
 deposito, una base). Dal 2026-10-05 le tre mappe `routes`/`starts`/`speeds` arrivano a `schedule_contacts` da
-`Mission_Adapter.session_movements` (`Logic/Session_Simulator.py:2255`, `:2385-2387`): un asset senza missione è
+`Mission_Adapter.session_movements` (`Logic/Session_Simulator.py:2281`, `:2411-2413`): un asset senza missione è
 "senza rotta", cioè fermo. Tre parametri facoltativi, tutti a comportamento invariato se omessi:
 
 - **`grounded`** (F4c, esteso dalla F5): oggi è un iterabile di id (l'insieme della F4c: sempre a terra), una
   mappa `{asset_id: [(lo, hi), ...]}` o un `GroundedSchedule` (§3.7); `GroundedSchedule.of` (`:293`) normalizza
-  le tre forme (`:1441`) e, per ogni coppia di asset superstite alla potatura, `_pair_windows` (`:1492-1524`) chiama
+  le tre forme (`:1525`) e, per ogni coppia di asset superstite alla potatura, `_pair_windows` (`:1576-1608`) chiama
   `contact_windows` con `grounded_a`/`grounded_b` calcolati allo stato della coppia. **La potatura per blocco non
   cambia**: `block_max_speed` e `block_reach` (§3.2 C) continuano a contare velocità e portata degli aerei a terra
   nell'inviluppo del loro blocco, anche se sono fermi e senza sensori. È una scelta **conservativa** dichiarata nel
-  docstring (`:1417-1418`): si esaminano più coppie di blocchi di quante servirebbero, ma nessun contatto va perso.
+  docstring (`:1501-1502`): si esaminano più coppie di blocchi di quante servirebbero, ma nessun contatto va perso.
   Resta quindi un costo, non un errore.
 - **`legs`** (F5-B/C, F6-A): `{asset_id: [Leg, ...]}`, i tratti **già calcolati dal chiamante**. Hanno la
-  precedenza su `routes` per quegli asset (`_asset_legs`, `:1538-1578`) e sono usati tali e quali se stanno nella
+  precedenza su `routes` per quegli asset (`_asset_legs`, `:1622-1662`) e sono usati tali e quali se stanno nella
   finestra `[t0, t0 + horizon]` (un secondo ritaglio rifarebbe l'interpolazione degli estremi), altrimenti
   ritagliati con `clamp_legs`. In sessione portano la presenza ferma prima della partenza e dopo la fine, le attese,
   il troncamento all'esaurimento del carburante e i rientri al bingo (capitolo 6 §6.15-6.19). Una lista **vuota**
   data per un asset significa "l'asset non esiste nella sessione" (aereo perso alla partenza): nessuna ricaduta
-  sulla rotta né sulla posizione (`:1553-1556`).
+  sulla rotta né sulla posizione (`:1637-1640`).
 - **`only_assets`** (G4b): insieme di id; se dato, `schedule_contacts` calcola **solo** le finestre delle coppie
-  con almeno uno dei due asset fra questi (`:1451`, `:1466-1478`), che è esattamente il sottoinsieme delle finestre
+  con almeno uno dei due asset fra questi (`:1535`, `:1550-1562`), che è esattamente il sottoinsieme delle finestre
   senza filtro (stessa potatura, stesso ordine), senza spendere il calcolo sulle altre coppie. È il ricalcolo dei
   contatti degli aerei ri-pianificati dopo un episodio d'ingaggio (capitolo 6 §6.20). Nota: `_operative_assets`
-  (`:1527-1535`) filtra gli asset non operativi *allo stato corrente*, quindi un ricalcolo a metà sessione non
+  (`:1611-1619`) filtra gli asset non operativi *allo stato corrente*, quindi un ricalcolo a metà sessione non
   produce finestre nuove per un asset ormai distrutto o fuori combattimento; le sue finestre del primo scheduling
   restano a cura della sessione.
 
-Restituisce una lista di `ContactWindow` ordinata per `(t_start, asset_a_id, asset_b_id)` (`:1487`):
+Restituisce una lista di `ContactWindow` ordinata per `(t_start, asset_a_id, asset_b_id)` (`:1571`):
 **l'ordine è parte del contratto**, è ciò che rende la sessione riproducibile a parità di seed,
-non il seed da solo (`:1429-1432`).
+non il seed da solo (`:1513-1516`).
 
 ## 3.7 `GroundedSchedule`: gli aerei a terra nel tempo (F5-A, `e723e82a`)
 
@@ -269,7 +271,7 @@ una base vera, dopo la fine della rotta (capitolo 6 §6.15): lo stato dipende da
 - **Interrogazioni**: `at(id, t)`, `always(id)` (sempre a terra: gli aerei senza missione, `:319`), `ever(id)`,
   `intervals(id)`, `transitions(id)` (gli istanti **finiti** di decollo e atterraggio, `:330`), `always_ids()`,
   `ids()`.
-- **Perché lo scheduler spezza le finestre**: `_pair_windows` (`:1492-1524`) taglia la sovrapposizione dei due span
+- **Perché lo scheduler spezza le finestre**: `_pair_windows` (`:1576-1608`) taglia la sovrapposizione dei due span
   ad ogni transizione di uno dei due asset (decollo, atterraggio) e chiama `contact_windows` su ciascun
   sottointervallo, con le portate derivate per **quello** stato (bersaglio in modo `'ground'`, osservatore senza
   sensori, §3.5). Ogni finestra prodotta ha quindi uno stato costante per entrambi gli asset, e il risolutore lo
@@ -278,7 +280,7 @@ una base vera, dopo la fine della rotta (capitolo 6 §6.15): lo stato dipende da
 
 ## 3.8 `trim_contact_window`: il ritaglio di una finestra (G4a, `9de461e0`)
 
-`trim_contact_window(window, t_from, legs_a, legs_b)` (`Logic/Contact_Scheduler.py:1129-1172`) restituisce la
+`trim_contact_window(window, t_from, legs_a, legs_b)` (`Logic/Contact_Scheduler.py:1213-1256`) restituisce la
 finestra ritagliata a `[t_from, t_end]`: `window` stessa se `t_from` non la taglia (`t_from <= t_start`), `None` se
 `t_from` è alla fine o oltre (nessuna durata residua), altrimenti una finestra nuova. Dentro `[t_start, t_end]` la
 distanza è già entro la portata maggiore per costruzione, quindi la parte rimasta è ancora **una** finestra; si
