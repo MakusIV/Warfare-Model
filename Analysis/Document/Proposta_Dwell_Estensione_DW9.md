@@ -1,13 +1,19 @@
 # Proposta: estensione dei `dwell_time_s` a SAM, AAA, TVD, vista, navi e AWACS (DW-9 rivista)
 
-**Stato: BOZZA, decisioni DW9-1..DW9-9 aperte (§4).** Scritta il 2026-11-17 da `des-planner` su osboxes.
+**Stato: DEFINITIVA (decisioni DW9-1..DW9-10 prese dall'utente il 2026-11-17, §4).** Scritta il 2026-11-17 da
+`des-planner` su osboxes. Decisioni in breve: DW9-1 Buk 9,0 s [S], Tor 3,0 s FONTE (pagina GlobalSecurity incollata
+dall'utente); DW9-2 A2 (`dwell_time_s` + chiave documentale `search_model`); DW9-3 Shilka 7,3 s [S] (valore
+centrale); DW9-4 S-300PS 12 s [S], Tunguska 1,82 s [S]; DW9-5 tutte (a); DW9-6 vista/TVD 3,2 s [S] con nota di
+approssimazione; DW9-7 AWACS 10 s; DW9-8 tutte (a); DW9-9 R1; **DW9-10 (nuova) riallineare i 10 EWR del contratto
+precedente alla regola di §3.5 (blocco 3bis)**. Nessuna decisione resta aperta per l'esecuzione.
 **Aggiornata il 2026-11-17 con la linea decisa dall'utente** dopo la lettura di `Dinamica dei Tempi di
 Aggiornamento Radar - Google Gemini.md`: **valore FISSO per sensore** (niente dwell dipendente da distanza, modo o
 carico del radar; §3.4), **regola sugli intervalli** "regime normale se citato, altrimenti valore centrale" con la
 **banda di incertezza** di fonte accanto al valore (§3.5), sonda S-4 con due passate di sensibilita' agli estremi
 (blocco 0). DW9-1, DW9-3 e DW9-6 sono diventate "quale valore fisso dentro l'intervallo".
-**Contratto precedente, non modificato**: `Proposta_Dwell_Time_Rilevamento.md` (blocchi A e B eseguiti: legge L1,
-interruttore `D5_DWELL_TIME`, lettori, S32-DWELL; DW-9 di allora = "solo il meccanismo, valori ai soli 10 EWR").
+**Contratto precedente, documento non modificato**: `Proposta_Dwell_Time_Rilevamento.md` (blocchi A e B eseguiti:
+legge L1, interruttore `D5_DWELL_TIME`, lettori, S32-DWELL; DW-9 di allora = "solo il meccanismo, valori ai soli 10
+EWR"). I **dati** dei suoi 10 EWR sono riallineati da questo piano (DW9-10, blocco 3bis); il documento resta com'e'.
 **Origine**: decisione dell'utente "DW-9 rivista" (vincolante, il "se" non si riapre; §1.1). Questo documento
 discute solo il "come": quali valori, dove, con quali etichette, con quali test, e che cosa succede alla fotografia.
 
@@ -28,7 +34,9 @@ del confronto con la fotografia, senza installare nulla.
 
 **Che cosa cambia.** Solo **dati**: la chiave opzionale `dwell_time_s` (periodo di rivisita della funzione di
 **ricerca**) entra nel dizionario del sensore di 43 record (9 SAM/AAA con radar, 4 SAM con TVD, 2 AAA a vista, 3 EWR,
-22 navi, 3 AWACS). Nessuna riga del motore cambia: la legge L1 `Pd = min(1, permanenza/dwell) x Pd(d)`, i lettori e
+22 navi, 3 AWACS), sempre accompagnata dalla chiave documentale `search_model` (nome del radar o della funzione di
+ricerca, DW9-2 = A2); i 10 EWR gia' valorizzati sono riallineati alla regola di §3.5 (5 valori cambiano, DW9-10) e
+ricevono anch'essi `search_model`. Nessuna riga del motore cambia: la legge L1 `Pd = min(1, permanenza/dwell) x Pd(d)`, i lettori e
 l'interruttore esistono gia' dal blocco A [V]. L'interruttore resta **`Engagement_Resolver.D5_DWELL_TIME = False`**
 (`Logic/Engagement_Resolver.py:592`): non serve un interruttore nuovo (§3.2).
 
@@ -52,7 +60,7 @@ inseguimento (Buk: `model` = "9S35 Fire Dome" ma `acquisition_range` 85 km = 9S1
 
 | Stato | Esito atteso | Base |
 |---|---|---|
-| Interruttore SPENTO (default), dopo i blocchi 1-5 | **1103 identiche, 0 cambiate, 0 nuove** | `Session_Simulator` non passa il lettore (`Logic/Session_Simulator.py:2792-2794`); le sole unita' che accendono la D-5 dentro il test (S32 `long`/`short`/`ewr_on`, S33) restano identiche: sonda breve S-4a (§1.6) |
+| Interruttore SPENTO (default), dopo i blocchi 1-5 e 3bis | **1103 identiche, 0 cambiate, 0 nuove** | `Session_Simulator` non passa il lettore (`Logic/Session_Simulator.py:2792-2794`); le sole unita' che accendono la D-5 dentro il test (S32 `long`/`short`/`ewr_on`, S33) restano identiche: sonda breve S-4a (§1.6); l'unico EWR negli scenari e' il P-18 di S32, il cui valore (6 s) non cambia con DW9-10 |
 | Interruttore ACCESO (sonda S-4, sola lettura, tre passate: valori raccomandati, estremi minimi, estremi massimi) | parziale, **con la prima versione dei valori** (regola "rotazione piu' veloce", §1.6): **545 esecuzioni su 1103 provate, tutte IDENTICHE**; delle 558 restanti, 507 non contengono sensori con valore nuovo (identiche per costruzione), 51 (S17, S20, VAL, ORC) da provare. I valori attuali (centrali) e gli estremi vanno provati con la S-4 completa (blocco 0) | §1.6 |
 
 **SAM e AAA sono tiratori**: con `D5_DWELL_TIME` acceso una Pd ridotta del loro sensore **cambia gli esiti di tiro**,
@@ -63,10 +71,11 @@ per contatti **radenti** (corde di poche centinaia di metri, §1.7): il rischio 
 accorcia le rotte senza orizzonte radar nel DES). **Il confronto con l'interruttore acceso va riletto dall'utente
 prima di qualunque accensione; la fotografia la installa solo l'utente.**
 
-**Dimensione stimata**: ~43 righe di dato + ~50 righe di commento nei tre registri; 1 file di test nuovo
-(`Test/Test_Dwell_Data.py`, ~170 righe) e 4 file di test ritoccati; **10 test nuovi** (suite attesa `Ran 4924`,
-base `Ran 4914` da rileggere); 1 documento nuovo (`Registro_Dwell_Stimati.md`). Cinque blocchi piccoli (uno per
-famiglia di asset) piu' il blocco 0 (sonda S-4 in tre passate, sessione principale, ~55 minuti su osboxes).
+**Dimensione stimata**: ~53 righe `dwell_time_s` (43 nuove + 10 EWR riallineati, di cui 5 con valore cambiato) e
+~53 righe `search_model` + ~60 righe di commento nei tre registri; 1 file di test nuovo (`Test/Test_Dwell_Data.py`,
+~190 righe) e 4 file di test ritoccati; **11 test nuovi** (suite attesa `Ran 4925`, base `Ran 4914` da rileggere); 1
+documento nuovo (`Registro_Dwell_Stimati.md`). Sei blocchi piccoli (uno per famiglia di asset, piu' il 3bis dei 10
+EWR) piu' il blocco 0 (sonda S-4 in tre passate, sessione principale, ~55 minuti su osboxes).
 
 ---
 
@@ -158,7 +167,7 @@ Conseguenze per il design, lette sul codice:
 | SAM/AAA con radar | ZSU-23-4-Shilka, Flakpanzer-Gepard, 2K22-Tunguska, 9A33-Osa, MIM-115-Roland, 9K331-Tor, 2K12-Kub, 9K37-Buk, S-300PS (9) | `radar` | nessun dwell | si' |
 | SAM con TVD | Strela-1-9P31, MIM-72G-Chaparral, 9K35-Strela-10, M6-Linebacker (4) | `TVD` (aria e terra) | nessuno | si' |
 | AAA a vista | ZSU-57-2, M163-VADS (2) | `visual` (solo aria) | nessuno | si' |
-| EWR | 10 con dwell (invariati); FuMG-80-Freya, Wassermann, AN-FPS-117, Chain-Home, Mammut senza (5) | `radar` | 10 su 15 | si' (i 5) |
+| EWR | 10 con dwell (riallineati alla regola di §3.5, DW9-10); FuMG-80-Freya, Wassermann, AN-FPS-117, Chain-Home, Mammut senza (5) | `radar` | 10 su 15 | si' (i 5; i 10 per il riallineamento) |
 | Navi | 23 record di `Ship_Data` (22 radar + Type 093 con "sonar passivo" nel campo `radar`, solo modo mare) | `radar` | nessuno | si' |
 | AWACS | E-3A Sentry, E-2D Advanced Hawkeye, A-50 (3) | `radar` | nessuno | si' |
 | Aerei non AWACS | 62 record di `Aircraft_Data` | `radar`, `TVD` | nessuno | **no** (decisione 1) |
@@ -176,8 +185,18 @@ motivo scritto (Chain-Home, Mammut, Type 093; DW9-8).
 - **Valori NON verificati (dichiarati dal compito, riletti qui)**: tutto cio' che D2 attribuisce a una "lettura
   diretta" di **GlobalSecurity** (pagina che risponde 403 al lettore della sessione principale; P1 la dava gia' come
   402/403 e "via ricerca"): **Buk 9S18** (2,5-4,5 s settore, 4,5-18 s circolare; 9S18M1-3 4,5 s), **Tor** ("modo
-  principale 3 s, modo a 3 fasci 1 s"), **64N6E** ("una rotazione ogni 12 s"). Qui sono trattati come **[S] fonte non
-  verificata**, mai come dati (DW9-1, DW9-4). L'utente puo' promuoverli a FONTE incollando la frase della pagina.
+  principale 3 s, modo a 3 fasci 1 s"), **64N6E** ("una rotazione ogni 12 s"). Buk e 64N6E restano trattati come
+  **[S] fonte non verificata**, mai come dati (DW9-1, DW9-4).
+- **Tor: pagina GlobalSecurity incollata dall'utente** (2026-11-17) nel file `Scrum Half - target
+  engagementmissile tracking radar  SA-15 GAUNTLET  9K331 Tor.md` (cartella `Analysis/Document/`; non e' una pagina
+  web letta dal controllo: e' il testo che l'utente ha copiato). Riga 7 [V]: "The coherent-pulse radar station of the
+  all- round view solves the problem of detecting air targets", "Each beam has a width of 4 ° in elevation and 1.5 °
+  in azimuth. One beam is able to overlap a sector at 32 ° in elevation. In the main mode, the scanning speed of the
+  detection zone is three seconds, while the lower part of the zone is scanned twice. Additionally, there is a
+  three-beam viewing mode with a pace of 1 second." Quindi: (1) la ricerca del Tor e' a **vista circolare** e i 32
+  gradi sono in **elevazione**: la lettura di D2 "settore di 32 gradi in azimut, non 360 gradi" e' errata (Appendice
+  C, C-1); (2) il **regime normale e' citato** ("main mode" 3 s): con la regola 1 di §3.5 il valore e' **3,0 s,
+  FONTE**, banda 1-3 s (DW9-1 decisa); concorda con Air Power Australia ("entire elevation zone ... within 3 s").
 - **Nota non tracciata** `Dinamica dei Tempi di Aggiornamento Radar - Google Gemini.md` (comparsa nella cartella
   durante la stesura, 2026-11-17): spiega in modo qualitativo perche' i radar a scansione elettronica dichiarano un
   intervallo di tempi di rivisita (allocazione dinamica fra ricerca e inseguimento). Coerente con la scelta di trattare
@@ -185,7 +204,7 @@ motivo scritto (Chain-Home, Mammut, Type 093; DW9-8).
 - **Verifica a campione delle bozze**: il pianificatore non ha accesso al web (lo ha solo `oc-researcher`); la
   verifica e' quindi di **coerenza interna** (estratti contro conclusioni, conti, confronto con P1). Incongruenze
   trovate in Appendice C (6 punti; le piu' rilevanti: il Tor "a settore di 32 gradi in azimut" di D2 non e' sostenuto
-  dai suoi stessi estratti; 64N6E 6/12 giri/min in P1 contro 12 s in D2; Type 381 "mirror 5 giri/min" in P1 contro
+  dai suoi stessi estratti ed e' smentito dalla pagina incollata dall'utente ("all-round view"); 64N6E 6/12 giri/min in P1 contro 12 s in D2; Type 381 "mirror 5 giri/min" in P1 contro
   "nessun valore" in D3).
 
 ### 1.6 Sonde eseguite per questa Proposta (sola lettura, brevi)
@@ -221,9 +240,10 @@ Lettura:
   dalla sonda **S-4 completa** del blocco 0 (una quarta sonda parziale su queste 51 e' stata negata dal sistema di
   permessi della sessione di pianificazione: non e' stata eseguita).
 - **Le sonde parziali usano la prima versione dei valori** (regola "rotazione piu' veloce": Buk 4,5, Tor 1,0, Kub 3,0,
-  vista/TVD 3,94, navi 5,0), scritta prima della linea "valore centrale" dell'utente. I valori attuali di §2 (Buk 9,0,
-  Tor 1,7, Kub 3,5, vista/TVD 3,2, Fregat-MA/Head Net-A 7,1, Top Pair 10) cadono tutti dentro le bande, i cui estremi
-  la S-4 completa prova in due passate (blocco 0). Lo script dell'Appendice A ha i valori attuali.
+  vista/TVD 3,94, navi 5,0, Shilka 18), scritta prima della linea "valore centrale" e delle decisioni dell'utente. I
+  valori decisi di §2 (Buk 9,0, Tor 3,0, Shilka 7,3, Kub 3,5, vista/TVD 3,2, Fregat-MA/Head Net-A 7,1, Top Pair 10) e i
+  10 EWR riallineati (§2.3bis) cadono tutti dentro le bande, i cui estremi la S-4 completa prova in due passate
+  (blocco 0). Lo script dell'Appendice A ha i valori decisi.
 - Queste sonde **non** sostituiscono il confronto dell'esecutore: provano i valori in memoria, non il codice scritto.
 
 ### 1.7 I numeri della corda per le nuove famiglie [calcolo; velocita' I]
@@ -234,10 +254,12 @@ Con L1 la Pd si riduce solo se la permanenza `tau` e' minore del dwell, cioe' se
 
 | Osservatore (valore raccomandato) | R [km] | bersaglio, v [m/s] | dwell [s] | corda con g<1 | profondita' massima |
 |---|---|---|---|---|---|
-| Shilka (18) | 20 | F-16, 250 [I] | 18 | 4,5 km | ~127 m |
+| Shilka (7,3; banda 3-18) | 20 | F-16, 250 [I] | 7,3 / 18 | 1,8 / 4,5 km | ~21 / ~127 m |
 | Shilka all'estremo minimo della banda (3 s) | 20 | F-16, 250 | 3 | 0,75 km | ~3,5 m |
 | Buk (9; banda 4,3-20) | 85 | F-16, 250 | 9 / 20 | 2,25 / 5 km | ~7,4 / ~37 m |
-| Tor (1,7; banda 1-3) | 25 | F-16, 250 | 1,7 / 3 | 0,43 / 0,75 km | ~0,9 / ~2,8 m |
+| Tor (3; banda 1-3) | 25 | F-16, 250 | 3 / 1 | 0,75 / 0,25 km | ~2,8 / ~0,3 m |
+| P-14 riallineato (17,3; banda 10-30) | 400 | caccia, 250 | 17,3 / 30 | 4,3 / 7,5 km | ~5,8 / ~17,6 m |
+| AMES Type 7 riallineato (30; banda 7,5-120) | 140 | bombardiere WWII, 100 [I] | 30 / 120 | 3 / 12 km | ~8 / ~129 m |
 | S-300PS (12) | 150 | F-16, 250 | 12 | 3 km | ~7,5 m |
 | Strela-10 TVD (3,2; banda 1,75-6) | 10 | F-16, 250 | 3,2 / 6 | 0,8 / 1,5 km | ~8 / ~28 m |
 | ZSU-57-2 vista (3,2) | 6 | A-10C, 155,6 [V: `speed['nominal']`] | 3,2 | 0,5 km | ~5,2 m |
@@ -246,8 +268,8 @@ Con L1 la Pd si riduce solo se la permanenza `tau` e' minore del dwell, cioe' se
 | E-3A (10) | 400 | caccia, 450 relativi [I] | 10 | 4,5 km | ~6 m |
 
 Lettura: la riduzione colpisce solo contatti **radenti** (il bersaglio sfiora il bordo del volume). Un esempio di Pd:
-un F-16 che sfiora il volume della Shilka per 9 s (corda 2,25 km, `d ~ R`) ha oggi `Pd ~ 0,5`; con dwell 18 s
-`g = 9/18 = 0,5` e `Pd ~ 0,25`; con dwell 6 s `g = 1` e `Pd ~ 0,5`. Anche agli estremi delle bande la riduzione resta
+un F-16 che sfiora il volume della Shilka per 6 s (corda 1,5 km, `d ~ R`) ha oggi `Pd ~ 0,5`; con il dwell deciso
+7,3 s `g = 6/7,3 = 0,82` e `Pd ~ 0,41`; all'estremo 18 s `g = 0,33` e `Pd ~ 0,17`; all'estremo 3 s `g = 1`. Anche agli estremi delle bande la riduzione resta
 confinata in poche decine di metri dal bordo del volume: e' il motivo per cui la scelta dentro l'intervallo pesa poco
 (§3.4 punto d).
 
@@ -265,7 +287,7 @@ Legenda delle etichette (colonna "Etichetta", da riportare **identica** nel comm
 - **nessun valore**: chiave assente, con il motivo nel commento.
 
 Per i record con dato di fonte la colonna "Conf." riporta la confidenza della bozza; per le stime e' "stima".
-Le righe marcate (R) dipendono da una decisione aperta: il valore e' quello **raccomandato**.
+Le righe marcate "DECISA DW9-n" riportano il valore scelto dall'utente il 2026-11-17 (§4).
 **Banda [s]** = intervallo di incertezza da riportare accanto al valore (commento del codice e registro): per i dati
 di fonte e' l'intervallo dichiarato dalla fonte (o fra le fonti); per le stime per confronto e' l'intervallo degli
 analoghi candidati; "—" = valore unico, nessuna banda. La sonda S-4 prova gli estremi (blocco 0).
@@ -274,17 +296,17 @@ analoghi candidati; "—" = valore unico, nessuna banda. La sonda S-4 prova gli 
 
 | Record (variabile, riga) | Funzione di ricerca | Dato di partenza | Valore [s] | Banda [s] | Etichetta | Fonte o analogo | Conf. |
 |---|---|---|---|---|---|---|---|
-| `ZSU-23-4-Shilka` (`ZSU_23_4_data`, `:3765`) (R, DW9-3) | 1RL33, ricerca (stessa antenna dell'inseguimento) | circolare 20 gradi/s (modo base, = regime normale citato); accelerata 45-60 gradi/s (8-6 s); settore 30-100 gradi a 20 gradi/s (rivisita 3-10 s) | **18.0** (360/20, D) | 3-18 | FONTE di variante, attribuzione [S] | D1 §2.1, manuale 1RL33M3 (ZSU-23-4M) | M |
+| `ZSU-23-4-Shilka` (`ZSU_23_4_data`, `:3765`) (DECISA DW9-3) | 1RL33, ricerca (stessa antenna dell'inseguimento) | circolare 20 gradi/s (18 s, modo base); accelerata 45-60 gradi/s (8-6 s); settore 30-100 gradi a 20 gradi/s (rivisita 3-10 s); l'utente non riconosce un regime normale unico (DW9-3 b) | **7.3** (centrale di 3-18 s: radice di 54 = 7,35, D) | 3-18 | FONTE di variante, valore centrale, attribuzione [S] | D1 §2.1, manuale 1RL33M3 (ZSU-23-4M) | M |
 | `Flakpanzer-Gepard` (`Flakpanzer_Gepard_data`, `:3886`) | MPDR-12 | 60 giri/min | **1.0** | — | FONTE | D1 §2.4 (radartutorial karte031, Military Periscope); P1 | M-A |
-| `2K22-Tunguska` (`K2K22_Tunguska_data`, `:3944`) (R, DW9-4) | 1RL144 "Hot Shot" (360 gradi, giri/min non trovati) | — | **1.82** | 1.0-4.0 (analoghi Gepard 1 s, Osa 1,82 s, Pantsir 2RL80 2-4 s) | STIMA PER CONFRONTO [S] | 9A33-Osa Land Roll (33 giri/min) | stima |
+| `2K22-Tunguska` (`K2K22_Tunguska_data`, `:3944`) (DECISA DW9-4) | 1RL144 "Hot Shot" (360 gradi, giri/min non trovati) | — | **1.82** | 1.0-4.0 (analoghi Gepard 1 s, Osa 1,82 s, Pantsir 2RL80 2-4 s) | STIMA PER CONFRONTO [S] | 9A33-Osa Land Roll (33 giri/min) | stima |
 | `9A33-Osa` (`A9A33_Osa_data`, `:4121`) | Land Roll, antenna di acquisizione | 33 giri/min | **1.82** (60/33 = 1,818, D, arrotondato al centesimo) | — | FONTE | D1 §2.2 (ausairpower APA-9K33, missilery) | A (per la bozza) |
 | `MIM-115-Roland` (`MIM115_Roland_data`, `:4237`) | MPDR-16 | 60 giri/min | **1.0** | — | FONTE | P1; D1 §2.5 (missilery) | M-A |
-| `9K331-Tor` (`K9K331_Tor_data`, `:4295`) (R, DW9-1) | radar di scoperta 3D del Tor-M1 | APA: "scanning interval 1 s" e "entire elevation zone ... within 3 s"; "modo principale 3 s" solo da GlobalSecurity (NON verificato: il regime normale non e' citato da una fonte leggibile) | **1.7** (centrale di 1-3 s: radice di 1 x 3 = 1,73) | 1-3 | FONTE, valore centrale, interpretazione [S] | D2 §2.3 (ausairpower APA-9K331, che cita Military Parade 1996) | M |
+| `9K331-Tor` (`K9K331_Tor_data`, `:4295`) (DECISA DW9-1) | radar di scoperta 3D a vista circolare del Tor-M1 ("all-round view"; 32 gradi in elevazione) | GlobalSecurity (testo incollato dall'utente): "In the main mode, the scanning speed of the detection zone is three seconds", modo a tre fasci 1 s; APA: "scanning interval 1 s", "entire elevation zone ... within 3 s" | **3.0** (regime normale citato, regola 1 di §3.5) | 1-3 | FONTE | file `Scrum Half - target engagementmissile tracking radar  SA-15 GAUNTLET  9K331 Tor.md` (pagina GlobalSecurity incollata dall'utente); D2 §2.3 (ausairpower APA-9K331, che cita Military Parade 1996) | M-A (due fonti concordi) |
 | `2K12-Kub` (`K2K12_Kub_data`, `:4412`) | antenna 1S11 del 1S91 | 15 o 20 giri/min (nessun regime normale) = 4 o 3 s | **3.5** (centrale: radice di 3 x 4 = 3,46) | 3-4 | FONTE, valore centrale | D2 §2.2 (radartutorial karte011) | M |
-| `9K37-Buk` (`K9K37_Buk_data`, `:4470`) (R, DW9-1) | 9S18 / 9S18M1 (non il 9S35 Fire Dome) | circolare 4,5-18 s (GlobalSecurity, NON verificato); 3-14 giri/min = 20-4,3 s (radartutorial 9S18M, via ricerca); nessun regime normale | **9.0** (centrale di 4,5-18 s: radice di 81) | 4.3-20 | FONTE NON VERIFICATA [S], valore centrale | P1 §3; D2 §2.1 | bassa-media |
-| `S-300PS` (`S300PS_data`, `:4528`) (R, DW9-4) | 5N64S "Big Bird-B" (giri/min non trovati), non il 30N6 | — | **12.0** | 5-12 (P1: 64N6E 6/12 giri/min = 10/5 s; D2: 12 s "regolare") | STIMA PER CONFRONTO [S] | 64N6/64N6E "Tombstone" (stessa famiglia, S-300PM): "rotazione ogni 12 s", regime "regolare" (D2 §2.4; GlobalSecurity non verificato, APA e valka.cz secondo la bozza) | stima |
+| `9K37-Buk` (`K9K37_Buk_data`, `:4470`) (DECISA DW9-1) | 9S18 / 9S18M1 (non il 9S35 Fire Dome) | circolare 4,5-18 s (GlobalSecurity, NON verificato); 3-14 giri/min = 20-4,3 s (radartutorial 9S18M, via ricerca); nessun regime normale | **9.0** (centrale di 4,5-18 s: radice di 81) | 4.3-20 | FONTE NON VERIFICATA [S], valore centrale | P1 §3; D2 §2.1 | bassa-media |
+| `S-300PS` (`S300PS_data`, `:4528`) (DECISA DW9-4) | 5N64S "Big Bird-B" (giri/min non trovati), non il 30N6 | — | **12.0** | 5-12 (P1: 64N6E 6/12 giri/min = 10/5 s; D2: 12 s "regolare") | STIMA PER CONFRONTO [S] | 64N6/64N6E "Tombstone" (stessa famiglia, S-300PM): "rotazione ogni 12 s", regime "regolare" (D2 §2.4; GlobalSecurity non verificato, APA e valka.cz secondo la bozza) | stima |
 
-### 2.2 SAM con TVD e AAA a vista (`Asset/Vehicle_Data.py`, dizionari `TVD` e `visual`) (R, DW9-6)
+### 2.2 SAM con TVD e AAA a vista (`Asset/Vehicle_Data.py`, dizionari `TVD` e `visual`) (DECISA DW9-6)
 
 Tutti con lo **stesso** valore, la stessa banda e la stessa nota di approssimazione.
 
@@ -297,24 +319,47 @@ Tutti con lo **stesso** valore, la stessa banda e la stessa nota di approssimazi
 | `ZSU-57-2` (`ZSU_57_2_data`, `:3701`) | `visual` | vista dell'equipaggio | **3.2** | 1.75-6.0 | idem | idem |
 | `M163-VADS` (`M163_VADS_data`, `:3823`) | `visual` | vista del puntatore | **3.2** | 1.75-6.0 | idem | idem |
 
-### 2.3 EWR rimasti senza valore (`Asset/Vehicle_Data.py`, `radar`) (R, DW9-8)
+### 2.3 EWR rimasti senza valore (`Asset/Vehicle_Data.py`, `radar`) (DECISA DW9-8)
 
 | Record (variabile, riga) | Dato di partenza | Valore [s] | Banda [s] | Etichetta | Analogo o motivo |
 |---|---|---|---|---|---|
-| `FuMG-80-Freya` (`FuMG80_Freya_data`, `:4692`) | schiera orientabile 360 gradi, velocita' non data | **60.0** | 7.5-60 (analoghi AMES Type 7 e SCR-270) | STIMA PER CONFRONTO [S] | SCR-270 (EWR a rotazione 1940, 1 giro/min; stessa classe ed epoca) |
-| `Wassermann` (`Wassermann_data`, `:4984`) | traliccio ruotabile, velocita' non data | **60.0** | 7.5-60 | STIMA PER CONFRONTO [S] | SCR-270 |
+| `FuMG-80-Freya` (`FuMG80_Freya_data`, `:4692`) | schiera orientabile 360 gradi, velocita' non data | **60.0** | 30-60 (analoghi AMES Type 7 riallineato e SCR-270) | STIMA PER CONFRONTO [S] | SCR-270 (EWR a rotazione 1940, 1 giro/min; stessa classe ed epoca) |
+| `Wassermann` (`Wassermann_data`, `:4984`) | traliccio ruotabile, velocita' non data | **60.0** | 30-60 | STIMA PER CONFRONTO [S] | SCR-270 |
 | `AN-FPS-117` (`AN_FPS117_data`, `:4876`) | array planare rotante, rotazione non riportata | **10.0** | — | STIMA PER CONFRONTO [S] | AN-TPS-43 (EWR 3D statunitense a rotazione, 6 giri/min) |
 | `Chain-Home` (`Chain_Home_data`, `:4901`) | antenna fissa a illuminazione continua | — | — | nessun valore | invariato (commento esistente `:4925`) |
 | `Mammut` (`Mammut_data`, `:5011`) | schiera fissa a scansione elettronica su 100 gradi, cadenza non data | — | — | nessun valore | nessun analogo credibile: l'unico radar fisso dei registri (Chain-Home) non ha periodo |
 
-I 10 EWR con dato (SCR-270 60; P-12 e P-18 6; P-37, 1L13, 55Zh6, AN-TPS-43, P-14 10; AMES Type 7 7,5; AMES Type 80
-15) restano **invariati** (contratto precedente). Nota: per quattro di loro la fonte da' un intervallo senza regime
-normale e DW-2 aveva scelto la rotazione **piu' veloce**; con la regola di §3.5 il valore centrale sarebbe diverso
-(P-37 e 1L13 3-6 giri/min: 14,1 s invece di 10; P-14 2-6: 17,3 invece di 10; AMES Type 7 0,5-8: 30 invece di 7,5).
-Questo piano **non** li tocca (perimetro della linea dell'utente); il disallineamento e' dichiarato in §6 e
-nell'elenco delle cose da decidere dopo.
+I 10 EWR con dato del contratto precedente sono riallineati in §2.3bis (DW9-10).
 
-### 2.4 Navi (`Asset/Ship_Data.py`, `radar`) (R, DW9-5)
+### 2.3bis I 10 EWR del contratto precedente, riallineati alla regola di §3.5 (`Asset/Vehicle_Data.py`, `radar`) (DECISA DW9-10)
+
+La regola DW-2 del contratto precedente ("regime normale se citato, altrimenti rotazione piu' veloce") e' sostituita,
+per questi 10 record, dalla regola di §3.5 ("regime normale se citato, altrimenti media geometrica degli estremi del
+periodo, un decimale"), cosi' che nello stesso registro valga una regola sola. Dati di partenza riletti in
+`Ricerca_EWR_2026_10_29.md` (righe della colonna "Antenna/mobilita'") [V].
+
+| Record (variabile) | Dato di fonte (riga) | Regola applicata | Attuale [s] | Nuovo [s] | Banda [s] | Etichetta |
+|---|---|---|---|---|---|---|
+| `SCR-270` (`SCR270_data`) | 1 giro/min (`:203`) | valore unico | 60.0 | **60.0** | — | FONTE |
+| `P-12-Yenisei` (`P12_Yenisei_data`) | 10 giri/min [W-P12] contro 2-6 giri/min [AC-P12] (`:231`), contraddizione fra fonti, nessun regime normale | centrale della banda fra le due fonti, 2-10 giri/min = 30-6 s: radice di 180 = 13,42 | 6.0 | **13.4** | 6-30 | FONTE, valore centrale fra fonti discordanti [S] |
+| `P-18-Terek` (`P18_Terek_data`) | 10 giri/min (`:263`) | valore unico | 6.0 | **6.0** | — | FONTE |
+| `P-37-Mech` (`P37_Mech_data`) | 3-6 giri/min (P-37; i 6-7 giri/min sono del P-35, `:291`) | centrale di 10-20 s: radice di 200 = 14,14 | 10.0 | **14.1** | 10-20 | FONTE, valore centrale |
+| `1L13-Nebo-SV` (`Nebo_SV_1L13_data`) | 3-6 giri/min (`:309`) | centrale di 10-20 s | 10.0 | **14.1** | 10-20 | FONTE, valore centrale |
+| `55Zh6-Nebo` (`Nebo_55Zh6_data`) | 6 giri/min (`:325`) | valore unico | 10.0 | **10.0** | — | FONTE |
+| `AN-TPS-43` (`AN_TPS43_data`) | 6 giri/min (`:363`) | valore unico | 10.0 | **10.0** | — | FONTE |
+| `AMES-Type-7` (`AMES_Type7_data`) | 0,5-8 giri/min (`:217`) | centrale di 7,5-120 s: radice di 900 = 30,0 | 7.5 | **30.0** | 7.5-120 | FONTE, valore centrale |
+| `AMES-Type-80` (`AMES_Type80_data`) | "4 giri/min (fino a 6)" (`:338`) | forma "N (fino a M)": regime base 4 giri/min = regime normale (regola 1 di §3.5, interpretazione [S] gia' dichiarata) | 15.0 | **15.0** | 10-15 | FONTE, interpretazione [S] |
+| `P-14-Lena` (`P14_Lena_data`) | 2-6 giri/min (`:246`) | centrale di 10-30 s: radice di 300 = 17,32 | 10.0 | **17.3** | 10-30 | FONTE, valore centrale |
+
+**Cambiano 5 valori** (P-12, P-37, 1L13, AMES Type 7, P-14); i tre che la nota precedente indicava (P-37/1L13 14,1,
+P-14 17,3, Type 7 30) sono confermati sui dati; il **P-12** si aggiunge perche' le sue due fonti discordanti formano
+un intervallo (dubbio residuo dichiarato: se si considera fonte principale [W-P12] da sola, il valore resterebbe 6 s
+con banda 6-30; la regola del piano prende il centrale). Restano invariati SCR-270, P-18, 55Zh6, AN-TPS-43 e AMES
+Type 80. I valori centrali sono **scelte di regola dentro un intervallo di fonte**, non stime per mancanza di dato:
+entrano nella seconda tabella del registro (Appendice B), come quelli di Kub e delle navi con Fregat-MA o Top Pair.
+Uso negli scenari: solo il **P-18** (S32-DWELL `ewr_off`/`ewr_on`), invariato [V: ricerca dei letterali negli scenari].
+
+### 2.4 Navi (`Asset/Ship_Data.py`, `radar`) (DECISA DW9-5)
 
 | Record (variabile, riga `'radar'`) | `radar['model']` | Ricerca aerea usata | Dato di partenza | Valore [s] | Banda [s] | Etichetta | Fonte o analogo | Conf. |
 |---|---|---|---|---|---|---|---|---|
@@ -337,7 +382,7 @@ nell'elenco delle cose da decidere dopo.
 | `LHA-1 Tarawa` (`LHA1_data`, `:1382`) | AN/SPS-52 + AN/SPS-67 | SPS-52 (non trovato) | — | **5.0** | 5-10 | STIMA PER CONFRONTO [S] | AN/SPS-49 (ricerca aerea US Navy coeva) | stima |
 | `Type 071` (`Type071_data`, `:1422`) | Type 360 + Type 364 | Type 364 (ricerca aerea; Type 360 non trovato) | 30 giri/min | **2.0** | — | FONTE | D3 §2.6.4 (Wikipedia Type 364) | M |
 
-### 2.5 AWACS (`Asset/Aircraft_Data.py`, `radar`; chiavi con doppi apici) (R, DW9-7)
+### 2.5 AWACS (`Asset/Aircraft_Data.py`, `radar`; chiavi con doppi apici) (DECISA DW9-7)
 
 | Record (variabile, riga) | Radar | Dato di partenza | Valore [s] | Banda [s] | Etichetta | Fonte | Conf. |
 |---|---|---|---|---|---|---|---|
@@ -347,13 +392,48 @@ nell'elenco delle cose da decidere dopo.
 
 ### 2.6 Riepilogo dei conteggi
 
-43 valori (invariati nel numero e nelle etichette dopo la linea "valore centrale"; rispetto alla prima versione
-cambiano 17 valori: Buk, Tor, Kub; 6 vista/TVD; Kuznetsov, Neustrashimy, Piotr Velikiy, Moskva, Type 052B, Rezky,
-Grisha, Molniya): **18 FONTE** (Gepard, Osa, Roland, Kub; 6 CVN, Kuznetsov, Piotr Velikiy, Moskva, FFG-46, Neustrashimy,
-Type 071; E-3A, E-2D) e **25 [S]** (Shilka per l'attribuzione di variante, Tor per l'interpretazione, Buk, Tunguska,
-S-300PS; 6 TVD/vista; Freya, Wassermann, AN-FPS-117; CV-59, Arleigh Burke, CG-65, Type 052B, Type 052C, Rezky,
-Type 054A, Grisha, Molniya, LHA-1; A-50). 3 senza valore (Chain-Home, Mammut, Type 093). Tutte le 25 [S] entrano nel
-registro dei dwell stimati (DW9-9, Appendice B).
+43 valori nuovi (decisi il 2026-11-17): **19 FONTE** (Gepard, Osa, Roland, Kub, Tor; 6 CVN, Kuznetsov, Piotr Velikiy,
+Moskva, FFG-46, Neustrashimy, Type 071; E-3A, E-2D) e **24 [S]** (Shilka per l'attribuzione di variante, Buk,
+Tunguska, S-300PS; 6 TVD/vista; Freya, Wassermann, AN-FPS-117; CV-59, Arleigh Burke, CG-65, Type 052B, Type 052C,
+Rezky, Type 054A, Grisha, Molniya, LHA-1; A-50). 3 senza valore (Chain-Home, Mammut, Type 093). Le 24 [S] entrano nel
+registro dei dwell stimati (DW9-9, Appendice B, prima tabella); i valori di FONTE scelti con la regola del valore
+centrale (Kub, Kuznetsov, Neustrashimy, Piotr Velikiy, Moskva; dei 10 EWR: P-12, P-37, 1L13, AMES Type 7, P-14) nella
+seconda tabella. Piu' i **10 EWR riallineati** (§2.3bis: 5 valori cambiati). Totale dei sensori con `dwell_time_s`
+dopo il piano: **53**, ognuno con `search_model` (§2.7).
+
+### 2.7 Chiave documentale `search_model` (DECISA DW9-2 = A2)
+
+In ogni dizionario di sensore che dichiara `dwell_time_s` si aggiunge, subito dopo, `'search_model': '<nome>'`
+(stringa non vuota): il nome del radar o della funzione di **ricerca** a cui il dwell si riferisce, anche quando
+coincide con `model`. Nessun codice di produzione la legge [V: le funzioni di punteggio dei tre registri leggono solo
+`capabilities` e `reliability`; nessuna funzione itera sulle chiavi dei dizionari dei sensori; nessun test ne
+controlla l'insieme delle chiavi (`Test_Vehicle_Data`, `Test_Ship_Data`, `Test_Aircraft_Data`, `Test_EWR_Data`,
+`Test_Mobile` leggono singole chiavi: `capabilities`, `reliability`, `antenna_height`, `dwell_time_s`; nessun
+confronto di un dizionario di sensore intero, nessun `len` o `keys()`): nessun test da ritoccare per la chiave nuova]. La verifica e' un test nuovo di
+`Test_Dwell_Data` (blocco 5).
+
+| Record | `search_model` |
+|---|---|
+| ZSU-23-4-Shilka | `1RL33 (search mode)` |
+| Flakpanzer-Gepard | `MPDR-12` |
+| 2K22-Tunguska | `1RL144 Hot Shot` |
+| 9A33-Osa | `Land Roll acquisition antenna` |
+| MIM-115-Roland | `MPDR-16` |
+| 9K331-Tor | `Scrum Half surveillance radar (all-round view)` |
+| 2K12-Kub | `1S11` |
+| 9K37-Buk | `9S18 Tube Arm` |
+| S-300PS | `5N64S Big Bird-B` |
+| Strela-1-9P31, MIM-72G-Chaparral, 9K35-Strela-10, M6-Linebacker (TVD), ZSU-57-2, M163-VADS (visual) | `crew visual search` |
+| FuMG-80-Freya / Wassermann / AN-FPS-117 | `FuMG 80 Freya` / `Wassermann` / `AN/FPS-117` |
+| 10 EWR di §2.3bis | `SCR-270`, `P-12`, `P-18`, `P-37`, `1L13`, `55Zh6`, `AN/TPS-43`, `AMES Type 7`, `AMES Type 80`, `P-14` |
+| CVN-70..75, FFG-46 | `AN/SPS-49` |
+| CV-59 / LHA-1 | `AN/SPS-43` / `AN/SPS-52` |
+| Kuznetsov, Neustrashimy, Piotr Velikiy | `Fregat-MA (MR-750)` |
+| Moskva | `MR-800 Top Pair` |
+| Arleigh Burke IIa / CG-65 | `AN/SPY-1D` / `AN/SPY-1A` |
+| Type 052B / Type 052C / Type 054A / Type 071 | `Type 381` / `Type 346` / `Type 382` / `Type 364` |
+| Rezky / Grisha / Molniya | `Head Net-C (MR-310U)` / `MR-302 Strut Curve` / `Band Stand (MR-331)` |
+| E-3A / E-2D / A-50 | `AN/APY-2` / `AN/APY-9` / `Shmel` |
 
 ---
 
@@ -368,6 +448,7 @@ registro dei dwell stimati (DW9-9, Appendice B).
 | A3 dwell per modo | `dwell_time_s` dentro `capabilities[modo][1]`, accanto ad `acquisition_range` | precisione per le navi con radar aria/mare diversi | cambia `Mobile._sensor_dwell_s` e i lettori (codice e test), ricolloca i 10 EWR; nessun effetto fisico (bersagli lenti: `g = 1`, §1.3 punto 3) |
 
 **Raccomandazione: A1.** Il codice garantisce gia' la regola "solo ricerca"; il resto e' documentazione.
+**DECISA (2026-11-17): A2** (DW9-2): `dwell_time_s` piu' `search_model` (§2.7).
 
 ### 3.2 Interruttore
 
@@ -385,7 +466,7 @@ usa solo con l'interruttore acceso (`Air_Route_Manager.py:1132`). Alternativa sc
 | R2 solo documento | tabella markdown | semplice | nessuna protezione contro record nuovi senza valore |
 | R3 costante nel registro | dizionario `DWELL_ESTIMATED` in `Vehicle_Data.py`/`Ship_Data.py`/`Aircraft_Data.py` | vicino al dato | codice di produzione che serve solo alla documentazione; tre moduli |
 
-**Raccomandazione: R1.**
+**Raccomandazione: R1. DECISA (2026-11-17): R1** (DW9-9).
 
 ### 3.4 Dwell fisso o variabile con distanza, modo e carico del radar (linea DECISA dall'utente, 2026-11-17)
 
@@ -432,17 +513,20 @@ piano. Le forme "N (fino a M)" (AMES Type 80) si leggono come regime base N, qui
 descrivono **funzioni diverse** (SPY-1: orizzonte contro sopra l'orizzonte) non sono un intervallo: si sceglie la
 funzione che vede i bersagli aerei e l'altro numero entra solo nella banda.
 
-**Effetto sui 10 EWR del contratto precedente**: non toccati (§2.3, nota; §6).
+**Effetto sui 10 EWR del contratto precedente**: riallineati a questa regola (DECISA DW9-10, §2.3bis, blocco 3bis):
+nel registro vale una regola sola.
 
 ---
 
-## 4. Decisioni aperte per l'utente
+## 4. Decisioni dell'utente (tutte prese il 2026-11-17)
 
-Una per volta, nell'ordine. Ogni decisione ha una raccomandazione; il piano di §5 e' scritto per le raccomandazioni e
-la tabella di §2 va aggiornata dal pianificatore prima dell'esecuzione se l'utente sceglie diversamente. Formula usata
+Ogni voce riporta in testa la decisione presa (**DECISA**), poi la domanda, le alternative e la raccomandazione come
+erano state presentate. Il piano di §5, le tabelle di §2 e le Appendici A e B sono scritti per le decisioni prese. Formula usata
 negli esempi: `Pd = g * Pd(d)`, `g = min(1, permanenza/dwell)`, `Pd(d) ~ 0,5` vicino al bordo del volume.
 
 ### DW9-1 — Buk e Tor: quale valore fisso dentro l'intervallo (dati in parte non verificati)
+
+**DECISA (2026-11-17)**: Buk **(a) 9,0 s**, resta [S] (fonte non verificata, valore centrale), banda 4,3-20 s. Tor **3,0 s, FONTE**: l'utente ha incollato la pagina GlobalSecurity (`Scrum Half - target engagementmissile tracking radar  SA-15 GAUNTLET  9K331 Tor.md`), che cita il regime normale ("main mode ... three seconds") e la vista circolare ("all-round view"): regola 1 di §3.5, banda 1-3 s. Il testo qui sotto e' la domanda come era stata posta.
 
 **Domanda.** Quale valore fisso, dentro l'intervallo di fonte, per il Buk e il Tor, i cui dati vengono in parte da
 una pagina (GlobalSecurity) che il controllo non riesce a leggere? Il modo del radar non si sceglie (§3.4): si sceglie
@@ -467,6 +551,8 @@ bordo); un passaggio radente di 6 s ha Pd ~ 0,5 x 6/9 = 0,33; con 4,5 s `g = 1` 
 
 ### DW9-2 — Dove sta il dwell nei record che fondono ricerca e inseguimento
 
+**DECISA (2026-11-17)**: **A2** = chiave `dwell_time_s` nel dizionario del sensore **piu'** chiave documentale `search_model` (nome del radar di ricerca, §2.7). Diversa dalla raccomandazione (A1). Nessun test o validatore dei registri controlla l'insieme delle chiavi dei sensori [V, §2.7]: nessun test da ritoccare; un test nuovo verifica `search_model` (blocco 5).
+
 **Domanda.** Il registro ha un solo dizionario `radar` per Buk, S-300PS, Tunguska, Gepard, Shilka, Kub, Tor; il suo
 `model` nomina spesso il radar di inseguimento. Come si scrive il dwell della **ricerca**?
 - (A1) **chiave `dwell_time_s` nel dizionario del sensore, commento che nomina il radar di ricerca** (nessun codice);
@@ -481,6 +567,8 @@ A1 si aggiunge `'dwell_time_s': 9.0` e il commento "ricerca 9S18 (non il 9S35 di
 Nel DES il Buk rileva un caccia entro 85 km con `g = min(1, permanenza/9)`; dopo il rilevamento il tiro (45 km) non legge il dwell.
 
 ### DW9-3 — Shilka: quale valore fisso dentro l'intervallo 3-18 s
+
+**DECISA (2026-11-17)**: **(b) 7,3 s [S]**, valore centrale della banda 3-18 s (l'utente non riconosce il modo circolare come regime normale unico). Diversa dalla raccomandazione (a).
 
 **Domanda.** Il manuale del 1RL33**M3** (ZSU-23-4M) da' tempi di rivisita fra 3 e 18 s secondo la geometria di
 ricerca: circolare a 20 gradi/s (18 s per giro, il modo base), circolare accelerata a 45-60 gradi/s (8-6 s), settore
@@ -503,6 +591,8 @@ passaggio ha `g = 1` (Pd 0,5) e la riduzione resta entro ~21 m dal bordo; con 3 
 
 ### DW9-4 — S-300PS e Tunguska: quale analogo
 
+**DECISA (2026-11-17)**: S-300PS **(a) 12 s [S]** (analogo 64N6/64N6E), banda 5-12 s; Tunguska **(a) 1,82 s [S]** (analogo 9A33-Osa), banda 1,0-4,0 s.
+
 **Domanda.** Nessuno dei due ha un dato per il proprio radar di ricerca.
 - **S-300PS** (ricerca reale: 5N64S "Big Bird-B", non trovato): (a) **12 s [S]** per confronto con il 64N6/64N6E
   (stessa famiglia "Big Bird", sistema successivo S-300PM; la cifra 12 s viene da GlobalSecurity non verificato e,
@@ -520,6 +610,8 @@ S-300PS il 76N6 copre solo la bassa quota.
 entro ~0,5 m. Tunguska (18 km): con 1-2 s la riduzione resta entro ~1-2 m dal bordo: nessun effetto pratico.
 
 ### DW9-5 — Navi
+
+**DECISA (2026-11-17)**: **tutte (a)**: SPS-49 5 s; Type 054A 2 s [S]; Molniya 7,1 s [S]; SPY-1 e Type 346 5 s [S]; regola generale della tabella §2.4 invariata.
 
 **Domanda.** Che regola per le 23 navi? Proposta (tabella §2.4): radar rotanti con dato -> FONTE con la regola di
 §3.5 (SPS-49 5 s, regime "default" citato; Fregat-MA 7,1 s e Top Pair 10 s, valori centrali; Type 364 2 s); fonti
@@ -541,6 +633,8 @@ Sotto-scelte:
 entro ~1,7 m. Bersagli navali (modo mare, 10-15 m/s) restano nel volume per ore: `g = 1` sempre.
 
 ### DW9-6 — Vista e TVD: quale valore fisso dentro l'intervallo 1,75-6,0 s, e nota di approssimazione
+
+**DECISA (2026-11-17)**: **(a) 3,2 s [S]** per vista e TVD, banda 1,75-6,0 s, con la nota di approssimazione nel codice, nel registro e nel manuale.
 
 **Domanda.** La vista non ha un periodo di rotazione. Poe 1974 (ADA017599, tabella 2) misura la durata di una passata
 completa del settore da osservatori a terra: 1,75-6,00 s fra tutte le passate, medie 2,72 / 2,99 / 3,94 s per settori
@@ -568,6 +662,8 @@ passaggio radente di 2 s ha Pd ~ 0,5 x 2/3,2 = 0,31 invece di 0,5; con 3,94 s 0,
 
 ### DW9-7 — AWACS
 
+**DECISA (2026-11-17)**: **(a) 10 s** a E-3A, E-2D e A-50 (A-50 FONTE DEBOLE [S]).
+
 **Domanda.** E-3A ed E-2D hanno un dato (6 giri/min = 10 s); l'A-50 solo una fonte divulgativa ("circa sei giri al
 minuto"). (a) **10 s a tutti e tre** (A-50 come FONTE DEBOLE [S], coincidente con l'analogo E-3A); (b) A-50 senza
 valore.
@@ -578,6 +674,8 @@ nessuno scenario li usa [V: nessun letterale negli scenari].
 **Esempio.** E-3A (400 km) contro un caccia a 450 m/s relativi: riduzione entro ~6 m dal bordo.
 
 ### DW9-8 — EWR senza dato e asset senza analogo credibile
+
+**DECISA (2026-11-17)**: **tutte (a)**: Freya e Wassermann 60 s [S] (analogo SCR-270; banda 30-60 s dopo il riallineamento dell'AMES Type 7, DW9-10); AN-FPS-117 10 s [S] (analogo AN-TPS-43); Chain-Home, Mammut e Type 093 senza valore con il motivo scritto.
 
 **Domanda.** (1) Freya e Wassermann (EWR tedeschi a rotazione, velocita' non data): (a) **60 s [S]** per confronto
 con lo SCR-270 (EWR, 1940, 1 giro/min: stessa classe ed epoca); (b) 7,5 s [S] con l'AMES Type 7 (radar GCI
@@ -592,6 +690,8 @@ senza analogo; sonar passivo in ascolto continuo); (b) valore dell'analogo piu' 
 6 km); con 7,5 s a ~0,6 m. Nessuno scenario usa gli EWR della seconda guerra mondiale: nessun effetto sulla fotografia.
 
 ### DW9-9 — Registro dei dwell stimati: file e formato
+
+**DECISA (2026-11-17)**: **R1** (`Registro_Dwell_Stimati.md` + costanti e test di completezza in `Test_Dwell_Data.py`).
 
 **Domanda.** Dove si raccolgono le stime da aggiornare?
 - (R1) **`Analysis/Document/Registro_Dwell_Stimati.md`** (contenuto iniziale in Appendice B: una riga per record [S]
@@ -608,9 +708,24 @@ FONTE, valore e test aggiornati).
 GlobalSecurity 9s18.htm (403), circolare 4,5-18 s; 3-14 giri/min radartutorial via ricerca | frase di fonte leggibile
 (GlobalSecurity o Jane's) | 2026-11-17 |`.
 
+### DW9-10 — Riallineare i 10 EWR del contratto precedente alla regola di §3.5 (nuova, da §6.12)
+
+**DECISA (2026-11-17)**: **(b) riallineare**, con un blocco di dati separato (blocco 3bis).
+
+**Domanda.** I 10 EWR valorizzati dal blocco A seguono DW-2 ("regime normale se citato, altrimenti rotazione piu'
+veloce"); i record nuovi seguono §3.5 ("altrimenti valore centrale"). (a) lasciarli com'erano (due regole nello
+stesso registro); (b) riallinearli alla regola di §3.5 (una regola sola).
+
+**Esito del ricalcolo** (tabella completa in §2.3bis): cambiano P-12 6 -> 13,4 s, P-37 10 -> 14,1, 1L13 10 -> 14,1,
+AMES Type 7 7,5 -> 30,0, P-14 10 -> 17,3; restano SCR-270 60, P-18 6, 55Zh6 10, AN-TPS-43 10, AMES Type 80 15
+(regime base "4 giri/min (fino a 6)" = regola 1).
+
+**Esempio.** Un bombardiere a 100 m/s che sfiora il volume dell'AMES Type 7 (140 km) per 20 s: con 7,5 s `g = 1`,
+Pd ~ 0,5; con 30 s `g = 0,67`, Pd ~ 0,33. Nessuno scenario della fotografia usa questi EWR (solo il P-18, invariato).
+
 ---
 
-## 5. Piano di intervento (per le raccomandazioni di §4)
+## 5. Piano di intervento (per le decisioni di §4)
 
 Branch unico `ai/oc-dwell-dw9` (o di `des-developer`), **un commit per blocco**, verifica parziale per blocco,
 suite e confronto completi solo alla fine (blocco 5). Se il codice reale non corrisponde (righe, nomi delle
@@ -646,8 +761,8 @@ le righe dei registri scorrono; l'esecutore localizza i record per **nome della 
    blocchi 1-5 (che con l'interruttore spento non cambiano nulla), ma va descritto nel rapporto.
 6. Copiare `log.txt` e `stats.json` delle tre passate in `Rapporti/Sonde_Dwell_D5/s4_rec|s4_min|s4_max/` e aggiornare
    il `LEGGIMI.md` della cartella (righe S-4).
-7. Dopo le decisioni DW9-1..DW9-9, se un valore o una banda cambia rispetto alla raccomandazione, aggiornare il
-   dizionario `VALUES` dello script e rieseguire almeno S-4/rec.
+7. Lo script dell'Appendice A ha gia' i valori decisi (DW9-1..DW9-10), compresi i 10 EWR riallineati; se in futuro
+   un valore o una banda cambia, aggiornare il dizionario `VALUES` e rieseguire almeno S-4/rec.
 
 ### Formato comune dei commenti nei registri (tutti i blocchi)
 
@@ -662,7 +777,11 @@ es. `Banda 1.0-4.0 s (analoghi Gepard, Osa, Pantsir).`); per i valori senza band
 `<ETICHETTA>` e testo sono quelli delle tabelle seguenti, **parola per parola**; l'esecutore puo' solo andare a capo
 per la larghezza di riga (le righe di commento continuano con `#` e due spazi). Nei dizionari che finiscono con
 `'reliability': {...}` senza virgola, aggiungere la virgola. In `Aircraft_Data.py` la chiave e' `"dwell_time_s"`
-(doppi apici, stile del file). Valori `float` con il punto (`18.0`, `1.82`).
+(doppi apici, stile del file). Valori `float` con il punto (`7.3`, `1.82`).
+
+**`search_model` (DW9-2 = A2)**: in ogni dizionario che riceve (o ha gia') `dwell_time_s`, la riga successiva e'
+`'search_model': '<nome>',` (in `Aircraft_Data.py` `"search_model": "<nome>",`) con il nome della tabella di §2.7,
+parola per parola. Nessun commento in piu' per questa chiave (la spiega l'intestazione del blocco 1.1).
 
 ### Blocco 1 — SAM e AAA con radar (9 record) + infrastruttura dei test e del registro
 
@@ -676,6 +795,8 @@ righe "Nuovi veicoli AAA ...":
 # D-5, DW-9 rivista (Proposta_Dwell_Estensione_DW9.md): 'dwell_time_s' [s] nel sensore = periodo di rivisita della
 # sola funzione di RICERCA (quella che da' 'acquisition_range'), anche quando 'model' nomina il radar di inseguimento
 # (Fire Dome, Flap Lid): il motore lo legge solo con la portata di acquisizione, mai per inseguimento o tiro.
+# 'search_model' (DW9-2): nome del radar o della funzione di ricerca a cui il dwell si riferisce; solo documentale,
+# nessun codice lo legge.
 # Valore FISSO per sensore: non dipende da distanza, modo o carico del radar (rinvio dichiarato, Proposta §3.4).
 # Intervalli di fonte: regime normale se citato, altrimenti valore centrale = media geometrica degli estremi del
 # periodo, un decimale (scelta [S]); l'intervallo e' riportato come "Banda <min>-<max> s".
@@ -683,16 +804,16 @@ righe "Nuovi veicoli AAA ...":
 # STIMA PER CONFRONTO [S] con l'analogo nominato. Stime [S] e bande in Analysis/Document/Registro_Dwell_Stimati.md.
 ```
 
-1.2 **Valori** (nel dizionario `radar`, dopo `'reliability'`):
+1.2 **Valori** (nel dizionario `radar`, dopo `'reliability'`; subito dopo, `search_model` di §2.7):
 
 | Variabile | Valore | Testo del commento dopo `# dwell_time_s <v>: ` |
 |---|---|---|
-| `ZSU_23_4_data` | `18.0` | `FONTE di variante, attribuzione STIMA [S] -- ricerca circolare 20 gradi/s del 1RL33M3 (manuale ZSU-23-4M; modo base = regime normale citato; accelerata 45-60 gradi/s e settore 30-100 gradi a 20 gradi/s danno 3-10 s) -> 360/20 (D); dato della variante M3 attribuito al 1RL33 base [S]. Conf. media.` (banda 3-18) |
+| `ZSU_23_4_data` | `7.3` | `FONTE di variante, valore centrale, attribuzione STIMA [S] -- ricerca del 1RL33M3 (manuale ZSU-23-4M): circolare 20 gradi/s = 18 s, accelerata 45-60 gradi/s = 8-6 s, settore 30-100 gradi a 20 gradi/s = 3-10 s; nessun regime normale unico (DW9-3) -> centrale di 3-18 s = 7,35 (D); dato della variante M3 attribuito al 1RL33 base [S]. Conf. media.` (banda 3-18) |
 | `Flakpanzer_Gepard_data` | `1.0` | `FONTE -- ricerca MPDR-12, 60 giri/min -> 60/60 (D). Conf. media-alta.` |
 | `K2K22_Tunguska_data` | `1.82` | `STIMA PER CONFRONTO [S] -- ricerca 1RL144 (giri/min non trovati; 1A26 e' il calcolatore): analogo 9A33-Osa Land Roll, 33 giri/min -> 60/33 (D).` (banda 1.0-4.0, analoghi Gepard, Osa, Pantsir) |
 | `A9A33_Osa_data` | `1.82` | `FONTE -- antenna di acquisizione Land Roll, 33 giri/min -> 60/33 = 1,818 (D, al centesimo). Conf. alta (due fonti secondarie).` |
 | `MIM115_Roland_data` | `1.0` | `FONTE -- ricerca MPDR-16, 60 giri/min -> 60/60 (D). Conf. media-alta.` |
-| `K9K331_Tor_data` | `1.7` | `FONTE, valore centrale, interpretazione [S] -- radar di scoperta 3D del Tor-M1: 'scanning interval 1 s' e intera zona di elevazione in 3 s (Air Power Australia), nessun regime normale da fonte leggibile -> centrale di 1-3 s (D); il 'modo principale 3 s' di GlobalSecurity NON e' verificato. Conf. media.` (banda 1-3) |
+| `K9K331_Tor_data` | `3.0` | `FONTE -- radar di scoperta 3D a vista circolare del Tor-M1 (32 gradi in elevazione): 'In the main mode, the scanning speed of the detection zone is three seconds', modo a tre fasci 1 s (GlobalSecurity, testo incollato dall'utente in Analysis/Document/Scrum Half - ... 9K331 Tor.md); concorde con Air Power Australia (zona di elevazione in 3 s). Regime normale citato. Conf. media-alta.` (banda 1-3) |
 | `K2K12_Kub_data` | `3.5` | `FONTE, valore centrale -- antenna di ricerca 1S11 del 1S91, 15 o 20 giri/min = 4 o 3 s (nessun regime normale citato) -> centrale 3,46 (D). Conf. media.` (banda 3-4) |
 | `K9K37_Buk_data` | `9.0` | `FONTE NON VERIFICATA [S], valore centrale -- ricerca 9S18 (non il 9S35 Fire Dome di inseguimento): giro circolare 4,5-18 s (GlobalSecurity, pagina non leggibile al controllo), nessun regime normale -> centrale 9,0 (D); 3-14 giri/min = 20-4,3 s dalla scheda 9S18M (via ricerca). Conf. bassa-media.` (banda 4.3-20) |
 | `S300PS_data` | `12.0` | `STIMA PER CONFRONTO [S] -- ricerca 5N64S Big Bird-B (giri/min non trovati; il 30N6 Flap Lid e' il radar d'ingaggio): analogo 64N6/64N6E della stessa famiglia, una rotazione ogni 12 s in regime regolare (fonte non verificata).` (banda 5-12) |
@@ -723,10 +844,10 @@ Costanti di modulo (nel blocco 1 solo la parte SAM/AAA; i blocchi successivi le 
 # D-5, DW-9 rivista: periodo di rivisita [s] della funzione di ricerca, per (registro, modello, sensore).
 SAM_AAA_DWELL_S = {
     'ZSU-23-4-Shilka': 18.0, 'Flakpanzer-Gepard': 1.0, '2K22-Tunguska': 1.82, '9A33-Osa': 1.82,
-    'MIM-115-Roland': 1.0, '9K331-Tor': 1.7, '2K12-Kub': 3.5, '9K37-Buk': 9.0, 'S-300PS': 12.0,
+    'MIM-115-Roland': 1.0, '9K331-Tor': 3.0, '2K12-Kub': 3.5, '9K37-Buk': 9.0, 'S-300PS': 12.0,
 }
 # Modelli con valore STIMATO [S] (registro Analysis/Document/Registro_Dwell_Stimati.md).
-DWELL_ESTIMATED = {'ZSU-23-4-Shilka', '2K22-Tunguska', '9K331-Tor', '9K37-Buk', 'S-300PS'}
+DWELL_ESTIMATED = {'ZSU-23-4-Shilka', '2K22-Tunguska', '9K37-Buk', 'S-300PS'}
 ```
 
 Classe **`TestSamAaaDwell(unittest.TestCase)`** (2 test):
@@ -751,7 +872,7 @@ punto 5).
   senza dwell." Se `build_detection_threat` restituisse None per quel record (es. per l'altezza d'antenna), usare
   `'Mammut'` e riferirlo.
 - test nuovo `test_sam_detection_threat_carries_the_search_dwell`: `_AssetStub(model='9K331-Tor',
-  category=gat.SAM_SMALL.value)` a quota 1000 m -> `threat.sensor == 'radar'` e `threat.dwell_time_s == 1.7`.
+  category=gat.SAM_SMALL.value)` a quota 1000 m -> `threat.sensor == 'radar'` e `threat.dwell_time_s == 3.0`.
 
 1.6 **`Analysis/Document/Registro_Dwell_Stimati.md`**: creato copiando l'Appendice B **cosi' com'e'** (tutte le righe,
 anche quelle dei blocchi successivi: e' il registro delle decisioni, non dello stato del codice) con la data del
@@ -765,8 +886,8 @@ commit.
 **File**: `Asset/Vehicle_Data.py`; `Test/Test_Dwell_Data.py`.
 
 2.1 **Valori** `3.2` nei dizionari `TVD` di `Strela1_9P31_data`, `MIM72G_Chaparral_data`, `K9K35_Strela10_data`,
-`M6_Linebacker_data` (dopo `'reliability'`) e `visual` di `ZSU_57_2_data`, `M163_VADS_data` (dopo `'capabilities'`).
-Commento (identico per i sei, salvo la parentesi):
+`M6_Linebacker_data` (dopo `'reliability'`) e `visual` di `ZSU_57_2_data`, `M163_VADS_data` (dopo `'capabilities'`);
+subito dopo, `'search_model': 'crew visual search',` (§2.7). Commento (identico per i sei, salvo la parentesi):
 
 ```
 # dwell_time_s 3.2: STIMA PER CONFRONTO [S], valore centrale -- ricerca a vista del servente (<parentesi>): Poe 1974
@@ -802,19 +923,20 @@ Commento (identico per i sei, salvo la parentesi):
 
 **File**: `Asset/Vehicle_Data.py`; `Test/Test_EWR_Data.py`; `Test/Test_Mobile.py`.
 
-3.1 **Valori** nel `radar` (dopo l'ultima chiave esistente del dizionario):
+3.1 **Valori** nel `radar` (dopo l'ultima chiave esistente del dizionario; subito dopo, `search_model` di §2.7):
 
 | Variabile | Valore | Testo del commento |
 |---|---|---|
-| `FuMG80_Freya_data` | `60.0` | `STIMA PER CONFRONTO [S] -- schiera orientabile, velocita' non data: analogo SCR-270 (EWR a rotazione del 1940, 1 giro/min). Banda 7.5-60 s (analoghi AMES Type 7 e SCR-270).` |
-| `Wassermann_data` | `60.0` | `STIMA PER CONFRONTO [S] -- traliccio ruotabile, velocita' non data: analogo SCR-270 (EWR a rotazione del 1940, 1 giro/min). Banda 7.5-60 s (analoghi AMES Type 7 e SCR-270).` |
+| `FuMG80_Freya_data` | `60.0` | `STIMA PER CONFRONTO [S] -- schiera orientabile, velocita' non data: analogo SCR-270 (EWR a rotazione del 1940, 1 giro/min). Banda 30-60 s (analoghi AMES Type 7 riallineato, 30 s, e SCR-270).` |
+| `Wassermann_data` | `60.0` | `STIMA PER CONFRONTO [S] -- traliccio ruotabile, velocita' non data: analogo SCR-270 (EWR a rotazione del 1940, 1 giro/min). Banda 30-60 s (analoghi AMES Type 7 riallineato, 30 s, e SCR-270).` |
 | `AN_FPS117_data` | `10.0` | `STIMA PER CONFRONTO [S] -- rotazione non riportata dalla ricerca (il valore noto fuori ricerca non si usa): analogo AN-TPS-43 (EWR 3D statunitense, 6 giri/min).` |
 
 In `Mammut_data`, nel `radar`, solo il commento: `# nessun dwell_time_s: schiera fissa a scansione elettronica su
 100 gradi, cadenza non data, nessun analogo credibile (Chain-Home, l'altro radar fisso, non ha periodo). D-5 DW-9.`
 Chain-Home: commento esistente invariato.
 
-3.2 **`Test/Test_EWR_Data.py`** (`:468-490`): `EWR_DWELL_S` con i 3 valori in piu' e commento aggiornato ("... ;
+3.2 **`Test/Test_EWR_Data.py`** (`:468-490`): `EWR_DWELL_S` con i 3 valori in piu' (la forma finale della costante,
+con i 10 EWR riallineati, e' in 3bis.3) e commento aggiornato ("... ;
 Freya e Wassermann 60 e AN-FPS-117 10: stime per confronto [S], DW-9 rivista"); `EWR_WITHOUT_DWELL = ('Chain-Home',
 'Mammut')` con commento "illuminazione continua; schiera fissa senza cadenza ne' analogo". Docstring della classe:
 "... dei 13 EWR con un valore".
@@ -825,6 +947,58 @@ Freya e Wassermann 60 e AN-FPS-117 10: stime per confronto [S], DW-9 rivista"); 
 
 3.5 **Verifica parziale**: `Test_EWR_Data`, `Test_Mobile`, `Test_Dwell_Data`. Test nuovi: **0** (solo `subTest` in
 piu').
+
+### Blocco 3bis — Riallineamento dei 10 EWR del contratto precedente (DW9-10)
+
+Blocco di soli dati, separato dal blocco 3 (che aggiunge i 3 EWR nuovi). Si esegue dopo il blocco 3 e prima del 4.
+
+**File**: `Asset/Vehicle_Data.py`; `Test/Test_EWR_Data.py`; `Test/Test_Dwell_Data.py`.
+
+3bis.1 **Intestazione EWR** (`Vehicle_Data.py:4659-4661`, blocco "Nuovi EWR (D-4b)"): la riga
+`# Intervalli di giri/min (scelta [S], DW-2): regime normale se la fonte lo cita, altrimenti rotazione piu' veloce.`
+diventa:
+
+```
+# Intervalli di giri/min (scelta [S], Proposta_Dwell_Estensione_DW9.md §3.5, DW9-10, che sostituisce DW-2): regime
+# normale se la fonte lo cita, altrimenti valore centrale = media geometrica degli estremi del periodo (un decimale);
+# l'intervallo e' riportato come "Banda <min>-<max> s". 'search_model' = radar di ricerca (solo documentale).
+```
+
+3bis.2 **Valori e commenti**: in ciascun record la riga `# dwell_time_s ...` esistente e il valore si sostituiscono
+con quelli della tabella (testo parola per parola, a capo libero); subito dopo `dwell_time_s` si aggiunge
+`'search_model'` (§2.7). Per i record con "invariato" si cambia solo il commento come indicato (o nulla) e si
+aggiunge `search_model`.
+
+| Variabile | Valore | Testo del commento dopo `# dwell_time_s <v>: ` |
+|---|---|---|
+| `SCR270_data` | `60.0` (invariato) | commento invariato |
+| `P12_Yenisei_data` | `13.4` (era 6.0) | `FONTE, valore centrale fra fonti discordanti [S] -- 10 giri/min [W-P12] contro 2-6 giri/min [AC-P12], nessun regime normale: banda 2-10 giri/min = 30-6 s -> centrale radice di 180 = 13,42 (D). Banda 6-30 s. Conf. media. D-5 DW9-10.` |
+| `P18_Terek_data` | `6.0` (invariato) | commento invariato |
+| `P37_Mech_data` | `14.1` (era 10.0) | `FONTE, valore centrale -- 3-6 giri/min (nessun regime normale citato) = 20-10 s -> centrale radice di 200 = 14,14 (D). Banda 10-20 s. Conf. media. D-5 DW9-10.` |
+| `Nebo_SV_1L13_data` | `14.1` (era 10.0) | `FONTE, valore centrale -- 3-6 giri/min (nessun regime normale citato) = 20-10 s -> centrale radice di 200 = 14,14 (D). Banda 10-20 s. Conf. media. D-5 DW9-10.` |
+| `Nebo_55Zh6_data` | `10.0` (invariato) | commento invariato |
+| `AN_TPS43_data` | `10.0` (invariato) | commento invariato |
+| `AMES_Type7_data` | `30.0` (era 7.5) | `FONTE, valore centrale -- 0,5-8 giri/min (nessun regime normale citato) = 120-7,5 s -> centrale radice di 900 = 30,0 (D). Banda 7.5-120 s. Conf. media. D-5 DW9-10.` |
+| `AMES_Type80_data` | `15.0` (invariato) | `FONTE 4 giri/min (fino a 6); 4 letto come regime base = regime normale, STIMA/interpretazione [S] (la fonte non dice 'normale'; regola 1 di §3.5) -> 60/4 (D). Banda 10-15 s. D-5 DW9-10.` |
+| `P14_Lena_data` | `17.3` (era 10.0) | `FONTE, valore centrale -- 2-6 giri/min (nessun regime normale citato) = 30-10 s -> centrale radice di 300 = 17,32 (D). Banda 10-30 s. Conf. media. D-5 DW9-10.` |
+
+3bis.3 **Test e costanti che dipendono dai valori EWR** [V: ricerca dei modelli EWR in `Test/`]:
+- `Test/Test_EWR_Data.py:468-476`: `EWR_DWELL_S` diventa `{'SCR-270': 60.0, 'P-12-Yenisei': 13.4, 'P-18-Terek': 6.0,
+  'P-37-Mech': 14.1, '1L13-Nebo-SV': 14.1, '55Zh6-Nebo': 10.0, 'AN-TPS-43': 10.0, 'AMES-Type-7': 30.0,
+  'AMES-Type-80': 15.0, 'P-14-Lena': 17.3, 'FuMG-80-Freya': 60.0, 'Wassermann': 60.0, 'AN-FPS-117': 10.0}` (gli ultimi
+  tre dal blocco 3); commento sopra la costante: `# D-5, DW-9 rivista (DW9-10): regime normale se citato, altrimenti
+  valore centrale (media geometrica); AMES-Type-80 15: regime base 4 giri/min [S]; P-12 13.4: centrale fra fonti
+  discordanti [S]; Freya, Wassermann, AN-FPS-117: stime per confronto [S].` Nessun test nuovo (`subTest`).
+- `Test/Test_Mobile.py` (`TestDetectionDwellTime`, P-18 6.0 a `:1424-1425`, `:1472`), `Test/Test_Threat_AA_Factory.py`
+  (`test_ewr_detection_threat_carries_the_dwell`, P-18 6.0, `:488-495`) e `Test/Test_Session_Scenarios_S32.py`
+  (`EWR_SOURCE_DWELL_S = 6.0`, `:65`, P-18): **invariati**, perche' il P-18 non cambia. Nessun altro test usa un EWR
+  con dwell.
+- `Test_Dwell_Data.py`: nessun modello dei 10 EWR in `DWELL_ESTIMATED` salvo `'P-12-Yenisei'` e `'AMES-Type-80'`
+  (interpretazioni [S]); i valori di `EWR_DWELL_S` entrano nel test di completezza (blocco 5) per import.
+
+3bis.4 **Verifica parziale**: `Test_EWR_Data`, `Test_Mobile`, `Test_Threat_AA_Factory`, `Test_Dwell_Data`,
+`Test_Session_Scenarios_S32`. Test nuovi: **0**.
+
 
 ### Blocco 4 — Navi (22 record con valore, 1 senza)
 
@@ -839,7 +1013,7 @@ piu').
 ```
 
 4.2 **Valori** nel `radar`, dopo `'reliability'`, allineati allo stile del file (`'dwell_time_s': 5.0,`); qui la
-frase della banda e' gia' dentro il testo del commento:
+frase della banda e' gia' dentro il testo del commento; subito dopo `dwell_time_s`, `search_model` di §2.7:
 
 | Variabile | Valore | Testo del commento |
 |---|---|---|
@@ -880,7 +1054,7 @@ della CVN porta ora 5,0 s; `test_ship_uses_mast_height` non lo legge). Test nuov
 `Asset/Mobile.py` (solo docstring); `Test/Scenario_Baseline.py` (solo docstring).
 
 5.1 **Valori** `10.0` nel `"radar"` di `e3a_data`, `e2d_data`, `a50_data`, dopo `"reliability"` (e dopo `"type"` dove
-c'e'):
+c'e'); subito dopo, `"search_model"` di §2.7:
 
 | Variabile | Testo del commento |
 |---|---|
@@ -893,7 +1067,7 @@ Sopra `e2d_data` (`# ==================== US AWACS & RECON ====================`
 
 5.2 **`Test_Dwell_Data.py`**: `AWACS_DWELL_S = {'E-3A Sentry': 10.0, 'E-2D Advanced Hawkeye': 10.0, 'A-50': 10.0}`,
 `'A-50'` in `DWELL_ESTIMATED`; `NO_DWELL = {'Chain-Home': 'illuminazione continua', 'Mammut': 'schiera fissa senza
-cadenza ne' analogo', 'Type 093': 'sonar passivo'}` (completo). Classe **`TestDwellScope`** (3 test):
+cadenza ne' analogo', 'Type 093': 'sonar passivo'}` (completo). Classe **`TestDwellScope`** (4 test):
 1. `test_awacs_dwell_values`: i 3 valori nel `radar`.
 2. `test_non_awacs_aircraft_declare_no_dwell`: per ogni record di `Aircraft_Data._registry` che non e' in
    `AWACS_DWELL_S`, nessun dizionario fra `radar`, `TVD` (se dizionari) contiene `dwell_time_s` (decisione 1
@@ -904,6 +1078,9 @@ cadenza ne' analogo', 'Type 093': 'sonar passivo'}` (completo). Classe **`TestDw
    nell'insieme dei modelli con valore; i valori del registro coincidono con l'unione di `SAM_AAA_DWELL_S`,
    `VISUAL_DWELL_S` (TVD e vista), `SHIP_DWELL_S`, `AWACS_DWELL_S` e di `EWR_DWELL_S` importato da
    `Test_EWR_Data` (import con percorso completo). Il messaggio d'errore elenca i modelli fuori regola.
+4. `test_every_dwell_names_its_search_radar` (DW9-2 = A2): in tutti e tre i registri, ogni dizionario di sensore che
+   contiene `dwell_time_s` contiene anche `search_model`, stringa non vuota; nessun dizionario ha `search_model` senza
+   `dwell_time_s`. Costante `SEARCH_MODEL` (la tabella di §2.7, per modello) e confronto dei valori.
 
 5.3 **Testi del codice** (nessuna istruzione cambia):
 - `Logic/Engagement_Resolver.py:172-173` (docstring "Permanenza nel volume"): "oggi solo nei 10 radar EWR" ->
@@ -913,10 +1090,11 @@ cadenza ne' analogo', 'Type 093': 'sonar passivo'}` (completo). Classe **`TestDw
 - `Asset/Mobile.py:1692-1702` (docstring di `detection_dwell_time`): una frase "Il dwell e' quello della funzione di
   RICERCA del sensore (DW-9 rivista): si legge con la portata di acquisizione, non entra nell'inseguimento".
 - `Test/Scenario_Baseline.py` (sezione "Permanenza nel volume dopo la D-5", `:176-180`): una frase in coda "I valori
-  della DW-9 rivista (SAM, AAA, TVD, vista, navi, AWACS) non cambiano nessuna esecuzione: interruttore spento; S32
-  `ewr_on` (acceso) legge il dwell visivo della ZSU-57-2 con permanenze di oltre 60 s (`g = 1`)."
+  della DW-9 rivista (SAM, AAA, TVD, vista, navi, AWACS; 10 EWR riallineati, DW9-10) non cambiano nessuna esecuzione:
+  interruttore spento; S32 `ewr_on` (acceso) legge il dwell visivo della ZSU-57-2 con permanenze di oltre 60 s
+  (`g = 1`) e il P-18, invariato."
 
-5.4 **Verifica finale** (con `tools/ai/verifica.sh`, mai in parallelo): suite, poi confronto. Test nuovi: **3**.
+5.4 **Verifica finale** (con `tools/ai/verifica.sh`, mai in parallelo): suite, poi confronto. Test nuovi: **4**.
 
 ### 5.5 Riepilogo dei test
 
@@ -925,11 +1103,12 @@ cadenza ne' analogo', 'Type 093': 'sonar passivo'}` (completo). Classe **`TestDw
 | 1 | `Test_Dwell_Data.py` (nuovo), `Test_Threat_AA_Factory.py`, `Test_Mobile.py` | 2 + 1 = **3** | 2 (`test_records_without_dwell_give_none`, `test_sensor_without_dwell_gives_none`) |
 | 2 | `Test_Dwell_Data.py` | **2** | — |
 | 3 | `Test_EWR_Data.py`, `Test_Mobile.py`, `Test_Dwell_Data.py` | **0** | 3 (costanti `EWR_DWELL_S`, `EWR_WITHOUT_DWELL`; riga FPS-117) |
+| 3bis | `Test_EWR_Data.py`, `Test_Dwell_Data.py` | **0** | 1 (costante `EWR_DWELL_S`: 5 valori cambiati, commento) |
 | 4 | `Test_Dwell_Data.py` | **2** | — |
-| 5 | `Test_Dwell_Data.py` | **3** | — |
-| Totale | | **10** | |
+| 5 | `Test_Dwell_Data.py` | **4** | — |
+| Totale | | **11** | |
 
-Suite attesa alla fine: **`Ran 4924 tests`, `OK (skipped=7)`**, sulla base dell'ultima suite valida letta in
+Suite attesa alla fine: **`Ran 4925 tests`, `OK (skipped=7)`** (4914 + 11), sulla base dell'ultima suite valida letta in
 `.ai-run/suite.log` (osboxes, 2026-11-13 08:53): `Ran 4914 tests`, `OK (skipped=7)`. **La base va riletta prima di
 iniziare** (i commit successivi, `dad7c66f` e `412faa7b`, toccano solo testi e memoria [V: messaggi di commit], ma la
 suite non e' stata rieseguita).
@@ -942,8 +1121,8 @@ suite non e' stata rieseguita).
 - **Interruttore**: `Engagement_Resolver.D5_DWELL_TIME = False`, invariato; nessun interruttore nuovo (§3.2).
 - **Nomi stabili**: nessuna unita', variante o asset nuovo in `Test/Scenario_Baseline.py`; nessun nome esistente
   cambia. Le chiavi del registro sono quelle esistenti (`'ZSU-23-4-Shilka'`, `'CVN-70 Carl Vinson'`, `'A-50'`, ...).
-- **Costanti**: nessuna costante del motore. I valori sono dati del registro con etichetta: 18 FONTE, 25 [S]
-  dichiarate nel commento e nel registro dei dwell stimati (§2.6). `VISUAL_DWELL_S` in test replica il dato.
+- **Costanti**: nessuna costante del motore. I valori sono dati del registro con etichetta: dei 43 nuovi 19 FONTE e 24 [S],
+  piu' i 10 EWR riallineati (§2.3bis), dichiarati nel commento e nel registro dei dwell stimati (§2.6). `VISUAL_DWELL_S` in test replica il dato.
 - **Core indifferente al simulatore**: dati nei registri del core, nessun import dall'adapter DCS.
 - **Import** con il percorso completo; nessuna classe base condivisa nuova nei test; logger mockato come negli altri
   `Test_*.py`.
@@ -966,6 +1145,9 @@ suite non e' stata rieseguita).
     richiederebbero uscite di 6 s fra due passaggi, che in S32 (un solo sorvolo) non ci sono [I, da confermare con
     S-4/max]. Anche il test `test_ewr_source_dwell_changes_nothing_at_medium_altitude` resta valido (confronta solo
     munizioni e Detection del P-18).
+- **10 EWR riallineati (blocco 3bis)**: nessuno scenario della fotografia usa un EWR salvo il P-18 di S32 (`ewr_off`,
+  `ewr_on`), il cui valore non cambia (6 s) [V: ricerca dei letterali dei 15 EWR nei file degli scenari e in
+  `Scenario_Fixtures.py`/`Scenario_Baseline.py`]: nessuna esecuzione puo' cambiare, nemmeno con l'interruttore acceso.
 - **Una sola esecuzione cambiata e' un errore** (valore nel sensore sbagliato, o un dato finito per sbaglio in un
   aereo non AWACS): l'esecutore si ferma e riferisce.
 
@@ -980,7 +1162,9 @@ criterio del blocco 0 (punto 5) prima di proporre l'accensione, che resta una de
 - **Manuale DES** (`des-manual-writer`): cap. 4 §4.36 (`05_Strato2_Risolutore_Ingaggio.md:2967`, paragrafo "Il
   dato": famiglie valorizzate, regola "solo ricerca", nota di approssimazione per vista e TVD, rimando al registro);
   `10_Limiti_Estensioni_Divergenze.md:381` (voce "Dwell dichiarato solo per 10 radar EWR; DW-9 aperto" sostituita:
-  DW-9 rivista, 43 valori di cui 25 stime, 3 senza valore, aerei non AWACS esclusi; valore fisso per sensore con
+  DW-9 rivista, 43 valori di cui 24 stime, 3 senza valore, aerei non AWACS esclusi; 10 EWR riallineati alla regola
+  del valore centrale (DW9-10, che sostituisce DW-2: P-12 13,4, P-37 e 1L13 14,1, AMES Type 7 30, P-14 17,3 s);
+  chiave documentale `search_model`; valore fisso per sensore con
   banda di incertezza; vista/TVD approssimazione; esito delle tre passate S-4; **rinvio dichiarato** del "dwell
   dipendente da distanza, modo e carico del radar", da fare insieme all'orizzonte radar nel DES e a una legge
   cumulativa (Koopman/esponenziale), con i quattro motivi di §3.4 e il riferimento qualitativo `Dinamica dei Tempi di
@@ -988,12 +1172,14 @@ criterio del blocco 0 (punto 5) prima di proporre l'accensione, che resta una de
   `11a_Atlante_Risolutore.md` se elenca i record con dwell.
 - **`F4_Differenze_Scenari.md`**: sezione "D-5, DW-9 rivista (2026-11-xx)": nessuna esecuzione cambiata con
   l'interruttore spento; esito delle tre passate della sonda S-4 con l'interruttore acceso (e la frase del criterio:
-  scelta dentro l'intervallo irrilevante, oppure i numeri); famiglie e conteggi (18 FONTE, 25 [S]).
+  scelta dentro l'intervallo irrilevante, oppure i numeri); famiglie e conteggi (19 FONTE, 24 [S]; 10 EWR riallineati,
+  5 valori cambiati).
 - **`Piano_Implementazione_Missione.md`**: nella riga "D-5 (Pd con permanenza)" di §5, stato "valori estesi (DW-9
-  rivista)", interruttore ancora spento.
+  rivista; 10 EWR riallineati, DW9-10)", interruttore ancora spento.
 - **`Rapporti/Sonde_Dwell_D5/LEGGIMI.md`**: riga S-4 (sessione principale, blocco 0).
-- **`Proposta_Dwell_Time_Rilevamento.md`**: NON si modifica (contratto dei blocchi A e B); se serve, una nota della
-  sessione principale in testa che rimanda a questo documento.
+- **`Proposta_Dwell_Time_Rilevamento.md`**: NON si modifica (contratto dei blocchi A e B); una nota della sessione
+  principale in testa che rimanda a questo documento e' consigliata, perche' i valori di 5 EWR della sua tabella A.1
+  e la regola DW-2 sono superati da DW9-10.
 
 ### 5.9 Esecutore consigliato
 
@@ -1001,7 +1187,7 @@ criterio del blocco 0 (punto 5) prima di proporre l'accensione, che resta una de
 |---|---|---|
 | 0 (sonda S-4) | sessione principale | sonda di sola lettura, lettura del confronto; gli agenti oc non hanno i permessi per il confronto parziale |
 | 1 | `oc-developer` (alternativa `des-developer`) | dati e commenti testuali dati parola per parola; l'unica parte nuova e' lo scheletro di `Test_Dwell_Data.py`, descritto per intero |
-| 2, 3, 4 | `oc-developer` | solo dati e costanti di test, nessuna logica |
+| 2, 3, 3bis, 4 | `oc-developer` | solo dati e costanti di test, nessuna logica |
 | 5 | `oc-developer` (alternativa `des-developer` se il blocco 1 ha avuto intoppi) | test di completezza con un minimo di logica sugli insiemi; docstring; suite e confronto completi |
 
 Un solo branch, blocchi in sequenza con verifica parziale fra uno e l'altro (memoria del progetto: blocchi piccoli,
@@ -1017,25 +1203,13 @@ suite e confronto completi solo alla fine).
    sono tiratori, ogni rilevamento perso puo' cambiare un tiro, ma servono passaggi di pochi secondi nel volume; nelle
    545 esecuzioni provate nessuna cambia. Il volo basso "non visto" richiede l'orizzonte radar nel DES (attivita'
    separata, DW-7).
-2. **25 valori su 43 sono stime [S]**, alcune deboli: Buk e S-300PS poggiano su una pagina non leggibile; il Tor su
-   un'interpretazione; la Shilka su una variante successiva (M3); SPY-1 e Type 382 su fonti di confidenza bassa; i
+2. **24 valori su 43 sono stime [S]**, alcune deboli: Buk e S-300PS poggiano su una pagina non leggibile; la Shilka
+   su una variante successiva (M3) e sul valore centrale di una banda larga (3-18 s); il Tor e' ora FONTE grazie al
+   testo GlobalSecurity incollato dall'utente (non riletto sul web dal controllo); SPY-1 e Type 382 su fonti di confidenza bassa; i
    radar navali senza dato su analoghi. Il registro dei dwell stimati (DW9-9) e' il punto di raccolta per chiuderle.
 3. **Vista e TVD con L1 sono un'approssimazione dichiarata**: la scoperta a vista e' cumulativa (Koopman; Poe 1974: un
    colpo d'occhio ogni ~0,33 s, probabilita' che cresce col tempo); L1 con 3,2 s riduce la Pd solo sotto i 3,2 s di
    permanenza e non la fa crescere oltre `Pd(d)` per permanenze lunghe. Da rivedere con una legge cumulativa.
-10. **Rinvio dichiarato: dwell dipendente da distanza, modo e carico del radar** (linea dell'utente, §3.4). Il valore
-    e' fisso per sensore; l'adattivita' dei radar a scansione elettronica (priorita' dei bersagli, ricerca/inseguimento,
-    settore/360 gradi, integrazione degli impulsi a distanza, clutter e disturbo: riferimento qualitativo `Dinamica dei
-    Tempi di Aggiornamento Radar - Google Gemini.md`, senza numeri utilizzabili) non e' modellata. Da riprendere
-    insieme all'orizzonte radar nel DES e a una legge cumulativa (Koopman/esponenziale), non prima: la distanza e' gia'
-    in `Pd(d)` e il motore non ha stato di modo del radar.
-11. **Valore fisso dentro una banda**: per Buk (4,3-20 s), Top Pair e Piotr Velikiy (5-20 s), SPY-1 (5-60 s), Shilka
-    (3-18 s) la banda e' larga; l'effetto della scelta e' misurato dalle passate S-4/min e S-4/max (blocco 0). Un esito
-    diverso fra le passate torna all'utente.
-12. **Due regole per gli intervalli nello stesso registro**: i 10 EWR del contratto precedente hanno la rotazione piu'
-    veloce (DW-2), i record nuovi il valore centrale (§3.5). Per P-37, 1L13, P-14 e AMES Type 7 i valori centrali
-    sarebbero 14,1 / 14,1 / 17,3 / 30 s invece di 10 / 10 / 10 / 7,5. Questo piano non li tocca (fuori dalla linea
-    dell'utente); il riallineamento, se voluto, e' un intervento separato da decidere (nessuno scenario usa gli EWR).
 4. **Un dwell per sensore, non per modo**: le navi con radar aria/mare diversi usano il valore della ricerca aerea
    anche in mare (nessun effetto: bersagli lenti, §1.3).
 5. **Un sensore per asset; portata e dwell dallo stesso sensore solo con `acquisition_range`** [V]. Nel DES
@@ -1081,6 +1255,21 @@ suite e confronto completi solo alla fine).
 9. **Le sonde provano i valori in memoria**, non il codice scritto: se l'esecutore mettesse un valore nel sensore
    sbagliato (es. nel `radar` di un mezzo che vede con il `visual`), il confronto con l'interruttore spento non lo
    vedrebbe; lo vedono `Test_Dwell_Data` (blocchi 1-5) e la S-4 rieseguita dopo il merge con il codice reale.
+10. **Rinvio dichiarato: dwell dipendente da distanza, modo e carico del radar** (linea dell'utente, §3.4). Il valore
+    e' fisso per sensore; l'adattivita' dei radar a scansione elettronica (priorita' dei bersagli, ricerca/inseguimento,
+    settore/360 gradi, integrazione degli impulsi a distanza, clutter e disturbo: riferimento qualitativo `Dinamica dei
+    Tempi di Aggiornamento Radar - Google Gemini.md`, senza numeri utilizzabili) non e' modellata. Da riprendere
+    insieme all'orizzonte radar nel DES e a una legge cumulativa (Koopman/esponenziale), non prima: la distanza e' gia'
+    in `Pd(d)` e il motore non ha stato di modo del radar.
+11. **Valore fisso dentro una banda**: per Buk (4,3-20 s), Top Pair e Piotr Velikiy (5-20 s), SPY-1 (5-60 s), Shilka
+    (3-18 s), AMES Type 7 (7,5-120 s), P-12 (6-30 s) e P-14 (10-30 s) la banda e' larga; l'effetto della scelta e' misurato dalle passate S-4/min e S-4/max (blocco 0). Un esito
+    diverso fra le passate torna all'utente.
+12. **Una regola sola per gli intervalli (DW9-10)**: i 10 EWR del contratto precedente sono riallineati alla regola di
+    §3.5 (blocco 3bis): P-12 6 -> 13,4 s, P-37 e 1L13 10 -> 14,1, AMES Type 7 7,5 -> 30, P-14 10 -> 17,3; invariati
+    SCR-270, P-18, 55Zh6, AN-TPS-43, AMES Type 80. Il **P-12** applica il valore centrale a una **contraddizione fra
+    fonti** (10 contro 2-6 giri/min), non a un intervallo di una fonte sola: e' una scelta [S] dichiarata (con la sola
+    fonte principale resterebbe 6 s). La tabella A.1 e la regola DW-2 di `Proposta_Dwell_Time_Rilevamento.md` sono
+    superate per questi valori; il documento non si modifica (contratto storico). Nessuno scenario usa questi EWR.
 
 ---
 
@@ -1121,16 +1310,22 @@ HEAD_NET = (7.1, 5.0, 10.0)
 SPY1 = (5.0, 5.0, 60.0)
 # famiglia -> {(registro, modello, sensore): (raccomandato, minimo, massimo)}; banda assente = tre valori uguali
 VALUES = {
-    'sam_aaa': {(V, 'ZSU-23-4-Shilka', 'radar'): (18.0, 3.0, 18.0), (V, 'Flakpanzer-Gepard', 'radar'): (1.0, 1.0, 1.0),
+    'sam_aaa': {(V, 'ZSU-23-4-Shilka', 'radar'): (7.3, 3.0, 18.0), (V, 'Flakpanzer-Gepard', 'radar'): (1.0, 1.0, 1.0),
                 (V, '2K22-Tunguska', 'radar'): (1.82, 1.0, 4.0), (V, '9A33-Osa', 'radar'): (1.82, 1.82, 1.82),
-                (V, 'MIM-115-Roland', 'radar'): (1.0, 1.0, 1.0), (V, '9K331-Tor', 'radar'): (1.7, 1.0, 3.0),
+                (V, 'MIM-115-Roland', 'radar'): (1.0, 1.0, 1.0), (V, '9K331-Tor', 'radar'): (3.0, 1.0, 3.0),
                 (V, '2K12-Kub', 'radar'): (3.5, 3.0, 4.0), (V, '9K37-Buk', 'radar'): (9.0, 4.3, 20.0),
                 (V, 'S-300PS', 'radar'): (12.0, 5.0, 12.0)},
     'tvd_vista': {(V, m, s): VISTA for m, s in (('Strela-1-9P31', 'TVD'), ('MIM-72G-Chaparral', 'TVD'),
                                                ('9K35-Strela-10', 'TVD'), ('M6-Linebacker', 'TVD'),
                                                ('ZSU-57-2', 'visual'), ('M163-VADS', 'visual'))},
-    'ewr': {(V, 'FuMG-80-Freya', 'radar'): (60.0, 7.5, 60.0), (V, 'Wassermann', 'radar'): (60.0, 7.5, 60.0),
-            (V, 'AN-FPS-117', 'radar'): (10.0, 10.0, 10.0)},
+    'ewr': {(V, 'FuMG-80-Freya', 'radar'): (60.0, 30.0, 60.0), (V, 'Wassermann', 'radar'): (60.0, 30.0, 60.0),
+            (V, 'AN-FPS-117', 'radar'): (10.0, 10.0, 10.0),
+            # i 10 EWR del contratto precedente, riallineati (DW9-10, §2.3bis)
+            (V, 'SCR-270', 'radar'): (60.0, 60.0, 60.0), (V, 'P-12-Yenisei', 'radar'): (13.4, 6.0, 30.0),
+            (V, 'P-18-Terek', 'radar'): (6.0, 6.0, 6.0), (V, 'P-37-Mech', 'radar'): (14.1, 10.0, 20.0),
+            (V, '1L13-Nebo-SV', 'radar'): (14.1, 10.0, 20.0), (V, '55Zh6-Nebo', 'radar'): (10.0, 10.0, 10.0),
+            (V, 'AN-TPS-43', 'radar'): (10.0, 10.0, 10.0), (V, 'AMES-Type-7', 'radar'): (30.0, 7.5, 120.0),
+            (V, 'AMES-Type-80', 'radar'): (15.0, 10.0, 15.0), (V, 'P-14-Lena', 'radar'): (17.3, 10.0, 30.0)},
     'navi': {(S, m, 'radar'): v for m, v in (
         ('CVN-70 Carl Vinson', SPS49), ('CVN-71 Theodore Roosevelt', SPS49), ('CVN-72 Abraham Lincoln', SPS49),
         ('CVN-73 George Washington', SPS49), ('CVN-74 John C. Stennis', SPS49), ('CVN-75 Harry S. Truman', SPS49),
@@ -1211,9 +1406,8 @@ Per chiudere una riga: fonte leggibile -> etichetta FONTE nel commento del regis
 
 | Record | Sensore (funzione di ricerca) | Valore [s] | Banda di incertezza [s] | Etichetta | Base | Che cosa serve per chiuderla | Data |
 |---|---|---|---|---|---|---|---|
-| ZSU-23-4-Shilka | radar (1RL33, ricerca circolare) | 18.0 | 3-18 | FONTE di variante, attribuzione [S] | manuale 1RL33M3 (ZSU-23-4M), 20 gradi/s, modo base | dato del 1RL33 base (1965) | 2026-11-17 |
+| ZSU-23-4-Shilka | radar (1RL33, ricerca) | 7.3 | 3-18 | FONTE di variante, valore centrale, attribuzione [S] | manuale 1RL33M3 (ZSU-23-4M): circolare 18 s, accelerata 8-6 s, settore 3-10 s; centrale (DW9-3) | dato del 1RL33 base (1965) e del suo regime normale | 2026-11-17 |
 | 2K22-Tunguska | radar (1RL144) | 1.82 | 1.0-4.0 | STIMA PER CONFRONTO [S] | 9A33-Osa Land Roll, 33 giri/min (analoghi: Gepard 1 s, Pantsir 2-4 s) | giri/min del 1RL144 (manuale 2S6) | 2026-11-17 |
-| 9K331-Tor | radar (scoperta 3D) | 1.7 | 1-3 | FONTE, valore centrale, interpretazione [S] | APA: "scanning interval 1 s", zona di elevazione in 3 s | frase GlobalSecurity "main mode 3 s" leggibile (-> 3,0 s) o fonte primaria | 2026-11-17 |
 | 9K37-Buk | radar (ricerca 9S18) | 9.0 | 4.3-20 | FONTE NON VERIFICATA [S], valore centrale | GlobalSecurity 9s18.htm (403), circolare 4,5-18 s; 3-14 giri/min radartutorial via ricerca | frase di fonte leggibile (GlobalSecurity, Jane's) | 2026-11-17 |
 | S-300PS | radar (ricerca 5N64S) | 12.0 | 5-12 | STIMA PER CONFRONTO [S] | 64N6/64N6E, rotazione ogni 12 s regolare (GlobalSecurity non verificato; P1: 6/12 giri/min) | giri/min del 5N64S | 2026-11-17 |
 | Strela-1-9P31 | TVD (vista del servente) | 3.2 | 1.75-6.0 | STIMA PER CONFRONTO [S], valore centrale, APPROSSIMAZIONE L1 | Poe 1974, passata del settore 1,75-6,00 s | legge cumulativa (Koopman) o tempo di scoperta misurato | 2026-11-17 |
@@ -1222,8 +1416,8 @@ Per chiudere una riga: fonte leggibile -> etichetta FONTE nel commento del regis
 | M6-Linebacker | TVD (vista del servente) | 3.2 | 1.75-6.0 | idem | idem | idem; cueing radar non modellato | 2026-11-17 |
 | ZSU-57-2 | visual | 3.2 | 1.75-6.0 | idem | idem | idem | 2026-11-17 |
 | M163-VADS | visual | 3.2 | 1.75-6.0 | idem | idem | idem | 2026-11-17 |
-| FuMG-80-Freya | radar | 60.0 | 7.5-60 | STIMA PER CONFRONTO [S] | SCR-270, 1 giro/min (analogo alternativo AMES Type 7) | velocita' di rotazione del Freya | 2026-11-17 |
-| Wassermann | radar | 60.0 | 7.5-60 | STIMA PER CONFRONTO [S] | SCR-270, 1 giro/min (analogo alternativo AMES Type 7) | velocita' di rotazione del Wassermann | 2026-11-17 |
+| FuMG-80-Freya | radar | 60.0 | 30-60 | STIMA PER CONFRONTO [S] | SCR-270, 1 giro/min (analogo alternativo AMES Type 7, 30 s dopo DW9-10) | velocita' di rotazione del Freya | 2026-11-17 |
+| Wassermann | radar | 60.0 | 30-60 | STIMA PER CONFRONTO [S] | SCR-270, 1 giro/min (analogo alternativo AMES Type 7, 30 s dopo DW9-10) | velocita' di rotazione del Wassermann | 2026-11-17 |
 | AN-FPS-117 | radar | 10.0 | — | STIMA PER CONFRONTO [S] | AN-TPS-43, 6 giri/min | giri/min dell'AN/FPS-117 da fonte leggibile | 2026-11-17 |
 | CV-59 USS Forrestal | radar (AN/SPS-43) | 5.0 | 5-10 | STIMA PER CONFRONTO [S] | AN/SPS-49 | giri/min dell'AN/SPS-43 | 2026-11-17 |
 | USS Arleigh Burke IIa | radar (AN/SPY-1D) | 5.0 | 5-60 | FONTE DEBOLE [S] | infobox "1 (orizzonte), 12 (sopra l'orizzonte) scan/min" | periodo di volume search dichiarato | 2026-11-17 |
@@ -1236,10 +1430,27 @@ Per chiudere una riga: fonte leggibile -> etichetta FONTE nel commento del regis
 | FSG 1241.1MP Molniya | radar (record con Band Stand, radar di tiro) | 7.1 | 5-10 | STIMA PER CONFRONTO [S] | Head Net-A (valore centrale) | radar di ricerca della corvetta e suoi giri/min | 2026-11-17 |
 | LHA-1 Tarawa | radar (AN/SPS-52) | 5.0 | 5-10 | STIMA PER CONFRONTO [S] | AN/SPS-49 | giri/min dell'AN/SPS-52 | 2026-11-17 |
 | A-50 | radar (Shmel) | 10.0 | — | FONTE DEBOLE [S] | divulgativo "circa sei giri al minuto" | seconda fonte o fonte tecnica | 2026-11-17 |
+| P-12-Yenisei | radar | 13.4 | 6-30 | FONTE, valore centrale fra fonti discordanti [S] (DW9-10) | 10 giri/min [W-P12] contro 2-6 giri/min [AC-P12] | fonte che risolva la contraddizione | 2026-11-17 |
+| AMES-Type-80 | radar | 15.0 | 10-15 | FONTE, interpretazione [S] (regime base letto come normale) | "4 giri/min (fino a 6)" | fonte che dica il regime normale | 2026-11-17 |
 
-Bande dei valori di FONTE (per completezza, non sono stime): 2K12-Kub 3.5 (3-4); CVN-70..75 e FFG-46 5.0 (5-10);
-Kuznetsov e Neustrashimy 7.1 (5-10); Piotr Velikiy 7.1 (5-20); Moskva 10.0 (5-20). Gli altri valori di fonte sono
-valori unici.
+**Valori di fonte scelti con la regola del valore centrale** (stima per scelta di regola dentro un intervallo di
+fonte, NON per mancanza di dato; si chiudono con una fonte che citi il regime normale):
+
+| Record | Sensore | Valore [s] | Banda di incertezza [s] | Intervallo di fonte | Data |
+|---|---|---|---|---|---|
+| 2K12-Kub | radar (1S11) | 3.5 | 3-4 | 15 o 20 giri/min (radartutorial) | 2026-11-17 |
+| CV 1143.5 Admiral Kuznetsov | radar (Fregat-MA) | 7.1 | 5-10 | 12 o 6 giri/min | 2026-11-17 |
+| FFG 11540 Neustrashimy | radar (Fregat-MA) | 7.1 | 5-10 | 12 o 6 giri/min | 2026-11-17 |
+| CGN 1144.2 Piotr Velikiy | radar (Fregat-MA; Top Pair) | 7.1 | 5-20 | 12 o 6 giri/min; Top Pair 3-12 | 2026-11-17 |
+| CG 1164 Moskva | radar (MR-800 Top Pair) | 10.0 | 5-20 | 3-12 giri/min | 2026-11-17 |
+| P-37-Mech | radar | 14.1 | 10-20 | 3-6 giri/min (DW9-10; era 10 s con DW-2) | 2026-11-17 |
+| 1L13-Nebo-SV | radar | 14.1 | 10-20 | 3-6 giri/min (DW9-10; era 10 s) | 2026-11-17 |
+| AMES-Type-7 | radar | 30.0 | 7.5-120 | 0,5-8 giri/min (DW9-10; era 7,5 s) | 2026-11-17 |
+| P-14-Lena | radar | 17.3 | 10-30 | 2-6 giri/min (DW9-10; era 10 s) | 2026-11-17 |
+
+Bande degli altri valori di fonte (regime normale citato): 9K331-Tor 3.0 (1-3, "main mode", testo GlobalSecurity
+incollato dall'utente); CVN-70..75 e FFG-46 5.0 (5-10, default 12 giri/min). Gli altri valori di fonte sono valori
+unici.
 
 Senza valore (motivo): Chain-Home (illuminazione continua); Mammut (schiera fissa, cadenza non data, nessun analogo);
 Type 093 (sonar passivo). Aerei non AWACS: esclusi per decisione dell'utente.
@@ -1253,8 +1464,8 @@ insieme all'orizzonte radar nel DES e a una legge cumulativa (Koopman/esponenzia
 
 | # | Dove | Incongruenza | Effetto sul piano |
 |---|---|---|---|
-| C-1 | D2 §2.3 (Tor) | Conclude "settore di 32 gradi in azimut, **non** 360 gradi", ma l'estratto APA che cita ("can be revolved mechanically through 32 deg with a detection zone of 32 to 64 deg") descrive un'inclinazione in **elevazione** (zona 32-64 gradi); P1 riportava "scansione circolare" e la stessa D2 cita "the entire elevation zone covers 32 deg". La lettura "settore in azimut" non e' sostenuta dagli estratti [I] | il valore 1 s resta; il significato ("periodo di rivisita di una ricerca circolare") e' un'interpretazione [S] |
-| C-2 | D2 §2.3 | Confidenza "A (due fonti concordi)" con una delle due (GlobalSecurity) non leggibile al controllo | al massimo M (APA sola) |
+| C-1 | D2 §2.3 (Tor) | Conclude "settore di 32 gradi in azimut, **non** 360 gradi", ma l'estratto APA che cita ("can be revolved mechanically through 32 deg with a detection zone of 32 to 64 deg") descrive un'inclinazione in **elevazione**; P1 riportava "scansione circolare". **Confermato dalla pagina GlobalSecurity incollata dall'utente** (2026-11-17): "radar station of the all- round view", "One beam is able to overlap a sector at 32 ° in elevation" [V sul file]. La lettura di D2 e' errata | ricerca a vista circolare; valore 3,0 s (regime normale "main mode"), FONTE (DW9-1) |
+| C-2 | D2 §2.3 | Confidenza "A (due fonti concordi)" quando GlobalSecurity non era leggibile al controllo | dopo il testo incollato dall'utente le due fonti (GlobalSecurity, APA) concordano su 3 s e 1 s: M-A |
 | C-3 | D2 §2.1 (Buk) | "GlobalSecurity, letta direttamente", mentre P1 la dava 402/403 e "via ricerca" e la sessione principale riceve 403; la cella "4; five; 6; 9, -6" indica una pagina tradotta a macchina | valore trattato come FONTE NON VERIFICATA [S] |
 | C-4 | P1 §3 contro D2 §2.4 (64N6E) | P1: "6 o 12 rpm -> 10 s o 5 s"; D2: "una rotazione ogni 12 s -> 5 rpm" (e 6/12 s in inseguimento). Le due bozze danno periodi diversi per lo stesso radar | l'analogo dello S-300PS (12 s) e' incerto anche nel numero: DW9-4 |
 | C-5 | P1 §6 contro D3 §2.6.2 (Type 381) | P1: "un mirror riporta 5 rpm"; D3: "i mirror riportano lo stesso testo, senza valore" | nessun valore di fonte: si usa l'analogo |
