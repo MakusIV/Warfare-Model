@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695ff177-5a7a-4644-9469-5c6efb8cb41e
-  modified: 2026-11-14
+  modified: 2026-11-17
 ---
 
 ## RIPRESA (fine sessione ProArt 2026-11-14) — LEGGERE PER PRIMO: manuale DES verificato a pezzi e committato (WIP), commenti nel codice sistemati, pushato

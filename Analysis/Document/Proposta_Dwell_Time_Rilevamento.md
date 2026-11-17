@@ -1,5 +1,10 @@
 # Proposta: tempo di permanenza `dwell_time_s` e Pd dipendente dalla permanenza nel DES (D-5, opzione 2)
 
+> **Nota (2026-11-17)**: la tabella A.1 dei valori EWR e la regola DW-2 sono **superate** per 4 EWR (P-37, 1L13,
+> AMES Type 7, P-14) da `Proposta_Dwell_Estensione_DW9.md` (DW9-10: valore centrale degli intervalli; DW-9 rivista
+> estende inoltre i valori a SAM, AAA, TVD, vista, navi e AWACS). Il resto del documento resta il contratto dei
+> blocchi A e B.
+
 **Stato: DEFINITIVA (decisioni DW-1..DW-9 prese dall'utente il 2026-11-06).** Bozza scritta il 2026-11-05,
 completata il 2026-11-06.
 - **Decisioni**: tutte prese (§3): DW-1 (a), DW-2 "regime normale se citato, altrimenti rotazione piu' veloce"

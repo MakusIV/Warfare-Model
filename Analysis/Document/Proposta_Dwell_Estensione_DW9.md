@@ -35,7 +35,7 @@ del confronto con la fotografia, senza installare nulla.
 **Che cosa cambia.** Solo **dati**: la chiave opzionale `dwell_time_s` (periodo di rivisita della funzione di
 **ricerca**) entra nel dizionario del sensore di 43 record (9 SAM/AAA con radar, 4 SAM con TVD, 2 AAA a vista, 3 EWR,
 22 navi, 3 AWACS), sempre accompagnata dalla chiave documentale `search_model` (nome del radar o della funzione di
-ricerca, DW9-2 = A2); i 10 EWR gia' valorizzati sono riallineati alla regola di §3.5 (5 valori cambiano, DW9-10) e
+ricerca, DW9-2 = A2); i 10 EWR gia' valorizzati sono riallineati alla regola di §3.5 (4 valori cambiano, DW9-10) e
 ricevono anch'essi `search_model`. Nessuna riga del motore cambia: la legge L1 `Pd = min(1, permanenza/dwell) x Pd(d)`, i lettori e
 l'interruttore esistono gia' dal blocco A [V]. L'interruttore resta **`Engagement_Resolver.D5_DWELL_TIME = False`**
 (`Logic/Engagement_Resolver.py:592`): non serve un interruttore nuovo (§3.2).
@@ -341,7 +341,7 @@ periodo, un decimale"), cosi' che nello stesso registro valga una regola sola. D
 | Record (variabile) | Dato di fonte (riga) | Regola applicata | Attuale [s] | Nuovo [s] | Banda [s] | Etichetta |
 |---|---|---|---|---|---|---|
 | `SCR-270` (`SCR270_data`) | 1 giro/min (`:203`) | valore unico | 60.0 | **60.0** | — | FONTE |
-| `P-12-Yenisei` (`P12_Yenisei_data`) | 10 giri/min [W-P12] contro 2-6 giri/min [AC-P12] (`:231`), contraddizione fra fonti, nessun regime normale | centrale della banda fra le due fonti, 2-10 giri/min = 30-6 s: radice di 180 = 13,42 | 6.0 | **13.4** | 6-30 | FONTE, valore centrale fra fonti discordanti [S] |
+| `P-12-Yenisei` (`P12_Yenisei_data`) | 10 giri/min [W-P12] contro 2-6 giri/min [AC-P12] (`:231`), contraddizione fra fonti | fonte principale [W-P12] (scelta dell'utente, 2026-11-17); [AC-P12] solo nella banda | 6.0 | **6.0** | 6-30 | FONTE (fonte principale; discordanza dichiarata) |
 | `P-18-Terek` (`P18_Terek_data`) | 10 giri/min (`:263`) | valore unico | 6.0 | **6.0** | — | FONTE |
 | `P-37-Mech` (`P37_Mech_data`) | 3-6 giri/min (P-37; i 6-7 giri/min sono del P-35, `:291`) | centrale di 10-20 s: radice di 200 = 14,14 | 10.0 | **14.1** | 10-20 | FONTE, valore centrale |
 | `1L13-Nebo-SV` (`Nebo_SV_1L13_data`) | 3-6 giri/min (`:309`) | centrale di 10-20 s | 10.0 | **14.1** | 10-20 | FONTE, valore centrale |
@@ -351,10 +351,10 @@ periodo, un decimale"), cosi' che nello stesso registro valga una regola sola. D
 | `AMES-Type-80` (`AMES_Type80_data`) | "4 giri/min (fino a 6)" (`:338`) | forma "N (fino a M)": regime base 4 giri/min = regime normale (regola 1 di §3.5, interpretazione [S] gia' dichiarata) | 15.0 | **15.0** | 10-15 | FONTE, interpretazione [S] |
 | `P-14-Lena` (`P14_Lena_data`) | 2-6 giri/min (`:246`) | centrale di 10-30 s: radice di 300 = 17,32 | 10.0 | **17.3** | 10-30 | FONTE, valore centrale |
 
-**Cambiano 5 valori** (P-12, P-37, 1L13, AMES Type 7, P-14); i tre che la nota precedente indicava (P-37/1L13 14,1,
-P-14 17,3, Type 7 30) sono confermati sui dati; il **P-12** si aggiunge perche' le sue due fonti discordanti formano
-un intervallo (dubbio residuo dichiarato: se si considera fonte principale [W-P12] da sola, il valore resterebbe 6 s
-con banda 6-30; la regola del piano prende il centrale). Restano invariati SCR-270, P-18, 55Zh6, AN-TPS-43 e AMES
+**Cambiano 4 valori** (P-37, 1L13, AMES Type 7, P-14), confermati sui dati. Il **P-12** resta 6 s: le sue due fonti
+sono discordanti (10 contro 2-6 giri/min) e l'utente ha scelto la **fonte principale** [W-P12] (2026-11-17); la
+fonte discordante [AC-P12] entra solo nella banda di incertezza 6-30 s (provata dalle passate estreme della S-4). Non
+e' un valore centrale ne' una stima: e' FONTE con discordanza dichiarata. Restano invariati SCR-270, P-18, 55Zh6, AN-TPS-43 e AMES
 Type 80. I valori centrali sono **scelte di regola dentro un intervallo di fonte**, non stime per mancanza di dato:
 entrano nella seconda tabella del registro (Appendice B), come quelli di Kub e delle navi con Fregat-MA o Top Pair.
 Uso negli scenari: solo il **P-18** (S32-DWELL `ewr_off`/`ewr_on`), invariato [V: ricerca dei letterali negli scenari].
@@ -397,8 +397,8 @@ Moskva, FFG-46, Neustrashimy, Type 071; E-3A, E-2D) e **24 [S]** (Shilka per l'a
 Tunguska, S-300PS; 6 TVD/vista; Freya, Wassermann, AN-FPS-117; CV-59, Arleigh Burke, CG-65, Type 052B, Type 052C,
 Rezky, Type 054A, Grisha, Molniya, LHA-1; A-50). 3 senza valore (Chain-Home, Mammut, Type 093). Le 24 [S] entrano nel
 registro dei dwell stimati (DW9-9, Appendice B, prima tabella); i valori di FONTE scelti con la regola del valore
-centrale (Kub, Kuznetsov, Neustrashimy, Piotr Velikiy, Moskva; dei 10 EWR: P-12, P-37, 1L13, AMES Type 7, P-14) nella
-seconda tabella. Piu' i **10 EWR riallineati** (§2.3bis: 5 valori cambiati). Totale dei sensori con `dwell_time_s`
+centrale (Kub, Kuznetsov, Neustrashimy, Piotr Velikiy, Moskva; dei 10 EWR: P-37, 1L13, AMES Type 7, P-14) nella
+seconda tabella. Piu' i **10 EWR riallineati** (§2.3bis: 4 valori cambiati; il P-12 resta 6 s, fonte principale). Totale dei sensori con `dwell_time_s`
 dopo il piano: **53**, ognuno con `search_model` (§2.7).
 
 ### 2.7 Chiave documentale `search_model` (DECISA DW9-2 = A2)
@@ -716,7 +716,7 @@ GlobalSecurity 9s18.htm (403), circolare 4,5-18 s; 3-14 giri/min radartutorial v
 veloce"); i record nuovi seguono §3.5 ("altrimenti valore centrale"). (a) lasciarli com'erano (due regole nello
 stesso registro); (b) riallinearli alla regola di §3.5 (una regola sola).
 
-**Esito del ricalcolo** (tabella completa in §2.3bis): cambiano P-12 6 -> 13,4 s, P-37 10 -> 14,1, 1L13 10 -> 14,1,
+**Esito del ricalcolo** (tabella completa in §2.3bis): cambiano P-37 10 -> 14,1 s, 1L13 10 -> 14,1,
 AMES Type 7 7,5 -> 30,0, P-14 10 -> 17,3; restano SCR-270 60, P-18 6, 55Zh6 10, AN-TPS-43 10, AMES Type 80 15
 (regime base "4 giri/min (fino a 6)" = regola 1).
 
@@ -972,7 +972,7 @@ aggiunge `search_model`.
 | Variabile | Valore | Testo del commento dopo `# dwell_time_s <v>: ` |
 |---|---|---|
 | `SCR270_data` | `60.0` (invariato) | commento invariato |
-| `P12_Yenisei_data` | `13.4` (era 6.0) | `FONTE, valore centrale fra fonti discordanti [S] -- 10 giri/min [W-P12] contro 2-6 giri/min [AC-P12], nessun regime normale: banda 2-10 giri/min = 30-6 s -> centrale radice di 180 = 13,42 (D). Banda 6-30 s. Conf. media. D-5 DW9-10.` |
+| `P12_Yenisei_data` | `6.0` (invariato) | `FONTE, fonte principale -- 10 giri/min [W-P12] -> 60/10 (D); [AC-P12] da' 2-6 giri/min (discordanza dichiarata, non usata per il valore). Banda 6-30 s. Conf. media. D-5 DW9-10.` |
 | `P18_Terek_data` | `6.0` (invariato) | commento invariato |
 | `P37_Mech_data` | `14.1` (era 10.0) | `FONTE, valore centrale -- 3-6 giri/min (nessun regime normale citato) = 20-10 s -> centrale radice di 200 = 14,14 (D). Banda 10-20 s. Conf. media. D-5 DW9-10.` |
 | `Nebo_SV_1L13_data` | `14.1` (era 10.0) | `FONTE, valore centrale -- 3-6 giri/min (nessun regime normale citato) = 20-10 s -> centrale radice di 200 = 14,14 (D). Banda 10-20 s. Conf. media. D-5 DW9-10.` |
@@ -983,18 +983,18 @@ aggiunge `search_model`.
 | `P14_Lena_data` | `17.3` (era 10.0) | `FONTE, valore centrale -- 2-6 giri/min (nessun regime normale citato) = 30-10 s -> centrale radice di 300 = 17,32 (D). Banda 10-30 s. Conf. media. D-5 DW9-10.` |
 
 3bis.3 **Test e costanti che dipendono dai valori EWR** [V: ricerca dei modelli EWR in `Test/`]:
-- `Test/Test_EWR_Data.py:468-476`: `EWR_DWELL_S` diventa `{'SCR-270': 60.0, 'P-12-Yenisei': 13.4, 'P-18-Terek': 6.0,
+- `Test/Test_EWR_Data.py:468-476`: `EWR_DWELL_S` diventa `{'SCR-270': 60.0, 'P-12-Yenisei': 6.0, 'P-18-Terek': 6.0,
   'P-37-Mech': 14.1, '1L13-Nebo-SV': 14.1, '55Zh6-Nebo': 10.0, 'AN-TPS-43': 10.0, 'AMES-Type-7': 30.0,
   'AMES-Type-80': 15.0, 'P-14-Lena': 17.3, 'FuMG-80-Freya': 60.0, 'Wassermann': 60.0, 'AN-FPS-117': 10.0}` (gli ultimi
   tre dal blocco 3); commento sopra la costante: `# D-5, DW-9 rivista (DW9-10): regime normale se citato, altrimenti
-  valore centrale (media geometrica); AMES-Type-80 15: regime base 4 giri/min [S]; P-12 13.4: centrale fra fonti
-  discordanti [S]; Freya, Wassermann, AN-FPS-117: stime per confronto [S].` Nessun test nuovo (`subTest`).
+  valore centrale (media geometrica); AMES-Type-80 15: regime base 4 giri/min [S]; P-12 6: fonte principale, fonti
+  discordanti (banda 6-30); Freya, Wassermann, AN-FPS-117: stime per confronto [S].` Nessun test nuovo (`subTest`).
 - `Test/Test_Mobile.py` (`TestDetectionDwellTime`, P-18 6.0 a `:1424-1425`, `:1472`), `Test/Test_Threat_AA_Factory.py`
   (`test_ewr_detection_threat_carries_the_dwell`, P-18 6.0, `:488-495`) e `Test/Test_Session_Scenarios_S32.py`
   (`EWR_SOURCE_DWELL_S = 6.0`, `:65`, P-18): **invariati**, perche' il P-18 non cambia. Nessun altro test usa un EWR
   con dwell.
-- `Test_Dwell_Data.py`: nessun modello dei 10 EWR in `DWELL_ESTIMATED` salvo `'P-12-Yenisei'` e `'AMES-Type-80'`
-  (interpretazioni [S]); i valori di `EWR_DWELL_S` entrano nel test di completezza (blocco 5) per import.
+- `Test_Dwell_Data.py`: nessun modello dei 10 EWR in `DWELL_ESTIMATED` salvo `'AMES-Type-80'`
+  (interpretazione [S]); i valori di `EWR_DWELL_S` entrano nel test di completezza (blocco 5) per import.
 
 3bis.4 **Verifica parziale**: `Test_EWR_Data`, `Test_Mobile`, `Test_Threat_AA_Factory`, `Test_Dwell_Data`,
 `Test_Session_Scenarios_S32`. Test nuovi: **0**.
@@ -1103,7 +1103,7 @@ cadenza ne' analogo', 'Type 093': 'sonar passivo'}` (completo). Classe **`TestDw
 | 1 | `Test_Dwell_Data.py` (nuovo), `Test_Threat_AA_Factory.py`, `Test_Mobile.py` | 2 + 1 = **3** | 2 (`test_records_without_dwell_give_none`, `test_sensor_without_dwell_gives_none`) |
 | 2 | `Test_Dwell_Data.py` | **2** | — |
 | 3 | `Test_EWR_Data.py`, `Test_Mobile.py`, `Test_Dwell_Data.py` | **0** | 3 (costanti `EWR_DWELL_S`, `EWR_WITHOUT_DWELL`; riga FPS-117) |
-| 3bis | `Test_EWR_Data.py`, `Test_Dwell_Data.py` | **0** | 1 (costante `EWR_DWELL_S`: 5 valori cambiati, commento) |
+| 3bis | `Test_EWR_Data.py`, `Test_Dwell_Data.py` | **0** | 1 (costante `EWR_DWELL_S`: 4 valori cambiati, commento) |
 | 4 | `Test_Dwell_Data.py` | **2** | — |
 | 5 | `Test_Dwell_Data.py` | **4** | — |
 | Totale | | **11** | |
@@ -1163,7 +1163,8 @@ criterio del blocco 0 (punto 5) prima di proporre l'accensione, che resta una de
   dato": famiglie valorizzate, regola "solo ricerca", nota di approssimazione per vista e TVD, rimando al registro);
   `10_Limiti_Estensioni_Divergenze.md:381` (voce "Dwell dichiarato solo per 10 radar EWR; DW-9 aperto" sostituita:
   DW-9 rivista, 43 valori di cui 24 stime, 3 senza valore, aerei non AWACS esclusi; 10 EWR riallineati alla regola
-  del valore centrale (DW9-10, che sostituisce DW-2: P-12 13,4, P-37 e 1L13 14,1, AMES Type 7 30, P-14 17,3 s);
+  del valore centrale (DW9-10, che sostituisce DW-2: P-37 e 1L13 14,1, AMES Type 7 30, P-14 17,3 s; P-12
+  resta 6 s, fonte principale con fonte discordante nella banda);
   chiave documentale `search_model`; valore fisso per sensore con
   banda di incertezza; vista/TVD approssimazione; esito delle tre passate S-4; **rinvio dichiarato** del "dwell
   dipendente da distanza, modo e carico del radar", da fare insieme all'orizzonte radar nel DES e a una legge
@@ -1173,12 +1174,12 @@ criterio del blocco 0 (punto 5) prima di proporre l'accensione, che resta una de
 - **`F4_Differenze_Scenari.md`**: sezione "D-5, DW-9 rivista (2026-11-xx)": nessuna esecuzione cambiata con
   l'interruttore spento; esito delle tre passate della sonda S-4 con l'interruttore acceso (e la frase del criterio:
   scelta dentro l'intervallo irrilevante, oppure i numeri); famiglie e conteggi (19 FONTE, 24 [S]; 10 EWR riallineati,
-  5 valori cambiati).
+  4 valori cambiati).
 - **`Piano_Implementazione_Missione.md`**: nella riga "D-5 (Pd con permanenza)" di §5, stato "valori estesi (DW-9
   rivista; 10 EWR riallineati, DW9-10)", interruttore ancora spento.
 - **`Rapporti/Sonde_Dwell_D5/LEGGIMI.md`**: riga S-4 (sessione principale, blocco 0).
 - **`Proposta_Dwell_Time_Rilevamento.md`**: NON si modifica (contratto dei blocchi A e B); una nota della sessione
-  principale in testa che rimanda a questo documento e' consigliata, perche' i valori di 5 EWR della sua tabella A.1
+  principale in testa che rimanda a questo documento e' consigliata, perche' i valori di 4 EWR della sua tabella A.1
   e la regola DW-2 sono superati da DW9-10.
 
 ### 5.9 Esecutore consigliato
@@ -1265,10 +1266,9 @@ suite e confronto completi solo alla fine).
     (3-18 s), AMES Type 7 (7,5-120 s), P-12 (6-30 s) e P-14 (10-30 s) la banda e' larga; l'effetto della scelta e' misurato dalle passate S-4/min e S-4/max (blocco 0). Un esito
     diverso fra le passate torna all'utente.
 12. **Una regola sola per gli intervalli (DW9-10)**: i 10 EWR del contratto precedente sono riallineati alla regola di
-    §3.5 (blocco 3bis): P-12 6 -> 13,4 s, P-37 e 1L13 10 -> 14,1, AMES Type 7 7,5 -> 30, P-14 10 -> 17,3; invariati
-    SCR-270, P-18, 55Zh6, AN-TPS-43, AMES Type 80. Il **P-12** applica il valore centrale a una **contraddizione fra
-    fonti** (10 contro 2-6 giri/min), non a un intervallo di una fonte sola: e' una scelta [S] dichiarata (con la sola
-    fonte principale resterebbe 6 s). La tabella A.1 e la regola DW-2 di `Proposta_Dwell_Time_Rilevamento.md` sono
+    §3.5 (blocco 3bis): P-37 e 1L13 10 -> 14,1 s, AMES Type 7 7,5 -> 30, P-14 10 -> 17,3; invariati SCR-270, P-12,
+    P-18, 55Zh6, AN-TPS-43, AMES Type 80. Il **P-12** ha due fonti discordanti (10 contro 2-6 giri/min): vale la fonte
+    principale (6 s, scelta dell'utente), la discordante e' solo nella banda 6-30 s. La tabella A.1 e la regola DW-2 di `Proposta_Dwell_Time_Rilevamento.md` sono
     superate per questi valori; il documento non si modifica (contratto storico). Nessuno scenario usa questi EWR.
 
 ---
@@ -1321,7 +1321,7 @@ VALUES = {
     'ewr': {(V, 'FuMG-80-Freya', 'radar'): (60.0, 30.0, 60.0), (V, 'Wassermann', 'radar'): (60.0, 30.0, 60.0),
             (V, 'AN-FPS-117', 'radar'): (10.0, 10.0, 10.0),
             # i 10 EWR del contratto precedente, riallineati (DW9-10, §2.3bis)
-            (V, 'SCR-270', 'radar'): (60.0, 60.0, 60.0), (V, 'P-12-Yenisei', 'radar'): (13.4, 6.0, 30.0),
+            (V, 'SCR-270', 'radar'): (60.0, 60.0, 60.0), (V, 'P-12-Yenisei', 'radar'): (6.0, 6.0, 30.0),
             (V, 'P-18-Terek', 'radar'): (6.0, 6.0, 6.0), (V, 'P-37-Mech', 'radar'): (14.1, 10.0, 20.0),
             (V, '1L13-Nebo-SV', 'radar'): (14.1, 10.0, 20.0), (V, '55Zh6-Nebo', 'radar'): (10.0, 10.0, 10.0),
             (V, 'AN-TPS-43', 'radar'): (10.0, 10.0, 10.0), (V, 'AMES-Type-7', 'radar'): (30.0, 7.5, 120.0),
@@ -1430,7 +1430,6 @@ Per chiudere una riga: fonte leggibile -> etichetta FONTE nel commento del regis
 | FSG 1241.1MP Molniya | radar (record con Band Stand, radar di tiro) | 7.1 | 5-10 | STIMA PER CONFRONTO [S] | Head Net-A (valore centrale) | radar di ricerca della corvetta e suoi giri/min | 2026-11-17 |
 | LHA-1 Tarawa | radar (AN/SPS-52) | 5.0 | 5-10 | STIMA PER CONFRONTO [S] | AN/SPS-49 | giri/min dell'AN/SPS-52 | 2026-11-17 |
 | A-50 | radar (Shmel) | 10.0 | — | FONTE DEBOLE [S] | divulgativo "circa sei giri al minuto" | seconda fonte o fonte tecnica | 2026-11-17 |
-| P-12-Yenisei | radar | 13.4 | 6-30 | FONTE, valore centrale fra fonti discordanti [S] (DW9-10) | 10 giri/min [W-P12] contro 2-6 giri/min [AC-P12] | fonte che risolva la contraddizione | 2026-11-17 |
 | AMES-Type-80 | radar | 15.0 | 10-15 | FONTE, interpretazione [S] (regime base letto come normale) | "4 giri/min (fino a 6)" | fonte che dica il regime normale | 2026-11-17 |
 
 **Valori di fonte scelti con la regola del valore centrale** (stima per scelta di regola dentro un intervallo di
@@ -1447,6 +1446,9 @@ fonte, NON per mancanza di dato; si chiudono con una fonte che citi il regime no
 | 1L13-Nebo-SV | radar | 14.1 | 10-20 | 3-6 giri/min (DW9-10; era 10 s) | 2026-11-17 |
 | AMES-Type-7 | radar | 30.0 | 7.5-120 | 0,5-8 giri/min (DW9-10; era 7,5 s) | 2026-11-17 |
 | P-14-Lena | radar | 17.3 | 10-30 | 2-6 giri/min (DW9-10; era 10 s) | 2026-11-17 |
+
+Fonti discordanti: P-12-Yenisei 6.0, banda 6-30 (fonte principale [W-P12] 10 giri/min, scelta dell'utente; [AC-P12]
+2-6 giri/min solo nella banda); si chiude con una fonte che risolva la discordanza.
 
 Bande degli altri valori di fonte (regime normale citato): 9K331-Tor 3.0 (1-3, "main mode", testo GlobalSecurity
 incollato dall'utente); CVN-70..75 e FFG-46 5.0 (5-10, default 12 giri/min). Gli altri valori di fonte sono valori
