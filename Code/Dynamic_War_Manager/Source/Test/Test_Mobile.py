@@ -1427,7 +1427,7 @@ class TestDetectionDwellTime(unittest.TestCase):
 
     def test_records_without_dwell_give_none(self):
         with self._real:
-            self.assertIsNone(_DwellStub(model='9K331-Tor').detection_dwell_time('air'))
+            self.assertIsNone(_DwellStub(model='Chain-Home').detection_dwell_time('air'))
             self.assertIsNone(_DwellStub(model='AN-FPS-117').detection_dwell_time('air'))
             self.assertIsNone(_DwellStub(model='ignoto').detection_dwell_time('air'))
             self.assertIsNone(_DwellStub().detection_dwell_time('air'))

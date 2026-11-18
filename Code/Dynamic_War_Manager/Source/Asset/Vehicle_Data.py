@@ -3697,6 +3697,17 @@ T155_Firtina_data = {
 # Nuovi veicoli AAA (Anti-Aircraft Artillery) semoventi da aggiungere a Vehicle_Data.py
 # Generato automaticamente dalle ricerche degli agent
 
+# D-5, DW-9 rivista (Proposta_Dwell_Estensione_DW9.md): 'dwell_time_s' [s] nel sensore = periodo di rivisita della
+# sola funzione di RICERCA (quella che da' 'acquisition_range'), anche quando 'model' nomina il radar di inseguimento
+# (Fire Dome, Flap Lid): il motore lo legge solo con la portata di acquisizione, mai per inseguimento o tiro.
+# 'search_model' (DW9-2): nome del radar o della funzione di ricerca a cui il dwell si riferisce; solo documentale,
+# nessun codice lo legge.
+# Valore FISSO per sensore: non dipende da distanza, modo o carico del radar (rinvio dichiarato, Proposta §3.4).
+# Intervalli di fonte: regime normale se citato, altrimenti valore centrale = media geometrica degli estremi del
+# periodo, un decimale (scelta [S]); l'intervallo e' riportato come "Banda <min>-<max> s".
+# Etichette: FONTE (giri/min di fonte, 60/giri al minuto D) | FONTE DEBOLE [S] | FONTE NON VERIFICATA [S] |
+# STIMA PER CONFRONTO [S] con l'analogo nominato. Stime [S] e bande in Analysis/Document/Registro_Dwell_Stimati.md.
+
 # ===== ZSU-57-2 Sparka =====
 ZSU_57_2_data = {
     'constructor': 'Uraltransmash',
@@ -3789,7 +3800,13 @@ ZSU_23_4_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 45, 'mttr': 4}
+        'reliability': {'mtbf': 45, 'mttr': 4},
+        # dwell_time_s 7.3: FONTE di variante, valore centrale, attribuzione STIMA [S] -- ricerca del 1RL33M3 (manuale
+        #  ZSU-23-4M): circolare 20 gradi/s = 18 s, accelerata 45-60 gradi/s = 8-6 s, settore 30-100 gradi a 20 gradi/s
+        #  = 3-10 s; nessun regime normale unico (DW9-3) -> centrale di 3-18 s = 7,35 (D); dato della variante M3
+        #  attribuito al 1RL33 base [S]. Conf. media. Banda 3-18 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 7.3,
+        'search_model': '1RL33 (search mode)',
     },
     'TVD': False,
     'communication': {
@@ -3910,7 +3927,11 @@ Flakpanzer_Gepard_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 65, 'mttr': 2.5}
+        'reliability': {'mtbf': 65, 'mttr': 2.5},
+        # dwell_time_s 1.0: FONTE -- ricerca MPDR-12, 60 giri/min -> 60/60 (D). Conf. media-alta. Solo ricerca. D-5
+        #  DW-9.
+        'dwell_time_s': 1.0,
+        'search_model': 'MPDR-12',
     },
     'TVD': False,
     'communication': {
@@ -3969,7 +3990,12 @@ K2K22_Tunguska_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 60, 'mttr': 3}
+        'reliability': {'mtbf': 60, 'mttr': 3},
+        # dwell_time_s 1.82: STIMA PER CONFRONTO [S] -- ricerca 1RL144 (giri/min non trovati; 1A26 e' il calcolatore):
+        #  analogo 9A33-Osa Land Roll, 33 giri/min -> 60/33 (D). Banda 1.0-4.0 s (analoghi Gepard, Osa, Pantsir). Solo
+        #  ricerca. D-5 DW-9.
+        'dwell_time_s': 1.82,
+        'search_model': '1RL144 Hot Shot',
     },
     'TVD': False,
     'communication': {
@@ -4145,7 +4171,11 @@ A9A33_Osa_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 50, 'mttr': 4}
+        'reliability': {'mtbf': 50, 'mttr': 4},
+        # dwell_time_s 1.82: FONTE -- antenna di acquisizione Land Roll, 33 giri/min -> 60/33 = 1,818 (D, al centesimo).
+        #  Conf. alta (due fonti secondarie). Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 1.82,
+        'search_model': 'Land Roll acquisition antenna',
     },
     'TVD': False,
     'communication': {
@@ -4261,7 +4291,11 @@ MIM115_Roland_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 60, 'mttr': 3}
+        'reliability': {'mtbf': 60, 'mttr': 3},
+        # dwell_time_s 1.0: FONTE -- ricerca MPDR-16, 60 giri/min -> 60/60 (D). Conf. media-alta. Solo ricerca. D-5
+        #  DW-9.
+        'dwell_time_s': 1.0,
+        'search_model': 'MPDR-16',
     },
     'TVD': False,
     'communication': {
@@ -4319,7 +4353,14 @@ K9K331_Tor_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 62, 'mttr': 3.5}
+        'reliability': {'mtbf': 62, 'mttr': 3.5},
+        # dwell_time_s 3.0: FONTE -- radar di scoperta 3D a vista circolare del Tor-M1 (32 gradi in elevazione): 'In the
+        #  main mode, the scanning speed of the detection zone is three seconds', modo a tre fasci 1 s (GlobalSecurity,
+        #  testo incollato dall'utente in Analysis/Document/Scrum Half - ... 9K331 Tor.md); concorde con Air Power
+        #  Australia (zona di elevazione in 3 s). Regime normale citato. Conf. media-alta. Banda 1-3 s. Solo ricerca.
+        #  D-5 DW-9.
+        'dwell_time_s': 3.0,
+        'search_model': 'Scrum Half surveillance radar (all-round view)',
     },
     'TVD': False,
     'communication': {
@@ -4436,7 +4477,11 @@ K2K12_Kub_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 48, 'mttr': 4.5}
+        'reliability': {'mtbf': 48, 'mttr': 4.5},
+        # dwell_time_s 3.5: FONTE, valore centrale -- antenna di ricerca 1S11 del 1S91, 15 o 20 giri/min = 4 o 3 s
+        #  (nessun regime normale citato) -> centrale 3,46 (D). Conf. media. Banda 3-4 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 3.5,
+        'search_model': '1S11',
     },
     'TVD': False,
     'communication': {
@@ -4494,7 +4539,13 @@ K9K37_Buk_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 55, 'mttr': 4}
+        'reliability': {'mtbf': 55, 'mttr': 4},
+        # dwell_time_s 9.0: FONTE NON VERIFICATA [S], valore centrale -- ricerca 9S18 (non il 9S35 Fire Dome di
+        #  inseguimento): giro circolare 4,5-18 s (GlobalSecurity, pagina non leggibile al controllo), nessun regime
+        #  normale -> centrale 9,0 (D); 3-14 giri/min = 20-4,3 s dalla scheda 9S18M (via ricerca). Conf. bassa-media.
+        #  Banda 4.3-20 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 9.0,
+        'search_model': '9S18 Tube Arm',
     },
     'TVD': False,
     'communication': {
@@ -4552,7 +4603,12 @@ S300PS_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 58, 'mttr': 4.5}
+        'reliability': {'mtbf': 58, 'mttr': 4.5},
+        # dwell_time_s 12.0: STIMA PER CONFRONTO [S] -- ricerca 5N64S Big Bird-B (giri/min non trovati; il 30N6 Flap Lid
+        #  e' il radar d'ingaggio): analogo 64N6/64N6E della stessa famiglia, una rotazione ogni 12 s in regime regolare
+        #  (fonte non verificata). Banda 5-12 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 12.0,
+        'search_model': '5N64S Big Bird-B',
     },
     'TVD': False,
     'communication': {

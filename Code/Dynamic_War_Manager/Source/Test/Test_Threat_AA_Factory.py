@@ -495,11 +495,21 @@ class TestBuildDetectionThreat(unittest.TestCase):
         self.assertEqual(threat.dwell_time_s, 6.0)
 
     def test_sensor_without_dwell_gives_none(self):
-        """D-5: un sensore che non dichiara `dwell_time_s` (DW-9: solo gli EWR) da' una minaccia senza dwell."""
-        threat = build_detection_threat(_AssetStub(model='9K331-Tor', category=gat.SAM_SMALL.value), 1000.0)
+        """D-5: un sensore che non dichiara `dwell_time_s` (Chain-Home: illuminazione continua) da' una minaccia
+        senza dwell."""
+        threat = build_detection_threat(_AssetStub(model='Chain-Home', category='EWR'), 1000.0)
 
         self.assertIsInstance(threat, DetectionThreat)
         self.assertIsNone(threat.dwell_time_s)
+
+    def test_sam_detection_threat_carries_the_search_dwell(self):
+        """D-5, DW-9 rivista: la DetectionThreat di un SAM con radar porta il periodo di rivisita della ricerca
+        (Tor: 'main mode' 3 s, regime normale citato)."""
+        threat = build_detection_threat(_AssetStub(model='9K331-Tor', category=gat.SAM_SMALL.value), 1000.0)
+
+        self.assertIsInstance(threat, DetectionThreat)
+        self.assertEqual(threat.sensor, 'radar')
+        self.assertEqual(threat.dwell_time_s, 3.0)
 
     def test_ewr_class_uses_pole_height(self):
         self.assertEqual(sensor_antenna_height(_AssetStub(model='2K12-Kub', category='EWR'), 'radar'),
