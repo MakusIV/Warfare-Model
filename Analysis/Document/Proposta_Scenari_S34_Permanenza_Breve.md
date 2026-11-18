@@ -261,7 +261,13 @@ dalla fotografia; il pianificatore entrera' in una fotografia solo con un'unita'
 
 ---
 
-## 3. Decisioni aperte per l'utente (una per volta)
+## 3. Decisioni dell'utente (TUTTE PRESE il 2026-11-18: R2 e le raccomandazioni di S36-1, S36-3..S36-7)
+
+**Esito.** S36-1 (a) nome S36; S36-2 **R2** (voce `detections` solo per le unita' S36; l'utente ha scelto R2 dopo aver
+visto R1/R2/R3 spiegate); S36-3 (a) cinque unita', 4 semi, 116 esecuzioni NEW; S36-4 g = 1,1; S36-5 W1 (due test unitari con
+dwell di prova); S36-6 (a) ROUTE come test unitari fuori dalla fotografia; S36-7 (a) `des-developer` (Sonnet high). Il testo
+sotto resta come motivazione.
+
 
 **S36-1 — Nome della serie.**
 Domanda: le unita' nuove si chiamano `S36-...`? Esempio: la bozza chiama `S34-BAND` la prova degli estremi della banda; ma
