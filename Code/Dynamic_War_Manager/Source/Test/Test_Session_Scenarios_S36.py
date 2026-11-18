@@ -209,8 +209,10 @@ class TestS36Graze(F.LoggerSilencer, unittest.TestCase):
         self.assertAlmostEqual(blue.assets['Blue-CAS/cas0'].speed['nominal'], A10_SPEED, places=9)
 
     def test_premise_no_salvo(self):
-        """Il passaggio e' piu' breve della reazione della ZSU (5,1 s) e gli A-10C sono in `weapon_hold`: nessuna salva
-        in nessuna variante e seme."""
+        """Nessuna salva in nessuna variante e seme: gli A-10C sono in `weapon_hold` e passano a un CPA di 5,98-6,00 km,
+        oltre l'`engagement_range` della ZSU (4 km nel registro); per le corde piu' brevi della reazione (5,1 s) vale
+        anche la reazione. La ragione per `casC` e `casD` (permanenza oltre la reazione) e' la portata d'ingaggio, non
+        la permanenza."""
         for variant in self.VARIANTS:
             for seed, (outcome, _) in zip(self.SEEDS, self.runs[variant]):
                 with self.subTest(variant=variant, session=seed):
