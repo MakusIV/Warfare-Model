@@ -16,16 +16,18 @@ Geometria di S31 'zsu' (linea Red di 3 BMP-2 con sensore dichiarato visivo a ter
 (ROE `only_designated`), `BOTH_HOLD`). Cinque varianti, 4 seed ciascuna (nomi stabili nella fotografia, nell'ordine;
 stesso `session_id` per le 5 varianti di un seed):
 
-| Variante  | Interruttore | dwell della ZSU (dichiarato di test) | Con P-18 | Cosa prova                                    |
-|-----------|--------------|--------------------------------------|----------|-----------------------------------------------|
-| `off`     | spento       | -                                    | no       | riferimento (legge di sola distanza)          |
-| `long`    | acceso       | 30 s (permanenza 62-67 s: `g` = 1)   | no       | riduzione esatta alla legge di prima          |
-| `short`   | acceso       | 600 s (`g` ~0,10-0,11)               | no       | Pd ridotta: rilevamenti della ZSU in meno     |
-| `ewr_off` | spento       | -                                    | si'      | riferimento con EWR                           |
-| `ewr_on`  | acceso       | - (P-18: dato di fonte 6 s)          | si'      | con permanenza di minuti nulla cambia         |
+| Variante  | Interruttore | dwell della ZSU (dichiarato di test)                    | Con P-18 | Cosa prova                                    |
+|-----------|--------------|---------------------------------------------------------|----------|-----------------------------------------------|
+| `off`     | spento       | -                                                       | no       | riferimento (legge di sola distanza)          |
+| `long`    | acceso       | 30 s (permanenza 62-67 s: `g` = 1)                      | no       | riduzione esatta alla legge di prima          |
+| `short`   | acceso       | 600 s (`g` ~0,10-0,11)                                  | no       | Pd ridotta: rilevamenti della ZSU in meno     |
+| `ewr_off` | spento       | -                                                       | si'      | riferimento con EWR                           |
+| `ewr_on`  | acceso       | - (registro: 3,2 s [S], g = 1; P-18: dato di fonte 6 s) | si'      | con permanenza di minuti nulla cambia         |
 
-30 s e 600 s sono periodi di rivisita DICHIARATI DI TEST sulla ZSU-57-2, non dati: il visivo non ha dati di scansione;
-il P-18 usa il dato di fonte del registro (6 s).
+30 s e 600 s sono periodi di rivisita DICHIARATI DI TEST sulla ZSU-57-2 (`declare_dwell`), non dati. Dalla DW-9 il
+registro dichiara per la vista della ZSU-57-2 3,2 s [S] (banda 1,75-6,0 s): lo leggono le varianti `ewr_on` (permanenza
+oltre 60 s, g = 1) e, con i dwell reali e permanenze brevi, gli scenari S36; il P-18 usa il dato di fonte del registro
+(6 s).
 """
 
 import sys

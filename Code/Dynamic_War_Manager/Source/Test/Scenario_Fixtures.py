@@ -304,8 +304,10 @@ def declare_sensor(asset, ranges: Mapping[str, float]):
 
 
 def declare_dwell(asset, dwell_by_mode: Mapping[str, float]):
-    """Periodo di rivisita DICHIARATO DI TEST [s] per modo (D-5): NON un dato, serve agli scenari che devono
-    mostrare la legge su un tiratore (nessun tiratore del registro ha dati di scansione).
+    """Periodo di rivisita DICHIARATO DI TEST [s] per modo (D-5): NON un dato, serve agli scenari che provano la legge
+    con un periodo DIVERSO da quello del registro (valori di prova come i 30/600 s di S32, la stima di 2 s di S33, gli
+    estremi della banda di incertezza di S36). Dalla DW-9 i registri dichiarano `dwell_time_s` per SAM/AAA, TVD e vista,
+    EWR, navi e AWACS (`Analysis/Document/Registro_Dwell_Stimati.md`).
 
     Scavalca `detection_dwell_time` SOLO sull'istanza e SOLO per i modi indicati; per gli altri delega al registro.
     Restituisce l'asset.

@@ -2778,3 +2778,103 @@ Suite `Ran 4914`, `OK (skipped=7)`.
 ### Stato
 FP eseguita, accesa e senza interruttore; fotografia di 1103 esecuzioni installata (2026-11-13).
 
+
+## D-5, DW-9 rivista (2026-11-18)
+
+Proposte: `Proposta_Dwell_Time_Rilevamento.md` (D-5 opzione 2, blocchi A e B, 2026-11-06) e `Proposta_Dwell_Estensione_DW9.md` (DW-9 rivista, decisioni
+DW9-1..DW9-10 del 2026-11-17, blocchi 0-5). Sonde in `Rapporti/Sonde_Dwell_D5/` (`LEGGIMI.md`), registro dei valori stimati in `Registro_Dwell_Stimati.md`.
+Il blocco A (`8943b292`) ha introdotto `dwell_time_s` per i 10 EWR, la legge `g = min(1, permanenza / dwell)` nel risolutore e lo scenario S32-DWELL (20 esecuzioni
+nuove); il blocco B (`effb0dcf`) usa la stessa legge nelle metriche di rilevamento del pianificatore. Entrambi con l'interruttore `Engagement_Resolver.D5_DWELL_TIME`
+spento (sonda S-1, legge accesa con i soli dati di fonte: 1009 IDENTICHE; sonda S-2, dwell fittizio di 10 s a ogni osservatore: cambiano 2 esecuzioni di S21,
+`S21-5/control` e `S21-7/control`). Il 2026-11-18 l'interruttore e' stato **acceso di default** (`ef8f657e`).
+
+### Il cambio (DW-9 rivista)
+I registri dichiarano `dwell_time_s` (periodo di rivisita di RICERCA, valore FISSO per sensore, con la banda di incertezza di fonte nel commento e la chiave
+documentale `search_model`) per **53 modelli**: 43 nuovi (9 SAM/AAA con radar, 6 TVD e vista, 3 EWR rimasti, 22 navi, 3 AWACS) e 10 EWR del contratto precedente
+riallineati alla regola "regime normale se citato, altrimenti valore centrale" (DW9-10, che sostituisce la DW-2). Fra i 43 nuovi: **19 FONTE** e **24 stime [S]** (Buk 9,0 s, S-300PS 12,0 s, Tunguska 1,82 s, vista e TVD 3,2 s, molte navi, ...; elenco in `Registro_Dwell_Stimati.md`).
+**3 modelli senza valore** (nessuna fonte): Chain-Home, Mammut, Type 093. Gli aerei diversi dagli AWACS restano esclusi (DW-9, decisione 1).
+**4 EWR cambiano valore**: P-37 10 -> 14,1 s, 1L13 10 -> 14,1 s, P-14 10 -> 17,3 s, AMES Type 7 7,5 -> 30 s (SCR-270, P-12, P-18, 55Zh6, AN/TPS-43, AMES Type 80 invariati).
+
+### Differenze della fotografia
+Nessuna esecuzione cambiata, con l'interruttore spento e con l'interruttore acceso.
+
+| Prova | Che cosa | Esito |
+|---|---|---|
+| S-4/rec | interruttore acceso, valori raccomandati di §2 della Proposta iniettati in memoria, tutte le famiglie | 1103 IDENTICHE (506,7 s) |
+| S-4/min | idem, ogni sensore con la banda all'estremo minimo | 1103 IDENTICHE (504,5 s) |
+| S-4/max | idem, ogni sensore con la banda all'estremo massimo | 1103 IDENTICHE (508,8 s) |
+| S-5 | `D5_DWELL_TIME` acceso sul codice committato (nessun valore iniettato), con registro delle chiamate a `dwell_factor` con `g < 1` | 1103 IDENTICHE (502,8 s; una prima esecuzione senza strumentazione: 507,5 s) |
+| Dopo l'accensione (`ef8f657e`) | suite completa e confronto con la fotografia, rieseguiti il 2026-11-18 | `Ran 4925`, `OK (skipped=7)`; 1103 IDENTICHE (numeri dichiarati dal messaggio del commit `a99bb3d4` e da `LEGGIMI.md`; non riletti dai log in questa stesura) |
+
+Criterio del blocco 0: la scelta del valore dentro la banda di incertezza e' IRRILEVANTE per le esecuzioni fotografate (identiche con i valori raccomandati, con
+tutti gli estremi minimi e con tutti gli estremi massimi). Dettaglio di S-5: 93 chiamate con `g < 1`, **77** con `g = 0` e Pd gia' 0 (bersaglio fuori portata) e
+**16** di S32 con il dwell di PROVA da 600 s (`short`), quindi neutre per costruzione o volute.
+
+### Limite (da dichiarare con chiarezza)
+**Le 1103 esecuzioni identiche NON mettono alla prova la legge con i dwell reali.** "Identiche" significa che accendere la legge non altera nessuna esecuzione
+fotografata; non che la legge sia stata validata con permanenze brevi. Con i dwell reali (1-12 s per SAM, AAA, TVD e vista; fino a 60 s per alcuni EWR) il bersaglio
+resta nel volume piu' di un periodo e `g = 1`; le uniche chiamate con `g < 1` sono quelle sopra (fuori portata o con il dwell di prova di S32). Anzi, con i
+dwell reali **nessuna salva cambia mai**, nemmeno con una permanenza breve: il tempo di reazione di ogni tiratore supera il suo dwell (ZSU-57-2 5,1 s contro 3,2 s;
+Tor 6,5 contro 3,0 s; Buk 27,1 contro 9,0 s; S-300PS 28,0 contro 12,0 s; unica eccezione la Shilka, 5,1 contro 7,3 s, ma a ~20 km, oltre la portata del cannone;
+`Proposta_Scenari_S34_Permanenza_Breve.md` §1.4). Per questo la serie S36 (sezione seguente) registra i `Detection` e non le salve.
+La legge e' coperta dai test dedicati (S32, S33, `TestDwellFactor`, `TestDwellTimeInTheResolver`, `Test_Dwell_Data`) e, dalla S36, da esecuzioni fotografate con permanenza breve.
+
+### Costanti stimate
+- I 24 dwell [S] dei 43 modelli nuovi e le bande di incertezza non sono dati tarati: vanno chiusi con una fonte leggibile (colonna "Che cosa serve per chiuderla" di
+  `Registro_Dwell_Stimati.md`). Vista e TVD a 3,2 s sono un'APPROSSIMAZIONE L1 (passata del settore, 1,75-6,0 s, Poe 1974).
+- Rinvio dichiarato: il dwell dipendente da distanza, modo e carico del radar e una legge cumulativa (Koopman/esponenziale) restano da fare insieme all'orizzonte radar nel DES.
+
+## S36 — permanenza breve con i dwell reali (2026-11-18)
+
+Proposta `Proposta_Scenari_S34_Permanenza_Breve.md` (richiesta "S34" dell'utente; la serie si chiama S36 perche' S34 e S35 sono gia' occupati). Decisioni S36-1..S36-7
+prese dall'utente il 2026-11-18 (R2: voce `detections` per le sole unita' S36). Eseguita da `des-developer` (Sonnet high) sul branch `ai/des-s36` in sei blocchi
+(commit `e107da28`: blocchi 1-2; `72cd0d5a`: blocchi 3-5; blocco 6, testi e documenti, non ancora committato quando e' scritta questa sezione).
+
+### Il cambio
+Nessuna riga del motore cambia, nessun interruttore nuovo, nessun dato dei registri toccato. Lo strumento `Scenario_Baseline` ha una voce nuova del riassunto, `detections`
+(le `Detection` di ogni `EngagementResult`, campi `DETECTION_FIELDS` in ordine fisso), registrata **solo per le unita' di `DETECTION_UNITS`** (le cinque S36): il
+registratore delle 1103 esecuzioni esistenti e' quello di prima (`with_detections=False`), quindi restano identiche per costruzione. `--ignore detections` la esclude
+(le 116 restano comunque NEW). Test unitari fuori dalla fotografia: 2 in `Test_Dwell_Data.py` (sensore vincente su F-16C Block 52d con dwell DI PROVA; limite
+`range_type` fissato) e 5 in `Test_Threat_AA_Factory.py` (metriche di rilevamento del pianificatore con i dwell reali; la rotta scelta non dipende dalla D-5).
+
+### Differenze della fotografia
+Stato atteso del confronto completo (**da confermare dalla sessione principale: non ancora eseguito in questa stesura**): `UNCHANGED (1103)`, `NEW (116)`,
+0 `CHANGED`, 0 `MISSING`, `compared 1219 runs: 116 difference lines` (le righe di differenza sono le NEW). Confronti PARZIALI gia' eseguiti dall'esecutore:
+`--only 'S3[2-5]'` 94 IDENTICAL; `--only 'S36'` 116 NEW, 0 CHANGED. Suite attesa `Ran 4961` (4925 + 36 test nuovi), `OK (skipped=7)` (non ancora eseguita in
+questa stesura; letti: `Test_Session_Scenarios_S36` 29 test OK, S32 6 e S33 11 OK dopo la modifica dei soli docstring). La fotografia nuova (1219 esecuzioni) la
+installa solo l'utente, dopo aver letto le 116.
+
+### Le cinque unita' (116 esecuzioni nuove, 4 semi ciascuna)
+Chiavi `S36-<unita>/S36-<unita>-<0..3>/<variante>`; stesso `session_id` per le varianti di un seme; i bersagli (A-10C) sono in `weapon_hold`, quindi l'osservatore non
+ha nessuna salva da sparare e la legge si legge sulle `Detection`.
+
+| Unita' | Leva | Geometria | Varianti | Esecuzioni |
+|---|---|---|---|---|
+| `S36-GRAZE` | A, passaggio radente | ZSU-57-2 (vista 6 km, 3,2 s [S]), 4 A-10C a 3000 m con scostamenti laterali per permanenze 1,6 / 2,88 / 3,52 / 6,4 s (g = 0,5 / 0,9 / 1,1 / 2,0) | `off`, `on`, `band_min` (1,75 s), `band_max` (6,0 s) | 16 |
+| `S36-CUT` | B, taglio alla fine della sessione | stessa ZSU, sessione di 120 s, 3 A-10C che entrano 1 / 3 / 10 s prima della fine (g = 0,3125 / 0,9375 / 1) | `off`, `on` | 8 |
+| `S36-PASSES` | unione FP-10 di due passaggi brevi | un A-10C, due passaggi da 1 s con uscita di 1 s (`join`, <= dwell) o 5 s (`split`) | `join_off`, `join_on`, `split_off`, `split_on` | 16 |
+| `S36-FAMILIES` | C, sei famiglie di sensori e un AWACS | Strela-10, Tor, Buk, S-300PS, P-37, FFG-46 (SPS-49) con permanenza meta' del dwell del registro (g = 0,5); E-3A (400 km, 10 s) contro un MiG-29S in verso opposto (leva C, osservatore mobile) | `strela10`, `tor`, `buk`, `s300`, `p37`, `ffg46`, `e3a` (D-5 accesa, dwell del registro) | 28 |
+| `S36-BAND` | estremi della banda di incertezza | le sei famiglie a terra e in mare con il dwell dichiarato (`declare_dwell`) a `min` e `max` della banda | 12 (`<famiglia>_min`, `<famiglia>_max`) | 48 |
+
+Totale 16 + 8 + 16 + 28 + 48 = 116. SHORT (Shilka in sessione di meno di 7,3 s) e' stata scartata: geometria artificiale, effetto non osservato in 12 semi provati
+(Proposta §2.3). Test: `Test_Session_Scenarios_S36.py` 29 test (`TestS36Graze` 9, `TestS36WindowCut` 5, `TestS36PassJoin` 5, `TestS36Families` 5, `TestS36Band` 3,
+`TestS36BaselineDetections` 2).
+
+### Costanti stimate
+- Portata, dwell e velocita' sono COPIE dei registri (controllate da test di premessa); i dwell di vista, TVD, Buk e S-300PS sono STIME [S] del registro (non dati
+  tarati: S36 ne verifica l'uso, non la taratura). Se il registro cambia, falliscono i test di premessa e cambiano le esecuzioni S36: e' voluto.
+- Scostamenti laterali, quote, durate di sessione, origini, durata dei passaggi e uscite sono GEOMETRIA DI TEST, non dati.
+- Gli estremi della banda (1,75 e 6,0 s per la vista; `BAND` in `Test_Session_Scenarios_S36.py`) sono VALORI DI PROVA presi dalla banda di incertezza dichiarata
+  (`Proposta_Dwell_Estensione_DW9.md` §2.1-§2.4), non dati; dwell di prova (6 s sul radar e 2 s sul TVD) nei due test WINNER.
+
+### Limiti noti
+- La legge con i dwell reali non tocca il tiro (nessuna salva in nessuna variante): S36 la prova sulle `Detection`, non su salve o danni.
+- La voce `detections` vale solo per le unita' S36: le altre 1103 esecuzioni non registrano rilevamenti (un cambio della legge che non tocca il tiro resta invisibile
+  li'). Restano fuori dalla fotografia con dwell reale: Shilka, Gepard, Osa, Tunguska, Roland, Kub, M163, Strela-1, Chaparral, M6, gli altri EWR, le altre navi, E-2D e A-50.
+- Geometrie radenti a pochi metri dal bordo del volume: esatte in doppia precisione, ma un cambio del volume di rilevamento (es. VA-6, orizzonte radar nel DES) cambiera'
+  le S36: voluto (guardiano), da rileggere. Con l'orizzonte nel DES le geometrie a 280-400 km (P-37, FFG-46, E-3A) non sarebbero piu' raggiungibili cosi'.
+- Taglio di sessione (leva B): la Pd dipende dalla durata scelta (un bersaglio che entra 1 s prima della fine ha g = 0,31); su sessioni concatenate un passaggio a cavallo
+  di due sessioni avrebbe due estrazioni con la permanenza tagliata: proprieta' del modello da valutare, non verificata su sessioni concatenate.
+- `registry_dwell_time` legge sempre il dwell del vincitore di acquisizione, indipendentemente da `range_type`: oggi nessun record con due sensori ha dwell, il test lo fissa.
+- Il pianificatore: la D-5 cambia `max_detection_probability` ma non la scelta della rotta; non e' nella fotografia (solo test unitari).
+- Gli A-10C in `weapon_hold` isolano il rilevamento: il comportamento CAS reale non e' messo alla prova.

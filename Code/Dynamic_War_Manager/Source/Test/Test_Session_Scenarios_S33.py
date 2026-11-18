@@ -18,7 +18,9 @@ S33 prova la configurazione finale: FP (sempre attiva) e D-5 accesa con il dwell
 | `cas_on` | CAS       | 2 s [S]                      | due passaggi NON contigui; FP sola (g = 1)    |
 
 La ZSU dichiara (`declare_dwell`, modo 'air') un periodo di aggiornamento di 2 s, STIMA [S] dell'utente (2026-11-08:
-osservatore umano piu' ottica), non un dato. Con passaggi di 50-67 s il fattore di permanenza e' g = 1 e con uscite di
+osservatore umano piu' ottica), non un dato. E' precedente alla DW-9 (registro: 3,2 s [S], banda 1,75-6,0 s) e resta
+dichiarata per non cambiare la fotografia di S33; con 3,2 s le conclusioni non cambierebbero (passaggi di 50-67 s: g = 1;
+uscite di 100-130 s: nessuna unione) [C]. Con passaggi di 50-67 s il fattore di permanenza e' g = 1 e con uscite di
 100-130 s l'unione dei passaggi (FP-10) non unisce: la D-5 non cambia ne' estrazioni ne' Pd; per questo non ci sono
 varianti con dwell lunghi. Le varianti `off` e `cas_off` (FP e D-5 spente) sono state tolte con l'interruttore FP
 (Proposta_FP_Pulizia_Interruttore.md).
