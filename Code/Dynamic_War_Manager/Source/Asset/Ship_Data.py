@@ -464,6 +464,9 @@ class Ship_Data:
 # radar capabilities   → range in km
 # cost                 → miliardi di $ (B$)
 # Categoria dal dizionario navi in Initial_Context → valore Sea_Asset_Type
+# dwell_time_s (D-5, DW-9 rivista, Proposta_Dwell_Estensione_DW9.md) -> periodo di rivisita [s] della ricerca AEREA
+#   del record (un solo valore per il dizionario 'radar': per i bersagli navali, lenti, la permanenza supera sempre il
+#   periodo). Etichette e stime [S] come in Vehicle_Data; registro in Analysis/Document/Registro_Dwell_Stimati.md.
 
 # =============================================================================
 # CARRIERS  (Sea_Asset_Type.CARRIER = 'Carrier')
@@ -500,6 +503,10 @@ CVN70_data = {
             'sea':    (True,  {'acquisition_range': 80,  'tracking_range': 60,  'engagement_range': 0, 'multi_target_capacity': 8}),
         },
         'reliability': {'mtbf': 200, 'mttr': 6},
+        # dwell_time_s 5.0: FONTE -- ricerca aerea AN/SPS-49: 6 giri/min lunga portata, 12 corta, default 12
+        #  sull'A(V)1 (regime normale citato) -> 60/12 (D). Banda 5-10 s. Conf. alta. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPS-49',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 28, 'consume': 0.4},
@@ -539,6 +546,10 @@ CVN71_data = {
             'sea':    (True,  {'acquisition_range': 80,  'tracking_range': 60,  'engagement_range': 0, 'multi_target_capacity': 8}),
         },
         'reliability': {'mtbf': 200, 'mttr': 6},
+        # dwell_time_s 5.0: FONTE -- ricerca aerea AN/SPS-49: 6 giri/min lunga portata, 12 corta, default 12
+        #  sull'A(V)1 (regime normale citato) -> 60/12 (D). Banda 5-10 s. Conf. alta. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPS-49',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 28, 'consume': 0.4},
@@ -578,6 +589,10 @@ CVN72_data = {
             'sea':    (True,  {'acquisition_range': 80,  'tracking_range': 60,  'engagement_range': 0, 'multi_target_capacity': 8}),
         },
         'reliability': {'mtbf': 200, 'mttr': 6},
+        # dwell_time_s 5.0: FONTE -- ricerca aerea AN/SPS-49: 6 giri/min lunga portata, 12 corta, default 12
+        #  sull'A(V)1 (regime normale citato) -> 60/12 (D). Banda 5-10 s. Conf. alta. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPS-49',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 28, 'consume': 0.4},
@@ -617,6 +632,10 @@ CVN73_data = {
             'sea':    (True,  {'acquisition_range': 80,  'tracking_range': 60,  'engagement_range': 0, 'multi_target_capacity': 8}),
         },
         'reliability': {'mtbf': 200, 'mttr': 6},
+        # dwell_time_s 5.0: FONTE -- ricerca aerea AN/SPS-49: 6 giri/min lunga portata, 12 corta, default 12
+        #  sull'A(V)1 (regime normale citato) -> 60/12 (D). Banda 5-10 s. Conf. alta. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPS-49',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 28, 'consume': 0.4},
@@ -656,6 +675,10 @@ CVN74_data = {
             'sea':    (True,  {'acquisition_range': 80,  'tracking_range': 60,  'engagement_range': 0, 'multi_target_capacity': 8}),
         },
         'reliability': {'mtbf': 200, 'mttr': 6},
+        # dwell_time_s 5.0: FONTE -- ricerca aerea AN/SPS-49: 6 giri/min lunga portata, 12 corta, default 12
+        #  sull'A(V)1 (regime normale citato) -> 60/12 (D). Banda 5-10 s. Conf. alta. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPS-49',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 28, 'consume': 0.4},
@@ -695,6 +718,10 @@ CVN75_data = {
             'sea':    (True,  {'acquisition_range': 80,  'tracking_range': 60,  'engagement_range': 0, 'multi_target_capacity': 8}),
         },
         'reliability': {'mtbf': 200, 'mttr': 6},
+        # dwell_time_s 5.0: FONTE -- ricerca aerea AN/SPS-49: 6 giri/min lunga portata, 12 corta, default 12
+        #  sull'A(V)1 (regime normale citato) -> 60/12 (D). Banda 5-10 s. Conf. alta. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPS-49',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 28, 'consume': 0.4},
@@ -734,6 +761,10 @@ CV59_data = {
             'sea':    (True,  {'acquisition_range': 60,  'tracking_range': 50,  'engagement_range': 0, 'multi_target_capacity': 5}),
         },
         'reliability': {'mtbf': 100, 'mttr': 10},
+        # dwell_time_s 5.0: STIMA PER CONFRONTO [S] -- AN/SPS-43 (giri/min non trovati): analogo AN/SPS-49, successore
+        #  nella ricerca aerea 2D US Navy. Banda 5-10 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPS-43',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 30, 'consume': 0.6},
@@ -775,6 +806,11 @@ KuznetsovAdmiral_data = {
             'sea':    (True,  {'acquisition_range': 100, 'tracking_range': 80,  'engagement_range': 50,  'multi_target_capacity': 8}),
         },
         'reliability': {'mtbf': 60, 'mttr': 12},
+        # dwell_time_s 7.1: FONTE, valore centrale -- ricerca 3D Fregat-MA (MR-750), 12 o 6 giri/min = 5 o 10 s,
+        #  nessun regime normale -> centrale 7,07 (D); Sky Watch (schiera fissa) senza dato. Banda 5-10 s. Conf.
+        #  media. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 7.1,
+        'search_model': 'Fregat-MA (MR-750)',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 22, 'consume': 0.7},
@@ -822,6 +858,11 @@ ArleighBurke_data = {
             'sea':    (True,  {'acquisition_range': 120, 'tracking_range': 100, 'engagement_range': 80,  'multi_target_capacity': 12}),
         },
         'reliability': {'mtbf': 150, 'mttr': 5},
+        # dwell_time_s 5.0: FONTE DEBOLE [S] -- AN/SPY-1 (schiera fissa): '1 (orizzonte), 12 (sopra l'orizzonte)
+        #  scan/min' (infobox, significato non definito), per bersagli aerei la ricerca sopra l'orizzonte -> 60/12
+        #  (D). Banda 5-60 s. Conf. bassa. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPY-1D',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 28, 'consume': 0.5},
@@ -864,6 +905,10 @@ Type052B_data = {
             'sea':    (True,  {'acquisition_range': 80,  'tracking_range': 60,  'engagement_range': 40,  'multi_target_capacity': 6}),
         },
         'reliability': {'mtbf': 80, 'mttr': 8},
+        # dwell_time_s 7.1: STIMA PER CONFRONTO [S] -- Type 381 (giri/min non trovati): analogo Fregat-MA (valore
+        #  centrale), radar 3D navale rotante della stessa epoca. Banda 5-10 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 7.1,
+        'search_model': 'Type 381',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 25, 'consume': 0.5},
@@ -906,6 +951,10 @@ Type052C_data = {
             'sea':    (True,  {'acquisition_range': 100, 'tracking_range': 80,  'engagement_range': 60,  'multi_target_capacity': 8}),
         },
         'reliability': {'mtbf': 110, 'mttr': 7},
+        # dwell_time_s 5.0: STIMA PER CONFRONTO [S] -- Type 346 (AESA fissa, periodo non trovato): analogo AN/SPY-1,
+        #  schiera fissa a fasci elettronici. Banda 5-60 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'Type 346',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 25, 'consume': 0.5},
@@ -953,6 +1002,11 @@ CG65_data = {
             'sea':    (True,  {'acquisition_range': 130, 'tracking_range': 110, 'engagement_range': 90,  'multi_target_capacity': 12}),
         },
         'reliability': {'mtbf': 140, 'mttr': 6},
+        # dwell_time_s 5.0: FONTE DEBOLE [S] -- AN/SPY-1A (schiera fissa): '1 (orizzonte), 12 (sopra l'orizzonte)
+        #  scan/min' (infobox, significato non definito), per bersagli aerei la ricerca sopra l'orizzonte -> 60/12
+        #  (D). Banda 5-60 s. Conf. bassa. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPY-1A',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 28, 'consume': 0.55},
@@ -995,6 +1049,10 @@ PiotrVelikiy_data = {
             'sea':    (True,  {'acquisition_range': 120, 'tracking_range': 100, 'engagement_range': 70,  'multi_target_capacity': 10}),
         },
         'reliability': {'mtbf': 80, 'mttr': 15},
+        # dwell_time_s 7.1: FONTE, valore centrale -- Fregat-MA 12 o 6 giri/min, nessun regime normale -> centrale
+        #  7,07 (D); Top Pair 3-12 giri/min. Banda 5-20 s (i due radar). Conf. media. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 7.1,
+        'search_model': 'Fregat-MA (MR-750)',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 25, 'consume': 0.5},
@@ -1037,6 +1095,10 @@ Moskva_data = {
             'sea':    (True,  {'acquisition_range': 110, 'tracking_range': 90,  'engagement_range': 60,  'multi_target_capacity': 8}),
         },
         'reliability': {'mtbf': 50, 'mttr': 20},
+        # dwell_time_s 10.0: FONTE, valore centrale -- MR-800 Top Pair, 3-12 giri/min = 20-5 s, nessun regime normale
+        #  -> centrale 10,0 (D). Banda 5-20 s. Conf. media. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 10.0,
+        'search_model': 'MR-800 Top Pair',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 24, 'consume': 0.65},
@@ -1084,6 +1146,10 @@ FFG46_data = {
             'sea':    (True,  {'acquisition_range': 70,  'tracking_range': 55,  'engagement_range': 30,  'multi_target_capacity': 5}),
         },
         'reliability': {'mtbf': 90, 'mttr': 8},
+        # dwell_time_s 5.0: FONTE -- ricerca aerea AN/SPS-49: default 12 giri/min (regime normale citato) -> 60/12
+        #  (D). Banda 5-10 s. Conf. alta. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPS-49',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 25, 'consume': 0.5},
@@ -1126,6 +1192,11 @@ FF1135M_data = {
             'sea':    (True,  {'acquisition_range': 60,  'tracking_range': 50,  'engagement_range': 30,  'multi_target_capacity': 4}),
         },
         'reliability': {'mtbf': 40, 'mttr': 18},
+        # dwell_time_s 7.1: STIMA PER CONFRONTO [S] -- Head Net-C (giri/min non trovati): analogo Head Net-A (MR-310),
+        #  6 o 12 giri/min, valore centrale; la -C e' la versione a due facce della -A. Banda 5-10 s. Solo ricerca.
+        #  D-5 DW-9.
+        'dwell_time_s': 7.1,
+        'search_model': 'Head Net-C (MR-310U)',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 26, 'consume': 0.55},
@@ -1168,6 +1239,10 @@ FFG11540_data = {
             'sea':    (True,  {'acquisition_range': 80,  'tracking_range': 65,  'engagement_range': 40,  'multi_target_capacity': 6}),
         },
         'reliability': {'mtbf': 60, 'mttr': 14},
+        # dwell_time_s 7.1: FONTE, valore centrale -- Fregat-MA, 12 o 6 giri/min, nessun regime normale -> centrale
+        #  7,07 (D); Mineral-ME e' un radar di tiro. Banda 5-10 s. Conf. media. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 7.1,
+        'search_model': 'Fregat-MA (MR-750)',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 25, 'consume': 0.5},
@@ -1210,6 +1285,10 @@ Type054A_data = {
             'sea':    (True,  {'acquisition_range': 70,  'tracking_range': 55,  'engagement_range': 35,  'multi_target_capacity': 6}),
         },
         'reliability': {'mtbf': 80, 'mttr': 11},
+        # dwell_time_s 2.0: FONTE DEBOLE [S] -- Type 382, circa 30 giri/min (forum) -> 60/30 (D); alternativa per
+        #  confronto con il Fregat MAE-3: 7,1 s. Banda 2-10 s. Conf. bassa. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 2.0,
+        'search_model': 'Type 382',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 22, 'consume': 0.5},
@@ -1257,6 +1336,10 @@ FFL1124_data = {
             'sea':    (True,  {'acquisition_range': 40,  'tracking_range': 30,  'engagement_range': 20,  'multi_target_capacity': 3}),
         },
         'reliability': {'mtbf': 35, 'mttr': 16},
+        # dwell_time_s 7.1: STIMA PER CONFRONTO [S] -- MR-302 Strut Curve (rotazione non data): analogo Head Net-A
+        #  (MR-310, valore centrale), ricerca aerea navale sovietica coeva. Banda 5-10 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 7.1,
+        'search_model': 'MR-302 Strut Curve',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 26, 'consume': 0.6},
@@ -1298,6 +1381,11 @@ FSG1241_data = {
             'sea':    (True,  {'acquisition_range': 50,  'tracking_range': 40,  'engagement_range': 25,  'multi_target_capacity': 2}),
         },
         'reliability': {'mtbf': 30, 'mttr': 18},
+        # dwell_time_s 7.1: STIMA PER CONFRONTO [S] -- Band Stand e' un radar di tiro, nessun radar di ricerca nel
+        #  record: la portata di acquisizione rappresenta la ricerca della corvetta; analogo Head Net-A (MR-310,
+        #  valore centrale). Banda 5-10 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 7.1,
+        'search_model': 'Band Stand (MR-331)',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 28, 'consume': 0.7},
@@ -1342,6 +1430,7 @@ Type093_data = {
             'sea':    (True,  {'acquisition_range': 80, 'tracking_range': 60, 'engagement_range': 40, 'multi_target_capacity': 4}),
         },
         'reliability': {'mtbf': 150, 'mttr': 10},
+        # nessun dwell_time_s: sonar passivo in ascolto continuo, nessuna scansione. D-5 DW-9.
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 18, 'consume': 0.4},  # submerged
@@ -1387,6 +1476,10 @@ LHA1_data = {
             'sea':    (True,  {'acquisition_range': 60,  'tracking_range': 50,  'engagement_range': 0, 'multi_target_capacity': 4}),
         },
         'reliability': {'mtbf': 80, 'mttr': 12},
+        # dwell_time_s 5.0: STIMA PER CONFRONTO [S] -- AN/SPS-52 (giri/min non trovati): analogo AN/SPS-49, ricerca
+        #  aerea US Navy coeva. Banda 5-10 s. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 5.0,
+        'search_model': 'AN/SPS-52',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 20, 'consume': 0.5},
@@ -1427,6 +1520,10 @@ Type071_data = {
             'sea':    (True,  {'acquisition_range': 50,  'tracking_range': 40,  'engagement_range': 0, 'multi_target_capacity': 3}),
         },
         'reliability': {'mtbf': 70, 'mttr': 13},
+        # dwell_time_s 2.0: FONTE -- ricerca aerea Type 364, 30 giri/min -> 60/30 (D); Type 360 senza dato. Conf.
+        #  media. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 2.0,
+        'search_model': 'Type 364',
     },
     'speed_data': {
         'sustained': {'metric': 'nautical', 'speed': 18, 'consume': 0.5},

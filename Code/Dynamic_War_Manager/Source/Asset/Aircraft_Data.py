@@ -2093,6 +2093,7 @@ s3b_tanker_data = {
 }
 
 # ==================== US AWACS & RECON ====================
+# dwell_time_s (D-5, DW-9 rivista): solo gli AWACS; gli altri aerei NON lo dichiarano (decisione dell'utente).
 
 e2d_data = {
     "constructor": "Northrop Grumman", "made": "USA", "model": "E-2D Advanced Hawkeye",
@@ -2110,6 +2111,10 @@ e2d_data = {
             "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
         },
         "reliability": {"mtbf": 60, "mttr": 3}, "type": "AESA",
+        # dwell_time_s 10.0: FONTE -- rotodome AN/APY-9, 6 giri/min (rotazione meccanica; settori elettronici in
+        #  aggiunta) -> 60/6 (D). Conf. media. Solo ricerca. D-5 DW-9.
+        "dwell_time_s": 10.0,
+        "search_model": "AN/APY-9",
     },
     "TVD": {
         "model": "none",
@@ -2146,6 +2151,9 @@ e3a_data = {
             "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
         },
         "reliability": {"mtbf": 55, "mttr": 3}, "type": "pulse-doppler",
+        # dwell_time_s 10.0: FONTE -- rotodome AN/APY-2, 6 giri/min -> 60/6 (D). Conf. alta. Solo ricerca. D-5 DW-9.
+        "dwell_time_s": 10.0,
+        "search_model": "AN/APY-2",
     },
     "TVD": {
         "model": "none",
@@ -3406,6 +3414,10 @@ a50_data = {
             "sea": (True, {"tracking_range": 400, "acquisition_range": 350, "engagement_range": 0, "multi_target_capacity": 20}),
         },
         "reliability": {"mtbf": 60, "mttr": 9}, "type": "pulse-doppler",
+        # dwell_time_s 10.0: FONTE DEBOLE [S] -- rotodome Shmel, 'circa sei giri al minuto' (fonte divulgativa unica)
+        #  -> 60/6 (D); coincide con l'analogo E-3A. Conf. bassa. Solo ricerca. D-5 DW-9.
+        "dwell_time_s": 10.0,
+        "search_model": "Shmel",
     },
     "TVD": {
         "model": "none",

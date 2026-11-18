@@ -170,8 +170,10 @@ ripiego per la portata. Nessuna estrazione nuova ne' spostata in nessuno dei due
 
 `Proposta_Dwell_Time_Rilevamento.md`. Un sensore che scandisce (un radar EWR che ruota) offre al bersaglio
 un'occasione di rilevamento a ogni passaggio del fascio, cioe' ogni `dwell_time_s` [s] (periodo di rivisita,
-60 / giri al minuto; chiave opzionale del dizionario del sensore nel registro, oggi solo nei 10 radar EWR). Se il
-bersaglio resta nel volume meno di un periodo, puo' non essere mai illuminato. La legge:
+60 / giri al minuto; chiave opzionale del dizionario del sensore nel registro, valorizzata per EWR, SAM, AAA, TVD,
+vista, navi e AWACS, mai per gli altri aerei (DW-9 rivista, `Proposta_Dwell_Estensione_DW9.md`); e' il periodo della
+sola funzione di ricerca). Se il bersaglio resta nel volume meno di un periodo, puo' non essere mai illuminato. La
+legge:
 
     Pd = min(1, permanenza / dwell_time_s) * Pd(d_cpa)         (`dwell_factor`, composto col fattore)
 
@@ -193,7 +195,8 @@ inversa esatta.
 * **RNG**: il calcolo sta prima di `_draw` e non estrae nulla. Numero e ordine delle estrazioni sono invariati in
   ogni stato dell'interruttore; cambia solo la soglia, come per `detection_factor`.
 * **Limiti** (Proposta §5.2): solo riduzione (nessun cumulo di scansioni su permanenze lunghe); un solo sensore
-  per asset (quello della portata massima); nessun dwell sul tracciamento dei colpi (R-INT).
+  per asset (quello della portata massima); nessun dwell sul tracciamento dei colpi (R-INT); vista e TVD: valore
+  stimato con L1, APPROSSIMAZIONE da rivedere con una legge cumulativa.
 
 ## Rilevamento per passaggio nella portata propria (FP)
 

@@ -1695,7 +1695,8 @@ class Mobile(Asset) :
         Stesso dispatch di registro e stessa esclusione del visivo (D4C_VISUAL_SENSOR) di detection_range; il
         sensore e' quello con la portata MASSIMA, a parita' il primo di DETECTION_SENSORS (come
         Air_Route_Manager.build_detection_threat). None se il modello non e' noto, nessun sensore ha portata sul
-        modo, o il sensore vincente non dichiara `dwell_time_s`.
+        modo, o il sensore vincente non dichiara `dwell_time_s`. Il dwell e' quello della funzione di RICERCA del
+        sensore (DW-9 rivista): si legge con la portata di acquisizione, non entra nell'inseguimento.
 
         Raises:
             ValueError: `mode` o `range_type` fuori dominio.
