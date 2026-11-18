@@ -843,7 +843,7 @@ Costanti di modulo (nel blocco 1 solo la parte SAM/AAA; i blocchi successivi le 
 ```python
 # D-5, DW-9 rivista: periodo di rivisita [s] della funzione di ricerca, per (registro, modello, sensore).
 SAM_AAA_DWELL_S = {
-    'ZSU-23-4-Shilka': 18.0, 'Flakpanzer-Gepard': 1.0, '2K22-Tunguska': 1.82, '9A33-Osa': 1.82,
+    'ZSU-23-4-Shilka': 7.3, 'Flakpanzer-Gepard': 1.0, '2K22-Tunguska': 1.82, '9A33-Osa': 1.82,
     'MIM-115-Roland': 1.0, '9K331-Tor': 3.0, '2K12-Kub': 3.5, '9K37-Buk': 9.0, 'S-300PS': 12.0,
 }
 # Modelli con valore STIMATO [S] (registro Analysis/Document/Registro_Dwell_Stimati.md).
