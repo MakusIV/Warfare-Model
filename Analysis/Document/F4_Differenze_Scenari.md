@@ -2828,7 +2828,7 @@ La legge e' coperta dai test dedicati (S32, S33, `TestDwellFactor`, `TestDwellTi
 
 Proposta `Proposta_Scenari_S34_Permanenza_Breve.md` (richiesta "S34" dell'utente; la serie si chiama S36 perche' S34 e S35 sono gia' occupati). Decisioni S36-1..S36-7
 prese dall'utente il 2026-11-18 (R2: voce `detections` per le sole unita' S36). Eseguita da `des-developer` (Sonnet high) sul branch `ai/des-s36` in sei blocchi
-(commit `e107da28`: blocchi 1-2; `72cd0d5a`: blocchi 3-5; blocco 6, testi e documenti, non ancora committato quando e' scritta questa sezione).
+(commit `e107da28`: blocchi 1-2; `72cd0d5a`: blocchi 3-5; `e824d9eb`: blocco 6, testi e documenti).
 
 ### Il cambio
 Nessuna riga del motore cambia, nessun interruttore nuovo, nessun dato dei registri toccato. Lo strumento `Scenario_Baseline` ha una voce nuova del riassunto, `detections`
@@ -2838,11 +2838,11 @@ registratore delle 1103 esecuzioni esistenti e' quello di prima (`with_detection
 `range_type` fissato) e 5 in `Test_Threat_AA_Factory.py` (metriche di rilevamento del pianificatore con i dwell reali; la rotta scelta non dipende dalla D-5).
 
 ### Differenze della fotografia
-Stato atteso del confronto completo (**da confermare dalla sessione principale: non ancora eseguito in questa stesura**): `UNCHANGED (1103)`, `NEW (116)`,
-0 `CHANGED`, 0 `MISSING`, `compared 1219 runs: 116 difference lines` (le righe di differenza sono le NEW). Confronti PARZIALI gia' eseguiti dall'esecutore:
-`--only 'S3[2-5]'` 94 IDENTICAL; `--only 'S36'` 116 NEW, 0 CHANGED. Suite attesa `Ran 4961` (4925 + 36 test nuovi), `OK (skipped=7)` (non ancora eseguita in
-questa stesura; letti: `Test_Session_Scenarios_S36` 29 test OK, S32 6 e S33 11 OK dopo la modifica dei soli docstring). La fotografia nuova (1219 esecuzioni) la
-installa solo l'utente, dopo aver letto le 116.
+**Verificato il 2026-11-18 (ProArt, sessione principale, `tools/ai/verifica.sh`, dopo il commit `e824d9eb`)**: confronto completo `UNCHANGED (1103)`,
+`compared 1219 runs: 116 difference lines` (510,9 s); la cattura salvata confrontata con la fotografia: 1103 identiche, **116 NEW, 0 CHANGED, 0 MISSING**, nessun errore
+(NEW per unita': `S36-BAND` 48, `S36-FAMILIES` 28, `S36-GRAZE` 16, `S36-PASSES` 16, `S36-CUT` 8). Suite `Ran 4961` (4925 + 36 test nuovi), `OK (skipped=7)` (603,2 s).
+Confronti parziali dell'esecutore, riletti dalla sessione principale: `--only 'S3[2-5]'` 94 IDENTICAL; `--only 'S36'` 116 NEW, 0 CHANGED. La fotografia nuova (1219
+esecuzioni) la installa solo l'utente, dopo aver letto le 116.
 
 ### Le cinque unita' (116 esecuzioni nuove, 4 semi ciascuna)
 Chiavi `S36-<unita>/S36-<unita>-<0..3>/<variante>`; stesso `session_id` per le varianti di un seme; i bersagli (A-10C) sono in `weapon_hold`, quindi l'osservatore non
