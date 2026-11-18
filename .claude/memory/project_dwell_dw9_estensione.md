@@ -1,6 +1,6 @@
 ---
 name: project-dwell-dw9-estensione
-description: "Estensione dei dwell di ricerca (DW-9 rivista): Proposta DEFINITIVA 2026-11-17, DW9-1..DW9-10 decise; da fare S-4 sul ProArt (blocco 0) e blocchi 1-5 + 3bis con des-developer"
+description: "Estensione dei dwell di ricerca (DW-9 rivista): ESEGUITA, D5_DWELL_TIME ACCESO di default e mergiato 2026-11-18 (S-4/S-5 1103 identiche, suite 4925, confronto 1103 identiche); restano documenti (manuale, F4, Piano), push"
 metadata:
   node_type: memory
   type: project
@@ -8,7 +8,16 @@ metadata:
   modified: 2026-11-17
 ---
 
-## Stato di fatto (fine sessione osboxes 2026-11-17)
+## RIPRESA (fine esecuzione ProArt 2026-11-18) — DW-9 ESEGUITA, mergiata (ff) in `analysis/dce-dcs-persistence` a `c075aeef`, NON pushata
+- Blocco 0: sonda S-4 sul ProArt (~8,5 min a passata): rec/min/max tutte `compared 1103 runs: IDENTICAL` -> scelta dentro la banda irrilevante per la fotografia (da scrivere in F4). Script e log in `Rapporti/Sonde_Dwell_D5/` (`b2b6403f`).
+- Refuso del piano corretto (`fe5713b9`): test dello Shilka diceva 18.0, deve essere 7.3 (DW9-3). Lezione: ricontrollare le costanti dei test del piano contro `VALUES` di `probe_dw9.py` (controllo fatto con uno script: 53 record, 0 discordanze).
+- Esecuzione con `des-developer` (Sonnet high) su `ai/des-dw9`: blocco 1 (`dd93b8c7`, 3 test nuovi), blocchi 2+3+3bis accorpati (`2699bcef`, 2 nuovi), blocchi 4+5 accorpati (`c075aeef`, 6 nuovi; 11 totali come da piano). Verifica mia a ogni giro: test parziali rieseguiti, diff letto. Solo dati/test/docstring, nessuna riga di motore.
+- Verifiche finali (`verifica.sh`): suite `Ran 4925 tests`, `OK (skipped=7)` (606 s); confronto `compared 1103 runs: IDENTICAL` (509,6 s), 0 CHANGED/NEW. Fotografia NON toccata.
+- ACCENSIONE (richiesta dell'utente, 2026-11-18, dopo S-5): `Engagement_Resolver.D5_DWELL_TIME = True` di default, branch `ai/des-dw9-accensione` mergiato (ff, `ef8f657e`), NON pushato. Prove: S-5 (interruttore acceso sul codice committato, strumentata) 1103 IDENTICHE x2; 93 chiamate g<1: 77 con g=0 ma Pd gia' 0 (bersaglio fuori portata), 16 di S32 con dwell di prova 600 s => la fotografia NON mette alla prova la legge coi dwell reali (permanenza > periodo, g=1). Prova temporanea con default True: solo i 2 test che controllavano il default spento fallivano (invertiti). Dopo: suite `Ran 4925`, `OK (skipped=7)` (606,6 s); confronto 1103 IDENTICHE (508,0 s). Air_Route_Manager (metriche di rotta) ora usa il dwell di default: suite OK. Script/log S-5 in `Rapporti/Sonde_Dwell_D5/s5/` (`85076272`). Fotografia non toccata.
+- PROSSIME: (1) documenti §5.8 dalla sessione principale/`des-manual-writer`, ORA CON INTERRUTTORE ACCESO: manuale cap. 4 §4.36 + cap. 9 (`10_Limiti...:381`) + `09_Validazione.md` §8.14, `F4_Differenze_Scenari.md` (DW-9: S-4 x3 e S-5 identiche; limite: fotografia non sensibile ai dwell reali; 19 FONTE/24 [S]; 4 EWR cambiati), `Piano_Implementazione_Missione.md` riga D-5 (ora acceso), `AGENTS.md`/memoria se citano "spento di default"; nota in testa a `Proposta_Dwell_Time_Rilevamento.md` (gia' da e81aabcc: verificare); (2) push su richiesta; (3) branch `ai/des-dw9` e `ai/des-dw9-accensione` mergiati, cancellabili; (4) eventuale scenario di prova con permanenza breve e dwell reale (la fotografia non ne ha) se si vuole validare la legge in sessione.
+- Resta non tracciato `Analysis/WIKI_LLM_SIMULATION/RAW/Logistica/` (Multilayer.Network.Science.md, probabilmente per la nota rete multistrato): non committare senza ok.
+
+## Stato di fatto prima dell'esecuzione (fine sessione osboxes 2026-11-17)
 - `Analysis/Document/Proposta_Dwell_Estensione_DW9.md` (des-planner Opus high) e' **DEFINITIVA e committata**; codice e test NON toccati. Contratto dei blocchi A e B resta `Proposta_Dwell_Time_Rilevamento.md` (con nota in testa: tabella A.1 e DW-2 superate per 4 EWR).
 - Intervento = SOLO DATI: `dwell_time_s` (+ chiave documentale `search_model`) nel dizionario del sensore di 43 record (19 FONTE, 24 stimati [S]); 3 senza valore (Chain-Home, Mammut, Type 093). Nessuna riga di motore: basta l'interruttore `Engagement_Resolver.D5_DWELL_TIME` (spento di default). Piano: blocco 0 (sonda S-4) + blocchi 1-5 + blocco 3bis (EWR). Attesi: 11 test nuovi, suite `Ran 4925` (base 4914 DA RILEGGERE dall'esito reale), con interruttore spento fotografia 1103 identica.
 - Linea di design decisa dall'utente (Gemini doc `Dinamica dei Tempi di Aggiornamento Radar - Google Gemini.md`): **dwell fisso per sensore, solo ricerca, niente dipendenza da distanza/modo/carico** (gia' in Pd(d); nessuno stato di modo nel motore; sensibilita' bassa). Dove la fonte da' un intervallo: regime normale se citato, altrimenti **media geometrica degli estremi del periodo**, banda di incertezza accanto al valore. Rinvio dichiarato: dwell dipendente da distanza/modo/carico + legge cumulativa (Koopman) + orizzonte radar.
