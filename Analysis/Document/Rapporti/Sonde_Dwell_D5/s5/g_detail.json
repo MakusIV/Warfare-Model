@@ -1,0 +1,932 @@
+[
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 108166.53826391968,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 111018.01655587259,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 113207.77358467925,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 115935.32679903913,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 108166.53826391968,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 111018.01655587259,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 113207.77358467925,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 115935.32679903913,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 108166.53826391968,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 111018.01655587259,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 113207.77358467925,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 115935.32679903913,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 108166.53826391968,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 111018.01655587259,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 113207.77358467925,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS6CarrierGroupVersusCoastalDefence",
+  "observer": "FSG 1241.1MP Molniya",
+  "dwell": 7.1,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 115935.32679903913,
+  "own_range": 50000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS9PartialFogOfWar",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 15075.681146562752,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS9PartialFogOfWar",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12858.759365754455,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS9PartialFogOfWar",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 17383.973297528708,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS9PartialFogOfWar",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12819.465095913822,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS9PartialFogOfWar",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12828.906944910916,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios.TestS9PartialFogOfWar",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12858.759365754455,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS11SessionBoundary",
+  "observer": "Flakpanzer-Gepard",
+  "dwell": 1.0,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 47825.28674039834,
+  "own_range": 15000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS11SessionBoundary",
+  "observer": "9K331-Tor",
+  "dwell": 3.0,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 47831.87276075777,
+  "own_range": 25000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS11SessionBoundary",
+  "observer": "Flakpanzer-Gepard",
+  "dwell": 1.0,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 47825.28674039834,
+  "own_range": 15000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS11SessionBoundary",
+  "observer": "9K331-Tor",
+  "dwell": 3.0,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 47831.87276075777,
+  "own_range": 25000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS11SessionBoundary",
+  "observer": "Flakpanzer-Gepard",
+  "dwell": 1.0,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 47827.05822491361,
+  "own_range": 15000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS11SessionBoundary",
+  "observer": "9K331-Tor",
+  "dwell": 3.0,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 47833.64400136453,
+  "own_range": 25000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS13ForwardFARPInterdiction",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14673.414856416688,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS13ForwardFARPInterdiction",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14692.144280142023,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS13ForwardFARPInterdiction",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14780.362091251687,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS13ForwardFARPInterdiction",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14673.414856416688,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS13ForwardFARPInterdiction",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14692.144280142023,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S10_S18.TestS13ForwardFARPInterdiction",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14780.362091251687,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12372.954376380769,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12395.160345876935,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12437.443467208202,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12499.599993599795,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12372.954376380769,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12395.160345876935,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12437.443467208202,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12499.599993599795,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12372.954376380769,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12395.160345876935,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12437.443467208202,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12499.599993599795,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12372.954376380769,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12395.160345876935,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12437.443467208202,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12499.599993599795,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12372.954376380769,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12395.160345876935,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12437.443467208202,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12499.599993599795,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12372.954376380769,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12395.160345876935,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12437.443467208202,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S19_Air_Defence.TestS19AirDefenceAllocation",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 12499.599993599795,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 11611.453970250624,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 11635.113377326796,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 16818.97079862832,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 16835.31344303135,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 16912.355800571135,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 10329.65504441809,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 10356.243205751403,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 10481.019670655718,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 15500.39365790907,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 15518.125001112334,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 15551.919609814979,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 10329.65504441809,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 10356.243205751403,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 10481.019670655718,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14203.54568067669,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14222.893865281758,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14314.003978728993,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14203.54568067669,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S21.TestS21ParkedAircraftStrike",
+  "observer": "9K35-Strela-10",
+  "dwell": 3.2,
+  "g": 0.0,
+  "exposure": 0.0,
+  "distance_cpa": 14222.893865281758,
+  "own_range": 10000.0,
+  "pd_without_dwell": 0.0
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.111,
+  "exposure": 66.6962349394775,
+  "distance_cpa": 3014.962686336267,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.968121875
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.11,
+  "exposure": 66.01113078682314,
+  "distance_cpa": 3104.834939252005,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9641475308641976
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.108,
+  "exposure": 64.68305774454126,
+  "distance_cpa": 3269.556544854363,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9559119984567901
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.104,
+  "exposure": 62.67115340719144,
+  "distance_cpa": 3498.57113690718,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9422
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.111,
+  "exposure": 66.6962349394775,
+  "distance_cpa": 3014.962686336267,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.968121875
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.11,
+  "exposure": 66.01113078682314,
+  "distance_cpa": 3104.834939252005,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9641475308641976
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.108,
+  "exposure": 64.68305774454126,
+  "distance_cpa": 3269.556544854363,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9559119984567901
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.104,
+  "exposure": 62.67115340719144,
+  "distance_cpa": 3498.57113690718,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9422
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.111,
+  "exposure": 66.6962349394775,
+  "distance_cpa": 3014.962686336267,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.968121875
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.11,
+  "exposure": 66.01113078682314,
+  "distance_cpa": 3104.834939252005,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9641475308641976
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.108,
+  "exposure": 64.68305774454126,
+  "distance_cpa": 3269.556544854363,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9559119984567901
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.104,
+  "exposure": 62.67115340719144,
+  "distance_cpa": 3498.57113690718,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9422
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.111,
+  "exposure": 66.6962349394775,
+  "distance_cpa": 3014.962686336267,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.968121875
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.11,
+  "exposure": 66.01113078682314,
+  "distance_cpa": 3104.834939252005,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9641475308641976
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.108,
+  "exposure": 64.68305774454126,
+  "distance_cpa": 3269.556544854363,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9559119984567901
+ },
+ {
+  "unit": "Test_Session_Scenarios_S32.TestS32DwellTime",
+  "observer": "ZSU-57-2",
+  "dwell": 600.0,
+  "g": 0.104,
+  "exposure": 62.67115340719144,
+  "distance_cpa": 3498.57113690718,
+  "own_range": 6000.0,
+  "pd_without_dwell": 0.9422
+ }
+]

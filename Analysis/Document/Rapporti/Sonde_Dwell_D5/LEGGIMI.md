@@ -12,6 +12,7 @@ Accendono la legge in memoria e rieseguono il confronto con la fotografia, senza
 | S-4/rec | DW-9: valori raccomandati di §2 in memoria, D-5 accesa, tutte le famiglie (`probe_dw9.py rec all`) | 1103 IDENTICHE (506,7 s) | `s4_rec/log.txt`, `s4_rec/stats.json` |
 | S-4/min | DW-9: ogni sensore con banda all'estremo minimo | 1103 IDENTICHE (504,5 s) | `s4_min/log.txt`, `s4_min/stats.json` |
 | S-4/max | DW-9: ogni sensore con banda all'estremo massimo | 1103 IDENTICHE (508,8 s) | `s4_max/log.txt`, `s4_max/stats.json` |
+| S-5 | accensione di `D5_DWELL_TIME` sul codice committato (nessun valore iniettato), con registro delle chiamate `g < 1` (`probe_dw9_on.py`) | 1103 IDENTICHE (502,8 s; una prima esecuzione senza strumentazione: 507,5 s). 93 chiamate `g < 1`: 77 con `g = 0` e Pd gia' 0 (bersaglio fuori portata), 16 di S32 con dwell di prova 600 s | `s5/log.txt`, `s5/stats.json`, `s5/g_detail.json` |
 
 Note:
 - Nel riepilogo di S-2 "44 difference lines" sono righe di stampa, non esecuzioni cambiate.
@@ -28,4 +29,4 @@ Per rieseguirle su un'altra macchina (dalla root del repo; sul ProArt usare l'in
     mkdir -p .ai-run/sonde_dwell/s2 && <python> .ai-run/sonde_dwell/probe_dwell.py uniform:10 .ai-run/sonde_dwell/s2 > .ai-run/sonde_dwell/s2/log.txt 2>&1
     grep -E '^(compared|DIFF|PROBE_RC)' .ai-run/sonde_dwell/s2/log.txt
 
-Contenuto: `probe_dwell.py` (S-1 e S-2), `probe_s32.py` (S-3), `probe_dw9.py` (S-4; lancio: `PYTHONPATH=. <python> .ai-run/sonde_dwell/probe_dw9.py <rec|min|max> all <cartella>`), `s1/`, `s2/esito_riassunto.txt`, `s3/esito.txt`, `s4_*/`.
+Contenuto: `probe_dwell.py` (S-1 e S-2), `probe_s32.py` (S-3), `probe_dw9_on.py` (S-5), `probe_dw9.py` (S-4; lancio: `PYTHONPATH=. <python> .ai-run/sonde_dwell/probe_dw9.py <rec|min|max> all <cartella>`), `s1/`, `s2/esito_riassunto.txt`, `s3/esito.txt`, `s4_*/`.
