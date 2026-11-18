@@ -466,18 +466,20 @@ class TestEWRFixedSitesAsAssets(F.LoggerSilencer, unittest.TestCase):
         self.assertFalse(any(e.asset_id == site_id for e in outcome.fuel_events))
 
 
-# D-5, DW-2: periodo di rivisita [s] = 60 / giri al minuto; regime normale se citato, altrimenti rotazione piu'
-# veloce. AMES-Type-80 15: 4 giri/min letto come regime normale di "4 (fino a 6)", interpretazione [S].
+# D-5, DW-9 rivista (DW9-10): regime normale se citato, altrimenti valore centrale (media geometrica);
+# AMES-Type-80 15: regime base 4 giri/min [S]; P-12 6: fonte principale, fonti discordanti (banda 6-30);
+# Freya, Wassermann, AN-FPS-117: stime per confronto [S].
 EWR_DWELL_S = {
-    'SCR-270': 60.0, 'P-12-Yenisei': 6.0, 'P-18-Terek': 6.0, 'P-37-Mech': 10.0, '1L13-Nebo-SV': 10.0,
-    '55Zh6-Nebo': 10.0, 'AN-TPS-43': 10.0, 'AMES-Type-7': 7.5, 'AMES-Type-80': 15.0, 'P-14-Lena': 10.0,
+    'SCR-270': 60.0, 'P-12-Yenisei': 6.0, 'P-18-Terek': 6.0, 'P-37-Mech': 14.1, '1L13-Nebo-SV': 14.1,
+    '55Zh6-Nebo': 10.0, 'AN-TPS-43': 10.0, 'AMES-Type-7': 30.0, 'AMES-Type-80': 15.0, 'P-14-Lena': 17.3,
+    'FuMG-80-Freya': 60.0, 'Wassermann': 60.0, 'AN-FPS-117': 10.0,
 }
-# I 5 record senza dato di rotazione: nessuna chiave `dwell_time_s` (legge di Pd invariata).
-EWR_WITHOUT_DWELL = ('FuMG-80-Freya', 'AN-FPS-117', 'Chain-Home', 'Wassermann', 'Mammut')
+# I 2 record senza valore: illuminazione continua (Chain-Home); schiera fissa senza cadenza ne' analogo (Mammut).
+EWR_WITHOUT_DWELL = ('Chain-Home', 'Mammut')
 
 
 class TestEWRDwellTime(unittest.TestCase):
-    """D-5: `dwell_time_s` [s] nel radar dei 10 EWR con un dato di rotazione."""
+    """D-5: `dwell_time_s` [s] nel radar dei 13 EWR con un valore."""
 
     def test_source_dwell_values(self):
         for model, expected in EWR_DWELL_S.items():

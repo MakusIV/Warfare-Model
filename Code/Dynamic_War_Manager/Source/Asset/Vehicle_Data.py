@@ -3744,6 +3744,13 @@ ZSU_57_2_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
+        # dwell_time_s 3.2: STIMA PER CONFRONTO [S], valore centrale -- ricerca a vista del servente (equipaggio a
+        #  torretta aperta): Poe 1974 (ADA017599, tab. 2), passata completa del settore da osservatori a terra 1,75-6,00
+        #  s (medie 2,72 / 2,99 / 3,94 s per 30 / 60 / 120 gradi), nessun regime normale -> centrale 3,24 (D). Banda
+        #  1.75-6.0 s. APPROSSIMAZIONE: la vista non ha un periodo di rivisita (probabilita' cumulata a ogni colpo
+        #  d'occhio, Koopman); da rivedere con una legge cumulativa. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 3.2,
+        'search_model': 'crew visual search',
     },
     'communication': {
         'model': 'generic comm model',
@@ -3871,6 +3878,13 @@ M163_VADS_data = {
             'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
+        # dwell_time_s 3.2: STIMA PER CONFRONTO [S], valore centrale -- ricerca a vista del servente (puntatore;
+        #  l'AN/VPS-2 misura solo la distanza): Poe 1974 (ADA017599, tab. 2), passata completa del settore da
+        #  osservatori a terra 1,75-6,00 s (medie 2,72 / 2,99 / 3,94 s per 30 / 60 / 120 gradi), nessun regime normale
+        #  -> centrale 3,24 (D). Banda 1.75-6.0 s. APPROSSIMAZIONE: la vista non ha un periodo di rivisita (probabilita'
+        #  cumulata a ogni colpo d'occhio, Koopman); da rivedere con una legge cumulativa. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 3.2,
+        'search_model': 'crew visual search',
     },
     'communication': {
         'model': 'generic comm model',
@@ -4056,7 +4070,14 @@ Strela1_9P31_data = {
             'ground': (True, {'tracking_range': 5, 'acquisition_range': 8, 'engagement_range': 5, 'multi_target_capacity': 1}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 50, 'mttr': 3}
+        'reliability': {'mtbf': 50, 'mttr': 3},
+        # dwell_time_s 3.2: STIMA PER CONFRONTO [S], valore centrale -- ricerca a vista del servente (il mirino ottico
+        #  serve dopo la scoperta): Poe 1974 (ADA017599, tab. 2), passata completa del settore da osservatori a terra
+        #  1,75-6,00 s (medie 2,72 / 2,99 / 3,94 s per 30 / 60 / 120 gradi), nessun regime normale -> centrale 3,24 (D).
+        #  Banda 1.75-6.0 s. APPROSSIMAZIONE: la vista non ha un periodo di rivisita (probabilita' cumulata a ogni colpo
+        #  d'occhio, Koopman); da rivedere con una legge cumulativa. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 3.2,
+        'search_model': 'crew visual search',
     },
     'communication': {
         'model': 'generic comm model',
@@ -4114,7 +4135,14 @@ MIM72G_Chaparral_data = {
             'ground': (True, {'tracking_range': 6, 'acquisition_range': 10, 'engagement_range': 6, 'multi_target_capacity': 1}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 52, 'mttr': 3}
+        'reliability': {'mtbf': 52, 'mttr': 3},
+        # dwell_time_s 3.2: STIMA PER CONFRONTO [S], valore centrale -- ricerca a vista del servente (il FLIR serve dopo
+        #  la scoperta): Poe 1974 (ADA017599, tab. 2), passata completa del settore da osservatori a terra 1,75-6,00 s
+        #  (medie 2,72 / 2,99 / 3,94 s per 30 / 60 / 120 gradi), nessun regime normale -> centrale 3,24 (D). Banda
+        #  1.75-6.0 s. APPROSSIMAZIONE: la vista non ha un periodo di rivisita (probabilita' cumulata a ogni colpo
+        #  d'occhio, Koopman); da rivedere con una legge cumulativa. Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 3.2,
+        'search_model': 'crew visual search',
     },
     'communication': {
         'model': 'generic comm model',
@@ -4234,7 +4262,15 @@ K9K35_Strela10_data = {
             'ground': (True, {'tracking_range': 6, 'acquisition_range': 10, 'engagement_range': 6, 'multi_target_capacity': 1}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 48, 'mttr': 3.5}
+        'reliability': {'mtbf': 48, 'mttr': 3.5},
+        # dwell_time_s 3.2: STIMA PER CONFRONTO [S], valore centrale -- ricerca a vista del servente (il mirino
+        #  ottico-IR serve dopo la scoperta; il telemetro 9S86 non scopre): Poe 1974 (ADA017599, tab. 2), passata
+        #  completa del settore da osservatori a terra 1,75-6,00 s (medie 2,72 / 2,99 / 3,94 s per 30 / 60 / 120 gradi),
+        #  nessun regime normale -> centrale 3,24 (D). Banda 1.75-6.0 s. APPROSSIMAZIONE: la vista non ha un periodo di
+        #  rivisita (probabilita' cumulata a ogni colpo d'occhio, Koopman); da rivedere con una legge cumulativa. Solo
+        #  ricerca. D-5 DW-9.
+        'dwell_time_s': 3.2,
+        'search_model': 'crew visual search',
     },
     'communication': {
         'model': 'generic comm model',
@@ -4420,7 +4456,15 @@ M6_Linebacker_data = {
             'ground': (True, {'tracking_range': 8, 'acquisition_range': 12, 'engagement_range': 8, 'multi_target_capacity': 1}),
             'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
         },
-        'reliability': {'mtbf': 65, 'mttr': 2.5}
+        'reliability': {'mtbf': 65, 'mttr': 2.5},
+        # dwell_time_s 3.2: STIMA PER CONFRONTO [S], valore centrale -- ricerca a vista del servente (il FLIR serve dopo
+        #  la scoperta; il cueing radar esterno non e' modellato): Poe 1974 (ADA017599, tab. 2), passata completa del
+        #  settore da osservatori a terra 1,75-6,00 s (medie 2,72 / 2,99 / 3,94 s per 30 / 60 / 120 gradi), nessun
+        #  regime normale -> centrale 3,24 (D). Banda 1.75-6.0 s. APPROSSIMAZIONE: la vista non ha un periodo di
+        #  rivisita (probabilita' cumulata a ogni colpo d'occhio, Koopman); da rivedere con una legge cumulativa. Solo
+        #  ricerca. D-5 DW-9.
+        'dwell_time_s': 3.2,
+        'search_model': 'crew visual search',
     },
     'communication': {
         'model': 'generic comm model',
@@ -4714,7 +4758,9 @@ def _ewr_support_fields(mobility: str) -> Dict:
 # restano commenti informativi e NON diventano chiavi del registro.
 # D-5 (Proposta_Dwell_Time_Rilevamento.md): 'dwell_time_s' [s] nel radar = periodo di rivisita 60/giri al minuto
 # (FONTE la rotazione, D la conversione); assente = nessuna permanenza dichiarata (legge di Pd invariata).
-# Intervalli di giri/min (scelta [S], DW-2): regime normale se la fonte lo cita, altrimenti rotazione piu' veloce.
+# Intervalli di giri/min (scelta [S], Proposta_Dwell_Estensione_DW9.md §3.5, DW9-10, che sostituisce DW-2): regime
+# normale se la fonte lo cita, altrimenti valore centrale = media geometrica degli estremi del periodo (un decimale);
+# l'intervallo e' riportato come "Banda <min>-<max> s". 'search_model' = radar di ricerca (solo documentale).
 
 SCR270_data = {
     **_ewr_support_fields('mobile'),
@@ -4742,6 +4788,7 @@ SCR270_data = {
         'acquisition_profile': ((305, 32), (1524, 80), (6096, 160), (7620, 180)),
         # dwell_time_s 60: FONTE 1 giro/min (conversione D: 60/1), conf. media. D-5.
         'dwell_time_s': 60.0,
+        'search_model': 'SCR-270',
     },
 }
 
@@ -4765,6 +4812,11 @@ FuMG80_Freya_data = {
         'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
         # 120: FONTE (infobox Wikipedia), bombardieri, quota non qualificata, conf. media;
         # CONTRADDIZIONE 120/160/200 km fra le fonti.
+        # dwell_time_s 60.0: STIMA PER CONFRONTO [S] -- schiera orientabile, velocita' non data: analogo SCR-270 (EWR a
+        #  rotazione del 1940, 1 giro/min). Banda 30-60 s (analoghi AMES Type 7 riallineato, 30 s, e SCR-270). Solo
+        #  ricerca. D-5 DW-9.
+        'dwell_time_s': 60.0,
+        'search_model': 'FuMG 80 Freya',
     },
 }
 
@@ -4788,9 +4840,10 @@ P12_Yenisei_data = {
         'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
         # 200: FONTE (Wikipedia en/ru), quota max 25 km, bersaglio non qualificato, conf. media;
         # altre fonti 250-360 km (360 = portata strumentale).
-        # dwell_time_s 6: FONTE 10 giri/min (2-6 secondo [AC-P12], CONTRADDIZIONE; nessun regime normale citato,
-        # regola: rotazione piu' veloce) -> 60/10 (D). D-5.
+        # dwell_time_s 6.0: FONTE, fonte principale -- 10 giri/min [W-P12] -> 60/10 (D); [AC-P12] da' 2-6 giri/min
+        #  (discordanza dichiarata, non usata per il valore). Banda 6-30 s. Conf. media. D-5 DW9-10.
         'dwell_time_s': 6.0,
+        'search_model': 'P-12',
     },
 }
 
@@ -4818,6 +4871,7 @@ P18_Terek_data = {
         'acquisition_profile': ((500, 60), (10000, 180), (20000, 260)),
         # dwell_time_s 6: FONTE 10 giri/min -> 60/10 (D), conf. media. D-5.
         'dwell_time_s': 6.0,
+        'search_model': 'P-18',
     },
 }
 
@@ -4840,8 +4894,10 @@ P37_Mech_data = {
         },
         'reliability': {'mtbf': 45, 'mttr': 4},  # STIMA [S] generica del registro (decisione 12), non dato di fonte
         # 280: FONTE (Wikipedia ru) contro caccia, quota non indicata, conf. media (bombardiere 350, missile da crociera 235).
-        # dwell_time_s 10: FONTE 3-6 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/6 (D). D-5.
-        'dwell_time_s': 10.0,
+        # dwell_time_s 14.1: FONTE, valore centrale -- 3-6 giri/min (nessun regime normale citato) = 20-10 s -> centrale
+        #  radice di 200 = 14,14 (D). Banda 10-20 s. Conf. media. D-5 DW9-10.
+        'dwell_time_s': 14.1,
+        'search_model': 'P-37',
     },
 }
 
@@ -4866,8 +4922,10 @@ Nebo_SV_1L13_data = {
         # 250: FONTE (APA, 'non inferiore a') contro caccia a 10 000 m, conf. media; CONTRADDIZIONE con la stampa
         # (60 km a 500 m, 350 km a 27 km). Servizio 1984: Wikipedia en (P-18 sostituito nel 1984); radartutorial ~1990.
         'acquisition_profile': ((500, 50), (10000, 250), (27000, 330)),
-        # dwell_time_s 10: FONTE 3-6 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/6 (D). D-5.
-        'dwell_time_s': 10.0,
+        # dwell_time_s 14.1: FONTE, valore centrale -- 3-6 giri/min (nessun regime normale citato) = 20-10 s -> centrale
+        #  radice di 200 = 14,14 (D). Banda 10-20 s. Conf. media. D-5 DW9-10.
+        'dwell_time_s': 14.1,
+        'search_model': '1L13',
     },
 }
 
@@ -4895,6 +4953,7 @@ Nebo_55Zh6_data = {
         'acquisition_profile': ((500, 65), (20000, 400)),
         # dwell_time_s 10: FONTE 6 giri/min -> 60/6 (D), conf. media-bassa. D-5.
         'dwell_time_s': 10.0,
+        'search_model': '55Zh6',
     },
 }
 
@@ -4920,6 +4979,7 @@ AN_TPS43_data = {
         # i profili per quota CMANO (gioco) NON sono usati.
         # dwell_time_s 10: FONTE 6 giri/min -> 60/6 (D), conf. media. D-5.
         'dwell_time_s': 10.0,
+        'search_model': 'AN/TPS-43',
     },
 }
 
@@ -4951,6 +5011,10 @@ AN_FPS117_data = {
         # conf. media-alta; portata strumentale 10-470 km NON usata. reliability: FONTE (Lockheed, EverythingRF), MTBF
         # critico >2000 h (limite inferiore), MTTR <45 min = 0.75 h (conversione D, limite superiore), conf. media-alta;
         # l'unico EWR con entrambi di fonte (decisione C-2). Riferimento di migliore fonte dei siti fissi.
+        # dwell_time_s 10.0: STIMA PER CONFRONTO [S] -- rotazione non riportata dalla ricerca (il valore noto fuori
+        #  ricerca non si usa): analogo AN-TPS-43 (EWR 3D statunitense, 6 giri/min). Solo ricerca. D-5 DW-9.
+        'dwell_time_s': 10.0,
+        'search_model': 'AN/FPS-117',
     },
 }
 
@@ -5004,8 +5068,10 @@ AMES_Type7_data = {
         # conf. media; a quota piu' alta la portata reale e' probabilmente maggiore. Profilo: FONTE, bombardiere.
         # Antenna in pozzo a terra, altezza non data: default EWR 20 m [S]. reliability: STIMA [S] generica (decisione 12).
         'acquisition_profile': ((150, 16), (6100, 140)),
-        # dwell_time_s 7.5: FONTE 0,5-8 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/8 (D). D-5.
-        'dwell_time_s': 7.5,
+        # dwell_time_s 30.0: FONTE, valore centrale -- 0,5-8 giri/min (nessun regime normale citato) = 120-7,5 s ->
+        #  centrale radice di 900 = 30,0 (D). Banda 7.5-120 s. Conf. media. D-5 DW9-10.
+        'dwell_time_s': 30.0,
+        'search_model': 'AMES Type 7',
     },
 }
 
@@ -5031,9 +5097,11 @@ AMES_Type80_data = {
         # quota alta, conf. media; infobox 'migliore di 240 nmi (440 km)' NON usato. antenna_height 11.4: DEDOTTO, torre
         # piramidale 25 ft (7.6 m) + meta' riflettore alto 25 ft (3.8 m). reliability: STIMA [S] generica (decisione 12).
         'antenna_height': 11.4,
-        # dwell_time_s 15: FONTE 4 giri/min (fino a 6); 4 letto come regime normale = STIMA/interpretazione [S] (la fonte non dice
-        # 'normale'; regola: regime normale se citato) -> 60/4 (D). D-5.
+        # dwell_time_s 15.0: FONTE 4 giri/min (fino a 6); 4 letto come regime base = regime normale,
+        #  STIMA/interpretazione [S] (la fonte non dice 'normale'; regola 1 di §3.5) -> 60/4 (D). Banda 10-15 s. D-5
+        #  DW9-10.
         'dwell_time_s': 15.0,
+        'search_model': 'AMES Type 80',
     },
 }
 
@@ -5061,6 +5129,11 @@ Wassermann_data = {
         # designazione contraddittorie fra le fonti. reliability: STIMA [S] generica (decisione 12).
         'antenna_height': 37.0,
         'acquisition_profile': ((50, 35), (6000, 190)),
+        # dwell_time_s 60.0: STIMA PER CONFRONTO [S] -- traliccio ruotabile, velocita' non data: analogo SCR-270 (EWR a
+        #  rotazione del 1940, 1 giro/min). Banda 30-60 s (analoghi AMES Type 7 riallineato, 30 s, e SCR-270). Solo
+        #  ricerca. D-5 DW-9.
+        'dwell_time_s': 60.0,
+        'search_model': 'Wassermann',
     },
 }
 
@@ -5085,6 +5158,8 @@ Mammut_data = {
         # 300: FONTE DEBOLE trattata come STIMA (infobox e testo Wikipedia; tabella tecnica 325), bersaglio NON
         # qualificato, conf. media-bassa; potenza contraddittoria (20/200 kW). Fascio su un arco di 100 gradi: il modello
         # lo tratta come omnidirezionale (limite). reliability: STIMA [S] generica (decisione 12).
+        # nessun dwell_time_s: schiera fissa a scansione elettronica su 100 gradi, cadenza non data, nessun analogo
+        #  credibile (Chain-Home, l'altro radar fisso, non ha periodo). D-5 DW-9.
     },
 }
 
@@ -5110,8 +5185,10 @@ P14_Lena_data = {
         # 40-540 km e 593 km strumentali. Portata contro caccia/quota: non trovata. Il record e' la versione statica
         # 1RL113; la mobile 5N84A (6 rimorchi, oltre 24 h di montaggio) non e' modellata a parte. Costruiti 731 o ~2000
         # (contraddizione). reliability: STIMA [S] generica (decisione 12).
-        # dwell_time_s 10: FONTE 2-6 giri/min (nessun regime normale citato, regola: rotazione piu' veloce) -> 60/6 (D). D-5.
-        'dwell_time_s': 10.0,
+        # dwell_time_s 17.3: FONTE, valore centrale -- 2-6 giri/min (nessun regime normale citato) = 30-10 s -> centrale
+        #  radice di 300 = 17,32 (D). Banda 10-30 s. Conf. media. D-5 DW9-10.
+        'dwell_time_s': 17.3,
+        'search_model': 'P-14',
     },
 }
 
