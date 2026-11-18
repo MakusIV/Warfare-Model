@@ -233,7 +233,7 @@ class TestEngagedAssetsCountsInterceptions(unittest.TestCase):
 
 
 class TestDwellTimeSwitch(_Base):
-    """D-5: `Session_Simulator.engage` passa `dwell_time_for` al risolutore solo con D5_DWELL_TIME acceso."""
+    """D-5: `Session_Simulator.engage` passa `dwell_time_for` al risolutore solo con D5_DWELL_TIME acceso (default)."""
 
     def _resolver_calls(self):
         original = ER.resolve_engagement
@@ -249,7 +249,8 @@ class TestDwellTimeSwitch(_Base):
         return calls
 
     def test_switch_off_passes_no_reader(self):
-        calls = self._resolver_calls()
+        with patch.object(ER, 'D5_DWELL_TIME', False):
+            calls = self._resolver_calls()
 
         self.assertTrue(calls)
 
@@ -257,8 +258,8 @@ class TestDwellTimeSwitch(_Base):
             self.assertNotIn('dwell_time_for', kwargs)
 
     def test_switch_on_passes_the_registry_reader(self):
-        with patch.object(ER, 'D5_DWELL_TIME', True):
-            calls = self._resolver_calls()
+        # default (DW-9): acceso, nessuna patch
+        calls = self._resolver_calls()
 
         self.assertTrue(calls)
 

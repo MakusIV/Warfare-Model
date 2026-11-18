@@ -729,7 +729,7 @@ Oltre alle posture, `run_session` chiude la porta di uscita con tre dati per la 
   dalla regola dichiarata (`Command/Session_Types.operation_outcome`, tabella §2.H della Proposta F8).
 
 ## Permanenza nel volume (D-5)
-Interruttore del risolutore, non di questo modulo: `Engagement_Resolver.D5_DWELL_TIME` (SPENTO). Acceso, `engage`
+Interruttore del risolutore, non di questo modulo: `Engagement_Resolver.D5_DWELL_TIME` (ACCESO di default dalla DW-9). Acceso, `engage`
 passa a `resolve_engagement` il lettore `dwell_time_for=Engagement_Resolver.registry_dwell_time` (Pd ridotta dalla
 permanenza nel volume per i sensori con `dwell_time_s`); spento, la chiamata e' quella di prima.
 

@@ -191,7 +191,7 @@ inversa esatta.
   tratti (chiamate dirette): tutta la finestra se la portata propria e' la maggiore, altrimenti l'intervallo
   reciproco, altrimenti 0.
 * **Chi la attiva**: solo il chiamante che passa `dwell_time_for` a `resolve_engagement`; in sessione lo fa
-  `Session_Simulator` con `D5_DWELL_TIME` acceso (SPENTO di default). Spento, la chiamata e' quella di prima.
+  `Session_Simulator` con `D5_DWELL_TIME` acceso (ACCESO di default dalla DW-9; spento, la chiamata e' quella di prima).
 * **RNG**: il calcolo sta prima di `_draw` e non estrae nulla. Numero e ordine delle estrazioni sono invariati in
   ogni stato dell'interruttore; cambia solo la soglia, come per `detection_factor`.
 * **Limiti** (Proposta §5.2): solo riduzione (nessun cumulo di scansioni su permanenze lunghe); un solo sensore
@@ -587,12 +587,13 @@ UNSEEN_DETECTION_FACTOR = 0.5
 RECON_EFFICIENCY_FOG_RELIEF = 0.5
 
 # D-5 opzione 2 (Proposta_Dwell_Time_Rilevamento.md), interruttore dedicato:
-#   * `D5_DWELL_TIME` (SPENTO): Pd ridotta dalla PERMANENZA nel volume quando l'osservatore dichiara un periodo di
+#   * `D5_DWELL_TIME` (ACCESO dalla DW-9, 2026-11-18; prima spento): Pd ridotta dalla PERMANENZA nel volume quando l'osservatore dichiara un periodo di
 #     rivisita (`dwell_time_s` del sensore nel registro): Pd = min(1, permanenza/dwell) * Pd(d_cpa). Lo leggono
 #     Session_Simulator (passa `dwell_time_for` al risolutore solo se acceso) e Air_Route_Manager (metriche di
 #     rilevamento). Spento: legge di sola distanza, come prima. Nessuna estrazione in piu' ne' in ordine diverso in
-#     nessuno dei due stati.
-D5_DWELL_TIME = False
+#     nessuno dei due stati. Acceso di default dopo la sonda S-5 (1103 esecuzioni identiche alla fotografia: con i
+#     dwell reali nessuna Pd cambia nelle esecuzioni fotografate; v. Rapporti/Sonde_Dwell_D5/LEGGIMI.md).
+D5_DWELL_TIME = True
 
 # Bersagli intercettabili (Proposta_Bersagli_Intercettabili_Difesa_Aerea.md), interruttore dedicato:
 #   * `BI_AD_TARGET_RULE` (SPENTO): un intercettore ferma un colpo solo se il suo dominio ('land' | 'naval') e' fra

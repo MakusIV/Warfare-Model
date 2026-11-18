@@ -175,12 +175,12 @@ varianti, 4 seed): 20 esecuzioni nuove; nessuna voce nuova nel riassunto.
 
 ## Permanenza nel volume dopo la D-5
 
-La D-5 opzione 2 (`Engagement_Resolver.D5_DWELL_TIME`, SPENTO; `dwell_time_s` dei radar EWR,
-`Proposta_Dwell_Time_Rilevamento.md`) non cambia le esecuzioni esistenti (interruttore spento; acceso, nessuno
-scenario precedente usa un sensore con `dwell_time_s`). Aggiunge in coda l'unita' S32-DWELL (5 varianti, 4 seed):
+La D-5 opzione 2 (`Engagement_Resolver.D5_DWELL_TIME`, ora ACCESO di default; `dwell_time_s` dei radar EWR,
+`Proposta_Dwell_Time_Rilevamento.md`) non cambia le esecuzioni esistenti (nessuno scenario precedente usa un sensore con `dwell_time_s`;
+acceso di default dopo la DW-9, v. sonda S-5). Aggiunge in coda l'unita' S32-DWELL (5 varianti, 4 seed):
 20 esecuzioni nuove; nessuna voce nuova nel riassunto (i `Detection` non sono registrati). I valori
-della DW-9 rivista (SAM, AAA, TVD, vista, navi, AWACS; 10 EWR riallineati, DW9-10) non cambiano nessuna esecuzione:
-interruttore spento; S32 `ewr_on` (acceso) legge il dwell visivo della ZSU-57-2 con permanenze di oltre 60 s
+della DW-9 rivista (SAM, AAA, TVD, vista, navi, AWACS; 10 EWR riallineati, DW9-10) non cambiano nessuna esecuzione
+(sonde S-4 e S-5: 1103 identiche con l'interruttore acceso; con i dwell reali nessuna Pd fotografata cambia); S32 `ewr_on` legge il dwell visivo della ZSU-57-2 con permanenze di oltre 60 s
 (`g = 1`) e il P-18, invariato.
 
 ## Bersagli intercettabili dopo la BI

@@ -3980,8 +3980,9 @@ class TestDwellFactor(unittest.TestCase):
         with self.assertRaises(TypeError):
             ER.dwell_factor(5.0, 'x')
 
-    def test_switch_is_off_by_default(self):
-        self.assertIs(ER.D5_DWELL_TIME, False)
+    def test_switch_is_on_by_default(self):
+        """DW-9: acceso di default dopo la sonda S-5 (1103 esecuzioni identiche alla fotografia)."""
+        self.assertIs(ER.D5_DWELL_TIME, True)
 
 
 class TestDetectionPerPass(unittest.TestCase):
