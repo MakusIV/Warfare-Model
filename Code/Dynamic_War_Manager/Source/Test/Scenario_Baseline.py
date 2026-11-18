@@ -178,7 +178,7 @@ varianti, 4 seed): 20 esecuzioni nuove; nessuna voce nuova nel riassunto.
 La D-5 opzione 2 (`Engagement_Resolver.D5_DWELL_TIME`, ora ACCESO di default; `dwell_time_s` dei radar EWR,
 `Proposta_Dwell_Time_Rilevamento.md`) non cambia le esecuzioni esistenti (nessuno scenario precedente usa un sensore con `dwell_time_s`;
 acceso di default dopo la DW-9, v. sonda S-5). Aggiunge in coda l'unita' S32-DWELL (5 varianti, 4 seed):
-20 esecuzioni nuove; nessuna voce nuova nel riassunto (i `Detection` non sono registrati). I valori
+20 esecuzioni nuove; nessuna voce nuova nel riassunto (i `Detection` non sono registrati, salvo le unita' S36: v. sotto). I valori
 della DW-9 rivista (SAM, AAA, TVD, vista, navi, AWACS; 10 EWR riallineati, DW9-10) non cambiano nessuna esecuzione
 (sonde S-4 e S-5: 1103 identiche con l'interruttore acceso; con i dwell reali nessuna Pd fotografata cambia); S32 `ewr_on` legge il dwell visivo della ZSU-57-2 con permanenze di oltre 60 s
 (`g = 1`) e il P-18, invariato.
@@ -204,6 +204,13 @@ fotografia di 1113 del 2026-11-12 la include gia'.
 Aggiunge in coda l'unita' S33-PASSES (2 varianti: rientro e CAS, FP e D-5 accese, dwell della ZSU 2 s, stima;
 5 seed): 10 esecuzioni nuove; le 10 `off`/`cas_off` sono tolte e risultano `MISSING` finche' l'utente non installa la
 fotografia nuova; nessuna voce nuova nel riassunto (i `Detection` non sono registrati).
+
+## Permanenza breve con i dwell reali (S36)
+
+La serie S36 (`Proposta_Scenari_S34_Permanenza_Breve.md`) non cambia le esecuzioni esistenti; aggiunge in coda 5 unita'
+(S36-GRAZE 4 varianti, S36-CUT 2, S36-PASSES 4, S36-FAMILIES 7, S36-BAND 12; 4 seed): 116 esecuzioni nuove. Solo per le
+unita' di `DETECTION_UNITS` il riassunto ha la voce `detections` (righe `DETECTION_FIELDS` delle `Detection` del
+risolutore, catturate con una spia attorno a `Engagement_Resolver.resolve_engagement`); `--ignore detections` la esclude.
 
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
@@ -239,6 +246,7 @@ from unittest.mock import patch
 
 _TEST = 'Code.Dynamic_War_Manager.Source.Test.'
 _SS_MODULE = 'Code.Dynamic_War_Manager.Source.Logic.Session_Simulator'
+_ER_MODULE = 'Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver'
 
 FORMAT_VERSION = 1
 ROUND_DIGITS = 6
@@ -432,7 +440,16 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     # varianti accese) — in coda, nomi stabili ──
     ('S33-PASSES', 'Test_Session_Scenarios_S33', 'TestS33DetectionPerPass', None,
      _by_occurrence('on', 'cas_on')),
+    # ── S36 (permanenza breve con i dwell reali, Proposta_Scenari_S34_Permanenza_Breve.md) — in coda, nomi stabili ──
+    ('S36-GRAZE', 'Test_Session_Scenarios_S36', 'TestS36Graze', None,
+     _by_occurrence('off', 'on', 'band_min', 'band_max')),
 )
+# Unita' per cui il riassunto registra anche le `Detection` del risolutore (voce `detections`, S36: permanenza breve con i
+# dwell reali). Le altre unita' non la registrano: le loro esecuzioni restano identiche byte per byte.
+DETECTION_UNITS = frozenset({'S36-GRAZE', 'S36-CUT', 'S36-PASSES', 'S36-FAMILIES', 'S36-BAND'})
+# Campi di una `Engagement_Resolver.Detection`, nell'ordine in cui la voce `detections` li registra.
+DETECTION_FIELDS = ('observer_id', 'target_id', 'sensor_range', 'distance_cpa', 'probability', 'draw', 'detected',
+                    'time', 'exposure_s', 'dwell_time_s', 'pass_index', 'pass_count', 'pass_start', 'pass_end')
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per
 # costruzione), i metodi di TestTwoFronts/TestSeedDiscipline che ripetono 'S-fronts'/'S-alpha'
@@ -533,8 +550,18 @@ def _call_parameters(kwargs: Dict, order=None) -> Dict:
     return described
 
 
-def summarize_run(order, forces_a, forces_b, kwargs: Dict, outcome) -> Dict:
-    """Riassunto deterministico di una chiamata a `run_session` (v. docstring del modulo)."""
+def detection_rows(results) -> List[List]:
+    """Le `Detection` di una sessione: una riga (campi `DETECTION_FIELDS`) per rilevamento, nell'ordine dei risultati
+    d'ingaggio e, dentro un risultato, nell'ordine del risolutore."""
+    return [[getattr(detection, name) for name in DETECTION_FIELDS]
+            for result in results for detection in result.detections]
+
+
+def summarize_run(order, forces_a, forces_b, kwargs: Dict, outcome, detections: Optional[List[List]] = None) -> Dict:
+    """Riassunto deterministico di una chiamata a `run_session` (v. docstring del modulo).
+
+    Con `detections` (righe di `detection_rows`, solo per le unita' di `DETECTION_UNITS`) il riassunto ha anche la voce
+    `detections`; con None nessuna voce (forma di prima)."""
     forces = _force_list(forces_a) + _force_list(forces_b)
 
     engagements = []
@@ -632,6 +659,10 @@ def summarize_run(order, forces_a, forces_b, kwargs: Dict, outcome) -> Dict:
         summary['actual_etas'] = {mission_id: list(mo.actual_etas)
                                   for mission_id, mo in sorted(mission_outcomes.items())}
 
+    # S36: i `Detection` del risolutore, solo per le unita' di `DETECTION_UNITS` (v. `--ignore detections`).
+    if detections is not None:
+        summary['detections'] = detections
+
     return norm(summary)
 
 
@@ -640,14 +671,38 @@ def summarize_run(order, forces_a, forces_b, kwargs: Dict, outcome) -> Dict:
 class _Recorder:
     """Sostituto di `run_session`: chiama l'originale e registra il riassunto."""
 
-    def __init__(self, original: Callable):
+    def __init__(self, original: Callable, with_detections: bool = False):
         self.original = original
+        self.with_detections = with_detections
         self.calls: List[Tuple[str, Dict]] = []
 
     def __call__(self, order, forces_a, forces_b, fire_control, **kwargs):
         forces_a, forces_b = list(forces_a), list(forces_b)
-        outcome = self.original(order, forces_a, forces_b, fire_control, **kwargs)
-        self.calls.append((order.session_id, summarize_run(order, forces_a, forces_b, kwargs, outcome)))
+
+        if not self.with_detections:
+            outcome = self.original(order, forces_a, forces_b, fire_control, **kwargs)
+            self.calls.append((order.session_id, summarize_run(order, forces_a, forces_b, kwargs, outcome)))
+            return outcome
+
+        # S36: una spia attorno al risolutore raccoglie i `EngagementResult` (e quindi le `Detection`). `inner` e' letto
+        # al momento della chiamata: i test sostituiscono a loro volta `resolve_engagement` con una spia attorno a
+        # `F.run`, e la catena chiama sempre l'originale.
+        er = importlib.import_module(_ER_MODULE)
+        inner, results = er.resolve_engagement, []
+
+        def spy(*args, **spy_kwargs):
+            result = inner(*args, **spy_kwargs)
+
+            if result is not None:
+                results.append(result)
+
+            return result
+
+        with patch.object(er, 'resolve_engagement', spy):
+            outcome = self.original(order, forces_a, forces_b, fire_control, **kwargs)
+
+        self.calls.append((order.session_id, summarize_run(order, forces_a, forces_b, kwargs, outcome,
+                                                          detections=detection_rows(results))))
         return outcome
 
 
@@ -705,7 +760,7 @@ def capture(only: Optional[str] = None, verbose: bool = True) -> Dict:
 
             module = importlib.import_module(_TEST + module_name)
             cls = getattr(module, class_name)
-            recorder = _Recorder(SS.run_session)
+            recorder = _Recorder(SS.run_session, with_detections=label in DETECTION_UNITS)
             started = time.perf_counter()
 
             try:
