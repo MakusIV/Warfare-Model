@@ -62,7 +62,13 @@ from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import (
     DANGER_LEVEL_REFERENCE_RADIUS_M,
     DANGER_LEVEL_REFERENCE_CEILING_M,
     DANGER_LEVEL_REFERENCE_REACTION_S,
+    Path,
+    PathCollection,
+    ThreatMode,
+    Edge,
+    Waypoint,
 )
+from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
 
 
 class _AssetStub:
@@ -539,6 +545,107 @@ class TestBuildDetectionThreat(unittest.TestCase):
         # a 5000 m l'orizzonte da 30 m e' ~314 km > 300 km: vale la portata nominale
         self.assertAlmostEqual(float(detection.cylinder.radius), 300_000.0)
         self.assertGreater(_horizon(30.0, 5000.0), 300_000.0)
+
+
+class TestDetectionMetricsWithRegistryDwell(unittest.TestCase):
+    """S36: metriche di rilevamento del pianificatore (`Path.compute_detection_metrics`) con i dwell REALI dei registri.
+
+    Il pianificatore non e' nella fotografia (nessuna unita' di scenario lo esegue): la legge D-5 vi si prova con
+    attraversamenti costruiti a mano di durata nota (corda della retta nel cilindro di rilevamento). Geometria di
+    test: quote, durate e scostamenti. Velocita' = A-10C nominale (copia del registro). La scelta della rotta NON
+    legge la Pd (`PathCollection.best_path_key`): la D-5 cambia le metriche, non la rotta scelta.
+
+    Con il cilindro a portata piena un attraversamento con Pd > 0 richiede una corda >= 2 x quota (fuori dalla sfera 3D
+    la Pd vale 0); con il cilindro limitato dall'orizzonte radar (bassa quota contro un radar a lunga portata) basta
+    un passaggio radente qualunque."""
+
+    SPEED = 155.55555555555554   # speed['nominal'] dell'A-10C [m/s] (copia del registro)
+
+    def setUp(self):
+        _silence_data_warnings()
+
+    @staticmethod
+    def _threat(model, altitude):
+        """La minaccia di rilevamento dell'asset reale `model` alla quota `altitude`."""
+        stub = _AssetStub(model=model, category=Vehicle_Data._registry[model].category,
+                          position=Point3D(0, 0, 0), id=model)
+        return build_detection_threat(stub, altitude)
+
+    def _crossing(self, threat, altitude, speed, exposure_s):
+        """Un percorso di un edge rettilineo che attraversa il cilindro con una corda di `speed * exposure_s` metri:
+        scostamento `h = sqrt(r^2 - (speed * tau / 2)^2)` dal sito, con `r` il raggio del cilindro."""
+        radius = float(threat.cylinder.radius)
+        half_chord = speed * exposure_s / 2.0
+        offset = math.sqrt(radius ** 2 - half_chord ** 2)
+        edge = Edge('e', 0, Waypoint('a', Point3D(-half_chord - 5000.0, offset, altitude), None),
+                    Waypoint('b', Point3D(half_chord + 5000.0, offset, altitude), None), speed)
+        return Path([edge])
+
+    @staticmethod
+    def _metrics(path, threat, speed, switch):
+        """Calcola le metriche con `D5_DWELL_TIME` = `switch` (il pianificatore lo legge a ogni chiamata)."""
+        with patch.object(ER, 'D5_DWELL_TIME', switch):
+            path.compute_detection_metrics([threat], speed)
+
+        return path
+
+    def _both(self, model, altitude, exposure_s):
+        """`(minaccia, percorso spento, percorso acceso)` per un attraversamento di `exposure_s` secondi."""
+        threat = self._threat(model, altitude)
+        off = self._metrics(self._crossing(threat, altitude, self.SPEED, exposure_s), threat, self.SPEED, False)
+        on = self._metrics(self._crossing(threat, altitude, self.SPEED, exposure_s), threat, self.SPEED, True)
+        return threat, off, on
+
+    def test_horizon_limited_short_crossing_halves_the_pd(self):
+        """S-300PS a 100 m: il cilindro e' limitato dall'orizzonte (50,4 km contro 150 km) e un attraversamento di 6 s,
+        meta' del dwell del registro (12 s), dimezza la Pd (g = 0,5)."""
+        threat, off, on = self._both('S-300PS', 100.0, 6.0)
+        self.assertLess(float(threat.cylinder.radius), threat.acquisition_range)
+        self.assertEqual(threat.dwell_time_s, 12.0)
+        tract = on.detection_tracts[0]
+        self.assertAlmostEqual(tract['crossing_exposure_s'], 6.0, places=6)
+        self.assertAlmostEqual(on.max_detection_probability,
+                               ER.detection_probability(float(tract['min_distance']), 150_000.0, 0.5), places=9)
+        self.assertAlmostEqual(on.max_detection_probability, 0.5 * off.max_detection_probability, places=9)
+
+    def test_crossing_longer_than_the_dwell_is_unchanged(self):
+        """S-300PS a 100 m, attraversamento di 24 s >= 12 s: g = 1, metriche identiche a interruttore spento."""
+        _, off, on = self._both('S-300PS', 100.0, 24.0)
+        self.assertAlmostEqual(on.max_detection_probability, off.max_detection_probability, places=12)
+        self.assertGreater(on.max_detection_probability, 0.0)
+
+    def test_low_altitude_short_crossings_of_tor_and_buk(self):
+        """Tor a 150 m (attraversamento 2,5 s, dwell 3,0 s) e Buk a 500 m (7,5 s, dwell 9,0 s): la Pd acceso e' quella
+        della legge con `g = tau / dwell`, minore dello spento."""
+        for model, altitude, exposure in (('9K331-Tor', 150.0, 2.5), ('9K37-Buk', 500.0, 7.5)):
+            with self.subTest(model=model):
+                threat, off, on = self._both(model, altitude, exposure)
+                tract = on.detection_tracts[0]
+                self.assertGreater(off.max_detection_probability, 0.0)
+                self.assertAlmostEqual(on.max_detection_probability,
+                                       ER.detection_probability(float(tract['min_distance']), threat.acquisition_range,
+                                                                exposure / threat.dwell_time_s), places=9)
+                self.assertLess(on.max_detection_probability, off.max_detection_probability)
+
+    def test_full_range_cylinder_edge_has_zero_pd_either_way(self):
+        """Tor a 3000 m, attraversamento di 1,5 s: l'edge sta nel cilindro (esposizione 1,5 s) ma a distanza 3D oltre
+        la portata: Pd = 0 sia acceso sia spento (divergenza nota fra cilindro di pianificazione e sfera del DES)."""
+        _, off, on = self._both('9K331-Tor', 3000.0, 1.5)
+
+        for path in (off, on):
+            self.assertAlmostEqual(path.detection_exposure_s, 1.5, places=6)
+            self.assertEqual(path.max_detection_probability, 0.0)
+
+    def test_best_path_key_ignores_the_switch(self):
+        """La chiave di scelta del percorso non legge la Pd: per l'attraversamento del primo test e' la stessa con la
+        D-5 accesa e spenta, in ogni modalita'. La D-5 non cambia la rotta scelta (v. docstring della classe)."""
+        _, off, on = self._both('S-300PS', 100.0, 6.0)
+        self.assertNotEqual(off.max_detection_probability, on.max_detection_probability)
+
+        for mode in (None, ThreatMode.AVOID_DETECTION):
+            with self.subTest(mode=mode):
+                key = PathCollection.best_path_key(mode)
+                self.assertEqual(key(off), key(on))
 
 
 class TestBuildAirDefenseThreats(unittest.TestCase):

@@ -443,6 +443,15 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     # ── S36 (permanenza breve con i dwell reali, Proposta_Scenari_S34_Permanenza_Breve.md) — in coda, nomi stabili ──
     ('S36-GRAZE', 'Test_Session_Scenarios_S36', 'TestS36Graze', None,
      _by_occurrence('off', 'on', 'band_min', 'band_max')),
+    ('S36-CUT', 'Test_Session_Scenarios_S36', 'TestS36WindowCut', None,
+     _by_occurrence('off', 'on')),
+    ('S36-PASSES', 'Test_Session_Scenarios_S36', 'TestS36PassJoin', None,
+     _by_occurrence('join_off', 'join_on', 'split_off', 'split_on')),
+    ('S36-FAMILIES', 'Test_Session_Scenarios_S36', 'TestS36Families', None,
+     _by_occurrence('strela10', 'tor', 'buk', 's300', 'p37', 'ffg46', 'e3a')),
+    ('S36-BAND', 'Test_Session_Scenarios_S36', 'TestS36Band', None,
+     _by_occurrence('strela10_min', 'strela10_max', 'tor_min', 'tor_max', 'buk_min', 'buk_max',
+                    's300_min', 's300_max', 'p37_min', 'p37_max', 'ffg46_min', 'ffg46_max')),
 )
 # Unita' per cui il riassunto registra anche le `Detection` del risolutore (voce `detections`, S36: permanenza breve con i
 # dwell reali). Le altre unita' non la registrano: le loro esecuzioni restano identiche byte per byte.

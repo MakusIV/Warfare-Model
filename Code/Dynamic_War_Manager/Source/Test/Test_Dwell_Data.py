@@ -8,6 +8,7 @@ Blocco 1: SAM e AAA con radar (9 record di `Vehicle_Data`). Blocco 2: SAM con TV
 Blocco 3: EWR rimasti (3 record). Blocco 4: navi (22 record con valore, 1 senza). Blocco 5: AWACS (3 record) e test di
 completezza del perimetro (SAM/AAA, TVD/vista, EWR, navi, AWACS).
 """
+import contextlib
 import sys
 import unittest
 from unittest.mock import MagicMock, patch
@@ -16,6 +17,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
 from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
 from Code.Dynamic_War_Manager.Source.Test.Test_EWR_Data import EWR_DWELL_S, EWR_WITHOUT_DWELL
 
 _MOBILE_LOGGER = 'Code.Dynamic_War_Manager.Source.Asset.Mobile.logger'
@@ -248,6 +250,70 @@ class TestDwellScope(unittest.TestCase):
                         else:
                             self.assertNotIn('search_model', sensor)
         self.assertEqual(found, SEARCH_MODEL)
+
+
+class TestDwellOfTwoSensorRecord(unittest.TestCase):
+    """S36 (W1): il sensore vincente su un record REALE con due sensori a portata aria (F-16C Block 52d: radar e TVD).
+
+    Nessun record dei registri ha due sensori a portata aria E un dwell (gli aerei non dichiarano dwell, DW-9 decisione
+    1: `test_non_awacs_aircraft_declare_no_dwell` resta vero perche' i patch sono ripristinati), quindi i dwell sono
+    VALORI DI PROVA, non dati. Qui si fissa quale dei due legge il motore."""
+
+    TWO_SENSOR_MODEL = 'F-16C Block 52d'
+    TEST_RADAR_DWELL_S = 6.0     # VALORE DI PROVA (non un dato): radar AN/APG-68, portata aria di acquisizione 70 km
+    TEST_TVD_DWELL_S = 2.0       # VALORE DI PROVA (non un dato): TVD LITENING, portata aria di acquisizione 110 km
+
+    def setUp(self):
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+
+    def _test_dwells(self):
+        """Context manager: dwell di prova su radar e TVD del record (ripristinati all'uscita)."""
+        record = Aircraft_Data._registry[self.TWO_SENSOR_MODEL]
+        stack = contextlib.ExitStack()
+        stack.enter_context(patch.dict(record.radar, {'dwell_time_s': self.TEST_RADAR_DWELL_S}))
+        stack.enter_context(patch.dict(record.TVD, {'dwell_time_s': self.TEST_TVD_DWELL_S}))
+        return stack
+
+    @staticmethod
+    def _acquisition(sensor, mode):
+        return sensor['capabilities'][mode][1]['acquisition_range']
+
+    @staticmethod
+    def _tracking(sensor, mode):
+        return sensor['capabilities'][mode][1]['tracking_range']
+
+    def test_dwell_follows_the_acquisition_winner_of_a_real_record(self):
+        """Con la portata di acquisizione vince il TVD (aria 110 contro 70 km, terra 95 contro 55): il dwell letto e'
+        il suo (2,0 s), non quello del radar (6,0 s); i patch sono ripristinati all'uscita."""
+        record = Aircraft_Data._registry[self.TWO_SENSOR_MODEL]
+        self.assertEqual((self._acquisition(record.radar, 'air'), self._acquisition(record.TVD, 'air')), (70, 110))
+        self.assertEqual((self._acquisition(record.radar, 'ground'), self._acquisition(record.TVD, 'ground')), (55, 95))
+
+        with self._test_dwells():
+            reader = _DwellReader(self.TWO_SENSOR_MODEL)
+            self.assertEqual(reader.detection_dwell_time('air'), self.TEST_TVD_DWELL_S)
+            self.assertEqual(reader.detection_dwell_time('ground'), self.TEST_TVD_DWELL_S)
+            self.assertEqual(reader.sensor_dwell_time('radar'), self.TEST_RADAR_DWELL_S)
+
+        self.assertNotIn('dwell_time_s', record.radar)
+        self.assertNotIn('dwell_time_s', record.TVD)
+
+    def test_registry_reader_ignores_the_tracking_winner(self):
+        """LIMITE NOTO: con `tracking_range` vincerebbe il radar (aria 150 contro 90 km, dwell 6,0 s), ma
+        `registry_dwell_time` (`Logic/Engagement_Resolver.py:1307`) non passa `range_type` e legge sempre il vincitore
+        di ACQUISIZIONE (2,0 s). Una sessione con `range_type='tracking_range'` userebbe quindi la portata del radar e il
+        dwell del TVD. Il test fissa il comportamento attuale: va cambiato insieme al limite."""
+        record = Aircraft_Data._registry[self.TWO_SENSOR_MODEL]
+        self.assertEqual((self._tracking(record.radar, 'air'), self._tracking(record.TVD, 'air')), (150, 90))
+
+        with self._test_dwells():
+            reader = _DwellReader(self.TWO_SENSOR_MODEL)
+            self.assertEqual(reader.detection_dwell_time('air', range_type='tracking_range'), self.TEST_RADAR_DWELL_S)
+            self.assertEqual(ER.registry_dwell_time(reader, None, 'air'), self.TEST_TVD_DWELL_S)
 
 
 if __name__ == '__main__':
