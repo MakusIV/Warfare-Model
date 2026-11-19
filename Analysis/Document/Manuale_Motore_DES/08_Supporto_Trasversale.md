@@ -217,7 +217,7 @@ documenta latenze navali.
 ## 7.4 Degradazione ambientale della Pd (meteo/notte)
 
 Vive in `Logic/Engagement_Resolver.py` (non in `Reaction_Profile`), perché è un parametro della
-legge di Pd (`Logic/Engagement_Resolver.py:556-568`, `:1365-1412`):
+legge di Pd (`Logic/Engagement_Resolver.py:563-575`, costanti; `:1375-1422`, `weather_detection_factor`):
 
 ```
 factor = (NIGHT_DETECTION_FACTOR se notte) * (ADVERSE_WEATHER_DETECTION_FACTOR se avverso)
