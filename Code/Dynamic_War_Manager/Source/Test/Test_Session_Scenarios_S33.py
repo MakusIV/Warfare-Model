@@ -178,7 +178,7 @@ class TestS33DetectionPerPass(F.LoggerSilencer, unittest.TestCase):
 
     def test_first_passes_draw_from_the_engagement_stream(self):
         """FP-2 (O3): le estrazioni dei primi passaggi sono, nell'ordine delle `Detection`, le prime uscite dello
-        stream dell'ingaggio (la fase di rilevamento e' la prima del risolutore, `Engagement_Resolver.py:4277-4278`)."""
+        stream dell'ingaggio (la fase di rilevamento, `_detect`, e' la prima chiamata di `run()` del risolutore)."""
         self._assert_first_passes_draw_from_the_engagement_stream(self.runs['on'])
 
     def test_no_launch_after_the_pass_without_a_new_detection(self):
