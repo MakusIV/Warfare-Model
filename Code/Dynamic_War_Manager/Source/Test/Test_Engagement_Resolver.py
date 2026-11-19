@@ -128,20 +128,21 @@ def _always(spec):
 # ── Pd ────────────────────────────────────────────────────────────────────────
 
 class TestDetectionProbability(unittest.TestCase):
-    """La legge di Pd dichiarata: 1 a distanza nulla, PD_AT_ACQUISITION_RANGE al bordo, R^4."""
+    """La legge di Pd dichiarata: 1 a distanza nulla, pd_at_acquisition_range() al bordo, R^4."""
 
     def test_certain_at_zero_distance(self):
         self.assertAlmostEqual(ER.detection_probability(0.0, 1000.0), 1.0)
 
     def test_declared_value_at_the_range_edge(self):
-        self.assertAlmostEqual(ER.detection_probability(1000.0, 1000.0), ER.PD_AT_ACQUISITION_RANGE)
+        self.assertAlmostEqual(ER.detection_probability(1000.0, 1000.0), ER.pd_at_acquisition_range())
 
     def test_zero_beyond_range(self):
         self.assertEqual(ER.detection_probability(1000.1, 1000.0), 0.0)
 
     def test_fourth_power_law(self):
-        """A meta' portata: 1 - 0.5 * 0.5^4 = 0.96875."""
-        self.assertAlmostEqual(ER.detection_probability(500.0, 1000.0), 1.0 - 0.5 * 0.5 ** 4)
+        """A meta' portata: 1 - (1 - p) * 0.5^4 (0.96875 con p = 0.5)."""
+        self.assertAlmostEqual(ER.detection_probability(500.0, 1000.0),
+                               1.0 - (1.0 - ER.pd_at_acquisition_range()) * 0.5 ** 4)
 
     def test_factor_scales(self):
         self.assertAlmostEqual(ER.detection_probability(0.0, 1000.0, factor=0.3), 0.3)
@@ -176,7 +177,7 @@ class TestDetectionRadius(unittest.TestCase):
         self.assertGreaterEqual(draw, ER.detection_probability(radius + 1.0, 1000.0))
 
     def test_low_draw_detects_at_the_range_edge(self):
-        self.assertEqual(ER.detection_radius(0.3, 1000.0), 1000.0)
+        self.assertEqual(ER.detection_radius(0.5 * ER.pd_at_acquisition_range(), 1000.0), 1000.0)
 
     def test_draw_above_factor_never_detects(self):
         self.assertIsNone(ER.detection_radius(0.5, 1000.0, factor=0.4))
@@ -186,10 +187,154 @@ class TestDetectionRadius(unittest.TestCase):
             ER.detection_radius(1.0, 1000.0)
 
 
+class TestPdEdgeRecalibration(unittest.TestCase):
+    """PB (Proposta_Pd_Bordo_Portata.md): interruttore PD_EDGE_RECALIBRATION e funzione d'accesso
+    `pd_at_acquisition_range`. I valori attesi si leggono da `ER` (mai copie a mano); ogni test che confronta i due
+    stati imposta anche lo stato spento esplicitamente."""
+
+    @staticmethod
+    def _switch(value):
+        return patch.object(ER, 'PD_EDGE_RECALIBRATION', value)
+
+    def test_switch_is_off_by_default(self):
+        self.assertIs(ER.PD_EDGE_RECALIBRATION, False)
+        self.assertEqual(ER.pd_at_acquisition_range(), ER.PD_AT_ACQUISITION_RANGE)
+        self.assertEqual(ER.PD_AT_ACQUISITION_RANGE, 0.5)
+
+    def test_recalibrated_value_is_a_lower_estimate(self):
+        self.assertGreaterEqual(ER.PD_AT_ACQUISITION_RANGE_RECALIBRATED, 0.0)
+        self.assertLess(ER.PD_AT_ACQUISITION_RANGE_RECALIBRATED, ER.PD_AT_ACQUISITION_RANGE)
+
+    def test_switch_on_uses_the_recalibrated_edge(self):
+        v = ER.PD_AT_ACQUISITION_RANGE_RECALIBRATED
+
+        with self._switch(True):
+            self.assertEqual(ER.pd_at_acquisition_range(), v)
+            self.assertAlmostEqual(ER.detection_probability(1000.0, 1000.0), v)
+            self.assertEqual(ER.detection_probability(0.0, 1000.0), 1.0)
+            self.assertAlmostEqual(ER.detection_probability(500.0, 1000.0), 1.0 - (1.0 - v) * 0.5 ** 4)
+            self.assertEqual(ER.detection_probability(1000.1, 1000.0), 0.0)
+
+    def test_switch_on_lowers_pd_inside_the_range(self):
+        for distance in range(50, 1001, 50):
+            with self.subTest(distance=distance):
+                with self._switch(False):
+                    off = ER.detection_probability(float(distance), 1000.0)
+
+                with self._switch(True):
+                    on = ER.detection_probability(float(distance), 1000.0)
+
+                self.assertLess(on, off)
+
+        with self._switch(False):
+            off = ER.detection_probability(0.0, 1000.0)
+
+        with self._switch(True):
+            on = ER.detection_probability(0.0, 1000.0)
+
+        self.assertEqual(on, off)
+        self.assertEqual(on, 1.0)
+
+    def test_switch_on_radius_is_the_inverse(self):
+        v = ER.PD_AT_ACQUISITION_RANGE_RECALIBRATED
+
+        with self._switch(True):
+            for k in (0.1, 0.4, 0.7, 0.95):
+                draw = v + (1.0 - v) * k
+
+                with self.subTest(draw=draw):
+                    radius = ER.detection_radius(draw, 1000.0)
+                    self.assertAlmostEqual(ER.detection_probability(radius, 1000.0), draw, places=9)
+
+    def test_switch_on_low_draw_detects_at_the_edge(self):
+        v = ER.PD_AT_ACQUISITION_RANGE_RECALIBRATED
+        between = (v + 0.5) / 2.0  # sopra la Pd sul bordo nuova, sotto quella vecchia
+
+        with self._switch(True):
+            self.assertEqual(ER.detection_radius(0.5 * v, 1000.0), 1000.0)
+            self.assertLess(ER.detection_radius(between, 1000.0), 1000.0)
+
+        with self._switch(False):
+            self.assertEqual(ER.detection_radius(between, 1000.0), 1000.0)
+
+    def test_switch_on_with_factor(self):
+        v = ER.PD_AT_ACQUISITION_RANGE_RECALIBRATED
+
+        with self._switch(True):
+            self.assertAlmostEqual(ER.detection_probability(1000.0, 1000.0, factor=0.5), 0.5 * v)
+            self.assertEqual(ER.detection_radius(0.5 * (0.5 * v), 1000.0, factor=0.5), 1000.0)
+
+    def test_invalid_edge_raises(self):
+        for bad in (1.0, -0.1, True):
+            with self.subTest(value=bad):
+                with self._switch(True), patch.object(ER, 'PD_AT_ACQUISITION_RANGE_RECALIBRATED', bad):
+                    with self.assertRaises(ValueError):
+                        ER.pd_at_acquisition_range()
+
+                    with self.assertRaises(ValueError):
+                        ER.detection_probability(10.0, 1000.0)
+
+    def test_resolver_same_draws_lower_pd(self):
+        """Stessa estrazione, stesso numero di chiamate all'RNG: spento rileva, acceso no (Pd piu' bassa)."""
+        with self._switch(False):
+            pd_off = ER.detection_probability(900.0, 1000.0)
+
+        with self._switch(True):
+            pd_on = ER.detection_probability(900.0, 1000.0)
+
+        draw = (pd_on + pd_off) / 2.0
+        runs = {}
+
+        for name, switch in (('off', False), ('on', True)):
+            blue = _Force('blue', 'Blue', [_Asset('b1')])
+            red = _Force('red', 'Red', [_Asset('r1')])
+            window = _window('b1', 'r1', distance=900.0, range_a=1000.0, range_b=None)
+            rng = _ScriptedRng([draw])
+
+            with self._switch(switch):
+                runs[name] = (ER.resolve_engagement(blue, red, [window], lambda s, t: None, rng), rng)
+
+        off, rng_off = runs['off']
+        on, rng_on = runs['on']
+
+        self.assertTrue(off.detections[0].detected)
+        self.assertFalse(on.detections[0].detected)
+        self.assertEqual(len(off.detections), 1)
+        self.assertEqual(len(on.detections), 1)
+        self.assertEqual(off.detections[0].draw, draw)
+        self.assertEqual(on.detections[0].draw, draw)
+        self.assertEqual(rng_off.calls, rng_on.calls)
+        self.assertAlmostEqual(off.detections[0].probability, pd_off, places=12)
+        self.assertAlmostEqual(on.detections[0].probability, pd_on, places=12)
+
+    def test_resolver_with_legs_detection_is_later(self):
+        """Geometria di `test_with_legs_detection_time_is_exact`: stessa estrazione 0.9, rilevamento piu' tardi."""
+        times = {}
+
+        for name, switch in (('off', False), ('on', True)):
+            blue = _Force('blue', 'Blue', [_Asset('b1')])
+            red = _Force('red', 'Red', [_Asset('r1')])
+            legs = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                    'r1': [Leg(0.0, 100.0, (10000.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+            window = ContactWindow('b1', 'r1', t_start=20.0, t_end=100.0, t_cpa=100.0, distance_cpa=0.0,
+                                   range_a=8000.0, range_b=None)
+
+            with self._switch(switch):
+                result = ER.resolve_engagement(blue, red, [window], lambda s, t: None, _ScriptedRng([0.9]),
+                                               legs=legs)
+                radius = 8000.0 * ((1 - 0.9) / (1 - ER.pd_at_acquisition_range())) ** 0.25
+
+            self.assertAlmostEqual(result.detections[0].time, (10000.0 - radius) / 100.0, places=6)
+            times[name] = result.detections[0].time
+
+        self.assertGreater(times['on'], times['off'])
+
+
 class TestDetectionInResolver(unittest.TestCase):
 
     def test_draw_above_pd_means_no_detection_and_no_fire(self):
-        """d_cpa al bordo della portata: Pd = 0.5; un'estrazione di 0.9 non rileva."""
+        """d_cpa al bordo della portata: Pd = pd_at_acquisition_range() (0.5 di default); un'estrazione di 0.9 non rileva
+        in nessuno dei due stati dell'interruttore."""
         blue = _Force('blue', 'Blue', [_Asset('b1')])
         red = _Force('red', 'Red', [_Asset('r1')])
         window = _window('b1', 'r1', distance=1000.0, range_a=1000.0, range_b=None)
@@ -224,7 +369,7 @@ class TestDetectionInResolver(unittest.TestCase):
     def test_with_legs_detection_time_is_exact(self):
         """Osservatore fermo, bersaglio in avvicinamento a 100 m/s da 10 km.
 
-        Estrazione 0.9 -> raggio r = R * ((1 - 0.9)/(1 - 0.5))^(1/4); il bersaglio vi
+        Estrazione 0.9 -> raggio r = R * ((1 - 0.9)/(1 - p))^(1/4); il bersaglio vi
         entra a t = (10000 - r) / 100.
         """
         blue = _Force('blue', 'Blue', [_Asset('b1')])
@@ -237,7 +382,7 @@ class TestDetectionInResolver(unittest.TestCase):
         result = ER.resolve_engagement(blue, red, [window], lambda s, t: None, _ScriptedRng([0.9]),
                                        legs=legs)
 
-        radius = 8000.0 * ((1 - 0.9) / (1 - ER.PD_AT_ACQUISITION_RANGE)) ** 0.25
+        radius = 8000.0 * ((1 - 0.9) / (1 - ER.pd_at_acquisition_range())) ** 0.25
         self.assertAlmostEqual(result.detections[0].time, (10000.0 - radius) / 100.0, places=6)
 
 
@@ -4122,7 +4267,7 @@ class TestDetectionPerPass(unittest.TestCase):
         self.assertAlmostEqual(b1[0].distance_cpa, 0.0, places=6)
         self.assertAlmostEqual(b1[1].distance_cpa, 3000.0, places=6)
         self.assertAlmostEqual(b1[0].probability, 1.0, places=9)
-        self.assertAlmostEqual(b1[1].probability, 0.9352, places=9)
+        self.assertAlmostEqual(b1[1].probability, ER.detection_probability(3000.0, 5000.0), places=9)
 
     def test_detection_time_is_inside_its_pass(self):
         result = self._resolve(_ScriptedRng([0.0, 0.9]), pass_rng=_ScriptedRng([0.0]))
@@ -4139,7 +4284,8 @@ class TestDetectionPerPass(unittest.TestCase):
                            detection_factor=lambda o, t: 0.9, fire=fire, profiles=profiles)
         b1 = [s for s in on.salvos if s.shooter_id == 'b1']
 
-        # 0.95 >= 0.9 nel primo passaggio (non rileva); 0.1 < 0.9352 x 0.9 nel secondo (rileva).
+        # 0.95 >= 0.9 nel primo passaggio (non rileva); 0.1 < Pd(3000, 5000) x 0.9 nel secondo (rileva;
+        # 0.9352 x 0.9 con p = 0.5).
         self.assertEqual([d.detected for d in on.detections if d.observer_id == 'b1'], [False, True])
         self.assertEqual(len(b1), 1)
         self.assertAlmostEqual(b1[0].t_launch, 300.0, places=6)
@@ -4166,7 +4312,7 @@ class TestDetectionPerPass(unittest.TestCase):
         self.assertAlmostEqual(b1[0].exposure_s, 100.0, places=6)
         self.assertAlmostEqual(b1[1].exposure_s, 80.0, places=6)
         self.assertAlmostEqual(b1[0].probability, 0.8, places=9)
-        self.assertAlmostEqual(b1[1].probability, 0.64 * 0.9352, places=9)
+        self.assertAlmostEqual(b1[1].probability, 0.64 * ER.detection_probability(3000.0, 5000.0), places=9)
         self.assertEqual(b1[0].dwell_time_s, 125.0)
         self.assertEqual(b1[1].dwell_time_s, 125.0)
 

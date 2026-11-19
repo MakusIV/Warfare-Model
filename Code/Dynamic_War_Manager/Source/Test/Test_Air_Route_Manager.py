@@ -1942,7 +1942,7 @@ class TestDetectionAndInterceptionVolumes(unittest.TestCase):
     def test_detection_metrics_hand_computed(self):
         # edge da (0,0,10) a (20,0,10), cilindro di rilevamento centrato in (10,0,0) raggio 5:
         # dentro per x in [5, 15] -> 10 unita' a velocita' 2 = 5 s; ingresso a 2,5 s; arrivo a 10 s
-        # d minima dal sito = 10 (sulla verticale), R = 20 -> Pd = 1 - 0,5*(10/20)^4 = 0,96875
+        # d minima dal sito = 10 (sulla verticale), R = 20 -> Pd = 1 - (1 - p)*(10/20)^4 (0,96875 con p = 0,5)
         edge = Edge("e", 0, Waypoint("a", Point3D(0, 0, 10), None), Waypoint("b", Point3D(20, 0, 10), None), 2)
         path = Path([edge])
         detection = self._detection(Point3D(10, 0, 0), 5, acquisition_range=20)
@@ -1952,7 +1952,8 @@ class TestDetectionAndInterceptionVolumes(unittest.TestCase):
         self.assertAlmostEqual(path.detection_exposure_s, 5.0, places=9)
         self.assertAlmostEqual(path.first_detection_time_s, 2.5, places=9)
         self.assertAlmostEqual(path.warning_time_s, 7.5, places=9)
-        self.assertAlmostEqual(path.max_detection_probability, 1 - 0.5 * (10 / 20) ** 4, places=9)
+        self.assertAlmostEqual(path.max_detection_probability,
+                               1 - (1 - ER.pd_at_acquisition_range()) * (10 / 20) ** 4, places=9)
         self.assertEqual(len(path.detection_tracts), 1)
         self.assertEqual(path.detection_tracts[0]['source_id'], 'site')
         self.assertEqual(path.total_danger, 0)  # il rilevamento non entra in total_danger
@@ -2044,6 +2045,24 @@ class TestDetectionMetricsWithDwell(unittest.TestCase):
         self.assertAlmostEqual(path.detection_exposure_s, 5.0, places=9)
         self.assertEqual(path.detection_tracts[0]['dwell_time_s'], 100.0)
         self.assertAlmostEqual(path.detection_tracts[0]['crossing_exposure_s'], 5.0, places=9)
+
+    def test_pd_edge_switch_follows_the_des_law(self):
+        """PB-3: la metrica del pianificatore legge la stessa legge del DES, quindi segue PD_EDGE_RECALIBRATION."""
+        edge = Edge("e", 0, Waypoint("a", Point3D(0, 0, 10), None), Waypoint("b", Point3D(20, 0, 10), None), 2)
+
+        def metric(switch):
+            path = Path([edge])
+
+            with patch.object(ER, 'PD_EDGE_RECALIBRATION', switch):
+                path.compute_detection_metrics([self._detection(dwell_time_s=None)], speed=2)
+
+            return path.max_detection_probability
+
+        off = metric(False)
+        on = metric(True)
+
+        self.assertAlmostEqual(on, 1 - (1 - ER.PD_AT_ACQUISITION_RANGE_RECALIBRATED) * (10 / 20) ** 4, places=9)
+        self.assertLess(on, off)
 
     def test_crossing_split_over_two_edges_is_one_exposure(self):
         path = self._metrics(self._path_through_cylinder(), self._detection(dwell_time_s=40), True)

@@ -877,5 +877,56 @@ class TestS36BaselineDetections(unittest.TestCase):
                     self.assertEqual(row[dwell_index], ZSU_DWELL if key.endswith('/on') else None)
 
 
+# ── Pd al bordo della portata (PB), fuori dalla fotografia ──────────────────────────────────────────────────────────
+
+class TestPdEdgeOnGraze(F.LoggerSilencer, unittest.TestCase):
+    """PB (`Proposta_Pd_Bordo_Portata.md`, T4): S36-GRAZE con `PD_EDGE_RECALIBRATION` spento (esecuzione `old`, p = 0,5)
+    e acceso (esecuzione `new`, p = PD_AT_ACQUISITION_RANGE_RECALIBRATED), dwell D-5 acceso con il valore del registro.
+    Stessi semi e stesse estrazioni: cambia solo la legge. Non e' in `UNITS` (come `TestS36BaselineDetections`): la
+    fotografia non lo vede."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.old = []
+        cls.new = []
+
+        for session_id in GRAZE_SEEDS:
+            with patch.object(ER_MODULE, 'PD_EDGE_RECALIBRATION', False):
+                cls.old.append(run_variant(session_id, build_graze(None), True))
+
+            with patch.object(ER_MODULE, 'PD_EDGE_RECALIBRATION', True):
+                cls.new.append(run_variant(session_id, build_graze(None), True))
+
+    def test_same_draws_lower_pd_and_no_new_detection(self):
+        edge = ER.PD_AT_ACQUISITION_RANGE_RECALIBRATED
+
+        for index, seed in enumerate(GRAZE_SEEDS):
+            for prefix, _ in GRAZE_FACTORS:
+                with self.subTest(seed=seed, prefix=prefix):
+                    target = f'Blue-CAS/{prefix}0'
+                    found_old = detections_of(self.old[index][1], OBSERVER, target)
+                    found_new = detections_of(self.new[index][1], OBSERVER, target)
+                    self.assertEqual(len(found_old), 1)
+                    self.assertEqual(len(found_new), 1)
+                    old, new = found_old[0], found_new[0]
+
+                    self.assertEqual(new.draw, old.draw)
+                    self.assertEqual(new.distance_cpa, old.distance_cpa)
+                    self.assertEqual(new.exposure_s, old.exposure_s)
+                    self.assertIsNotNone(new.exposure_s)
+
+                    g = ER.dwell_factor(new.exposure_s, new.dwell_time_s)
+                    ratio = (new.distance_cpa / new.sensor_range) ** ER.PD_RANGE_EXPONENT
+                    self.assertAlmostEqual(new.probability, g * (1.0 - (1.0 - edge) * ratio), places=12)
+                    self.assertLess(new.probability, old.probability)
+
+                    if new.detected:
+                        self.assertTrue(old.detected)
+
+                    if old.detected and new.detected:
+                        self.assertGreaterEqual(new.time, old.time - 1e-9)
+
+
 if __name__ == '__main__':
     unittest.main()

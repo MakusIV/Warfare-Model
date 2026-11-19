@@ -19,6 +19,7 @@ attraverso l'RNG di sessione passato dal chiamante.
    avviene il rilevamento (v. `detection_radius`), e quindi *quando*: l'istante e' ricavato analiticamente con
    `Contact_Scheduler.range_intervals` quando il chiamante fornisce i tratti delle rotte.
    Con `dwell_time_for` (D-5) la soglia e' moltiplicata per il fattore di permanenza.
+   La Pd sul bordo della portata e' `pd_at_acquisition_range()` (interruttore `PD_EDGE_RECALIBRATION`, PB).
 2. **Latenza di reazione — chi spara per primo.** Dal rilevamento al primo lancio passa
    `ReactionProfile.total` (RIV+VAL+COM+ATT, `Context/Reaction_Profile.py`); le salve
    successive sono separate da `refire_interval`. E' la parte salvata della "Strategia 1":
@@ -550,10 +551,26 @@ logger = Logger(module_name=__name__, class_name='Engagement_Resolver').logger
 
 # ── COSTANTI ──────────────────────────────────────────────────────────────────
 
-# Pd sul bordo della portata di acquisizione. STIMA DICHIARATA: delle due convenzioni con
-# cui si dichiara la portata di un radar (Pd 0.5 o 0.9 a quella distanza) si adotta la piu'
-# prudente. Da ricalibrare.
+# Pd sul bordo della portata di acquisizione (legge di prima, in vigore con PD_EDGE_RECALIBRATION
+# spento). STIMA DICHIARATA: convenzione "la piu' prudente fra Pd 0.5 e 0.9" senza fonte
+# verificata (Guida_Concettuale_DES_Bibliografia.md, "non verificate"). Valore ricalibrato:
+# PD_AT_ACQUISITION_RANGE_RECALIBRATED.
 PD_AT_ACQUISITION_RANGE = 0.5
+
+# Ricalibrazione della Pd sul bordo della portata (Proposta_Pd_Bordo_Portata.md, PB), interruttore dedicato:
+#   * `PD_EDGE_RECALIBRATION` (SPENTO): acceso, la legge di Pd (`detection_probability`, `detection_radius`, e
+#     quindi la metrica del pianificatore `Air_Route_Manager.Path.compute_detection_metrics`) usa
+#     PD_AT_ACQUISITION_RANGE_RECALIBRATED al posto di PD_AT_ACQUISITION_RANGE; spento, la legge di prima. Letto a
+#     ogni chiamata (`pd_at_acquisition_range`). Nessuna estrazione in piu' ne' in ordine diverso in nessuno dei due
+#     stati: l'estrazione precede la Pd; cambiano esito e raggio del rilevamento, e a valle le estrazioni di tiro.
+PD_EDGE_RECALIBRATION = False
+
+# Pd sul bordo della portata ricalibrata. STIMA DICHIARATA (decisione PB-2 dell'utente, 2026-11-19), nessuna fonte:
+# l'utente giudica 0.5 alta (attesi 0.1-0.3); 0.2 e' il centro dell'intervallo. Con il taglio a R del motore la
+# legge si annullerebbe a R * (1/(1 - 0.2))^(1/4) = 1.057 R (con 0.5: 1.189 R): salto al bordo piu' piccolo. Vale
+# per ogni sensore (radar, TVD, vista): una costante per sensore e la dipendenza dalla RCS sono rinviate
+# (Proposta §2.2-§2.3).
+PD_AT_ACQUISITION_RANGE_RECALIBRATED = 0.2
 
 # Esponente della distanza nella legge di Pd: e' la dipendenza R^4 dell'equazione radar
 # (SNR proporzionale a 1/R^4, §4.6 del documento). La FORMA viene dalla fisica, la curva
@@ -1222,13 +1239,30 @@ def _check_dwell(value) -> Optional[float]:
     return float(value) if value > 0 else None
 
 
+def pd_at_acquisition_range() -> float:
+    """Pd sul bordo della portata in vigore: PD_AT_ACQUISITION_RANGE_RECALIBRATED con PD_EDGE_RECALIBRATION acceso,
+    altrimenti PD_AT_ACQUISITION_RANGE (globali letti a ogni chiamata, cosi' i test li sostituiscono).
+
+    Raises:
+        ValueError: il valore in vigore non e' in [0, 1) (con 1 `detection_radius` dividerebbe per zero).
+    """
+    value = PD_AT_ACQUISITION_RANGE_RECALIBRATED if PD_EDGE_RECALIBRATION else PD_AT_ACQUISITION_RANGE
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0.0 <= value < 1.0:
+        raise ValueError(f"Pd at the acquisition range must be in [0, 1), got {value!r}")
+
+    return float(value)
+
+
 def detection_probability(distance: float, sensor_range: float, factor: float = 1.0) -> float:
     """Pd di un sensore contro un bersaglio a `distance` [m].
 
-        Pd(d) = factor * (1 - (1 - PD_AT_ACQUISITION_RANGE) * (d / R)^4)    per d <= R
-        Pd(d) = 0                                                            per d >  R
+        Pd(d) = factor * (1 - (1 - p) * (d / R)^4)    per d <= R
+        Pd(d) = 0                                      per d >  R
 
-    STIMA DICHIARATA di forma: 1 a distanza nulla, PD_AT_ACQUISITION_RANGE sul bordo della
+    con p = `pd_at_acquisition_range()` (interruttore PD_EDGE_RECALIBRATION, PB).
+
+    STIMA DICHIARATA di forma: 1 a distanza nulla, p sul bordo della
     portata dichiarata dal registro, decrescente con la quarta potenza della distanza come
     il rapporto segnale/rumore dell'equazione radar. `factor` in [0, 1] e' la degradazione
     (meteo, notte, disturbo) applicata dal chiamante; 1.0 = nessuna.
@@ -1247,9 +1281,10 @@ def detection_probability(distance: float, sensor_range: float, factor: float = 
     if distance > sensor_range:
         return 0.0
 
+    edge = pd_at_acquisition_range()
     ratio = (distance / sensor_range) ** PD_RANGE_EXPONENT
 
-    return factor * (1.0 - (1.0 - PD_AT_ACQUISITION_RANGE) * ratio)
+    return factor * (1.0 - (1.0 - edge) * ratio)
 
 
 def detection_radius(draw: float, sensor_range: float, factor: float = 1.0) -> Optional[float]:
@@ -1259,7 +1294,8 @@ def detection_radius(draw: float, sensor_range: float, factor: float = 1.0) -> O
     `draw < Pd(d)`, cioe' quando il bersaglio entra nel raggio restituito. Cosi' UNA sola
     estrazione decide sia se il sensore rileva (raggio >= distanza minima raggiunta) sia
     quando (primo istante in cui la distanza scende sotto il raggio), senza campionare
-    la finestra nel tempo.
+    la finestra nel tempo. Usa la stessa Pd sul bordo `p = pd_at_acquisition_range()`: a un'estrazione
+    sotto `factor * p` il rilevamento avviene sul bordo della portata.
 
     Returns:
         raggio [m] in (0, sensor_range], oppure None se `draw >= factor` (nemmeno a
@@ -1272,14 +1308,15 @@ def detection_radius(draw: float, sensor_range: float, factor: float = 1.0) -> O
         raise ValueError(f"sensor_range must be positive, got {sensor_range!r}")
 
     factor = _check_factor(factor)
+    edge = pd_at_acquisition_range()
 
     if draw >= factor:
         return None
 
-    if draw < factor * PD_AT_ACQUISITION_RANGE:
+    if draw < factor * edge:
         return float(sensor_range)
 
-    ratio = (1.0 - draw / factor) / (1.0 - PD_AT_ACQUISITION_RANGE)
+    ratio = (1.0 - draw / factor) / (1.0 - edge)
 
     return float(sensor_range) * ratio ** (1.0 / PD_RANGE_EXPONENT)
 
@@ -1381,7 +1418,7 @@ def weather_detection_factor(conditions: Optional[Mapping]) -> float:
         factor = (NIGHT_DETECTION_FACTOR se notte) * (ADVERSE_WEATHER_DETECTION_FACTOR se avverso)
 
     Sede: qui e non in `Meteo_Analysis` perche' il numero e' un parametro della legge di
-    Pd (entra in `detection_probability` accanto a PD_AT_ACQUISITION_RANGE), non una
+    Pd (entra in `detection_probability` accanto alla Pd sul bordo, `pd_at_acquisition_range`), non una
     proprieta' del meteo; `Meteo_Analysis` resta il produttore delle condizioni.
 
     **Limite noto, dichiarato:** il fattore e' UNICO per ogni sensore. La finestra di
