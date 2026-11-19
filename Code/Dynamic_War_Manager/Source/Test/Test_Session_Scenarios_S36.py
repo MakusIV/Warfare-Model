@@ -210,7 +210,9 @@ class TestS36Graze(F.LoggerSilencer, unittest.TestCase):
 
     def test_premise_no_salvo(self):
         """Nessuna salva in nessuna variante e seme: gli A-10C sono in `weapon_hold` e passano a un CPA di 5,98-6,00 km,
-        oltre l'`engagement_range` della ZSU (4 km nel registro); per le corde piu' brevi della reazione (5,1 s) vale
+        oltre la portata del cannone S-68-57mm (`range.direct` 4000 m in `Ground_Weapon_Data`, che il fire control passa
+        a `ShotSpec.max_range`; non il campo `engagement_range` del sensore, di pari valore; verificato: con 7000 m
+        `GRAZE-2` e `GRAZE-3` hanno una salva a rilevamento + reazione); per le corde piu' brevi della reazione (5,1 s) vale
         anche la reazione. La ragione per `casC` e `casD` (permanenza oltre la reazione) e' la portata d'ingaggio, non
         la permanenza."""
         for variant in self.VARIANTS:
