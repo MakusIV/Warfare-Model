@@ -1,0 +1,11 @@
+Ran 4973, failures 10, errors 0, skipped 7
+FAIL Test_Engagement_Resolver.TestPdEdgeRecalibration.test_switch_is_off_by_default | AssertionError: True is not False
+FAIL Test_Session_Scenarios_S23.TestS23GroundHold.test_the_halted_tank_is_engaged_during_the_hold | AssertionError: 0.375 not greater than or equal to 0.5 : 3
+FAIL Test_Session_Scenarios_S36.TestS36Graze.test_same_draws_and_no_extra_detection | AssertionError: 0 not greater than 0
+FAIL Test_Session_Simulator.TestEndToEnd.test_fronts_are_resolved_in_time_order | + ['M-north', 'M-south']
+FAIL Test_Session_Simulator.TestEndToEnd.test_fuel_distance_time_and_application | AssertionError: 16209.008114612889 != 40000.0 within 6 places (23790.991885387113 difference)
+FAIL Test_Session_Simulator.TestEndToEnd.test_fuel_events_only_for_moving_assets | + ['bn1', 'bn2', 'bs1']
+FAIL Test_Session_Simulator.TestEndToEnd.test_g3_movement_at_cruise_plus_one_engagement_charge | AssertionError: 2 != 1 : bn1
+FAIL Test_Session_Simulator.TestEndToEnd.test_one_engagement_per_front | + ['Blue-North']
+FAIL Test_Session_Simulator.TestEndToEnd.test_regime_is_combat_only_for_assets_that_fought | AssertionError: 0.03241801622922578 != 0.08 within 7 places (0.047581983770774224 difference)
+FAIL Test_Session_Simulator.TestPresenceAndPostures.test_postures_of_every_asset_in_the_outcome | AssertionError: False is not true
