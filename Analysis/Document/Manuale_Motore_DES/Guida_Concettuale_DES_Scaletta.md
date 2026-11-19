@@ -691,8 +691,8 @@ storici: quest'ultima non è stata fatta.
   attribuire ogni differenza a una causa sola.
 - Test di contratto dell'indipendenza dal simulatore.
 - Verifica contro validazione: differenza in una frase.
-- Stato attuale: fotografia **installata da 1103** esecuzioni; una cattura con la serie S36 ne ha **1219** (116 nuove),
-  **non ancora installata** (decisione dell'utente).
+- Stato attuale: fotografia **installata da 1219** esecuzioni (1103 + 116 della serie S36; installata il 2026-11-19, commit
+  `fdb78b86`, su richiesta dell'utente; fino al 2026-11-18 era di 1103).
 
 **Glossario.** Test unitario; scenario; replica; fotografia di non regressione; esecuzione identica / cambiata / nuova;
 interruttore; controprova; verifica; validazione; taratura (calibrazione).
@@ -720,8 +720,8 @@ interruttore; controprova; verifica; validazione; taratura (calibrazione).
 **Limiti e incertezze.**
 - **Nessuna validazione contro dati reali o storici** è dichiarata nel manuale [V per l'assenza; da confermare con l'utente,
   Q8].
-- La fotografia installata **non mette alla prova la permanenza con i dwell reali**; la serie S36 sì, ma non è installata [V].
-- Le 1103 esecuzioni **non registrano i rilevamenti**: un cambio della legge di scoperta che non tocca il tiro vi resta
+- Le 1103 esecuzioni preesistenti **non mettono alla prova la permanenza con i dwell reali**; la serie S36 sì, ed è nella fotografia da 1219 installata [V].
+- Le 1103 esecuzioni preesistenti **non registrano i rilevamenti** (li registrano solo le 116 di S36): un cambio della legge di scoperta che non tocca il tiro vi resta
   invisibile [V].
 - Molti sensori reali (Shilka, Gepard, Osa, ...) sono provati solo da test di dati, non in sessione [V].
 - Nessun EWR in nessuno scenario della fotografia [V].
@@ -732,7 +732,7 @@ interruttore; controprova; verifica; validazione; taratura (calibrazione).
 
 **Rischi di fraintendimento.**
 - «Tutti i test passano» ≠ «il modello è realistico».
-- «1103 identiche» dopo una modifica ≠ «la modifica è giusta»: significa solo che non tocca quelle esecuzioni.
+- «1219 identiche» dopo una modifica ≠ «la modifica è giusta»: significa solo che non tocca quelle esecuzioni.
 - La fotografia **non** è un insieme di risultati attesi «veri»: è la storia prodotta dal codice a una data.
 
 ---
@@ -795,7 +795,7 @@ scrivere «il motore è prudente» dove il manuale dice «stima ottimistica per 
 codice.
 
 **Contenuti (tutti dal manuale, capitolo 9 §9.3 e §9.1; stato al 2026-11-19).**
-- Installare la fotografia da 1219 dopo la lettura delle 116 esecuzioni nuove.
+- (Chiusa il 2026-11-19: la fotografia da 1219 è installata, `fdb78b86`.)
 - Ricalibrare la Pd al bordo della portata (tre ipotesi emerse: costante unica rivista, costante per sensore, sezione radar del
   bersaglio — riferite dal manuale come non scritte in documenti del repo).
 - Accendere o no le regole BI e VA (ognuna cambierebbe la fotografia).
@@ -890,8 +890,8 @@ fornitori; (4) nessuna voce non verificata.
   della fase B: va ripristinata nel manuale (lavoro separato, con verifica), oppure la guida la ricostruisce dalla versione in
   git e dal wiki? E la frase sul «micro-passo fine dentro una finestra d'ingaggio» va verificata nel codice prima di essere
   ripresa o tolta?
-- **Q5 — Fotografia.** La guida descrive lo stato «1103 installata, 1219 in attesa», o si aspetta la decisione
-  sull'installazione?
+- **Q5 — Fotografia. RISOLTA (2026-11-19).** La fotografia da 1219 è stata installata (`fdb78b86`): la guida descrive la
+  1219. (Domanda originale: stato «1103 installata, 1219 in attesa» oppure attesa della decisione.)
 - **Q6 — Bibliografia.** Lingua delle fonti, stile di citazione; sono accettabili pagine Wikipedia e di fornitori come fonti
   secondarie, o solo fonti primarie?
 - **Q7 — Perimetro dei pianificatori satellite.** I pianificatori di rotta e d'attacco (fuori dal motore, ma lo alimentano e
