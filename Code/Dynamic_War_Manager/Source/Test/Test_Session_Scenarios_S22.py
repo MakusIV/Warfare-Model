@@ -27,8 +27,10 @@ Il contatto comincia quando Blue entra nel raggio del sensore Red (x = -4,2 km, 
 della F5-B la finestra durava 20 s, meno del tempo di rilevamento e reazione del BMP-2 (il primo
 colpo arriva ~30 s dopo l'inizio di una finestra, misura del 2026-10-12): NESSUN colpo era possibile.
 Ora la finestra dura fino alla fine della sessione. Il rilevamento e' UNA estrazione per finestra e
-osservatore (Pd ~0,59 a 4 km con questa portata, `Engagement_Resolver.detection_probability`): con
-tre osservatori il carro e' visto in ~93% delle repliche, in quelle restanti nessuno spara (in
+osservatore (Pd ~0,59 a 4 km con questa portata, con p = 0,5 al bordo della portata (interruttore
+`PD_EDGE_RECALIBRATION` spento), `Engagement_Resolver.detection_probability`; con la ricalibrazione acceso
+dal 2026-11-20, p = 0,2, la Pd a 4 km e' ~0,34): con tre osservatori il carro e' visto in ~93% delle
+repliche (con p = 0,2: ~71%), in quelle restanti nessuno spara (in
 entrambe le varianti), per questo l'asserzione e' una frazione di repliche.
 
 ## S22-E3: partenza ritardata (`TestS22E3LateDepartureIsPresent`)

@@ -1002,8 +1002,8 @@ class TargetRules:
             raggio e' quello EFFICACE (raggio dichiarato piu' l'incertezza di una stima); None = nessuna area.
         designated_weapons: modelli d'arma designati (v. "Armi designate").
         air_self_defence: l'esenzione d'autodifesa aerea di `only_designated` (un aereo nemico si ingaggia
-            anche se non designato): vale per le missioni aria-suolo, la cui politica d'armi ammette
-            l'autodifesa contro gli aerei.
+            anche se non designato): vale per CAS/Strike/Pinpoint/SEAD/Anti_Ship e per Recon/AWACS/Tanker/Transport
+            (`Context.MISSION_WEAPON_POLICY`, regola `self_defence`; non per CAP/Sweep/Intercept/Escort).
         known_hostile_ids: asset che hanno gia' lanciato contro il dominio di coordinamento del tiratore in
             episodi precedenti della sessione (memoria di `return_fire`).
         attack_point: `(x, y, z)` [m] del punto ATTACK della missione sulla rotta DELL'ASSET (con l'offset di

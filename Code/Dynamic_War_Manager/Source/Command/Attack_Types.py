@@ -6,7 +6,9 @@ Tipi dato del profilo d'attacco (Proposta B, `Analysis/Document/Proposta_Munizio
 
 `AttackProfile` e' cio' che `Logic/Weapon_Delivery.plan_attack_profile` produce e che due esecutori
 consumano allo stesso modo (vincolo simulator-agnostic):
-  * il motore DES: rotta canonica, quota e velocita' di sgancio, gittata obliqua e tempo di caduta;
+  * il motore DES: rotta canonica, quota e velocita' di sgancio (gittata obliqua e tempo di caduta il DES
+    NON li legge dal profilo: li ricalcola `Fire_Control.shot_spec_for` con
+    `Weapon_Delivery.bomb_engagement_estimate`, alla quota corrente tiratore-bersaglio);
   * il futuro adapter DCS: quota (`altitude`), azimut d'ingresso (`direction`), arma (`weaponType`),
     quantita' (`expend`/`attackQty`) dei task AttackGroup/Bombing. Il punto di sgancio esatto in
     DCS lo calcola l'IA: il core fornisce il profilo, validato contro la finestra di rilascio
@@ -98,8 +100,8 @@ class AttackProfile:
     release_pitch_deg: Optional[float] = None        # < 0 picchiata, > 0 cabrata, 0 livellato
     drag: Optional[str] = None                       # 'low' | 'high': finestra di rilascio usata
     release_ground_range_m: Optional[float] = None
-    release_slant_range_m: Optional[float] = None    # -> DES: max_range della ShotSpec
-    fall_time_s: Optional[float] = None              # -> DES: time_of_flight della ShotSpec
+    release_slant_range_m: Optional[float] = None    # informativo: il DES non la legge (la ricalcola)
+    fall_time_s: Optional[float] = None              # informativo: il DES non la legge (la ricalcola)
     exposure: Tuple[ThreatExposure, ...] = ()
     weighted_exposure: float = 0.0                   # somma di ThreatExposure.weighted_exposure
     detection_exposure_s: float = 0.0                # tempo nei volumi di rilevamento (somma sui siti)
