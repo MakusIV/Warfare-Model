@@ -7,6 +7,12 @@
 >
 > **A chi serve questa scaletta**: all'utente, per decidere struttura, livello di dettaglio e punti aperti prima della
 > stesura (fase B); all'agente che prepara la bibliografia, per sapere quali argomenti hanno bisogno di una fonte.
+>
+> **Aggiornamento 2026-11-20 (inizio della fase B).** Le domande Q1-Q11 hanno una risposta (§0.4 e sezione (i)); la struttura
+> definitiva della guida è in §0.4 (sezione nuova sui pianificatori, sezione 12 spostata in un documento di stato separato,
+> riassunto iniziale). Il corpo delle sezioni qui sotto conserva la **numerazione della scaletta del 2026-11-19**: per passare
+> alla numerazione della guida si usi la tabella di §0.4. La §1.1 del capitolo 1 è stata ripristinata nel manuale (`03555c81`):
+> le note «ASSENTE» delle sezioni 2 e 14 sono superate.
 
 ## 0. Impostazione generale
 
@@ -56,6 +62,56 @@ risultati e dove stanno le stime non tarate; (5) quali decisioni restano a lui; 
 | 14 | Come leggere il manuale | k | Con la tabella di corrispondenza dei nomi di progetto |
 | 15 | Glossario | l | — |
 | 16 | Bibliografia | m | Arriva da un altro agente |
+
+### 0.4 Decisioni dell'utente (Q1-Q11) e struttura definitiva (2026-11-20)
+
+Decisioni che vincolano la stesura (dettaglio nella sezione (i)):
+
+- **Q1** — file finale `Guida_Concettuale_DES.md` in questa cartella; in testa la data e il commit del manuale su cui è scritta.
+- **Q2** — le formule restano e sono **parte centrale** del testo (legge di Pd, saturazione, permanenza, CPA, potatura...),
+  spiegate a parole e con esempi numerici marcati **ILLUSTRATIVI**; nessun riquadro facoltativo.
+- **Q3** — nel testo solo descrizioni piane; le sigle di progetto (D-5, BI, VA, FP, F0-F9, G1-G5, ...) solo nella tabella di
+  corrispondenza della sezione 14.
+- **Q4** — §1.1 ripristinata nel manuale; il «micro-passo» non esiste nel codice e non va ripreso.
+- **Q5** — fotografia da **1219 esecuzioni INSTALLATA** (2026-11-19; prima 1103).
+- **Q6** — fonti primarie; le secondarie solo come indicazioni di lettura. Le pagine del wiki su Hughes e Lanchester derivano da
+  conversazioni con assistenti AI: **non si citano**. Il motore **non** è un modello alla Lanchester.
+- **Q7** — i pianificatori di rotta e d'attacco (manuale cap. 7 §7.8-§7.9) hanno una **sezione propria** (sezione 9 della guida,
+  scaletta in «Sezione 8-bis» più sotto).
+- **Q8** — la guida dichiara che oggi il motore serve a **confronti relativi con repliche** e che **non c'è validazione** su dati
+  reali o storici.
+- **Q9** — la sezione 12 (decisioni aperte e tarature) **non fa parte della guida**: va in un documento di stato separato, scritto
+  da altri. La guida rimanda a quel documento senza riportarne il contenuto.
+- **Q10** — **non confermata dall'utente**. Formulazione proposta, usata nella stesura e da confermare: «il contratto di
+  ingresso/uscita è lo stesso sia per una sessione sintetica sia per una giocata in DCS; il DES risolve solo le sintetiche; oggi
+  non esiste un adattatore DCS né un chiamante di produzione del ciclo di campagna».
+- **Q11** — lunghezza completa (circa 58-67 pagine), decisa dalla chiarezza, con un **riassunto iniziale** di 1-2 pagine.
+
+Struttura definitiva della guida (la colonna «scaletta» dà il numero usato nel corpo di questo file):
+
+| # guida | Sezione | # scaletta |
+|---|---|---|
+| — | Intestazione, come leggere la guida, etichette | 0 |
+| — | **Riassunto iniziale** (1-2 pagine, copre tutta la guida) | nuovo |
+| 1 | A che cosa serve e a che cosa NON serve | 1 |
+| 2 | Simulare per eventi, non per passi di tempo | 2 |
+| 3 | I quattro strati e il percorso di una sessione | 3 |
+| 4 | Missioni, operazioni, regole d'ingaggio | 4 |
+| 5 | Contatti e rilevamento | 5 |
+| 6 | Lo scontro | 6 |
+| 7 | Tempo, carburante, munizioni, stato delle unità | 7 |
+| 8 | Dalla sessione alla campagna | 8 |
+| 9 | **Attorno al motore: i pianificatori di rotta e d'attacco** (nuova, Q7) | 8-bis |
+| 10 | Casualità e riproducibilità | 9 |
+| 11 | Come si verifica il motore | 10 |
+| 12 | Quanto fidarsi dei risultati | 11 |
+| — | ~~Decisioni aperte e tarature~~ → documento di stato separato (Q9) | 12 |
+| 13 | Da dove vengono le idee | 13 |
+| 14 | Come leggere il manuale (con la tabella delle sigle) | 14 |
+| 15 | Glossario | 15 |
+| 16 | Bibliografia (dal file verificato) | 16 |
+
+Stesura a parti: **parte A** = intestazione, riassunto, sezioni 1-4 (`Guida_Concettuale_DES_ParteA.md`, 2026-11-20).
 
 ---
 
@@ -622,6 +678,58 @@ prontezza; posizione persistente.
 
 ---
 
+## Sezione 8-bis (nella guida: sezione 9) — Attorno al motore: i pianificatori di rotta e d'attacco (nuova, Q7)
+
+**Scopo.** Descrivere i due pianificatori che stanno **fuori** dai quattro strati ma alimentano il motore o ne condividono le
+regole, perché un responsabile sappia che cosa decidono, con quali criteri e con quali limiti.
+**Messaggio chiave.** Il pianificatore di **rotta** aerea sceglie un percorso che aggira (o attraversa con una «corda» limitata)
+i volumi di intercettazione e, se richiesto, quelli di **scoperta**, che sono distinti; il pianificatore d'**attacco** sceglie da
+che quota, velocità, profilo e direzione sganciare una bomba minimizzando l'esposizione pesata alle minacce, e produce un
+**profilo d'attacco** che il motore legge (gittata e tempo di caduta) e che un futuro adattatore DCS leggerebbe in altro modo
+(«una fisica, un pianificatore, due esecutori»). Sono euristiche deterministiche, non ottimizzatori garantiti.
+
+**Concetti da spiegare.**
+- Volume di intercettazione (portata dell'arma) contro volume di scoperta (portata del sensore): perché aggirare l'arma non è
+  aggirare il sensore (esempio del manuale: un sistema che scopre a 75 km e intercetta a 24 km).
+- Tre modi di trattare una minaccia: aggirarla, attraversarla con la corda di sicurezza, aggirare la scoperta.
+- Orizzonte radar nel pianificatore (raggio terrestre equivalente 4/3 per il radar; 1 per ottico e vista, stima) e la sua
+  **assenza nel motore** (incoerenza dichiarata).
+- Metriche di scoperta del percorso: tempo sotto sensore, primo rilevamento, preavviso, Pd massima (stessa legge del motore, con
+  la permanenza); non sono la probabilità di essere rilevati almeno una volta.
+- Pianificatore d'attacco a due livelli: fisica del rilascio (moto parabolico nel vuoto più fattori di resistenza **stimati**,
+  bombe plananti, distanza di sgancio dichiarata) e ricerca su griglia (quote, profili, angoli, 12 direzioni), con la regola
+  dell'esposizione **effettiva** (il sito lancia solo dopo averti visto e dopo il suo tempo di reazione) e la scelta per
+  esposizione pesata, poi quota, poi direzione.
+- Le minacce non rendono mai un profilo «non fattibile» (decisione dell'utente): scelgono fra i profili fattibili.
+
+**Mappa verso il manuale.** Capitolo 7 §7.8 (pianificatore di rotta, D14), §7.9 (pianificatore d'attacco, D15); capitolo 4 §4.20
+(il profilo letto dal motore); capitolo 9 §9.1 «Limiti del pianificatore di rotta e del pianificatore d'attacco» e «D-5».
+
+**Diagrammi proposti.** *Volumi di scoperta e di intercettazione* (flowchart, 6-8 nodi; da D14); *Dal pianificatore d'attacco ai
+due esecutori* (flowchart LR, 6-7 nodi; da D15); *Esposizione effettiva* (flowchart TD, 5-6 nodi, con un esempio numerico
+ILLUSTRATIVO della formula «lancio = max(ingresso nel volume d'arma, contatto + acquisizione) + tempo minimo di tiro»).
+
+**Letteratura.** `[FONTE: pianificazione di rotte in presenza di minacce / route planning militare]` (non coperta dalla
+bibliografia); orizzonte radar: Skolnik [B 5.4] e Mahafza [B 5.5] come testi radar (contenuto specifico non verificato);
+balistica delle bombe e profili di sgancio: `[FONTE: ...]` (non coperta). Le scelte (griglia, criteri di scelta, fattori di
+resistenza) sono **scelte di progetto [D]/[S]**.
+
+**Limiti e incertezze.**
+- Chiamanti: `plan_attack_profile` ha solo chiamanti di test; il pianificatore di rotta è chiamato dal pianificatore d'attacco
+  (transito) e da uno strumento di visualizzazione [V, ricerca testuale del 2026-11-20]: **nessuna catena di produzione** li usa.
+- Fattori di resistenza delle bombe: stime dichiarate [S]; volo IP → sgancio a quota costante (la picchiata non è nella
+  traiettoria di esposizione) [V]; terreno non modellato [V]; solo armi a caduta [V].
+- Volume di scoperta costruito a una sola quota: niente cambi di quota per aggirarlo [V]; nessuna rete di sensori (EWR→SAM) [V];
+  «attraversamento a corda limitata» del solo rilevamento non fatto [V].
+- La sfera di portata non ha distanza minima; quota e velocità fuori finestra portate al bordo ammesso più vicino (come l'IA di
+  DCS) [V].
+
+**Rischi di fraintendimento.** «Pianificatore» non è il C2 (non decide missioni né assegna asset); «esposizione minima» non è
+«sicurezza»; le metriche di scoperta del pianificatore e il rilevamento del motore usano la stessa legge ma non la stessa
+geometria (cilindro a una quota contro sfera; orizzonte sì contro orizzonte no).
+
+---
+
 ## Sezione 9 — Casualità e riproducibilità
 
 **Scopo.** Spiegare come un modello stocastico possa dare risultati ripetibili e perché questo conta.
@@ -788,7 +896,12 @@ scrivere «il motore è prudente» dove il manuale dice «stima ottimistica per 
 
 ---
 
-## Sezione 12 — Decisioni aperte e tarature da fare (nuova)
+## Sezione 12 — Decisioni aperte e tarature da fare (nuova) — SPOSTATA FUORI DALLA GUIDA (Q9, 2026-11-20)
+
+> Per decisione dell'utente questa sezione **non fa parte della guida**: il contenuto qui sotto è il materiale di partenza per un
+> **documento di stato separato** (non scritto da chi stende la guida). La guida vi rimanda soltanto. Nota: la Pd al bordo della
+> portata ha ora una Proposta in corso (interruttore spento di default, valore candidato 0,2, stima senza fonte, non acceso): la
+> guida descrive lo stato attuale (0,5) e dice solo che una ricalibrazione è in valutazione.
 
 **Scopo.** Raccogliere in un solo posto ciò che spetta all'utente/responsabile.
 **Messaggio chiave.** L'affidabilità del motore cresce soprattutto con **decisioni di taratura e di perimetro**, non con altro
@@ -879,6 +992,13 @@ fornitori; (4) nessuna voce non verificata.
 
 ## (i) Domande aperte per l'utente
 
+> **Risposte (2026-11-20)**, in sintesi (testo completo in §0.4): Q1 sì (`Guida_Concettuale_DES.md`, data e commit in testa);
+> Q2 formule nel testo, parte centrale, con esempi ILLUSTRATIVI; Q3 sigle solo nella tabella della sezione 14; Q4 §1.1
+> ripristinata, «micro-passo» tolto; Q5 fotografia da 1219 installata; Q6 fonti primarie, secondarie come indicazioni, wiki su
+> Hughes e Lanchester non citate; Q7 sezione propria (sezione 9 della guida); Q8 sì, confronti relativi con repliche e nessuna
+> validazione; Q9 sezione 12 in un documento separato; **Q10 non confermata** (formulazione proposta in §0.4, da confermare);
+> Q11 lunghezza completa con riassunto iniziale. Le domande originali restano qui sotto per memoria.
+
 - **Q1 — Titolo, collocazione e data.** Il file finale si chiamerà `Guida_Concettuale_DES.md` in questa cartella? Va
   dichiarato in testa il commit del manuale su cui è scritta (proposta: sì) e chi la aggiorna quando il manuale cambia?
 - **Q2 — Matematica.** Includere le poche formule (legge di Pd, saturazione, regola di permanenza) in riquadri «per chi
@@ -931,6 +1051,10 @@ Pagina = circa 450-500 parole o un diagramma con didascalia e mezza pagina di te
 | 16. Bibliografia | 2-3 (dipende dall'altro agente) |
 | **Totale** | **circa 58-67 pagine** (32 diagrammi o tabelle) |
 
+*Aggiornamento 2026-11-20*: con le decisioni di §0.4 si aggiungono il riassunto iniziale (1-2 pagine) e la sezione sui
+pianificatori (3-4 pagine) e si toglie la sezione 12 (2 pagine): il totale resta nell'ordine di 60-70 pagine, deciso dalla
+chiarezza (Q11).
+
 ## (iii) Parti del manuale NON lette a fondo, e perché
 
 Budget di lettura: il manuale ha 16.105 righe; per una scaletta servivano struttura, stato di verifica e limiti, non il
@@ -961,7 +1085,8 @@ dettaglio delle regole.
 2. **Stati di verifica disomogenei**: alcune sezioni del capitolo 4 hanno riferimenti di riga sfasati e il loro contenuto è
    verificato a una data più vecchia; i numeri di suite e fotografia sono sempre «dichiarati, non rieseguiti». La guida non usa
    righe di codice, ma deve riportare le etichette senza promuovere [NV] a [V].
-3. **§1.1 mancante** nel capitolo 1 (Q4): la sezione 2 della guida poggia su un testo che oggi non c'è nel manuale.
+3. ~~**§1.1 mancante** nel capitolo 1 (Q4): la sezione 2 della guida poggia su un testo che oggi non c'è nel manuale.~~
+   Superato il 2026-11-19: §1.1 ripristinata e riverificata (`03555c81`).
 4. **Incoerenze manuale/codice già note** (voci 30 e 32 di §9.6 risolte nel codice ma «APERTE» nel manuale): la guida deve
    evitare di riprenderle; segnalarle a chi mantiene il manuale.
 5. **Fonti del wiki non primarie**: le pagine su Hughes e Lanchester derivano da conversazioni con assistenti AI; c'è il
