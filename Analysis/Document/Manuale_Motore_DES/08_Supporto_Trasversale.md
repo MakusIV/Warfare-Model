@@ -232,7 +232,7 @@ interno.
 `weather_detection_factor_fn(conditions)` (`Logic/Engagement_Resolver.py:1415-1429`) produce la callable `(observer, target) -> float`
 richiesta da `resolve_engagement(detection_factor=...)`. `meteo_detection_factor(region_name,
 date, time)` (`:1432-1441`) collega le due funzioni a `Logic/Meteo_Analysis.get_meteo_conditions` (oggi un
-placeholder deterministico: nessuna casualità entra da qui).
+placeholder deterministico: nessuna casualità entra da qui). **Nessun codice di produzione passa questo fattore a `run_session`** (verificato sul codice a `fd2af921`: solo test e scenari lo fanno; capitolo 9 §9.1 «Fog-of-war reale»): di default il meteo **non** degrada la Pd.
 
 **Limite noto, dichiarato** (`Logic/Engagement_Resolver.py:558-565`): il fattore è **unico per ogni sensore**. La finestra di
 contatto porta solo la portata migliore fra radar, TVD e (dal 2026-11-04, D-4c) visivo (`Mobile.detection_range`, default =
@@ -720,8 +720,8 @@ o sovrastimerebbe il raggio alle altre quote valutate.
 
 Tipi immutabili (`@dataclass(frozen=True)`), senza logica di calcolo, senza dipendenze da `Logic/`
 (evita cicli con `Weapon_Delivery`): `AttackProfile` è ciò che **due esecutori** consumano allo
-stesso modo (vincolo simulator-agnostic, v. capitolo 1) — il motore DES legge `release_slant_range_m`
-(→ `ShotSpec.max_range`, capitolo 4 §4.20) e `fall_time_s` (→ `ShotSpec.time_of_flight`); un
+stesso modo (vincolo simulator-agnostic, v. capitolo 1) — **nelle intenzioni del progetto** il motore DES legge `release_slant_range_m`
+(→ `ShotSpec.max_range`) e `fall_time_s` (→ `ShotSpec.time_of_flight`), come dicono i commenti dei campi (`Attack_Types.py:101-102`) e il docstring del modulo (`:9`). **Nel codice di `fd2af921` il DES non legge né l'uno né l'altro** (*divergenza verificata il 2026-11-20*): nessun modulo di produzione legge un campo di `AttackProfile` se non `weapon`, per l'arma designata (`MissionAsset.designated_weapons`, `Command/Mission_Types.py:784-789`; capitolo 6 §6.22), e la `ShotSpec` di una bomba è calcolata da `Fire_Control.shot_spec_for` (`:823`, ramo a `:839-851`) con `Weapon_Delivery.bomb_engagement_estimate` (`:343`, «senza profilo pianificato»), sulla quota **corrente** tiratore−bersaglio (`shooter_z - target_z`, `:974`) e sulla velocità `attack` **del loadout** (`_attack_speed_kmh`, `:885`), con rilascio livellato. Il DES **ricalcola** quindi sgancio e tempo di caduta con la **stessa balistica** del pianificatore (livello 1), non con il **risultato** del suo livello 2 (quota, profilo e azimut scelti). Un
 futuro adapter DCS leggerebbe `release_altitude_m` (`altitude`), `run_in_azimuth_deg`
 (`direction`), `weapon` (`weaponType`) e `quantity`/`passes` (`expend`/`attackQty`) dei task DCS
 `AttackGroup`/`Bombing` — il punto di sgancio esatto lo calcola comunque l'IA di DCS, il core le
@@ -755,7 +755,7 @@ flowchart TD
     C --> D["_evaluate_exposure: finestre nei volumi V_I/V_R,<br/>regola B3/D-8"]
     D --> E["scelta: min esposizione pesata,<br/>poi quota, poi azimut verso base"]
     E --> F["AttackProfile (Command/Attack_Types.py)"]
-    F --> G["DES: Logic/Fire_Control.shot_spec_for (B6, cap.4 §4.20)<br/>max_range/time_of_flight dalla balistica"]
+    C -.->|"stessa balistica (livello 1),<br/>ricalcolata alla quota corrente del tiratore"| G["DES: Logic/Fire_Control.shot_spec_for (B6, cap.4 §4.20)<br/>max_range/time_of_flight da bomb_engagement_estimate,<br/>NON letti dall'AttackProfile"]
     F --> H["futuro adapter DCS: altitude/direction/weaponType/expend<br/>dei task AttackGroup/Bombing"]
 ```
 

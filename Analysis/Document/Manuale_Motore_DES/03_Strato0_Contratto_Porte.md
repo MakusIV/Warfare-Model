@@ -610,8 +610,7 @@ Il **tipo di missione** è un asse **separato** dalla **postura tattica** (decis
 (`Tactical_Evaluation.evaluateGroundTacticalAction`) e la chiave della combat power e delle tabelle di
 efficacia, **invariata** (salvo il rename `Retrait` → `Retreat`, v. sotto); il tipo di missione è un
 attributo della Missione, sotto un livello comune `Mission_Category`. Per ora la tabella che collega i
-due assi (`MISSION_TYPE_POSTURES`) è **solo un dato**: nessun modulo di produzione la legge
-(`Context/Context.py:452-467`, verificato con una ricerca sull'albero); l'unico consumatore della
+due assi (`MISSION_TYPE_POSTURES`) è, **alla fase F2, solo un dato**. *[**Corretto il 2026-11-20** (verificato a `fd2af921`): dalla F5 un modulo di produzione la legge, in parte. `Mission_Adapter.final_posture` chiama `Context.postures_for(mission.domain, mission.mission_type)[1]` (`Logic/Mission_Adapter.py:1616`; funzione a `Context/Context.py:609`) e ne usa la **postura di riferimento** per l'etichetta di postura finale di un asset di terra o mare in movimento o in missione sul posto (capitolo 6 §6.15); le **posture ammesse** (`[0]`) non sono lette da nessun modulo di produzione. L'unica altra lettura della tassonomia, `Mission.category`, è sotto.]* La tabella sta a `Context/Context.py:452-467`; l'unico consumatore della
 tassonomia è `Mission.category` (`Command/Mission_Types.py:1152-1157`), che usa `MISSION_TYPE_CATEGORY` per
 validare la forma del bersaglio. Il secondo stadio "postura → tipi di missione compatibili" andrà
 progettato con il pianificatore.
@@ -650,7 +649,7 @@ con `self_escort_capability` nel loadout) o un insieme di task d'arma dei regist
 la tabella è `None` (nessun vincolo d'arma: valgono le sole ROE). I tipi di missione aerea sono i 13 di `AIR_TASK`, tutti coperti.
 **È una scelta di progetto, non un dato tarato** (confermata dall'utente il 2026-10-18 riga per riga). La **tabella completa**, la
 sua semantica e chi la applica (`Fire_Control.restrict_by_policy`, un involucro puro della `fire_control`, non il risolutore) sono nel
-capitolo 4 §4.33; qui è solo il dato, con lo stesso statuto di `MISSION_TYPE_POSTURES` ma, a differenza di quella, **letto da
+capitolo 4 §4.33; qui è solo il dato; a differenza di `MISSION_TYPE_POSTURES` *(com'era alla F2: oggi anche questa è letta in parte da `Mission_Adapter.final_posture`, v. sopra)*, è **letto da
 codice di produzione** (`Mission_Adapter.weapon_policies`, capitolo 6 §6.22).
 
 **I tempi di turnaround e di riparazione (F8c, F8-R).** In coda alla sezione dei dati degli asset aerei (`Context/Context.py:1013-1038`,

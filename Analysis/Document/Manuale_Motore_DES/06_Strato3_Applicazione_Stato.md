@@ -64,7 +64,7 @@ risolutore d'ingaggio (capitolo 4); questo modulo fissa **solo** il contratto co
    per gradi.
 5. **La soglia `Destroyed` resta a `health <= 15`** (`DataType/State.py`, `HEALTH_LEVEL`), **non**
    0. Il residuo del 15% è il relitto: l'asset non combatte più ma esiste ancora come oggetto
-   recuperabile (`repair_time`). `health = 0` resta raggiungibile e significa distruzione
+   recuperabile (`repair_time`). *[Intenzione di progetto della decisione, **non il comportamento del codice** (verificato il 2026-11-20 a `fd2af921`): oggi il relitto **non è mai riparato**. `Readiness.repair_s` dà `None` per un asset distrutto (`Logic/Readiness.py:126-128`), `readiness_after_session` non gli scrive nessun record (`:199-201`, «Distrutto: mai pronto») e `apply_campaign_processes` toglie il suo record senza ripararlo (`:323-325`); `Asset.repair_time` / `t2r` non è letto da nessuna regola (capitolo 7 §7.13). Una riparazione `health = 100` si applica solo a un asset **non** distrutto (salute fra 16 e 99), a fine turnaround.]* `health = 0` resta raggiungibile e significa distruzione
    completa. La messa fuori combattimento avviene **prima**: `State.isOperative()` è già falso
    sotto il 50% (stato `Critical`), e `Military.combat_power` somma solo gli asset operativi — il
    modello distingue da sé "mission kill" (≤50) da "distruzione" (≤15).
