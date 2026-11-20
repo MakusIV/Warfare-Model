@@ -324,7 +324,7 @@ conteggio di `SalvoResolution.interceptable_rounds` non include le salve a domin
 `capacity` resta la somma delle disponibilità di **tutti** gli intercettori del dominio, non filtrata per dominio.
 
 I colpi fermati sono quindi `Σ_salve (colpi − residuo)`, mai più di `min(interceptable_rounds,
-capacity)`; coincide con quel minimo solo se nessun intercettore è escluso da (3) e (4) (v. il
+capacity)` — e **senza estrazione**: ogni canale disponibile ferma un colpo con certezza (Pk dell'intercettore = 1 per canale, capitolo 7 §7.5), l'allocazione non usa l'RNG e l'unica estrazione di `_on_resolve` è quella del danno (`self._draw()`, `:3977`) (*aggiunto il 2026-11-20, voce 38 di §9.6*). Coincide con quel minimo solo se nessun intercettore è escluso da (3) e (4) (v. il
 commento a `:3851-3856`: senza vincoli geometrici il risultato coincide con l'allocazione sul totale
 usata fino al 2026-09-28). Il *quale* intercettore ferma *quale* salva è ora tracciato internamente
 (`used` per intercettore, `stopped` per salva), ma l'`InterceptionEvent` resta per intercettore e
@@ -2550,7 +2550,7 @@ fire control, stesse estrazioni, stessi esiti.
 | `designated_ids` | id degli asset **nemici** designati dalla missione (bersaglio `ASSET` o `GROUP`, già filtrati per lato dalla sessione) |
 | `designated_area` | `(x, y, raggio)` [m] orizzontali dell'area designata (bersaglio `POINT`/`AREA`/`ZONE`); il raggio è quello *efficace* (v. capitolo 6 §6.22); `None` = nessuna area |
 | `designated_weapons` | modelli d'arma designati (v. sotto) |
-| `air_self_defence` | l'esenzione d'autodifesa aerea di `only_designated`: vale per le missioni aria-suolo, la cui politica d'armi ammette l'autodifesa |
+| `air_self_defence` | l'esenzione d'autodifesa aerea di `only_designated`: vale per i tipi di missione aerea la cui politica d'armi dà alla classe aria la regola `self_defence`: le missioni aria-suolo (CAS, Strike, Pinpoint_Strike, SEAD, Anti_Ship) **e** Recon, AWACS, Tanker, Transport (tabella di §4.33, `Context/Context.py:662-680`; `Logic/Mission_Adapter.py:1991-1992`); **non** CAP, Fighter_Sweep, Intercept, Escort (regola `any`), né terra e mare (politica `None`) (*corretto il 2026-11-20; la frase originale, «vale per le missioni aria-suolo», taceva Recon, AWACS, Tanker e Transport*) |
 | `known_hostile_ids` | asset che hanno già lanciato contro il dominio di coordinamento del tiratore in episodi precedenti della sessione (memoria di `return_fire`) |
 | `attack_point` | `(x, y, z)` [m] del punto `ATTACK` della missione sulla rotta *dell'asset* (con l'offset di formazione), per la fine dell'attacco di `priority_designated`; `None` = nessun punto `ATTACK` |
 | `known_destroyed_ids` | designati già distrutti negli episodi precedenti (fine dell'attacco per distruzione) |

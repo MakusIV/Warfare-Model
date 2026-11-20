@@ -142,8 +142,12 @@ derivata, `:1006-1009`) e `run(...)` accetta `missions=` (`:944-951`).
 ### Sensori dichiarati di test — lacuna dei registri documentata (`:45-58`)
 
 I registri **non** dichiarano alcun sensore in modo `'ground'` per carri, corazzati e artiglieria
-(portate nulle in tutti i record `Tank`/`Armored`/`Artillery_*` di `Vehicle_Data`), né per le navi.
-Con i soli registri, due forze terrestri **non si vedono mai**: è un dato mancante, non un errore
+(portate nulle in tutti i record `Tank`/`Armored`/`Artillery_Semovent` di `Vehicle_Data`), né per le navi
+(*corretto il 2026-11-20; la frase originale diceva «nessun sensore `ground`» senza eccezioni*): dei **79 veicoli**
+dei registri **4** hanno un TVD in modo `'ground'` (Strela-1-9P31, MIM-72G Chaparral, 9K35 Strela-10, M6 Linebacker:
+tutti `SAM_Small`, 8-12 km di `acquisition_range`, `Asset/Vehicle_Data.py:4070`, `:4135`, `:4262`, `:4456`), e le
+**23 navi** hanno `'ground': (False, {})` (nessuna capacità) ma il radar in modo `'sea'` (`Asset/Ship_Data.py`). Con i soli registri, due forze terrestri di
+carri, corazzati o artiglieria **non si vedono mai**: è un dato mancante, non un errore
 del motore (`Mobile.detection_range` lo dichiara esplicitamente), ma oggi nessun chiamante di
 produzione lo compensa. Per gli scenari si usa quindi un sensore dichiarato di test
 (`declare_sensor`), un'iniezione esplicita e visibile in ogni scenario — non un'alterazione
