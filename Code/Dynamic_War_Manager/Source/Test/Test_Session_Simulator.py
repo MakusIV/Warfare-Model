@@ -160,6 +160,8 @@ def _fire(shooter, target):
 class _Base(unittest.TestCase):
     def setUp(self):
         self._patches = [patch(target, MagicMock()) for target in _LOGGERS]
+        # Premessa tarata con p = 0,5: test di orchestrazione, non di rilevamento (Proposta_Pd_Bordo_Portata.md, PB-6)
+        self._patches.append(patch.object(ER, 'PD_EDGE_RECALIBRATION', False))
         for p in self._patches:
             p.start()
 

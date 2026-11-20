@@ -71,6 +71,7 @@ frazioni aggregate con soglie DICHIARATE (stime di test, non tarate sul risultat
 """
 
 import dataclasses
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -86,8 +87,12 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     route_waypoints,
 )
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
+from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
 from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA
 from Code.Dynamic_War_Manager.Source.Test import Scenario_Fixtures as F
+
+# Modulo che contiene davvero il risolutore (come in Test_Session_Scenarios_S36.py): e' li' che si legge l'interruttore.
+ER_MODULE = sys.modules[ER.__name__]
 
 DURATION = 3_600.0
 SEEDS_PER_SCENARIO = 8
@@ -404,9 +409,11 @@ class TestS23GroundHold(_EtaChecks, F.LoggerSilencer, unittest.TestCase):
         super().setUpClass()
         cls.runs = {variant: [] for variant in cls.VARIANTS}
 
-        for session_id in cls.SEEDS:
-            for variant in cls.VARIANTS:
-                cls.runs[variant].append(_run_variant(cls, _hold_scenario, variant, session_id))
+        # Premessa tarata con p = 0,5: test di orchestrazione, non di rilevamento (Proposta_Pd_Bordo_Portata.md, PB-6)
+        with patch.object(ER_MODULE, 'PD_EDGE_RECALIBRATION', False):
+            for session_id in cls.SEEDS:
+                for variant in cls.VARIANTS:
+                    cls.runs[variant].append(_run_variant(cls, _hold_scenario, variant, session_id))
 
     def test_blue_never_fires(self):
         for _, outcome, _ in self._all():

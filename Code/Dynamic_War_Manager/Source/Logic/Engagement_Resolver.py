@@ -558,12 +558,13 @@ logger = Logger(module_name=__name__, class_name='Engagement_Resolver').logger
 PD_AT_ACQUISITION_RANGE = 0.5
 
 # Ricalibrazione della Pd sul bordo della portata (Proposta_Pd_Bordo_Portata.md, PB), interruttore dedicato:
-#   * `PD_EDGE_RECALIBRATION` (SPENTO): acceso, la legge di Pd (`detection_probability`, `detection_radius`, e
+#   * `PD_EDGE_RECALIBRATION` (ACCESO): acceso, la legge di Pd (`detection_probability`, `detection_radius`, e
 #     quindi la metrica del pianificatore `Air_Route_Manager.Path.compute_detection_metrics`) usa
 #     PD_AT_ACQUISITION_RANGE_RECALIBRATED al posto di PD_AT_ACQUISITION_RANGE; spento, la legge di prima. Letto a
 #     ogni chiamata (`pd_at_acquisition_range`). Nessuna estrazione in piu' ne' in ordine diverso in nessuno dei due
 #     stati: l'estrazione precede la Pd; cambiano esito e raggio del rilevamento, e a valle le estrazioni di tiro.
-PD_EDGE_RECALIBRATION = False
+#     ACCESO dalla decisione dell'utente del 2026-11-20; prima spento (la legge di prima si ottiene spegnendolo).
+PD_EDGE_RECALIBRATION = True
 
 # Pd sul bordo della portata ricalibrata. STIMA DICHIARATA (decisione PB-2 dell'utente, 2026-11-19), nessuna fonte:
 # l'utente giudica 0.5 alta (attesi 0.1-0.3); 0.2 e' il centro dell'intervallo. Con il taglio a R del motore la

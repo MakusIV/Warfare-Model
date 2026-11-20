@@ -242,7 +242,7 @@ class TestS36Graze(F.LoggerSilencer, unittest.TestCase):
     def test_same_draws_and_no_extra_detection(self):
         """Stesse estrazioni a interruttore acceso e spento, stessa distanza al massimo avvicinamento, e la legge non
         aggiunge rilevamenti: un rilevamento acceso lo e' anche spento."""
-        lost = 0
+        reduced = 0
 
         for seed, index, prefix, variant in self._each(('on', 'band_min', 'band_max')):
             with self.subTest(session=seed, variant=variant, target=prefix):
@@ -254,11 +254,12 @@ class TestS36Graze(F.LoggerSilencer, unittest.TestCase):
                 if detection.detected:
                     self.assertTrue(reference.detected)
 
-                if variant == 'band_max' and reference.detected and not detection.detected:
-                    lost += 1
+                if variant == 'band_max' and detection.probability < reference.probability:
+                    reduced += 1
 
-        # Premessa non vacua: la riduzione di Pd toglie davvero qualche rilevamento (P-11, seme 0: casB0).
-        self.assertGreater(lost, 0)
+        # Premessa non vacua sulla legge (PB-6): con p = 0,2 nessun rilevamento radente e' perso per la D-5 perche' non
+        # e' rilevato gia' a `off`; resta verificato che la riduzione di Pd (g < 1) c'e' in almeno un caso.
+        self.assertGreater(reduced, 0)
 
     def test_factor_one_reproduces_the_previous_law(self):
         """Permanenza >= dwell: g = 1, quindi la Pd, l'esito e l'istante sono ESATTAMENTE quelli di `off`."""

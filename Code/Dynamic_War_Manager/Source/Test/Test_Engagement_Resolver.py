@@ -196,9 +196,10 @@ class TestPdEdgeRecalibration(unittest.TestCase):
     def _switch(value):
         return patch.object(ER, 'PD_EDGE_RECALIBRATION', value)
 
-    def test_switch_is_off_by_default(self):
-        self.assertIs(ER.PD_EDGE_RECALIBRATION, False)
-        self.assertEqual(ER.pd_at_acquisition_range(), ER.PD_AT_ACQUISITION_RANGE)
+    def test_switch_is_on_by_default(self):
+        """Acceso dalla decisione dell'utente del 2026-11-20; la legge di prima resta disponibile spegnendolo."""
+        self.assertIs(ER.PD_EDGE_RECALIBRATION, True)
+        self.assertEqual(ER.pd_at_acquisition_range(), ER.PD_AT_ACQUISITION_RANGE_RECALIBRATED)
         self.assertEqual(ER.PD_AT_ACQUISITION_RANGE, 0.5)
 
     def test_recalibrated_value_is_a_lower_estimate(self):
