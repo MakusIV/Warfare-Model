@@ -73,7 +73,8 @@ Decisioni che vincolano la stesura (dettaglio nella sezione (i)):
 - **Q3** — nel testo solo descrizioni piane; le sigle di progetto (D-5, BI, VA, FP, F0-F9, G1-G5, ...) solo nella tabella di
   corrispondenza della sezione 14.
 - **Q4** — §1.1 ripristinata nel manuale; il «micro-passo» non esiste nel codice e non va ripreso.
-- **Q5** — fotografia da **1219 esecuzioni INSTALLATA** (2026-11-19; prima 1103).
+- **Q5** — fotografia da **1219 esecuzioni INSTALLATA** (2026-11-19; prima 1103); sostituita il 2026-11-20 da una nuova da 1219
+  (`a910dc15`, Pd al bordo a 0,2: 716 cambiate, 503 identiche rispetto alla precedente).
 - **Q6** — fonti primarie; le secondarie solo come indicazioni di lettura. Le pagine del wiki su Hughes e Lanchester derivano da
   conversazioni con assistenti AI: **non si citano**. Il motore **non** è un modello alla Lanchester.
 - **Q7** — i pianificatori di rotta e d'attacco (manuale cap. 7 §7.8-§7.9) hanno una **sezione propria** (sezione 9 della guida,
@@ -82,7 +83,7 @@ Decisioni che vincolano la stesura (dettaglio nella sezione (i)):
   reali o storici.
 - **Q9** — la sezione 12 (decisioni aperte e tarature) **non fa parte della guida**: va in un documento di stato separato, scritto
   da altri. La guida rimanda a quel documento senza riportarne il contenuto.
-- **Q10** — **non confermata dall'utente**. Formulazione proposta, usata nella stesura e da confermare: «il contratto di
+- **Q10** — **confermata dall'utente il 2026-11-20**. Formulazione usata nella stesura: «il contratto di
   ingresso/uscita è lo stesso sia per una sessione sintetica sia per una giocata in DCS; il DES risolve solo le sintetiche; oggi
   non esiste un adattatore DCS né un chiamante di produzione del ciclo di campagna».
 - **Q11** — lunghezza completa (circa 58-67 pagine), decisa dalla chiarezza, con un **riassunto iniziale** di 1-2 pagine.
@@ -167,7 +168,7 @@ verso DCS; non esiste).
 - «Motore» non significa «simulatore 3D» né «sostituto di DCS»: spiegare che produce numeri ed eventi, non immagini.
 - La frase d'apertura del manuale («e, per costruzione, anche quelli con un giocatore», `Manuale_Motore_DES.md:5-6`) può far
   credere che il DES risolva anche le sessioni giocate in DCS: la guida deve dire che il **contratto** è lo stesso, non che
-  il DES le esegue (v. domanda aperta Q10).
+  il DES le esegue (v. Q10, confermata il 2026-11-20).
 - «Indifferente al simulatore» non vuol dire «già integrato con DCS».
 
 ---
@@ -385,7 +386,8 @@ anche con la permanenza. **Vedere non è poter colpire.**
 - Volume di minaccia e volume di scoperta; finestra di contatto; perché la geometria è deterministica.
 - Punto di massimo avvicinamento e intervalli «a portata».
 - Potatura per blocchi: si scartano prima le coppie di gruppi lontani.
-- Legge di probabilità di scoperta (Pd): 1 a distanza zero, 0,5 al bordo della portata, calo «alla quarta potenza» (idea
+- Legge di probabilità di scoperta (Pd): 1 a distanza zero, costante al bordo della portata (0,5 fino al 2026-11-19, 0,2 dal
+  2026-11-20), calo «alla quarta potenza» (idea
   dall'equazione radar), moltiplicata per meteo/notte e ricognizione.
 - **Un'estrazione decide sia se sia quando**: niente campionamento continuo.
 - **Rilevamento per passaggio**: ogni ingresso nel proprio volume è un'occasione nuova; dopo l'uscita l'osservatore con la
@@ -437,8 +439,8 @@ nebbia di guerra.
 **Limiti e incertezze (dal manuale, con etichetta).**
 - **Nessun orizzonte radar nel motore**: un EWR vede a piena portata anche un aereo radente [V]; il pianificatore di rotta
   invece lo taglia (incoerenza dichiarata) [V].
-- Pd al bordo della portata = 0,5: **stima da ricalibrare, giudicata alta dall'utente**, nessuna proposta ancora [S]
-  (capitolo 9 §9.1 «Pd sul bordo della portata»).
+- Pd al bordo della portata: era 0,5, **stima giudicata alta dall'utente**; ricalibrata a **0,2 dal 2026-11-20** (stima senza
+  fonte, scelta dell'utente) [S] (capitolo 9 §9.1 «Pd sul bordo della portata»).
 - Forma della legge di Pd: semplificazione monotona [S].
 - Meteo e notte con **un solo fattore** per ogni sensore: il visivo di notte è sovrastimato [V].
 - Periodo di rivisita: valore **fisso** per sensore; 53 modelli con valore, **24 stime [S]**; vista e ottico 3,2 s
@@ -455,7 +457,7 @@ nebbia di guerra.
 **Rischi di fraintendimento.**
 - «Rilevato» non significa «ingaggiato»: servono arma in portata, regole e tempo di reazione.
 - «Con permanenza breve non si vede mai» è **falso**: si vede con probabilità ridotta.
-- «Pd 0,5 al bordo» non è un dato del radar: è una convenzione stimata.
+- «Pd 0,5 al bordo» (e anche 0,2) non è un dato del radar: è una convenzione stimata.
 - «Portata» qui è una sfera senza terreno: niente valli né rilievi.
 
 ---
@@ -799,8 +801,9 @@ storici: quest'ultima non è stata fatta.
   attribuire ogni differenza a una causa sola.
 - Test di contratto dell'indipendenza dal simulatore.
 - Verifica contro validazione: differenza in una frase.
-- Stato attuale: fotografia **installata da 1219** esecuzioni (1103 + 116 della serie S36; installata il 2026-11-19, commit
-  `fdb78b86`, su richiesta dell'utente; fino al 2026-11-18 era di 1103).
+- Stato attuale: fotografia **installata da 1219** esecuzioni (1103 + 116 della serie S36 dal 2026-11-19, commit `fdb78b86`,
+  su richiesta dell'utente; fino al 2026-11-18 era di 1103; sostituita il 2026-11-20 da quella con la Pd al bordo a 0,2,
+  `a910dc15`: 716 cambiate e 503 identiche rispetto alla precedente, contate sui due file).
 
 **Glossario.** Test unitario; scenario; replica; fotografia di non regressione; esecuzione identica / cambiata / nuova;
 interruttore; controprova; verifica; validazione; taratura (calibrazione).
@@ -874,7 +877,7 @@ previsioni assolute — affermazione della scaletta, da confermare con l'utente 
 
 **Diagrammi proposti.**
 - *G30 — Mappa delle stime* (tabella: tema, grandezza stimata, effetto, stato: stima/da ricalibrare/decisione). Nessun D.
-  Contenuto minimo: Pd al bordo 0,5; legge di Pd; soglia di rottura (erosione, shock, dispersione, pesi); scomposizione dei
+  Contenuto minimo: Pd al bordo (0,2 dal 2026-11-20, prima 0,5); legge di Pd; soglia di rottura (erosione, shock, dispersione, pesi); scomposizione dei
   ritardi; esponente costo/efficacia; finestra della salva 0 s; dwell (24 stime, vista 3,2 s); portate e affidabilità EWR;
   classificazione BI (52 voci); fuoco su posizione (3 costanti); consumi di emergenza; costanti del bingo; turnaround e
   riparazione; raggio di un bersaglio «punto».
@@ -900,8 +903,8 @@ scrivere «il motore è prudente» dove il manuale dice «stima ottimistica per 
 
 > Per decisione dell'utente questa sezione **non fa parte della guida**: il contenuto qui sotto è il materiale di partenza per un
 > **documento di stato separato** (non scritto da chi stende la guida). La guida vi rimanda soltanto. Nota: la Pd al bordo della
-> portata ha ora una Proposta in corso (interruttore spento di default, valore candidato 0,2, stima senza fonte, non acceso): la
-> guida descrive lo stato attuale (0,5) e dice solo che una ricalibrazione è in valutazione.
+> portata è stata ricalibrata a 0,2 e l'interruttore è acceso dal 2026-11-20 (stima senza fonte, decisione dell'utente): la
+> guida descrive lo stato attuale (0,2).
 
 **Scopo.** Raccogliere in un solo posto ciò che spetta all'utente/responsabile.
 **Messaggio chiave.** L'affidabilità del motore cresce soprattutto con **decisioni di taratura e di perimetro**, non con altro
@@ -909,7 +912,7 @@ codice.
 
 **Contenuti (tutti dal manuale, capitolo 9 §9.3 e §9.1; stato al 2026-11-19).**
 - (Chiusa il 2026-11-19: la fotografia da 1219 è installata, `fdb78b86`.)
-- Ricalibrare la Pd al bordo della portata (tre ipotesi emerse: costante unica rivista, costante per sensore, sezione radar del
+- Ricalibrazione ulteriore della Pd al bordo della portata (a 0,2 dal 2026-11-20; tre ipotesi emerse: costante unica rivista, costante per sensore, sezione radar del
   bersaglio — riferite dal manuale come non scritte in documenti del repo).
 - Accendere o no le regole BI e VA (ognuna cambierebbe la fotografia).
 - Rivedere la regola sui colpi lanciati da dentro il volume del difensore (L1): da essa dipendono S35 e S19AD.
@@ -996,7 +999,7 @@ fornitori; (4) nessuna voce non verificata.
 > Q2 formule nel testo, parte centrale, con esempi ILLUSTRATIVI; Q3 sigle solo nella tabella della sezione 14; Q4 §1.1
 > ripristinata, «micro-passo» tolto; Q5 fotografia da 1219 installata; Q6 fonti primarie, secondarie come indicazioni, wiki su
 > Hughes e Lanchester non citate; Q7 sezione propria (sezione 9 della guida); Q8 sì, confronti relativi con repliche e nessuna
-> validazione; Q9 sezione 12 in un documento separato; **Q10 non confermata** (formulazione proposta in §0.4, da confermare);
+> validazione; Q9 sezione 12 in un documento separato; **Q10 confermata il 2026-11-20** (formulazione in §0.4);
 > Q11 lunghezza completa con riassunto iniziale. Le domande originali restano qui sotto per memoria.
 
 - **Q1 — Titolo, collocazione e data.** Il file finale si chiamerà `Guida_Concettuale_DES.md` in questa cartella? Va

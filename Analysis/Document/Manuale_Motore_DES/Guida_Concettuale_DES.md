@@ -1,21 +1,21 @@
 # Guida concettuale al motore DES
 
 > **Data**: 2026-11-20.
-> **Scritta sul repository al commit `3116813d`** (branch `analysis/dce-dcs-persistence`). Il manuale tecnico è letto
-> all'ultimo commit che lo tocca, `78ebf15b`; il manuale descrive il codice del motore a `a99bb3d4` e test e scenari a
-> `ff84e2a4`. Dopo di allora nel codice sono cambiati commenti e testi di documentazione (`34c4cefd` nel motore, `8fa92710`
-> in un test) ed è stato aggiunto un interruttore per la ricalibrazione della probabilità di scoperta al bordo della
-> portata (`598af98e`, spento), poi acceso il 2026-11-20 (`fd2af921`). La fotografia di non regressione installata è quella del 2026-11-19 (`fdb78b86`, 1219 esecuzioni).
-> <!-- PD-STATO -->
-> **Stato della probabilità di scoperta al bordo della portata.** Dal 2026-11-20 è acceso l'interruttore della
-> ricalibrazione: la probabilità al bordo è 0,2 (stima senza fonte, decisione dell'utente) invece di 0,5; manuale e
-> fotografia installata descrivono ancora lo stato con 0,5 fino alla prossima fotografia (la installa solo l'utente). La
-> modifica che accende l'interruttore è nel branch `analysis/dce-dcs-persistence` (commit `fd2af921`, non ancora pushato); la
-> legge di prima si ottiene spegnendo l'interruttore.
-> <!-- /PD-STATO -->
-> **Nessuna suite e nessun confronto sono stati rieseguiti per questa guida** (i soli numeri di esecuzioni citati vengono
-> dal confronto del 2026-11-20 sul commit `fd2af921`). Il motore cambia spesso: ciò che la guida
-> dice vale a questa data.
+> **Scritta sul repository al commit `3116813d` e chiusa al commit `882c4b8d`** (branch `analysis/dce-dcs-persistence`). Il
+> manuale tecnico è letto all'ultimo commit che lo tocca, `882c4b8d`; il manuale descrive il codice del motore a `a99bb3d4`
+> più la ricalibrazione della probabilità di scoperta al bordo della portata (`fd2af921`), e test e scenari a `ff84e2a4` più
+> gli aggiornamenti del 2026-11-20. Dopo `a99bb3d4` nel codice sono cambiati commenti e testi di documentazione (`34c4cefd`
+> nel motore, `8fa92710` in un test) ed è stato aggiunto un interruttore per quella ricalibrazione (`598af98e`, spento),
+> poi acceso il 2026-11-20 (`fd2af921`). La fotografia di non regressione installata è quella del 2026-11-20 (`a910dc15`,
+> 1219 esecuzioni, con la probabilità al bordo a 0,2); la precedente (`fdb78b86`, 2026-11-19) era anch'essa di 1219.
+>
+> **Stato della probabilità di scoperta al bordo della portata.** Dal 2026-11-20 l'interruttore della ricalibrazione è
+> acceso: la probabilità al bordo è 0,2 (stima senza fonte, decisione dell'utente) invece di 0,5. Manuale e fotografia
+> installata descrivono lo stato con 0,2; la legge di prima si ottiene spegnendo l'interruttore.
+>
+> **Nessuna suite e nessun confronto sono stati rieseguiti per questa guida.** I numeri delle esecuzioni cambiate e
+> identiche fra le due fotografie (716 e 503) sono stati contati confrontando i due file chiave per chiave; i conteggi di
+> suite sono quelli dichiarati dai messaggi di commit. Il motore cambia spesso: ciò che la guida dice vale a questa data.
 
 ## Come leggere questa guida
 
@@ -80,11 +80,9 @@ ritira (sezione 4).
 
 **Le regole centrali.** Il rilevamento usa una **legge di probabilità di scoperta** che vale 1 a distanza zero e una
 **costante al bordo della portata** del sensore; in mezzo la probabilità **mancata** (1 − Pd) cresce con la **quarta potenza**
-del rapporto fra distanza e portata, e subito fuori dalla portata la probabilità è zero.
-<!-- PD-STATO -->
-Dal 2026-11-20 è acceso l'interruttore della ricalibrazione: la probabilità al bordo è 0,2 (stima senza fonte, decisione
-dell'utente) invece di 0,5; manuale e fotografia installata descrivono ancora lo stato con 0,5 fino alla prossima fotografia.
-<!-- /PD-STATO -->
+del rapporto fra distanza e portata, e subito fuori dalla portata la probabilità è zero. Dal 2026-11-20 la costante al bordo
+vale 0,2 (stima senza fonte, scelta dall'utente) invece di 0,5, con l'interruttore della ricalibrazione acceso: spegnendolo
+si torna alla legge di prima.
 Una sola estrazione casuale decide **se e a che distanza** avviene la scoperta, una volta per ogni passaggio del bersaglio nel
 volume del sensore; se il bersaglio vi resta meno del tempo di rivisita del sensore, la probabilità si riduce in proporzione
 (sezione 5). Lo scontro è una catena: ritardo di reazione del sistema, scelta dell'arma dai registri, **saturazione delle
@@ -103,7 +101,8 @@ calcolati in modo identico su ogni macchina: a parità di dati e di codice il mo
 esecuzione resta però un campione: per conoscere la variabilità servono **repliche** con semi diversi (sezione 10).
 
 **Verifica, non validazione.** Il motore è controllato da alcune migliaia di test, da una batteria di scenari e da una
-**fotografia di non regressione** che registra l'esito di **1219 esecuzioni** (installata il 2026-11-19; prima erano 1103):
+**fotografia di non regressione** che registra l'esito di **1219 esecuzioni** (da 1219 dal 2026-11-19, prima erano 1103; l'ultima
+installazione è del 2026-11-20, con la probabilità al bordo a 0,2):
 ogni modifica che cambia ciò che la fotografia registra è vista e va spiegata. La fotografia però **non** registra i
 rilevamenti in 1103 delle 1219 esecuzioni, né gli esiti di missione e di operazione, né le posizioni finali: questi li
 controllano solo i test. Tutto ciò prova che il motore fa ciò che il progetto dice (**verifica**); **non** prova che i suoi
@@ -119,7 +118,7 @@ per la regola della permanenza, che è una scelta del progetto [S]. Non usa coef
 modello alla Lanchester** (sezione 13). Le sezioni 14-16 sono la guida al manuale (con la tabella delle sigle di progetto), il
 glossario e la bibliografia.
 
-**Il rapporto con DCS** (formulazione proposta, da confermare): il contratto di ingresso e di uscita è lo stesso per una sessione
+**Il rapporto con DCS** (confermato dall'utente il 2026-11-20): il contratto di ingresso e di uscita è lo stesso per una sessione
 sintetica e per una giocata in DCS; il DES risolve solo le sintetiche; oggi non esistono un adattatore DCS né un chiamante di
 produzione del ciclo di campagna.
 
@@ -170,7 +169,7 @@ Il nucleo del progetto deve restare **indifferente al simulatore**: la verifica 
 DCS, la campagna deve continuare a girare con sole sessioni sintetiche. Per il motore questo significa che le porte trasportano
 solo valori di dominio e che nessun pezzo del motore dipende da file o concetti di DCS [V].
 
-**Rapporto con le sessioni giocate** (*formulazione proposta, da confermare dall'utente*): il contratto di ingresso e di uscita
+**Rapporto con le sessioni giocate** (*formulazione confermata dall'utente il 2026-11-20*): il contratto di ingresso e di uscita
 è lo stesso per una sessione sintetica e per una giocata in DCS; il DES risolve solo le sintetiche; oggi non esistono un
 adattatore DCS né un chiamante di produzione del ciclo di campagna. Il codice lo dice in due punti: le porte sono quelle a cui
 deve conformarsi «qualunque esecutore di sessione: il risolutore sintetico oggi, un adattatore DCS domani», e un adattatore
@@ -414,8 +413,10 @@ non prende decisioni tattiche, applica regole. Le sue funzioni principali:
 Una sessione percorre questi passi, nell'ordine [V]:
 
 1. **Lettura e controllo delle missioni**: ogni missione appartiene a un blocco presente, le sue unità sono di quel blocco, nessun
-   tratto supera la velocità massima del mezzo più lento, il carico dichiarato di ogni aereo è quello che l'aereo ha davvero.
-   Un errore qui ferma la sessione.
+   tratto supera la velocità massima del mezzo più lento (se almeno un'unità ne ha il dato), il carico dichiarato di ogni aereo
+   è quello che l'aereo ha davvero, l'identificativo di una missione non coincide con quello di un blocco. Un errore qui
+   ferma la sessione: il motore rifiuta l'ordine con un errore di valore, prima di eseguire qualunque altro passo [V,
+   2026-11-20].
 2. **Movimenti**: per ogni unità la rotta (quella della missione più la posizione in formazione), l'istante di partenza, la
    velocità, le attese, la presenza prima della partenza e dopo l'arrivo.
 3. **Forze dello scontro**: una per missione; le unità di un blocco senza missione formano una forza «residua» con l'identità
@@ -706,8 +707,10 @@ La missione decide anche **contro chi** si spara e **con quale arma** [V]:
   è **500 m** [S], aumentato dell'incertezza se la posizione è stimata.
 - **Regole di fuoco** (ROE, *rules of engagement*). Per le missioni aeree sono cinque: **fuoco libero**; **priorità al
   designato** (in avvicinamento non si spara alle occasioni di superficie, dopo l'attacco sì, con precedenza al designato se è
-  visto e a portata); **solo il designato** (salvo l'autodifesa contro aerei per le missioni aria-suolo); **solo in risposta** (si
-  spara a chi ha già sparato contro il proprio dominio); **divieto di fuoco** (le intercettazioni difensive restano). Per le
+  visto e a portata); **solo il designato** (salvo l'autodifesa contro aerei, per i tipi di missione la cui politica d'armi la
+  prevede: attacco al suolo e anti-nave, soppressione delle difese, ricognizione, radar volante, rifornimento in volo,
+  trasporto); **solo in risposta** (si spara a chi ha già sparato contro il proprio dominio); **divieto di fuoco** (le
+  intercettazioni difensive restano) [V, 2026-11-20]. Per le
   missioni terrestri e navali le regole sono tre: fuoco libero, solo in risposta, divieto di fuoco.
 - **Armi designate**: contro il designato si usano **solo** quelle, senza ripiego; contro gli altri bersagli quelle armi sono
   **riservate**.
@@ -717,7 +720,7 @@ La missione decide anche **contro chi** si spara e **con quale arma** [V]:
 
 ### 4.7 Come finisce una missione
 
-L'esito di ogni missione segue **una regola unica**, con questa precedenza [V]:
+L'esito di ogni missione segue **una regola unica**, con questa precedenza [V, 2026-11-20]:
 
 **distrutta** (tutte le unità perse) **>** **completata** (obiettivo raggiunto) **>** **abortita**, con il motivo **>** **in
 corso** **>** **fallita**.
@@ -841,10 +844,10 @@ flowchart TD
 >   dichiarata [V]. L'orbita non ha circuito [V].
 > - Una missione deve stare dentro la sessione: lo controlla il **validatore**; chi chiama il motore direttamente può violarlo, e
 >   il motore taglia la rotta alla fine della sessione con un avviso [V].
-> - Nel manuale due frasi non sono allineate con il codice attuale: il cap. 2 §2.7 (e il cap. 9 §9.1) dice che la tabella fra
->   tipo di missione e postura non è letta da nessun modulo, mentre il motore la usa per l'etichetta di postura finale
->   [V, 2026-11-20]; il cap. 6 §6.16 e una voce del cap. 9 §9.1 (limiti della missione come unità di scontro) dicono che nessuno
->   calcola l'esito di un'operazione, mentre dal 2026-10-22 il motore lo calcola (cap. 2 §2.4, cap. 6 §6.24) [V, 2026-11-20].
+> - Due frasi del manuale (la tabella fra tipo di missione e postura «non letta da nessun modulo»; l'esito di un'operazione «non
+>   calcolato») non erano allineate con il codice: il motore usa la tabella per l'etichetta di postura finale e calcola l'esito
+>   delle operazioni dal 2026-10-22 [V, 2026-11-20]. Il manuale le ha corrette nel testo, con un'annotazione, il 2026-11-20
+>   (cap. 9 §9.6, voci 34-37); la guida descrive il comportamento del codice.
 >
 > **Nel manuale.** Cap. 2 §2.6-§2.8 (tipi della missione, tassonomia, che cosa fa la porta; D16, D17, D18); cap. 4 §4.27-§4.33
 > (missione come forza, dominio, aerei a terra, fine di attività, regole di bersaglio, politica d'armi; D32); cap. 6
@@ -887,9 +890,13 @@ semplificazione forte, e dichiarata [V]:
 - **niente settori**: ogni sensore guarda in tutte le direzioni, anche quelli che nella realtà coprono solo un arco;
 - un aereo **a terra** non osserva (sensori spenti) ed è scoperto come un bersaglio di superficie (sezione 4.3).
 
-Una lacuna dei dati pesa sugli scontri fra forze di terra: secondo il manuale i registri di carri, corazzati, artiglieria e navi
-non dichiarano sensori contro bersagli di superficie, per cui due forze terrestri, senza un'aggiunta esplicita del chiamante,
-non si vedono mai [V; dichiarato dal manuale, non ricontrollato record per record per questa guida].
+Una lacuna dei dati pesa sugli scontri fra forze di terra: nei registri dei veicoli nessun carro, corazzato o semovente
+d'artiglieria dichiara un sensore contro bersagli terrestri; ne dichiarano uno soltanto quattro sistemi contraerei di piccola
+taglia, con il loro sensore ottico (portate di scoperta da 8 a 12 km), e nessun veicolo ne dichiara contro bersagli navali. Le
+navi vedono navi e aerei, non bersagli terrestri. Per questo due forze terrestri, senza un'aggiunta esplicita del chiamante,
+non si vedono mai [V, 2026-11-20: ricontrollato record per record sui registri: 79 modelli di veicolo, 4 con un sensore
+contro bersagli terrestri, tutti ottici; 23 navi, nessuna]. Gli aerei fanno eccezione: 35 dei 65 modelli dichiarano un radar
+o un sensore ottico contro bersagli terrestri [V, 2026-11-20].
 
 ### 5.3 La finestra di contatto
 
@@ -911,7 +918,8 @@ riproducibilità (sezione 10) [V].
 
 **Esempio ILLUSTRATIVO** (la geometria della sezione 2.4). A ha un radar da **40 km**, B uno da **20 km**; B passa a 10 km da A,
 con la velocità relativa di 500 m/s dell'esempio. La finestra va dall'ingresso di B nei 40 km (circa 43 s) all'uscita (circa
-197 s). Il tratto reciproco è quello sotto i 20 km, da 85 a 155 s. Per i primi 42 secondi della finestra solo A può scoprire B.
+197 s). Il tratto reciproco è quello sotto i 20 km, da 85 a 155 s. Per i primi 43 secondi circa della finestra solo A può
+scoprire B.
 
 *Fig. 11 — Una finestra di contatto, dall'ingresso all'uscita (numeri ILLUSTRATIVI, dall'esempio). Deriva da D70
 (portate, intervalli di portata maggiore e minore, massimo avvicinamento) e D3 (tipi di dominio dello strato 1).*
@@ -943,19 +951,22 @@ presa dall'**equazione radar**, per cui il segnale di ritorno cala come 1/d⁴; 
 scoperta al rapporto segnale/rumore (le curve di Swerling) hanno però una forma a «S», e questa legge ne è una
 **semplificazione monotona** scelta dal progetto [S]. La stessa legge vale per ogni sensore, radar, ottico o vista [V].
 
-*Tab. 2 — Valori della legge per R = 20 km, con le due costanti al bordo p = 0,5 e p = 0,2 (formula del codice, numeri
-calcolati per questa guida; ILLUSTRATIVO). Nessun diagramma tecnico corrispondente.*
+*Tab. 2 — Valori della legge per R = 20 km, con la costante al bordo in vigore dal 2026-11-20 (p = 0,2) e, per confronto, con
+la legge di prima (p = 0,5) (formula del codice, numeri calcolati per questa guida; ILLUSTRATIVO). Nessun diagramma tecnico
+corrispondente.*
 
 | Distanza d | 0 | 5 km | 10 km | 15 km | 18 km | 20 km | 20,1 km |
 |---|---|---|---|---|---|---|---|
-| Pd con p = 0,5, senza riduzioni (f = 1) | 1,00 | 0,998 | 0,969 | 0,842 | 0,672 | **0,50** | **0** |
-| Pd con p = 0,5, di notte (f = 0,7) | 0,70 | 0,699 | 0,678 | 0,589 | 0,470 | 0,35 | 0 |
-| Pd con p = 0,2, senza riduzioni (f = 1) | 1,00 | 0,997 | 0,950 | 0,747 | 0,475 | **0,20** | **0** |
+| Pd con p = 0,2 (in vigore), senza riduzioni (f = 1) | 1,00 | 0,997 | 0,950 | 0,747 | 0,475 | **0,20** | **0** |
+| Pd con p = 0,2 (in vigore), di notte (f = 0,7) | 0,70 | 0,698 | 0,665 | 0,523 | 0,333 | 0,14 | 0 |
+| Pd con p = 0,5 (legge di prima), senza riduzioni (f = 1) | 1,00 | 0,998 | 0,969 | 0,842 | 0,672 | **0,50** | **0** |
+| Pd con p = 0,5 (legge di prima), di notte (f = 0,7) | 0,70 | 0,699 | 0,678 | 0,589 | 0,470 | 0,35 | 0 |
 
 Due cose si leggono nella tabella.
 
-- **Il salto al bordo.** Appena oltre la portata la probabilità passa di colpo da f·p a zero (senza riduzioni, da 0,5 o da 0,2
-  secondo la costante). La legge non si annulla da sola: è **tagliata** alla portata del registro [V, 2026-11-20].
+- **Il salto al bordo.** Appena oltre la portata la probabilità passa di colpo da f·p a zero (senza riduzioni, da 0,2 con la
+  costante in vigore; sarebbe da 0,5 con la legge di prima). La legge non si annulla da sola: è **tagliata** alla portata del
+  registro [V, 2026-11-20].
 - **Che cosa significa Pd(d).** Poiché nel motore una sola estrazione decide se e quando avviene la scoperta (§5.5), Pd(d) non
   è la probabilità di un singolo giro d'antenna: è la probabilità di **aver già scoperto** il bersaglio quando, avvicinandosi,
   la distanza scende a d (lettura dell'autore di questa guida, ricavata dal codice).
@@ -965,13 +976,10 @@ commento del codice come «la più prudente» delle due convenzioni con cui si d
 oppure 0,9 a quella distanza), ma **nessuna fonte di quella convenzione è stata trovata** dalla bibliografia [NV]: va letta come
 una scelta non verificata, non come una proprietà della legge. L'utente ha giudicato 0,5 alto (si attende valori fra 0,1 e
 0,3) e ha deciso il valore ricalibrato 0,2, il centro di quell'intervallo, anch'esso una stima senza fonte [S/D]. Quale dei due
-valori è in vigore lo decide un interruttore [V, 2026-11-20].
-<!-- PD-STATO -->
-Dal 2026-11-20 è acceso l'interruttore della ricalibrazione: la probabilità al bordo è 0,2 (stima senza fonte, decisione
-dell'utente) invece di 0,5; manuale e fotografia installata descrivono ancora lo stato con 0,5 fino alla prossima fotografia.
+valori è in vigore lo decide un interruttore, oggi **acceso**: la costante al bordo vale **0,2** dal 2026-11-20 [V, 2026-11-20].
 Con 0,2 il salto al bordo è più piccolo: la formula, se non fosse tagliata, si annullerebbe a circa 1,06 R invece che a circa
-1,19 R [V, 2026-11-20, commento del codice]. La stessa costante entra anche nelle misure del pianificatore di rotta (§9.2).
-<!-- /PD-STATO -->
+1,19 R con 0,5 [V, 2026-11-20, commento del codice; ricalcolato: 1,25^(1/4) = 1,057 e 2^(1/4) = 1,189]. La stessa costante entra
+anche nelle misure del pianificatore di rotta (§9.2).
 
 **Il fattore f.** Tre fattori, che si moltiplicano [V]:
 
@@ -1001,16 +1009,18 @@ cui la scoperta avverrà, invertendo la legge [V, 2026-11-20]:
 Il bersaglio è scoperto se r è almeno pari alla distanza minima raggiunta (che equivale a u < Pd(d_min)); l'**istante** della
 scoperta è il primo in cui la distanza scende sotto r, e lo calcola la geometria, come per la finestra [V]. Una conseguenza
 diretta: senza riduzioni (f = 1) una frazione p delle estrazioni (quelle sotto f·p) produce la scoperta **esattamente al
-bordo** della portata, se il bersaglio entra nel volume: la metà con p = 0,5, un quinto con p = 0,2 [V, 2026-11-20].
+bordo** della portata, se il bersaglio entra nel volume: un quinto con p = 0,2 (in vigore dal 2026-11-20), la metà con p = 0,5
+(la legge di prima) [V, 2026-11-20].
 
 **Esempio ILLUSTRATIVO** (B vola verso A come nella sezione 2.4; il radar di A ha R = 20 km; il massimo avvicinamento è 10 km;
-f = 1; le due colonne mostrano le due costanti al bordo):
+f = 1; le due colonne mostrano la costante al bordo in vigore, p = 0,2, e quella di prima, p = 0,5; numeri ricalcolati con la
+formula del codice [V, 2026-11-20]):
 
-| Estrazione u | Con p = 0,5: raggio e esito | Con p = 0,2: raggio e esito |
+| Estrazione u | Con p = 0,2 (in vigore): raggio e esito | Con p = 0,5 (legge di prima): raggio e esito |
 |---|---|---|
-| 0,30 | 20 km (sotto 0,5: bordo); scoperto a 85 s, all'ingresso nella portata | circa 19,3 km; scoperto a circa 87 s |
-| 0,80 | circa 15,9 km; scoperto a circa 95 s | circa 14,1 km; scoperto a circa 100 s |
-| 0,98 | circa 8,9 km; **mai scoperto**: B non scende sotto 10 km (Pd(10 km) = 0,969, quindi circa il 3% delle estrazioni dà questo esito) | circa 8,0 km; **mai scoperto** (Pd(10 km) = 0,95: circa il 5% delle estrazioni) |
+| 0,30 | circa 19,3 km; scoperto a circa 87 s | 20 km (sotto 0,5: bordo); scoperto a 85 s, all'ingresso nella portata |
+| 0,80 | circa 14,1 km; scoperto a circa 100 s | circa 15,9 km; scoperto a circa 95 s |
+| 0,98 | circa 8,0 km; **mai scoperto** (Pd(10 km) = 0,95: circa il 5% delle estrazioni) | circa 8,9 km; **mai scoperto**: B non scende sotto 10 km (Pd(10 km) = 0,969, quindi circa il 3% delle estrazioni dà questo esito) |
 
 Il vantaggio è triplice: nessun campionamento nel tempo, un risultato **esatto rispetto al modello di moto**, e una storia
 riproducibile a parità di seme.
@@ -1085,7 +1095,7 @@ scoperta più ritardo di reazione cadono dentro il passaggio, quindi servirebbe 
 registri la reazione di ogni tiratore è più lunga del suo (con un'eccezione, che nel caso esaminato è comunque fuori dalla portata
 della sua arma) [V]. La legge si vede quindi solo sulle **scoperte**, che la fotografia registra unicamente per una **serie
 dedicata di 116 esecuzioni** [V, 2026-11-20: voce delle scoperte contata sul file della fotografia]. Accendere la regola **non ha
-cambiato** nessuna delle 1103 esecuzioni preesistenti; questo dice che la regola non le altera, **non** che sia stata messa alla
+cambiato** nessuna delle 1103 esecuzioni preesistenti di allora; questo dice che la regola non le altera, **non** che sia stata messa alla
 prova da esse [V per la lettura, NV per i numeri del confronto].
 
 **Fra una sessione e l'altra la permanenza non si somma.** La regola vale **dentro una sessione** [V]:
@@ -1094,7 +1104,8 @@ prova da esse [V per la lettura, NV per i numeri del confronto].
 - il **rilevamento non passa** da una sessione alla successiva: ogni sessione rifà le sue estrazioni, anche se il contatto era
   appena avvenuto (sezione 8).
 
-**Esempio ILLUSTRATIVO.** Tempo di rivisita 3 s, legge della distanza 0,5. Un passaggio di 6 s in una sola sessione: una
+**Esempio ILLUSTRATIVO.** Tempo di rivisita 3 s; la legge della distanza dà 0,5 nel punto di massimo avvicinamento (un valore
+scelto per l'esempio, che non dipende dalla costante al bordo). Un passaggio di 6 s in una sola sessione: una
 estrazione con g = 1, probabilità **0,50**. Lo stesso passaggio spezzato a metà fra due sessioni: due estrazioni con g = 1,
 probabilità di almeno una scoperta 1 − 0,5 · 0,5 = **0,75**. Un passaggio di 3 s spezzato a metà: due estrazioni con g = 0,5,
 probabilità 1 − 0,75 · 0,75 = **0,44**, contro 0,50 in una sessione sola. Le prove fatte dal progetto il 2026-11-19, con script
@@ -1113,8 +1124,9 @@ tiro richiede poi un'arma con portata sufficiente e regole che lo consentano (se
 - **la vista** dei due semoventi contraerei che non hanno radar arriva a 6 km [S], ma i loro cannoni sparano più vicino e più in
   basso: vedono aerei che non possono colpire [V];
 - **il ricevitore d'allarme radar** (RWR, *radar warning receiver*) di un aereo, se riconosce la categoria del radar che lo
-  illumina, fa sapere alla sua forza **chi** la sta ingaggiando da quell'istante; un aereo senza RWR **non percepisce mai** i
-  sistemi contraerei, perché i registri degli aerei non hanno sensori verso terra [V].
+  illumina, fa sapere alla sua forza **chi** la sta ingaggiando da quell'istante; un aereo senza RWR percepisce un sistema
+  contraereo **solo se lo scopre con un proprio sensore** contro bersagli terrestri, e 35 dei 65 modelli d'aereo dei registri ne
+  dichiarano uno (radar od ottico): gli altri non percepiscono mai i sistemi contraerei [V, 2026-11-20: contati sui registri].
 
 *Fig. 12 — Dalla finestra alla scoperta. Deriva da D131 e D133 (un'estrazione per passaggio, con la permanenza) e D12
 (composizione del fattore di riduzione).*
@@ -1163,7 +1175,8 @@ flowchart TD
 >   approssimati [S].
 > - Permanenza non additiva fra sessioni e rilevamento che non passa da una sessione all'altra: la probabilità di scoperta nel
 >   tempo dipende dalla durata e dalla cadenza delle sessioni [V; numeri delle prove NV].
-> - Mancano sensori contro bersagli di superficie in molti registri [V, dichiarato dal manuale].
+> - Nei registri dei veicoli mancano i sensori contro bersagli terrestri (solo quattro sistemi contraerei ne hanno, ottici): due
+>   forze terrestri non si vedono mai senza un'aggiunta del chiamante; le navi vedono navi e aerei [V, 2026-11-20].
 > - Le scoperte sono registrate dalla fotografia solo per la serie dedicata; altrove un cambio della legge che non tocca il tiro
 >   resta invisibile al confronto [V].
 >
@@ -1171,8 +1184,8 @@ flowchart TD
 > (nebbia di guerra, D12), §4.35 (un'estrazione per passaggio, D131, D133), §4.36 (permanenza); cap. 7 §7.4 (ambiente), §7.12
 > (dati dei sensori); cap. 8 §8.13-§8.14 (scenari dei sensori e della permanenza); cap. 9 §9.1 «La Pd non distingue radar da
 > ottico», «Fog-of-war reale», «Rilevamento per passaggio nella portata propria», «Permanenza nel volume», «Limiti dei sensori EWR
-> e visivo», «Pd sul bordo della portata». <!-- PD-STATO -->Quest'ultima voce descrive ancora lo stato con 0,5, e la
-> ricalibrazione della costante al bordo non è ancora descritta nel manuale (tabella delle sigle, §14.3.2).<!-- /PD-STATO -->
+> e visivo», «Pd sul bordo della portata» (che dal 2026-11-20 descrive la costante a 0,2 e l'interruttore della
+> ricalibrazione; v. anche cap. 4 §4.2, cap. 6 §6.21, cap. 8 §8.7).
 
 ---
 
@@ -1226,9 +1239,11 @@ comandare, attuare, salvo armi con una cadenza propria [V].
 I **totali** «dalla scoperta al lancio» sono ripresi dal documento di analisi del progetto, che li attribuisce a fonti tecniche
 non riverificate [NV per le fonti]: circa 26 s per un sistema missilistico a corto raggio di vecchia generazione, circa 28 s per
 uno a lungo raggio con posto comando, 5-8 s per un sistema moderno da fermo, 1-2 s per la reazione di un pilota, circa 31 s per un
-equipaggio di carro per bersaglio; dove la fonte dà un intervallo si usa il punto medio [V]. La **scomposizione** nelle quattro
-fasi è una stima [S]. Navi e sistemi senza profilo ricevono il profilo **più lento** (31 s), di proposito: la mancanza di un dato
-non deve regalare l'iniziativa [V]. Un fattore per il livello di addestramento è previsto ma vale 1 per tutti [V].
+equipaggio di carro per bersaglio; dove la fonte dà un intervallo si usa il punto medio [V, 2026-11-20: valori letti nel codice].
+La **scomposizione** nelle quattro fasi è una stima [S]. Questi cinque profili sono quelli documentati; per gli altri sistemi
+contraerei il profilo è ricavato dalla tabella delle minacce del pianificatore di rotta, e navi, radar di scoperta a lungo raggio
+e classi non riconosciute ricevono il profilo **più lento** (31 s), di proposito: la mancanza di un dato non deve regalare
+l'iniziativa [V, 2026-11-20]. Un fattore per il livello di addestramento è previsto ma vale 1 per tutti [V].
 
 **Esempio ILLUSTRATIVO** (i numeri della sezione 2.5). Un sistema contraereo scopre un aereo a t = 85 s; la sua reazione è di
 26 s, quindi il primo lancio è possibile a 111 s; con 29 s di volo il missile arriva a 140 s. Se l'aereo aveva scoperto il sito a
@@ -1294,7 +1309,8 @@ quando la distanza in tre dimensioni scende sotto la portata dell'arma; se non c
 candidato si esaurisce, **anche se un'altra arma della lista potrebbe ingaggiare** (limite dichiarato) [V]. Altri due punti:
 
 - il **tempo di volo** di un missile non dipende dalla distanza vera di tiro: è la metà della portata massima divisa per la
-  velocità dell'arma [S]; per le bombe, gittata e tempo di caduta vengono dalla balistica descritta nella sezione 9, calcolata
+  velocità dell'arma (per ogni arma con portata e velocità note; altrimenti un valore di ripiego per tipo d'arma) [S; V,
+  2026-11-20]; per le bombe, gittata e tempo di caduta vengono dalla balistica descritta nella sezione 9, calcolata
   alla quota del tiratore sopra il bersaglio [V, 2026-11-20];
 - per le missioni aeree, la **politica d'armi** per tipo di missione restringe ancora la lista (sezione 4.6) [V].
 
@@ -1519,9 +1535,13 @@ era»), senza averlo scoperto. Non passa dallo strato 2: è un evento di session
   strato 2, in cui il motore estrae numeri casuali [V, 2026-11-20].
 
 **Esempio ILLUSTRATIVO.** Dieci colpi da 152 mm su un punto stimato con incertezza 100 m; il bersaglio è davvero lì; Pk\|h = 0,5.
-La probabilità che un colpo cada entro 38 m dal bersaglio è (38/100)² ≈ 0,14; per colpo il bersaglio è distrutto o danneggiato
-con probabilità circa 0,07; su dieci colpi, almeno un effetto con probabilità circa 0,53. Se il bersaglio si è spostato di 150 m,
-nessun colpo può raggiungerlo (100 m di dispersione più 38 m di raggio letale fanno 138 m).
+La probabilità che un colpo cada entro 38 m dal bersaglio è (38/100)² ≈ 0,14. Poiché dentro il raggio letale il colpo è
+considerato a segno, ogni colpo che cade lì ha **un effetto**: il bersaglio è distrutto con probabilità Pk\|h (0,5) oppure
+danneggiato con la restante (0,5). Per colpo, quindi: effetto con probabilità circa 0,14, di cui distruzione diretta circa 0,07.
+Su dieci colpi: almeno un effetto con probabilità circa 0,79; almeno una distruzione diretta con probabilità circa 0,53 (la
+distruzione può venire anche da più danneggiamenti). Se il bersaglio si è spostato di 150 m, nessun colpo può raggiungerlo
+(100 m di dispersione più 38 m di raggio letale fanno 138 m). Numeri ricalcolati con le formule e le costanti del codice [V,
+2026-11-20].
 
 *Fig. 18 — Il fuoco su posizione. Deriva da D49 (dalla condizione di tiro alle estrazioni) e D50 (l'evento nella coda di
 sessione).*
@@ -1681,7 +1701,8 @@ Dal bingo in poi l'aereo **non lancia più salve offensive**, ma resta bersaglio
 **Lo stato dei dati.** Il consumo «di emergenza» dei registri ha un'**unità non documentata**, dedotta come kg/h; per i caccia con
 postbruciatore sottostima di circa sei volte il consumo a postbruciatore pieno. Per questo l'utente ha **definito** la riserva come
 «5 minuti alla massima spinta militare» invece che al postbruciatore [D]; sul campione di otto aerei esaminato dal progetto la
-riserva va dal 5,2% al 21,4% del pieno [V]. Una regola per gli aerei storici con un'emergenza più breve di 5 minuti è indicata
+riserva va dal 5,2% (A-10C) al 21,4% (Mirage 2000C) del carburante interno, senza serbatoi esterni [V, 2026-11-20:
+ricalcolato sui registri e sui loadout con la formula sopra]. Una regola per gli aerei storici con un'emergenza più breve di 5 minuti è indicata
 dall'utente ma **non implementata** [V].
 
 *Fig. 20 — La decisione al bingo, semplificata. Deriva da D38.*
@@ -1849,8 +1870,9 @@ consumato qualcosa; la riparazione solo per chi è danneggiato. Un'unità **dist
 **Esempio ILLUSTRATIVO** (con i tempi del codice, che sono stime). Un caccia è colpito a 1,2 h dall'inizio della sessione e scende
 a salute 70; atterra a 1,5 h. Inizio = 1,5 h; ripristino 3 h; riparazione 24 h × 0,30 = 7,2 h: **pronto da 11,7 h**. Una sessione
 che comincia a 8 h non può impiegarlo (il validatore lo rifiuta); in una che comincia a 12 h il conduttore, al passo 1, lo riporta a
-salute 100, lo riarma e lo rifornisce. Se invece fosse stato colpito di nuovo sul parcheggio a 1,8 h, l'inizio sarebbe 1,8 h e la
-prontezza 12,0 h.
+salute 100, lo riarma e lo rifornisce. Se invece fosse stato colpito di nuovo sul parcheggio a 1,8 h, e portato a salute 60,
+l'inizio sarebbe 1,8 h, la riparazione 24 h × 0,40 = 9,6 h e la prontezza 14,4 h (numeri ricalcolati con la formula del codice
+[V, 2026-11-20]).
 
 Tre regole che contano [V]:
 
@@ -1993,10 +2015,9 @@ l'orizzonte, non è sempre vera (passo successivo non implementato) [V].
 **Come sceglie fra i percorsi.** Per ogni percorso calcola il **pericolo** d'intercettazione e alcune **misure di scoperta**: il
 tempo passato nei volumi di scoperta, l'istante della prima scoperta, il **preavviso** (arrivo meno prima scoperta) e la **massima
 probabilità di scoperta**, calcolata con la **stessa legge** del motore e, con la regola accesa, con la stessa permanenza [V].
-<!-- PD-STATO -->
 La costante al bordo della portata è la stessa del motore: dal 2026-11-20, con l'interruttore della ricalibrazione acceso, 0,2
-invece di 0,5 anche in questa misura [V, 2026-11-20, commento del codice].
-<!-- /PD-STATO -->
+invece di 0,5 anche in questa misura; lo stesso interruttore agisce sulle due [V, 2026-11-20: la misura chiama la funzione di
+scoperta del motore; c'è un test dedicato].
 Nel modo «aggirare la scoperta» sceglie il percorso con **meno tempo sotto i sensori**, poi meno pericolo, poi il più corto;
 negli altri modi, meno pericolo e poi il più corto [V, 2026-11-20]. La probabilità di scoperta **non entra nella scelta**: è una
 misura, non un vincolo; e per più attraversamenti è il **peggiore** di essi, non la probabilità di essere scoperti almeno una
@@ -2028,7 +2049,7 @@ su due livelli [V].
 > **t_caduta = ( v_z + √(v_z² + 2·g·h) ) / g**    **gittata = v · cos(beccheggio) · t_caduta**
 >
 > dove v è la velocità, v_z = v · sin(beccheggio) la sua componente verticale (negativa in picchiata), h la quota sopra il
-> bersaglio e g = 9,81 m/s². Poi i **fattori di resistenza** per classe di bomba [S]: bassa resistenza, gittata −10% e caduta
+> bersaglio e g = 9,80665 m/s² (il valore del codice). Poi i **fattori di resistenza** per classe di bomba [S]: bassa resistenza, gittata −10% e caduta
 > +5%; frenata (code a ombrello, paracadute), gittata circa −50% e caduta circa +30%.
 
 Le bombe plananti guidate usano invece un rapporto di planata, e i contenitori di submunizioni plananti la distanza di sgancio
@@ -2037,7 +2058,7 @@ ammesso più vicino, come fa l'intelligenza artificiale di DCS, invece di rinunc
 
 **Esempio ILLUSTRATIVO.** Sgancio livellato a 1000 m sopra il bersaglio a 200 m/s: nel vuoto la bomba cade in circa 14,3 s e
 percorre circa 2,86 km; con il fattore di bassa resistenza circa 2,57 km in circa 15,0 s, cioè una distanza obliqua dal bersaglio
-di circa 2,76 km. È questa distanza che il motore usa come «portata» della bomba (sezione 6.4).
+di circa 2,76 km (numeri ricalcolati con la formula e le costanti del codice [V, 2026-11-20]). È questa distanza che il motore usa come «portata» della bomba (sezione 6.4).
 
 **Livello 2, la ricerca su griglia** [V]. Il pianificatore prova:
 
@@ -2085,7 +2106,7 @@ sgancio, tempo di caduta e le esposizioni a ogni sito [V]. Il progetto lo pensa 
 motore DES e un futuro adattatore DCS, che ne trarrebbe quota, direzione, arma e numero di passaggi per i compiti d'attacco del
 simulatore. **Oggi il motore ne legge solo l'arma** (§9.1).
 
-*Fig. 25 — Dal pianificatore d'attacco agli esecutori. Deriva da D15, corretto sul codice per la parte del motore (le
+*Fig. 25 — Dal pianificatore d'attacco agli esecutori. Deriva da D15, nella versione corretta dal manuale il 2026-11-20 sul codice per la parte del motore (le
 frecce tratteggiate sono letture previste ma oggi non fatte).*
 
 ```mermaid
@@ -2124,8 +2145,9 @@ flowchart TD
 >
 > **Nel manuale.** Cap. 7 §7.8 (pianificatore di rotta: volumi, orizzonte, modi, misure, permanenza; D14), §7.9 (pianificatore
 > d'attacco: fisica, griglia, esposizione effettiva, profilo; D15); cap. 4 §4.20 (le bombe nel motore); cap. 9 §9.1 «Limiti del
-> pianificatore di rotta e del pianificatore d'attacco». Attenzione: il cap. 7 §7.9 e il diagramma D15 dicono che il motore legge
-> distanza e tempo di sgancio del profilo; il codice attuale non lo fa (vedi §9.1 di questa guida).
+> pianificatore di rotta e del pianificatore d'attacco». Il cap. 7 §7.9 e il diagramma D15 dicevano che il motore legge distanza
+> e tempo di sgancio del profilo; il codice non lo fa (vedi §9.1 di questa guida) e il manuale li ha corretti il 2026-11-20
+> (cap. 9 §9.6, voce 34).
 
 ---
 
@@ -2345,8 +2367,8 @@ sezione spiega gli strumenti di verifica, che cosa provano e che cosa no.
 ### 11.2 Gli strumenti
 
 **I test automatici.** Ogni regola ha test che la controllano da sola: una formula su casi noti, un caso limite, un errore
-atteso. Insieme formano la **suite**, che l'ultimo commit di codice del branch (2026-11-19) dichiara di **4973 test, tutti
-superati** [NV: numero dichiarato, non rieseguito]. Fra i test ce ne sono due famiglie di particolare interesse per un
+atteso. Insieme formano la **suite**, che l'ultimo commit di codice del branch (`fd2af921`, 2026-11-20) dichiara di **4973 test, tutti
+superati** [NV: numero dichiarato dal messaggio di commit, non rieseguito]. Fra i test ce ne sono due famiglie di particolare interesse per un
 responsabile:
 
 - il **test di determinismo**: la stessa sessione costruita due volte dà esiti e stato delle unità identici, e una sessione
@@ -2378,21 +2400,23 @@ ordinate, così che **due catture dello stesso codice sono identiche byte per by
 al confronto, non dice nulla sulla precisione fisica dei numeri.
 
 La fotografia installata oggi registra **1219 esecuzioni** [V, 2026-11-20: contate sul file]. È stata installata il
-2026-11-19, su richiesta dell'utente, dopo la lettura delle 116 esecuzioni nuove di una serie di scenari sulla permanenza
-breve nel volume dei sensori; fino al giorno prima era di 1103. Il confronto fatto subito dopo l'installazione ha dato **1219
-esecuzioni identiche**, e lo stesso esito è dichiarato dopo l'ultimo cambio di codice del branch, con l'interruttore della
-ricalibrazione ancora spento [NV: dichiarato, non rieseguito].
-<!-- PD-STATO -->
-Dal 2026-11-20 è acceso l'interruttore della ricalibrazione: la probabilità al bordo è 0,2 (stima senza fonte, decisione
-dell'utente) invece di 0,5; manuale e fotografia installata descrivono ancora lo stato con 0,5 fino alla prossima fotografia.
-Con l'interruttore acceso il confronto con la fotografia installata non dà più tutte esecuzioni identiche: il confronto
-eseguito dal progetto il 2026-11-20 sul codice con l'interruttore acceso ha dato 716 esecuzioni cambiate e 503 identiche su
-1219, nessuna nuova e nessuna mancante [V: confronto rieseguito il 2026-11-20 con lo strumento del progetto]. Delle 1219,
-36 restano identiche per costruzione: i test di orchestrazione e uno scenario di sosta fissano l'interruttore spento. Una prova
-precedente, del 2026-11-19, fatta con l'interruttore acceso anche in quei test, aveva contato 752 cambiate e 84 con l'esito di
-una forza cambiato [NV: numeri di un rapporto della prova, non rieseguiti; il numero di esiti di forza cambiati sul codice
-definitivo non è stato estratto].
-<!-- /PD-STATO -->
+2026-11-20, su richiesta dell'utente, ed è quella con la probabilità al bordo a 0,2. La precedente (2026-11-19) era anch'essa di
+1219 esecuzioni e aveva la legge di prima: era stata installata dopo la lettura delle 116 esecuzioni nuove di una serie di
+scenari sulla permanenza breve nel volume dei sensori; fino al 2026-11-18 le esecuzioni erano 1103.
+
+Accendere l'interruttore della ricalibrazione ha cambiato la storia di molte esecuzioni: confrontando le due fotografie chiave
+per chiave, **716 esecuzioni su 1219 sono cambiate e 503 identiche, nessuna nuova e nessuna mancante** [V, 2026-11-20: contate
+sui due file]. In **75** delle 716 è cambiato l'esito di una forza (la voce degli esiti di forza) [V, 2026-11-20: stesso
+confronto]; le 116 esecuzioni della serie sulla permanenza breve sono cambiate tutte. Fra le 503 identiche ce ne sono **36**
+che lo sono per costruzione e non perché la legge non le tocchi: i test di orchestrazione (17 esecuzioni in tutto) e uno
+scenario di sosta (24 esecuzioni in tutto) fissano l'interruttore spento, perché la loro premessa è tarata con 0,5, e 36 di
+quelle 41 erano fra le 752 esecuzioni cambiate in una prova del 2026-11-19, fatta con l'interruttore acceso anche in quei test
+(15 di orchestrazione e 21 di sosta) [V, 2026-11-20: elenco della prova letto e confrontato con i conteggi]. Queste esecuzioni
+non provano la legge nuova; la provano i test unitari e un test su uno scenario dedicato, fuori dalla fotografia.
+Il confronto del codice con la fotografia nuova dà **1219 esecuzioni identiche** [V, 2026-11-20: esito letto nel registro locale
+del confronto, non rieseguito per questa guida]. Quanto le 716 esecuzioni cambiate siano «migliori» o «peggiori» non è
+valutato: secondo il manuale, in un campione di 20 esecuzioni scelte a mano l'esito delle forze cambia senza un segno
+sistematico, e il campione non permette stime di frequenza [NV].
 
 **Il processo.** Ogni modifica del motore segue la stessa procedura [V]: la fotografia viene ricontrollata identica sul codice
 di partenza; si modifica il codice; si confronta; ogni esecuzione risulta **identica**, **cambiata**, **nuova** (uno scenario
@@ -2407,10 +2431,8 @@ un'alternativa pronta. Il principio ha **eccezioni dichiarate**, che il responsa
 - alcune regole sono state **accese di default** per decisione dell'utente dopo la verifica (la riduzione della scoperta per
   permanenza breve nel volume, il 2026-11-18; lo stato di missione «in corso»): da quel momento il default **non** riproduce più
   il comportamento precedente in assoluto, lo riproduce solo sulle esecuzioni fotografate;
-<!-- PD-STATO -->
 - la ricalibrazione della probabilità di scoperta al bordo della portata, introdotta spenta il 2026-11-19, è accesa dal
   2026-11-20 per decisione dell'utente (valore 0,2 invece di 0,5); spegnendola si torna alla legge di prima;
-<!-- /PD-STATO -->
 - una regola (una scoperta per ogni passaggio nel volume) è stata resa permanente e il suo interruttore **eliminato**;
 - due regole sono costruite e provate ma **spente di default** (quali armi le difese aeree possono intercettare; la quota nel
   volume d'ingaggio): con questi interruttori spenti, quelle regole **non** agiscono nelle sessioni.
@@ -2469,7 +2491,8 @@ flowchart LR
   provati solo da test sui dati; il caso con più passaggi nel volume è provato da pochi scenari dedicati; lo scenario di scala
   ha 40 blocchi e 240 unità, non 10.000 [V].
 - **Numeri dichiarati.** I conteggi della suite e gli esiti dei confronti riportati qui e nel manuale vengono dai rapporti e
-  dai messaggi di commit; non sono stati rieseguiti per questa guida [NV].
+  dai messaggi di commit; non sono stati rieseguiti per questa guida [NV]. Fanno eccezione i conteggi delle esecuzioni
+  cambiate e identiche fra le due ultime fotografie (§11.2), che sono stati ricontati sui due file [V, 2026-11-20].
 
 > **Dalla letteratura.** La distinzione fra verifica, validazione e accreditamento, e l'accreditamento come giudizio di
 > gestione sull'idoneità a un uso specifico: Youngblood e altri [B 6.2] (articolo **letto**). Rassegne dei metodi: Sargent
@@ -2526,7 +2549,7 @@ Un avvertimento sulle etichette: «stima» non vuol dire «inventata a caso» (h
 |---|---|---|
 | **Tempo ed eventi** | salto da evento a evento, ordine degli eventi simultanei [V] | tempo di calcolo sul caso grande non misurato [NV] |
 | **Contatti** | istanti d'incontro calcolati con la geometria, esatti rispetto al moto a tratti rettilinei [V] | nessuna manovra fuori rotta; nessun terreno né orizzonte radar [V]; guadagno della potatura per blocchi non misurato [NV] |
-| **Scoperta** | una legge unica, con una forma che dipende dalla distanza; un'estrazione per passaggio [V] | costante al bordo della portata stimata senza fonte [S]; valore in vigore <!-- PD-STATO -->0,2 dal 2026-11-20 (prima 0,5), decisione dell'utente [S/D]<!-- /PD-STATO -->; forma della legge [S]; fattori di notte e maltempo uguali per radar e ottico [S]; tempi di rivisita in parte stimati [S]; portate di alcuni radar e della vista deboli o contraddittorie [S] |
+| **Scoperta** | una legge unica, con una forma che dipende dalla distanza; un'estrazione per passaggio [V] | costante al bordo della portata stimata senza fonte [S]; valore in vigore 0,2 dal 2026-11-20 (prima 0,5), decisione dell'utente [S/D]; forma della legge [S]; fattori di notte e maltempo uguali per radar e ottico [S]; tempi di rivisita in parte stimati [S]; portate di alcuni radar e della vista deboli o contraddittorie [S] |
 | **Reazione e scelta dell'arma** | ritardo come evento futuro; prima arma con scorta in un ordine di preferenza [V] | totali «dal rilevamento al lancio» da fonti citate dal documento di analisi [NV]; scomposizione in quattro fasi [S]; esponente del costo 0,5 [S; l'utente ha confermato solo il principio del compromesso]; efficacia dell'arma non modulata dalla posizione nell'inviluppo [V] |
 | **Salva e difese** | saturazione: colpi contro capacità di intercettazione [V] | finestra di raggruppamento delle salve 0 s di default [S]; intercettazione certa per canale e scoperta dei colpi in arrivo con semplificazioni dichiarate favorevoli alla difesa [S]; regole su quali armi si possono intercettare costruite ma spente [V] |
 | **Danno** | un'estrazione per colpo, perdite per singola unità [V] | probabilità di colpo e di distruzione lette dai registri, di qualità variabile [V per la lettura, non per i valori] |
@@ -2543,7 +2566,7 @@ Un avvertimento sulle etichette: «stima» non vuol dire «inventata a caso» (h
 
 | Grandezza | Valore oggi | Stato | Che cosa tocca |
 |---|---|---|---|
-| Probabilità di scoperta al bordo della portata | <!-- PD-STATO -->0,2 dal 2026-11-20, con l'interruttore della ricalibrazione acceso (prima 0,5)<!-- /PD-STATO --> | [S/D]: stima senza fonte, decisione dell'utente; vale per ogni sensore | tutte le scoperte, quindi l'iniziativa e i tiri a valle; anche le misure del pianificatore di rotta |
+| Probabilità di scoperta al bordo della portata | 0,2 dal 2026-11-20, con l'interruttore della ricalibrazione acceso (prima 0,5) | [S/D]: stima senza fonte, decisione dell'utente; vale per ogni sensore | tutte le scoperte, quindi l'iniziativa e i tiri a valle; anche le misure del pianificatore di rotta |
 | Forma della legge di scoperta (probabilità mancata che cresce con la quarta potenza della distanza) | — | [S] di forma: ispirata all'equazione radar, semplificazione monotona | come la scoperta cala con la distanza |
 | Fattori di notte e maltempo | 0,7 e 0,8 | [S], unici per tutti i sensori | scoperte notturne, soprattutto della vista |
 | Tempi di rivisita dei sensori | 53 modelli; 24 dei 43 aggiunti a novembre sono stime | [S] per le stime; vista e sensori ottici 3,2 s come approssimazione | riduzione della scoperta per passaggi brevi |
@@ -2562,12 +2585,9 @@ Un avvertimento sulle etichette: «stima» non vuol dire «inventata a caso» (h
 codice dichiarava «da ricalibrare»; il commento la lega a una convenzione per cui la portata di un sensore si dichiara a una
 certa probabilità di scoperta (0,5 o 0,9), ma **la bibliografia non ha trovato una fonte per quella convenzione** [S; V,
 2026-11-20 per il commento]. L'utente l'ha giudicata alta e ha deciso il valore ricalibrato 0,2, anch'esso senza fonte [S/D].
-<!-- PD-STATO -->
-Dal 2026-11-20 è acceso l'interruttore della ricalibrazione: la probabilità al bordo è 0,2 (stima senza fonte, decisione
-dell'utente) invece di 0,5; manuale e fotografia installata descrivono ancora lo stato con 0,5 fino alla prossima fotografia.
-La guida descrive come stato corrente quello con 0,2; per i confronti con esecuzioni passate, fotografate con 0,5, conta che le
+Dal 2026-11-20 l'interruttore della ricalibrazione è acceso e il valore in vigore è 0,2; manuale e fotografia installata lo
+descrivono. Per i confronti con esecuzioni passate, fatte con 0,5 (anche quelle della fotografia fino al 2026-11-19), conta che le
 storie cambiano (sezione 11.2).
-<!-- /PD-STATO -->
 
 ### 12.5 Dove il manuale indica il verso di una distorsione
 
@@ -2623,8 +2643,9 @@ flowchart LR
 - Il costo di calcolo delle finestre di contatto dei radar di grande portata non è misurato [NV].
 - Il collegamento fra la ricognizione della campagna e la probabilità di scoperta esiste, ma il manuale lo dichiara «debole»
   (copre meno casi di quanto il nome suggerisca) e segnala un difetto a monte, non corretto [V per la dichiarazione].
-- Il manuale tiene un elenco delle incoerenze trovate fra documenti di progetto e codice. Le voci più recenti sono state
-  chiuse il 2026-11-19, salvo la descrizione incompleta di un componente interno nel commento del codice; le voci più
+- Il manuale tiene un elenco delle incoerenze trovate fra documenti di progetto e codice. Le voci 30-33 sono state
+  chiuse il 2026-11-19, salvo la descrizione incompleta di un componente interno nel commento del codice; le voci 34-37, che
+  sono divergenze fra manuale e codice, sono state corrette nel testo del manuale il 2026-11-20 e la 38 non è una divergenza; le voci più
   vecchie che il manuale dà come aperte (stato del 2026-11-05, non ricontrollate dopo) riguardano testi di progetto, regole
   scritte nel codice in forma diversa da quella delle proposte, o ingressi non collegati (morale e stima del nemico, catalogo
   dei ricevitori d'allarme radar). La guida descrive il comportamento del codice, non quello dei documenti [V].
@@ -2699,7 +2720,7 @@ coefficienti di logoramento aggregato.
 | Istanti d'incontro dal punto di massimo avvicinamento | geometria del moto relativo; scelta del progetto | la formula | `[FONTE: cinematica del moto relativo / anticollisione]` |
 | Ritardo di reazione in quattro fasi | documento di analisi | i totali da fonti tecniche citate; la scomposizione è una stima [S] | `[FONTE: ciclo OODA e tempi di reazione]` |
 | Probabilità mancata di scoperta che cresce con la quarta potenza della distanza | letteratura (forma) + stima (valori) | la dipendenza dalla distanza dell'equazione radar; la curva reale è a «S», qui semplificata | [B 5.4] (contenuto non letto), [B 5.8] (contenuto non letto) |
-| Probabilità al bordo della portata (<!-- PD-STATO -->0,2 dal 2026-11-20, prima 0,5<!-- /PD-STATO -->) | stima [S]; il valore ricalibrato è una decisione dell'utente [S/D] | nessuna fonte trovata per la convenzione | `[FONTE: convenzioni sulla portata dichiarata di un radar]` |
+| Probabilità al bordo della portata (0,2 dal 2026-11-20, prima 0,5) | stima [S]; il valore ricalibrato è una decisione dell'utente [S/D] | nessuna fonte trovata per la convenzione | `[FONTE: convenzioni sulla portata dichiarata di un radar]` |
 | Scoperta per passaggio; probabilità cumulativa | scelta del progetto; la letteratura distingue scoperta per scansione e cumulativa | il concetto | [B 5.5] (sommario letto), [B 5.6] (contenuto non letto), [B 5.7] (contenuto non letto) |
 | Riduzione per permanenza breve nel volume | scelta del progetto con giustificazione geometrica [S] | la teoria della ricerca come riferimento **qualitativo** | [B 5.1]-[B 5.3] (contenuto non letto) |
 | Tempo di rivisita 3,2 s della vista e dei sensori ottici | stima [S] dal valore centrale di una banda attribuita a una fonte del 1974 | — | `[FONTE: scoperta visiva da terra, «Poe 1974»]`, nessuna fonte individuata dalla bibliografia |
@@ -2937,7 +2958,7 @@ Queste attività **non** sono fasi del piano della Missione: il cap. 9 §9.5 lo 
 | FP, FP-1 … FP-10 | la regola **«una scoperta per ogni passaggio nella portata propria»**; FP-10 è l'unione dei passaggi separati da un'uscita più breve del tempo di rivisita; FP-3 (a) la fine del tiro all'uscita dal volume; FP-5 (d) il legame fra intercettazione e passaggio. Il manuale non scioglie la sigla | §5.6 | cap. 4 §4.35, §4.26; cap. 8 §8.14; cap. 9 §9.1 |
 | BI, BI-1 … BI-12, R-BI | la regola facoltativa, **spenta**, su **quali munizioni una difesa aerea considera bersagli** (per classe e taglia del colpo). Il manuale non scioglie la sigla | §6.5 | cap. 4 §4.24 «Regola BI» (D130); cap. 8 §8.14; cap. 9 §9.1 |
 | VA, VA-1 … VA-8 | la regola facoltativa, **spenta**, che aggiunge la **fascia di quota** al volume d'ingaggio delle armi, valutata nel tempo. Il manuale non scioglie la sigla | §6.5 | cap. 4 §4.37 (D132); cap. 3 §3.2; cap. 8 §8.14; cap. 9 §9.1 |
-| PB, PB-1 … PB-6 | la **ricalibrazione della probabilità di scoperta al bordo della portata** («Pd al bordo», secondo il documento di proposta); valore ricalibrato 0,2 (decisione PB-2). <!-- PD-STATO -->L'interruttore è acceso dal 2026-11-20 per decisione dell'utente (commit `fd2af921`, non ancora pushato).<!-- /PD-STATO --> **Non compare nel manuale** alla data di questa guida | §5.4, §11.2, §12.4 | — (documento di proposta separato) |
+| PB, PB-1 … PB-6 | la **ricalibrazione della probabilità di scoperta al bordo della portata** («Pd al bordo»); valore ricalibrato 0,2 (decisione PB-2); PB-3: la misura del pianificatore di rotta segue la stessa legge; PB-6: i test di orchestrazione e uno scenario di sosta fissano l'interruttore spento. L'interruttore è acceso dal 2026-11-20 per decisione dell'utente (commit `fd2af921`). Il manuale usa la sigla senza scioglierla; il documento di proposta è separato | §5.4, §11.2, §12.4 | cap. 4 §4.2 e tabella delle regole del 2026-11-20 in testa al capitolo; cap. 6 §6.21; cap. 8 §8.7, §8.14 «S36»; cap. 9 §9.1 «Pd sul bordo della portata» |
 
 #### 14.3.3 Le regole del risolutore del settembre 2026
 
@@ -2966,7 +2987,7 @@ Queste attività **non** sono fasi del piano della Missione: il cap. 9 §9.5 lo 
 | L0 … L4 | i **livelli** dei diagrammi (Fig. 32) | §14.1 | cap. 10 §10.1 |
 | D1 … D134 | i **diagrammi** del manuale (D88 e D89 non usati) | didascalie delle figure | documento indice del manuale, «Elenco dei diagrammi»; cap. 10 §10.2 |
 | 10A, 10B, 10C | le tre parti aggiuntive dell'atlante | §14.1 | cap. 10 §10.2bis |
-| «voci» 1-33 | le incoerenze fra documenti di progetto e codice, ciascuna con il suo stato | §12.7 | cap. 9 §9.6 |
+| «voci» 1-38 | le incoerenze fra documenti di progetto e codice (dalla 34 anche del manuale stesso), ciascuna con il suo stato | §12.7 | cap. 9 §9.6 |
 | «Fase 1» … «Fase 7» (scritte per esteso) | le sette fasi **originali** di costruzione del motore (settembre 2026). La «Fase 7» **non** è la fase F7 del piano della Missione | — | documento indice del manuale; cap. 8 §8.5 |
 | «decisione 15», «decisioni 17-27», Q1 … Q6, D1.c, D3.b, D5.a, N1 … N3, I1 | codici di decisione dei documenti di proposta e del piano della Missione, citati dal manuale per rintracciare la scelta; il manuale **non** li spiega uno per uno | — | cap. 4 §4.24, §4.26; cap. 6 §6.10, §6.23; cap. 9 §9.1, §9.5 |
 
@@ -3029,7 +3050,7 @@ testo delle sezioni; in caso di dubbio prevale la sezione citata. Le sigle di pr
 - **Blocco** — un raggruppamento di unità del progetto (una squadriglia, un reparto corazzato, una batteria, un gruppo navale).
   → §1.2
 - **Bordo della portata** — la distanza pari alla portata di scoperta: lì la probabilità di scoperta vale una costante stimata
-  (<!-- PD-STATO -->0,2 dal 2026-11-20 con l'interruttore della ricalibrazione acceso, prima 0,5<!-- /PD-STATO -->) e appena
+  (0,2 dal 2026-11-20 con l'interruttore della ricalibrazione acceso, prima 0,5) e appena
   oltre vale zero. → §5.4
 
 **C**
@@ -3174,7 +3195,7 @@ testo delle sezioni; in caso di dubbio prevale la sezione citata. Le sigle di pr
 **L**
 
 - **Legge di probabilità di scoperta** (Pd) — la probabilità di aver scoperto il bersaglio alla distanza d: 1 a distanza zero,
-  una costante al bordo della portata (<!-- PD-STATO -->0,2 dal 2026-11-20, prima 0,5<!-- /PD-STATO -->), con la probabilità
+  una costante al bordo della portata (0,2 dal 2026-11-20, prima 0,5), con la probabilità
   mancata che cresce con la quarta potenza di d/R; zero oltre la portata. → §5.4
 - **Logistica delle basi** — rifornimento e riparazione che consumano risorse delle basi: **non modellata**, per decisione
   dell'utente. → §1.4, §8.3
@@ -3279,8 +3300,8 @@ testo delle sezioni; in caso di dubbio prevale la sezione citata. Le sigle di pr
 - **Replica** — la stessa sessione eseguita con un identificativo diverso, quindi con semi diversi, per conoscere la variabilità.
   → §10.5
 - **Ricalibrazione della probabilità al bordo** — la sostituzione della costante al bordo della portata 0,5 con 0,2 (stima
-  senza fonte, decisione dell'utente), governata da un interruttore. <!-- PD-STATO -->Acceso dal 2026-11-20; manuale e
-  fotografia installata descrivono ancora lo stato con 0,5.<!-- /PD-STATO --> → §5.4, §11.2, §12.4
+  senza fonte, decisione dell'utente), governata da un interruttore. Acceso dal 2026-11-20; manuale e
+  fotografia installata descrivono lo stato con 0,2. → §5.4, §11.2, §12.4
 - **Riparazione a gradino** — la salute torna a 100 solo alla fine della riparazione; un'unità parzialmente riparata non è
   impiegabile. → §8.3
 - **Ripartizione a turno** — la regola per cui i bersagli sono assegnati a rotazione fra i tiratori del dominio; non è
@@ -3293,8 +3314,8 @@ testo delle sezioni; in caso di dubbio prevale la sezione citata. Le sigle di pr
   attuare). → §2.5, §6.2
 - **Ritirata** (rompere il contatto) — la decisione di una forza intera di lasciare lo scontro quando erosione o shock superano la
   soglia di rottura. → §6.7
-- **RWR** (ricevitore d'allarme radar) — l'apparato di un aereo che riconosce chi lo sta illuminando; senza di esso un aereo non
-  percepisce i sistemi contraerei. → §5.8
+- **RWR** (ricevitore d'allarme radar) — l'apparato di un aereo che riconosce chi lo sta illuminando; senza di esso un aereo
+  percepisce un sistema contraereo solo se lo scopre con un proprio sensore contro bersagli terrestri. → §5.8
 
 **S**
 
