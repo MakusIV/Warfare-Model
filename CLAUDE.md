@@ -23,3 +23,8 @@
   OpenRouter (`provider_name`), con costo e qualita' registrati in `Rapporti/Costi_Deleghe.md`; leggere il codice nuovo principale; rieseguire suite e confronto
   con `tools/ai/verifica.sh` e confrontarli con l'esito atteso dal piano; nessun file riservato toccato.
   Solo dopo: merge nel branch di lavoro, aggiornamento della memoria, push su richiesta dell'utente.
+- **PDF in Markdown**: skill `pdf-to-markdown`, che usa prima Game_PC (lan-tools/pdf2md: Docling, OCR, formule,
+  figure descritte; server MCP `lan-tools` o comando `lan-tools`) e ripiega in locale se Game_PC non risponde. Il
+  risultato va in `<nome>_pdf2md/` accanto al PDF (es. `Analysis/WIKI_LLM_SIMULATION/RAW/`); per una cartella intera,
+  un lavoro per PDF in coda. La conversione non si delega a un agente. Durante una conversione `oc-helper` non e'
+  disponibile (503 "Pc_GAME occupato"): non delegargli nulla finche' il lavoro non e' finito.

@@ -60,7 +60,7 @@ identiche/cambiate/nuove e' in `.ai-run/confronto.log` (cercalo con `grep -E '^(
 | `oc-debugger` | DeepSeek V4 Pro high | solo `Diagnosi_*.md` | no | `/diagnosi <sintomo>` |
 | `oc-writer` | DeepSeek V4.1 Flash high | bozze e documenti `.md` non riservati, rapporto | si', solo `ai/*` | `/bozza <tema>` |
 | `oc-researcher` | DeepSeek V4.1 Flash high (scelto il 2026-11-07 dopo la prova su 3 missili con GLM 5.3 e V4 Pro: qualita' pari o migliore, costo ~5 volte inferiore) | solo `Bozze/Ricerca_*_oc-researcher.md`; unico agente con accesso al web | no | `/ricerca <tema e compito>` |
-| `oc-helper` | Qwen3.8 27B locale (Game_PC) | su conferma | no | — |
+| `oc-helper` | Qwen3.8 27B locale (Game_PC; non disponibile durante una conversione pdf2md su Game_PC: 503 "Pc_GAME occupato") | su conferma | no | — |
 
 L'agente globale `oc-ui-developer` e' disattivato in questo progetto (`opencode.json`).
 
