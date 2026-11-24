@@ -829,8 +829,8 @@ interruttore; controprova; verifica; validazione; taratura (calibrazione).
   `concepts/lanchester-models.md` (sezione sullo stato di validazione) — utile per spiegare **perché è difficile**.
 
 **Limiti e incertezze.**
-- **Nessuna validazione contro dati reali o storici** è dichiarata nel manuale [V per l'assenza; da confermare con l'utente,
-  Q8].
+- **Nessuna validazione contro dati reali o storici** è dichiarata nel manuale [V per l'assenza; confermato
+  dall'utente, Q8].
 - Le 1103 esecuzioni preesistenti **non mettono alla prova la permanenza con i dwell reali**; la serie S36 sì, ed è nella fotografia da 1219 installata [V].
 - Le 1103 esecuzioni preesistenti **non registrano i rilevamenti** (li registrano solo le 116 di S36): un cambio della legge di scoperta che non tocca il tiro vi resta
   invisibile [V].
@@ -854,7 +854,7 @@ interruttore; controprova; verifica; validazione; taratura (calibrazione).
 **Messaggio chiave.** La **struttura** del motore (eventi, geometria, catena dello scontro, riproducibilità) è verificata; i
 **numeri** che lo alimentano sono in buona parte **stime dichiarate** o dati di registro di confidenza variabile, e **nessuna
 taratura** su dati reali è stata fatta. Il motore oggi è adatto a confronti **relativi** fra scelte (con repliche), non a
-previsioni assolute — affermazione della scaletta, da confermare con l'utente (Q8).
+previsioni assolute — affermazione confermata dall'utente (Q8, 2026-11-20).
 
 **Concetti da spiegare.**
 - Tre famiglie di incertezza: (a) **forma del modello** (che cosa non è rappresentato: terreno, orizzonte radar, C2, cueing,
