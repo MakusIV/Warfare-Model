@@ -1,6 +1,6 @@
 ---
 name: project-l1-revisione-decisioni
-description: "Revisione della regola L1 (lanciatore dentro il V_I non si intercetta): sonda e decisioni a-e (2026-11-24), Proposta SCRITTA e committata; RIPRESA per la prossima sessione sul ProArt con il prospetto di scelte da riproporre all'utente"
+description: "Revisione della regola L1 (lanciatore dentro il V_I non si intercetta): sonda e decisioni a-e (2026-11-24), CHIUSA il 2026-11-25: accesa, fotografia nuova installata, interruttore eliminato (merge bbaa61c1); vedi RIPRESA notte"
 metadata:
   node_type: memory
   type: project
@@ -8,7 +8,13 @@ metadata:
   modified: 2026-11-25T12:56:37.771Z
 ---
 
-## RIPRESA (ProArt 2026-11-25 sera) — L1 rivista ACCESA (blocchi 1-5 FATTI e VERIFICATI), testi e manuale ritoccati con la formulazione semplificata; DA FARE: fotografia nuova (solo l'utente), merge di `ai/des-l1-revisione`, blocco 6
+## RIPRESA (ProArt 2026-11-25 notte) — L1 rivista CHIUSA: accesa, fotografia nuova installata (`79e500e9`), pulizia (blocco 6) ESEGUITA e MERGIATA (`bbaa61c1`), interruttore ELIMINATO; PROSSIMO: BI, VA, pendenti
+
+**Stato (verificato di persona 2026-11-25):** merge `170f4e0b` (accensione) e `bbaa61c1` (pulizia) nel branch di lavoro `analysis/dce-dcs-persistence`, NIENTE push. Pulizia: Proposta `Proposta_L1_Pulizia_Interruttore.md` (`039018d4`), des-developer Sonnet high su `ai/des-l1-pulizia` (`13046d5f` A, `b0e3f813` B, `436a0ef0` C, `85c7b8cc` verifica): eliminati `L1_IMMEDIATE_TARGET_RULE`, `l1_immediate_target`, `zone_cache`, `_interception_zone`, `_may_intercept_volume`, `_may_intercept_revised`; `_may_intercept` applica la regola con la cache. `Mobile.air_defense_volume` RESTA (pianificatore di rotta, Military, Block). Rieseguiti da me: suite `Ran 4991`, `OK (skipped=7)`; confronto `IDENTICAL` 1219; diff del codice letto (stesse chiamate, stesso ordine, nessuna estrazione). Limite noto: il confronto non prova l'equivalenza di `_may_intercept` (la provano `TestL1ImmediateTarget` e il test della scorta, verdi). Manuale (blocco D) con des-manual-writer e documenti di §4.9 (LEGGIMI sonde, F4, Piano §5, Stato, L1_Esecuzioni_Cambiate) aggiornati; la nota in §4.6 della Proposta di revisione resta da chiedere a des-planner SOLO se l'utente la vuole. Interruttori rimasti: D-5, BI, VA, PB (analisi mirata). Sonde del blocco 4 storiche (non eseguibili).
+
+**Pendenti dell'utente:** riaprire BI (S35 dipende da L1 e BI); VA; bozze `Guida_Concettuale_DES_ParteB/D.md` col vecchio testo L1 (allineare o archiviare); tre cartelle RAW non tracciate; push su richiesta; prova Mermaid in Obsidian; fotografie nuove SOLO l'utente (l'autorizzazione del 2026-11-25 valeva solo per `79e500e9`).
+
+## (superata) RIPRESA (ProArt 2026-11-25 sera) — L1 rivista ACCESA (blocchi 1-5 FATTI e VERIFICATI), testi e manuale ritoccati con la formulazione semplificata; DA FARE: fotografia nuova (solo l'utente), merge di `ai/des-l1-revisione`, blocco 6
 
 **FORMULAZIONE DA USARE (utente, 2026-11-25, strada 1: comportamento invariato, solo testo):** "Se il lanciatore spara da dentro la zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve non si intercettano." (rilevato + scorta + portata = significato di "puo' gia' colpirlo"). La regola "zona = salve non intercettate" senza la condizione (2) sarebbe a=1: scartata (reintroduce il difetto: lanciatore non rilevato -> ne' si intercetta ne' si spara). FATTO il 2026-11-25 (commenti di `Engagement_Resolver`, test, manuale cap. 4/7/8/9/atlante/guida via des-manual-writer; AST identico, suite 5005 OK): ritoccati docstring/commenti di `Engagement_Resolver` (modulo, `_may_intercept`, commento dell'interruttore), docstring dei test e manuale DES (des-manual-writer) con questa formulazione; poi ricontrollare che sia solo testo (AST identico, come per i ritocchi del 2026-11-20).
 

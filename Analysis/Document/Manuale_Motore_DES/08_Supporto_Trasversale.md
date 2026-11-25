@@ -1,5 +1,7 @@
 # Capitolo 7 — Moduli di supporto trasversali
 
+> **Aggiornamento 2026-11-25 (pulizia L1; codice `bbaa61c1`).** Toccano questo capitolo due punti di §7.5/§7.6: l'esclusione per salva degli intercettori (`salvo_interception_capacity`) descrive ora la sola regola L1 rivista, senza interruttore (`L1_IMMEDIATE_TARGET_RULE` e la regola del 2026-09-28 sono eliminati: capitolo 4 §4.24), e `Mobile.interceptor_envelopes` è consumata dal risolutore sempre; `Mobile.air_defense_volume` **non è più letto dal risolutore** e resta per pianificatore di rotta, blocchi e riepiloghi. I `:riga` verificati sono quelli di `Engagement_Resolver.py` citati in questi due punti.
+>
 > **Aggiornamento 2026-11-18 (DW-9 rivista e D-5 accesa di default; codice `a99bb3d4`).** Toccano questo capitolo due punti. (1) **§7.12, dati**: `dwell_time_s` e la chiave documentale `search_model` non sono più nei soli 10 EWR ma in **53 modelli** dei tre registri (`Vehicle_Data`, `Ship_Data`, `Aircraft_Data`: SAM/AAA, TVD e vista, EWR, navi, AWACS; 3 record senza valore, aerei non AWACS esclusi), e i 10 EWR sono riallineati a una regola sola (P-37 e 1L13 14,1; AMES Type 7 30; P-14 17,3; P-12 resta 6 s): elenco e regole in capitolo 4 §4.36. (2) **§7.8, metrica del pianificatore**: poiché `Engagement_Resolver.D5_DWELL_TIME` è **`True` di default dal 2026-11-18**, `compute_detection_metrics` applica la permanenza D-5 **per ogni minaccia il cui sensore dichiara un dwell** (non più solo per gli EWR e solo con l'interruttore acceso a mano); a interruttore spento le metriche sono quelle di prima. `Air_Route_Manager.py` **non è cambiato** (`:1098-1212`, `:1132` invariati). I `:riga` a `Asset/Vehicle_Data.py` e agli altri registri di §7.12 sono sfasati dalle aggiunte della DW-9 (`git diff --numstat a389cadb a99bb3d4`: `Vehicle_Data` +159/−26 righe, `Ship_Data` +97, `Aircraft_Data` +12): quelli nuovi sono verificati a `a99bb3d4`.
 > **Aggiornamento 2026-11-13 (D-5, BI, VA, FP; codice `a389cadb`).** Toccano questo capitolo solo tre punti, tutti **dati o metriche** (le regole sono nel capitolo 4 §4.35-§4.37): (1) **§7.8**, le metriche di rilevamento del pianificatore replicano la legge di permanenza D-5 quando `Engagement_Resolver.D5_DWELL_TIME` è acceso (blocco B della D-5, `effb0dcf`: `Logic/Air_Route_Manager.py`, 71 righe toccate
 > rispetto a `f33902ba`; i riferimenti `:riga` della §7.8 a `Air_Route_Manager.py`, che erano a `efa8f353`, **sono stati ricalcolati il 2026-11-13**: `compute_detection_metrics` da `:1081-1150` a `:1098-1211`); il paragrafo «Fuori perimetro» che dava la D-5 opzione 2 come non fatta è corretto. (2) **§7.12**, voci nuove di dati: `dwell_time_s` dei 10 radar EWR (D-5) con i due lettori di `Mobile`,
@@ -284,9 +286,9 @@ primo candidato alla ricalibrazione). La formula non è cambiata dal 2026-09-26:
 **cosa** legge `scorta_i` (`asset.interceptor_stock`), ora una vista sulla scorta per arma per
 chi la ha modellata (v. §7.6 e capitolo 4 §4.19). **Dal 2026-09-28 è un TETTO**, non il numero di colpi
 fermabili: il risolutore esclude, salva per salva, gli intercettori per cui il lanciatore è un **bersaglio immediato dentro
-la zona di una loro arma** (regola L1 rivista, accesa il 2026-11-25: il lancio parte dal cilindro di almeno una loro arma
-`Anti_Missile` **e** loro hanno già rilevato il lanciatore e possono già colpirlo; fino al 2026-11-24, e con
-`L1_IMMEDIATE_TARGET_RULE` spento, gli intercettori dentro il cui V_I era partito il lancio) e quelli senza traccia o tempo
+la zona di una loro arma** (regola L1, la rivista, senza interruttore dal 2026-11-25: il lancio parte dal cilindro di almeno una loro arma
+`Anti_Missile` **e** loro hanno già rilevato il lanciatore e possono già colpirlo; fino al 2026-11-24 erano esclusi
+gli intercettori dentro il cui V_I era partito il lancio, regola eliminata) e quelli senza traccia o tempo
 di reagire (R-INT), capitolo 4 §4.5 e §4.24. Nota: il
 risolutore d'ingaggio **non chiama direttamente** questo metodo per calcolare la capacità durante la run
 (ricalcola con `_capacity`, capitolo 4, §4.5, che replica la stessa formula sullo stato **ombra**, non
@@ -352,7 +354,14 @@ quota massima [m])`, relative all'asset, con la **stessa selezione** di `interce
 `_is_interceptor_weapon`, `:211-221`: chi intercetta e scorta non possono divergere dalla zona). Raggio: per le navi `range` [km] × 1000,
 per i veicoli `range['direct']` [m]; armi con raggio ≤ 0 escluse; modello ripetuto una volta sola; `None` (senza sollevare) se il
 modello non è noto, non ha armi o non ha armi intercettrici con portata. Dati di registro, nessuna stima nuova, nessuna
-dipendenza dall'adapter DCS; non dipende dalla posizione. Lo consuma solo il risolutore, con `L1_IMMEDIATE_TARGET_RULE` acceso.
+dipendenza dall'adapter DCS; non dipende dalla posizione. Lo consuma solo il risolutore (`_interceptor_envelopes`,
+`Logic/Engagement_Resolver.py:3691`), **sempre** (non c'è più un interruttore: eliminato il 2026-11-25, capitolo 4 §4.24).
+
+**`Mobile.air_defense_volume` non è più letto dal risolutore** (dal 2026-11-25, pulizia L1: `grep` su `Engagement_Resolver.py` lo trova
+solo in due commenti, `:3694` e `:3731`). Prima la regola L1 del 2026-09-28 lo usava come V_I d'intercettazione; resta nel
+codice per chi lo leggeva già e non è cambiato: il pianificatore di rotta (`Air_Route_Manager.build_threat_aa`,
+`Logic/Air_Route_Manager.py:596`, §7.8), `Military.air_defense_volume` (`Block/Military.py:530`) e i riepiloghi di `Block`
+(`Block/Block.py:704`), con i loro test.
 
 ### Carburante (`Asset/Mobile.py:230-269`)
 

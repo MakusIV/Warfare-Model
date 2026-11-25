@@ -2878,3 +2878,19 @@ Totale 16 + 8 + 16 + 28 + 48 = 116. SHORT (Shilka in sessione di meno di 7,3 s) 
 - `registry_dwell_time` legge sempre il dwell del vincitore di acquisizione, indipendentemente da `range_type`: oggi nessun record con due sensori ha dwell, il test lo fissa.
 - Il pianificatore: la D-5 cambia `max_detection_probability` ma non la scelta della rotta; non e' nella fotografia (solo test unitari).
 - Gli A-10C in `weapon_hold` isolano il rilevamento: il comportamento CAS reale non e' messo alla prova.
+
+## L1 rivista (2026-11-24, accesa il 2026-11-25, interruttore ELIMINATO il 2026-11-25)
+
+Regola (Proposta_Revisione_L1_Lanciatore_Bersaglio.md): se il lanciatore spara da dentro la zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve non si intercettano. Sostituisce la regola del 2026-09-28 (lancio dentro il volume V_I = mai intercettato).
+
+### Accensione (blocco 5, `3bd4058b`)
+- Fotografia di 1219 esecuzioni: **6 cambiate**, 1213 identiche, 0 NEW, 0 MISSING: `S16/S16-3`, `S19AD/S19-4/tor_forward_ifv_only`, `S35-ADTGT/S35-ADTGT-0..3/naval_maverick_off`. In tutte la direzione e' una sola: piu' intercettazioni, meno perdite della forza difesa. Dettaglio e coppie escluse in `Rapporti/L1_Esecuzioni_Cambiate.md`.
+- Con la regola rivista nessuna delle 414 coppie (intercettore, salva) della fotografia e' esclusa (la regola del 2026-09-28 ne escludeva 14): il ramo "bersaglio immediato dentro la zona" e' provato solo dai test unitari (`TestL1ImmediateTarget`), non dalla fotografia.
+- Fotografia nuova installata dall'utente il 2026-11-25 (`79e500e9`; l'autorizzazione valeva solo per quella).
+
+### Pulizia (`Proposta_L1_Pulizia_Interruttore.md`, merge `bbaa61c1`)
+- Eliminati `L1_IMMEDIATE_TARGET_RULE`, `l1_immediate_target`, `zone_cache`, `_interception_zone`, `_may_intercept_volume`, `_may_intercept_revised`; `_may_intercept` applica la regola con la cache. `Mobile.air_defense_volume` resta (pianificatore di rotta, blocchi, riepiloghi).
+- **0 esecuzioni cambiate**: confronto `IDENTICAL` a 1219 con la fotografia `79e500e9`; suite `Ran 4991`, `OK (skipped=7)` (5005 - 14 test: 18 tolti, 4 migrati).
+
+### Stato
+L1 rivista FATTA, ACCESA e SENZA INTERRUTTORE. Restano aperti BI (S35 dipende da L1 e BI) e VA.

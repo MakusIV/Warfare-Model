@@ -1,5 +1,9 @@
 # L1 rivista — esecuzioni cambiate con l'interruttore acceso (blocco 4, sonda)
 
+> Interruttore eliminato il 2026-11-25 (`Proposta_L1_Pulizia_Interruttore.md`, merge `bbaa61c1`): la regola rivista e' l'unica;
+> la pulizia non cambia nessuna esecuzione (confronto `IDENTICAL` a 1219 con la fotografia `79e500e9`, suite 4991 OK).
+> Gli script di questa sonda sono storici (v. `Sonde_L1_Revisione/LEGGIMI.md`).
+
 Data: 2026-11-25. Autore: sessione principale (Claude). Branch `ai/des-l1-revisione`, codice dei blocchi 1-3 a `a1559ad9`
 (interruttore `L1_IMMEDIATE_TARGET_RULE` SPENTO nel codice; la sonda lo accende solo in memoria).
 Piano: `Proposta_Revisione_L1_Lanciatore_Bersaglio.md` §4.4. Script: `Sonde_L1_Revisione/probe_l1.py` e `suite_l1_on.py`
