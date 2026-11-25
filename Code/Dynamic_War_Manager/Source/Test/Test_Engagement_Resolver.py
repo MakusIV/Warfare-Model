@@ -1796,7 +1796,9 @@ class TestShotSpec(unittest.TestCase):
 # ── CONTROLLO DI PORTATA (ShotSpec.max_range, 2026-09-24) ────────────────────
 
 class _ZonedInterceptor(_Asset):
-    """Intercettore con posizione e volume d'intercettazione V_I (come Mobile.air_defense_volume)."""
+    """Intercettore con posizione e volume d'intercettazione V_I (come Mobile.air_defense_volume). Il risolutore non
+    legge piu' il V_I (regola del 2026-09-28 eliminata, Proposta_L1_Pulizia_Interruttore.md): senza
+    `interceptor_envelopes` nessun vincolo L1; il V_I resta per provare che non c'e' ripiego (SD-4)."""
 
     def __init__(self, asset_id, position, radius, bottom=0.0, height=6_000.0, **kwargs):
         super().__init__(asset_id, **kwargs)
@@ -1808,77 +1810,9 @@ class _ZonedInterceptor(_Asset):
         return self._volume
 
 
-class TestLauncherInsideInterceptionZone(unittest.TestCase):
-    """Regola L1 (2026-09-28, Proposta_Regole_Allocazione_SAM.md §7): un colpo si intercetta solo
-    se il punto di lancio e' FUORI dal volume V_I dell'intercettore; un lanciatore che spara da
-    dentro la zona e' un bersaglio, non si inseguono i suoi colpi (Q2: mai intercettati).
-
-    Geometria: bersaglio r1 nell'origine; intercettore r2 nell'origine, V_I cilindrico di 12 km
-    (0-6000 m); il tiratore b1 e' fermo a quota `z` e distanza `x` lungo l'asse x. Una salva di 5
-    colpi intercettabili a t = 2 s; 3 canali, scorta non vincolante.
-
-    Regola del 2026-09-28, interruttore L1_IMMEDIATE_TARGET_RULE fissato spento; la regola rivista e' in
-    TestL1ImmediateTarget.
-    """
-
-    def _run(self, x, z=0.0, interceptors=None, spec=None):
-        spec = spec or _miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF)
-        blue = _Force('blue', 'Blue', [_Asset('b1')])
-        interceptors = interceptors or [_ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0)]
-        red = _Force('red', 'Red', [_Asset('r1')] + interceptors, interceptors=[(i, 3) for i in interceptors])
-        legs = {'b1': [Leg(0.0, 100.0, (x, 0.0, z), (x, 0.0, z))],
-                'r1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
-        for i in interceptors:
-            p = (float(i.position.x), float(i.position.y), float(i.position.z))
-            legs[i.id] = [Leg(0.0, 100.0, p, p)]
-        windows = [ContactWindow('b1', 'r1', t_start=0.0, t_end=2.9, t_cpa=2.9, distance_cpa=x,
-                                 range_a=50_000.0, range_b=None)]
-        with patch(_ER_LOGGER), patch.object(ER, 'L1_IMMEDIATE_TARGET_RULE', False):
-            return ER.resolve_engagement(blue, red, windows, _always(spec), _ScriptedRng([0.0] * 20),
-                                         legs=legs, reaction_profile_for=_profiles({}, default=(2.0, 1.0)))
-
-    def test_launch_outside_the_zone_is_intercepted(self):
-        result = self._run(x=15_000.0)
-        self.assertEqual(result.resolutions[0].intercepted, 3)
-        self.assertEqual(result.interceptions_consumed(), {'r2': 3})
-
-    def test_launch_inside_the_zone_is_never_intercepted(self):
-        result = self._run(x=8_000.0)
-        resolution, = result.resolutions
-        self.assertEqual(resolution.interceptable_rounds, 5)
-        self.assertEqual(resolution.capacity, 3)          # tetto, non garantita
-        self.assertEqual(resolution.intercepted, 0)
-        self.assertEqual(result.interception_events, ())
-        self.assertEqual(len(result.damage_events), 5)
-
-    def test_zone_boundary_counts_as_inside(self):
-        self.assertEqual(self._run(x=12_000.0).resolutions[0].intercepted, 0)
-
-    def test_launch_above_the_zone_ceiling_is_outside(self):
-        """Il V_I e' un cilindro: sopra il tetto (6000 m) il lanciatore e' fuori zona."""
-        self.assertEqual(self._run(x=8_000.0, z=7_000.0).resolutions[0].intercepted, 3)
-
-    def test_zone_is_per_interceptor(self):
-        """Q1: si valuta sul V_I del singolo intercettore. Il lancio e' dentro i 12 km di r2 ma
-        fuori dai 5 km di r3, che quindi intercetta (e paga) da solo."""
-        r2 = _ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0)
-        r3 = _ZonedInterceptor('r3', (0.0, 300.0, 0.0), 5_000.0)
-        result = self._run(x=8_000.0, interceptors=[r2, r3])
-        self.assertEqual(result.resolutions[0].intercepted, 3)
-        self.assertEqual(result.interceptions_consumed(), {'r3': 3})
-
-    def test_without_zone_data_the_rule_does_not_apply(self):
-        """Dato mancante = non modellato: senza V_I l'intercettore intercetta come prima."""
-        result = self._run(x=8_000.0, interceptors=[_ZonedInterceptor('r2', (0.0, 0.0, 0.0), None)])
-        self.assertEqual(result.resolutions[0].intercepted, 3)
-
-    def test_non_interceptable_rounds_are_unaffected(self):
-        result = self._run(x=15_000.0, spec=_miss(rounds=5, interceptable=False))
-        self.assertEqual(result.resolutions[0].intercepted, 0)
-
-
 class _ArmedInterceptor(_ZonedInterceptor):
-    """Intercettore con V_I (air_defense_volume) e zone delle armi intercettrici (Mobile.interceptor_envelopes)."""
+    """Intercettore con zone delle armi intercettrici (Mobile.interceptor_envelopes); il V_I ereditato
+    (air_defense_volume) non e' letto dal risolutore."""
 
     def __init__(self, asset_id, position, envelopes, vi_radius=12_000.0, **kwargs):
         super().__init__(asset_id, position, vi_radius, **kwargs)
@@ -1895,16 +1829,17 @@ class TestL1ImmediateTarget(unittest.TestCase):
     di una salva solo se il lancio e' dentro la zona di una sua arma intercettrice E il lanciatore e' un suo bersaglio
     immediato (rilevato da lui al lancio e ingaggiabile per portata e scorta). Altrimenti il colpo e' intercettabile.
 
-    Geometria come TestLauncherInsideInterceptionZone: bersaglio r1 nell'origine; intercettore r2 nell'origine con una
+    Geometria: bersaglio r1 nell'origine; intercettore r2 nell'origine con una
     arma `sam` (12 km, 0-6000 m); il tiratore b1 e' fermo a quota `z` e distanza `x` lungo l'asse x e lancia a t = 2 s
     una salva di 5 colpi intercettabili; 3 canali, scorta non vincolante. r2 rileva b1 a `see_from` (candidato con
-    t_ready = see_from + 2) e colpirebbe b1 con `fire` (arma `sam`, portata 20 km). L'interruttore e' fissato a ogni run.
+    t_ready = see_from + 2) e colpirebbe b1 con `fire` (arma `sam`, portata 20 km). Dal blocco di pulizia
+    (Proposta_L1_Pulizia_Interruttore.md) e' l'unica regola L1: nessun interruttore.
     """
 
     ZONES = (('sam', 12_000.0, 0.0, 6_000.0),)
     FIRE = _miss(rounds=1, max_range=20_000.0, weapon='sam')
 
-    def _run(self, x, z=0.0, interceptors=None, observers=('r2',), see_from=0.0, fire=FIRE, spec=None, switch=True,
+    def _run(self, x, z=0.0, interceptors=None, observers=('r2',), see_from=0.0, fire=FIRE, spec=None,
              rng=None):
         spec = spec or _miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF)
         blue = _Force('blue', 'Blue', [_Asset('b1')])
@@ -1931,7 +1866,7 @@ class TestL1ImmediateTarget(unittest.TestCase):
 
             return None
 
-        with patch(_ER_LOGGER), patch.object(ER, 'L1_IMMEDIATE_TARGET_RULE', switch):
+        with patch(_ER_LOGGER):
             return ER.resolve_engagement(blue, red, windows, fire_control, rng or _ScriptedRng([0.0] * 40),
                                          legs=legs, reaction_profile_for=_profiles({}, default=(2.0, 1.0)))
 
@@ -1940,20 +1875,19 @@ class TestL1ImmediateTarget(unittest.TestCase):
         """Risoluzione della salva di b1 (la forza `red` e' quella difesa; `blue` spara anche r2 a b1, con `fire`)."""
         return [r for r in result.resolutions if r.force_id == 'red'][0]
 
-    def test_switch_is_on_by_default(self):
-        self.assertIs(ER.L1_IMMEDIATE_TARGET_RULE, True)
-
     def test_seen_launcher_in_range_inside_the_zone_is_not_intercepted(self):
         result = self._run(x=8_000.0)
-        self.assertEqual(self._salvo_resolution(result).intercepted, 0)
+        resolution = self._salvo_resolution(result)
+        self.assertEqual(resolution.interceptable_rounds, 5)
+        self.assertEqual(resolution.capacity, 3)          # tetto, non garantita
+        self.assertEqual(resolution.intercepted, 0)
         self.assertEqual([e for e in result.interception_events if e.asset_id == 'r2'], [])
+        self.assertEqual(len([e for e in result.damage_events if e.target_id == 'r1']), 5)
 
     def test_unseen_launcher_inside_the_zone_is_intercepted(self):
         result = self._run(x=8_000.0, observers=())
         self.assertEqual(self._salvo_resolution(result).intercepted, 3)
         self.assertEqual(result.interceptions_consumed(), {'r2': 3})
-        # Spento (regola del 2026-09-28): dentro il V_I non si intercetta, visto o no: e' la differenza della revisione.
-        self.assertEqual(self._salvo_resolution(self._run(x=8_000.0, observers=(), switch=False)).intercepted, 0)
 
     def test_launcher_seen_after_the_launch_is_intercepted(self):
         """Rilevato dopo il lancio (t = 2,5 s contro un lancio a 2 s): non e' un lancio osservato."""
@@ -1979,10 +1913,10 @@ class TestL1ImmediateTarget(unittest.TestCase):
 
     def test_zone_is_the_interceptor_weapon_not_the_air_defence_volume(self):
         """Il caso Rezky: V_I di 12 km (SAM) ma unica arma intercettrice un CIWS di 4 km. Lancio a 8 km, rilevato e a
-        portata della SAM: fuori zona (acceso) -> intercettato; con la regola di oggi sarebbe dentro il V_I."""
+        portata della SAM: fuori dalla zona del CIWS -> intercettato (con la regola del 2026-09-28, eliminata, sarebbe
+        stato dentro il V_I)."""
         ciws = _ArmedInterceptor('r2', (0.0, 0.0, 0.0), (('ciws', 4_000.0, 0.0, 3_000.0),))
         self.assertEqual(self._salvo_resolution(self._run(x=8_000.0, interceptors=[ciws])).intercepted, 3)
-        self.assertEqual(self._salvo_resolution(self._run(x=8_000.0, interceptors=[ciws], switch=False)).intercepted, 0)
 
     def test_zones_are_per_weapon_not_an_envelope(self):
         """Z-unione: un punto e' dentro solo se e' nel raggio E nella fascia della STESSA arma (un involucro unico con
@@ -1997,35 +1931,49 @@ class TestL1ImmediateTarget(unittest.TestCase):
                                  expected)
 
     def test_without_envelopes_the_rule_does_not_apply(self):
-        """SD-4: senza `interceptor_envelopes` nessun vincolo, e nessun ripiego sul V_I (solo la regola spenta lo usa)."""
+        """SD-4: senza `interceptor_envelopes` nessun vincolo, e nessun ripiego sul V_I (`air_defense_volume`, che lo
+        stub ha)."""
         plain = _ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0)
         self.assertEqual(self._salvo_resolution(self._run(x=8_000.0, interceptors=[plain])).intercepted, 3)
-        self.assertEqual(self._salvo_resolution(self._run(x=8_000.0, interceptors=[plain], switch=False)).intercepted, 0)
 
-    def test_launch_outside_every_zone_is_the_same_in_both_states(self):
-        rng_on, rng_off = _ScriptedRng([0.0] * 40), _ScriptedRng([0.0] * 40)
-        on = self._run(x=15_000.0, rng=rng_on)
-        off = self._run(x=15_000.0, switch=False, rng=rng_off)
-        self.assertEqual(on, off)
-        self.assertEqual(rng_on.calls, rng_off.calls)
+    def test_launch_outside_every_zone_is_intercepted(self):
+        """Lancio a 15 km, fuori dai 12 km dell'unica arma: intercettato anche se il lanciatore e' rilevato e a portata
+        (caso migrato da TestLauncherInsideInterceptionZone.test_launch_outside_the_zone_is_intercepted)."""
+        result = self._run(x=15_000.0)
+        self.assertEqual(self._salvo_resolution(result).intercepted, 3)
+        self.assertEqual(result.interceptions_consumed(), {'r2': 3})
 
     def test_rule_draws_nothing_from_the_rng(self):
-        """Stesse estrazioni di rilevamento nei due stati; la differenza e' solo il danno: 3 colpi in piu' arrivano al
-        modello di danno a interruttore spento (tre estrazioni)."""
-        rng_on, rng_off = _ScriptedRng([0.0] * 40), _ScriptedRng([0.0] * 40)
-        on = self._run(x=8_000.0, observers=(), rng=rng_on)
-        off = self._run(x=8_000.0, observers=(), switch=False, rng=rng_off)
-        self.assertEqual(self._salvo_resolution(on).intercepted, 3)
-        self.assertEqual(self._salvo_resolution(off).intercepted, 0)
-        self.assertEqual([(d.observer_id, d.target_id, d.draw) for d in on.detections],
-                         [(d.observer_id, d.target_id, d.draw) for d in off.detections])
-        self.assertEqual(rng_off.calls - rng_on.calls, 3)
+        """La regola non estrae: lanciatore rilevato e a portata, dentro la zona (escluso), contro la stessa esecuzione
+        con `_may_intercept` forzato a True (nessuna L1). Stesse estrazioni di rilevamento; la differenza e' solo il
+        danno: con la regola 3 colpi in piu' arrivano al modello di danno (tre estrazioni)."""
+        rng_rule, rng_free = _ScriptedRng([0.0] * 40), _ScriptedRng([0.0] * 40)
+        rule = self._run(x=8_000.0, rng=rng_rule)
+
+        with patch.object(ER._EngagementRun, '_may_intercept', return_value=True):
+            free = self._run(x=8_000.0, rng=rng_free)
+
+        self.assertEqual(self._salvo_resolution(rule).intercepted, 0)
+        self.assertEqual(self._salvo_resolution(free).intercepted, 3)
+        self.assertEqual([(d.observer_id, d.target_id, d.draw) for d in rule.detections],
+                         [(d.observer_id, d.target_id, d.draw) for d in free.detections])
+        self.assertEqual(rng_rule.calls - rng_free.calls, 3)
 
     def test_rule_is_per_interceptor(self):
         """Q1: r2 vede b1 ed e' escluso; r3 non lo vede e intercetta (e paga) da solo."""
         r2 = _ArmedInterceptor('r2', (0.0, 0.0, 0.0), self.ZONES)
         r3 = _ArmedInterceptor('r3', (0.0, 300.0, 0.0), self.ZONES)
         result = self._run(x=8_000.0, interceptors=[r2, r3], observers=('r2',))
+        self.assertEqual(self._salvo_resolution(result).intercepted, 3)
+        self.assertEqual(result.interceptions_consumed(), {'r3': 3})
+
+    def test_zone_is_per_interceptor(self):
+        """Q1: la zona e' quella del singolo intercettore. Entrambi rilevano b1 e lo hanno a portata; il lancio (8 km) e'
+        dentro i 12 km di r2 (escluso) ma fuori dai 5 km di r3, che intercetta (e paga) da solo. Caso migrato da
+        TestLauncherInsideInterceptionZone.test_zone_is_per_interceptor."""
+        r2 = _ArmedInterceptor('r2', (0.0, 0.0, 0.0), self.ZONES)
+        r3 = _ArmedInterceptor('r3', (0.0, 300.0, 0.0), (('sam', 5_000.0, 0.0, 6_000.0),))
+        result = self._run(x=8_000.0, interceptors=[r2, r3], observers=('r2', 'r3'))
         self.assertEqual(self._salvo_resolution(result).intercepted, 3)
         self.assertEqual(result.interceptions_consumed(), {'r3': 3})
 
@@ -2050,7 +1998,7 @@ class TestL1ImmediateTarget(unittest.TestCase):
 
 
 class _TrackingInterceptor(_ZonedInterceptor):
-    """Intercettore senza V_I (regola L1 spenta) con raggio di rilevamento aereo (Mobile.detection_range)."""
+    """Intercettore senza zone per arma (nessun vincolo L1) con raggio di rilevamento aereo (Mobile.detection_range)."""
 
     def __init__(self, asset_id, position, air_range, **kwargs):
         super().__init__(asset_id, position, None, **kwargs)
@@ -2067,7 +2015,7 @@ class TestInterceptionReaction(unittest.TestCase):
     tau = VAL+COM+ATT; altrimenti traccia nuova dalla geometria, tau = RIV+VAL+COM+ATT.
 
     Geometria: bersaglio r1 nell'origine, tiratore b1 fermo a (x, 0, 0), una salva di 5 colpi
-    intercettabili a t = 2 s; intercettore senza V_I, 3 canali; la difesa non spara.
+    intercettabili a t = 2 s; intercettore senza zone per arma (nessun vincolo L1), 3 canali; la difesa non spara.
     """
 
     def _run(self, tof, interceptors, x=15_000.0, profile=(5.0, 1.0), observed=()):
@@ -3288,21 +3236,31 @@ class TestCoordinationDomainSalvoDefence(unittest.TestCase):
     """
 
     @staticmethod
-    def _run(coordination_of=None, escort=None, channels=3, spec=None, legs=None, x=None):
+    def _run(coordination_of=None, escort=None, channels=3, spec=None, legs=None, x=None,
+             escort_sees=False, escort_fire=None):
         spec = spec or _miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF)
         escort = escort or _Asset('e1')
         m1 = _Force('m1', 'Blue', [escort], interceptors=[(escort, channels)])
         m2, red = _Force('m2', 'Blue', [_Asset('t1')]), _Force('red', 'Red', [_Asset('a1')])
 
         def fire(shooter, target):
-            return spec if shooter.id == 'a1' else None
+            if shooter.id == 'a1':
+                return spec
 
-        # Con i tratti di rotta la portata della finestra conta: 50 km, come in TestLauncherInsideInterceptionZone.
+            return escort_fire if shooter.id == 'e1' and target.id == 'a1' else None
+
+        # Con i tratti di rotta la portata della finestra conta: 50 km, come in TestL1ImmediateTarget.
         window = _window('a1', 't1', t_end=2.9, range_b=None) if x is None else \
             ContactWindow('a1', 't1', t_start=0.0, t_end=2.9, t_cpa=2.9, distance_cpa=x, range_a=50_000.0, range_b=None)
+        windows = [window]
+
+        if escort_sees:
+            # L1: la scorta rileva a1 dall'inizio (bersaglio immediato se ha anche un'arma a portata).
+            windows.append(ContactWindow('e1', 'a1', t_start=0.0, t_end=2.9, t_cpa=2.9, distance_cpa=x,
+                                         range_a=50_000.0, range_b=None))
 
         with patch(_ER_LOGGER):
-            return ER.resolve_engagement(m1, m2, [window], fire, random.Random(0), extra_forces=(red,), legs=legs,
+            return ER.resolve_engagement(m1, m2, windows, fire, random.Random(0), extra_forces=(red,), legs=legs,
                                          reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
                                          thresholds=_LOOSE_DOCTRINE, coordination_of=coordination_of)
 
@@ -3328,18 +3286,20 @@ class TestCoordinationDomainSalvoDefence(unittest.TestCase):
         self.assertEqual(result.interception_events, ())
 
     def test_launch_inside_the_escort_zone_is_not_intercepted(self):
-        """Regola L1 invariata: a1 lancia da 8 km, dentro i 12 km del V_I della scorta."""
-        # L1 del 2026-09-28 (la rivista richiede anche il bersaglio immediato: Proposta_Revisione_L1_Lanciatore_Bersaglio.md)
-        with patch.object(ER, 'L1_IMMEDIATE_TARGET_RULE', False):
-            for x, expected in ((8_000.0, 0), (15_000.0, 3)):
-                escort = _ZonedInterceptor('e1', (0.0, 0.0, 0.0), 12_000.0)
-                legs = {'a1': [Leg(0.0, 100.0, (x, 0.0, 0.0), (x, 0.0, 0.0))],
-                        't1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
-                        'e1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+        """Regola L1 anche per la scorta di un'altra forza del dominio: a1 lancia da 8 km, dentro i 12 km della zona
+        dell'arma della scorta, che lo rileva e lo ha a portata -> non fermato; da 15 km (fuori zona) o non rilevato ->
+        fermato."""
+        fire_e1 = _miss(rounds=1, max_range=20_000.0, weapon='sam')
 
-                with self.subTest(x=x):
-                    self.assertEqual(self._run(_SHARED, escort=escort, legs=legs, x=x).resolutions[0].intercepted,
-                                     expected)
+        for x, sees, expected in ((8_000.0, True, 0), (15_000.0, True, 3), (8_000.0, False, 3)):
+            escort = _ArmedInterceptor('e1', (0.0, 0.0, 0.0), (('sam', 12_000.0, 0.0, 6_000.0),))
+            legs = {'a1': [Leg(0.0, 100.0, (x, 0.0, 0.0), (x, 0.0, 0.0))],
+                    't1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                    'e1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+
+            with self.subTest(x=x, sees=sees):
+                result = self._run(_SHARED, escort=escort, legs=legs, x=x, escort_sees=sees, escort_fire=fire_e1)
+                self.assertEqual([r.intercepted for r in result.resolutions if r.force_id == 'm2'], [expected])
 
     def test_escort_without_time_to_react_does_not_intercept(self):
         """Regola R-INT invariata: lancio non osservato, tau = 2 s, volo di 1 s."""
@@ -4964,8 +4924,9 @@ class TestAirDefenceTargetRule(unittest.TestCase):
     gli `intercept_domains` della ShotSpec; None = non dichiarato (BI-8). Il filtro e' PRIMA di L1 e R-INT, che non
     cambiano, e non estrae nulla.
 
-    Geometria come TestLauncherInsideInterceptionZone: bersaglio r1 nell'origine, tiratore b1 fermo a (x, 0, 0), una
-    salva di 5 colpi intercettabili a t = 2 s; intercettori nell'origine, 3 canali ciascuno, V_I di 12 km.
+    Geometria: bersaglio r1 nell'origine, tiratore b1 fermo a (x, 0, 0), una salva di 5 colpi intercettabili a t = 2 s;
+    intercettori nell'origine, 3 canali ciascuno, senza zone per arma (`_ZonedInterceptor`/`Ship`: la regola L1 non li
+    vincola; l'ordine BI -> L1 e' in TestL1ImmediateTarget).
     """
 
     ALL = frozenset({'land', 'naval'})
@@ -5031,13 +4992,6 @@ class TestAirDefenceTargetRule(unittest.TestCase):
         for interceptor in (_ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0), Ship('r2', (0.0, 0.0, 0.0), 12_000.0)):
             with self.subTest(interceptor=type(interceptor).__name__):
                 self.assertEqual(self._run(None, [interceptor]).resolutions[0].intercepted, 3)
-
-    def test_switch_on_filter_is_applied_before_not_instead_of_l1(self):
-        """L1 si applica ancora ai colpi ammessi: lancio dentro il V_I di 12 km -> non fermato."""
-        # L1 del 2026-09-28 (la rivista richiede anche il bersaglio immediato: Proposta_Revisione_L1_Lanciatore_Bersaglio.md)
-        with patch.object(ER, 'L1_IMMEDIATE_TARGET_RULE', False):
-            self.assertEqual(self._run(self.ALL, x=8_000.0).resolutions[0].intercepted, 0)
-            self.assertEqual(self._run(self.ALL, x=15_000.0).resolutions[0].intercepted, 3)
 
     def test_switch_on_filter_is_applied_before_not_instead_of_r_int(self):
         """R-INT si applica ancora ai colpi ammessi: tempo di volo nullo -> mai fermato."""

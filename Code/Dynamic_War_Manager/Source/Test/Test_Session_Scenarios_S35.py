@@ -21,9 +21,10 @@ nell'ordine; stesso `session_id` per le 8 varianti di un seed). Fire control dei
     Rezky. Acceso: la nave non ferma piu' i Maverick (`ad_detectable` fisso False).
 
 La Rezky e non l'Arleigh Burke (decisione P-1 del 2026-11-08): con il V_I di 240 km del Burke la regola L1 del
-2026-09-28 vieta ogni intercettazione dei lanci da aereo. Con la regola rivista (L1_IMMEDIATE_TARGET_RULE, acceso dal
-2026-11-25) la zona della Rezky e' quella dell'AK-630 (4 km) e il Burke resterebbe escluso solo per i lanciatori che
-vede e puo' colpire: v. TestS35L1Revised. Il sensore `sea` di 20 km dell'A-10C e' un VALORE DI TEST [S] (P-2), non un dato:
+2026-09-28 (eliminata con Proposta_L1_Pulizia_Interruttore.md) vietava ogni intercettazione dei lanci da aereo. Con la
+regola L1 rivista (dal 2026-11-25) la zona della Rezky e' quella dell'AK-630 (4 km) e la nave ferma i Maverick in ogni
+seed (test 13); il Burke resterebbe escluso solo per i lanciatori che vede e puo' colpire.
+Il sensore `sea` di 20 km dell'A-10C e' un VALORE DI TEST [S] (P-2), non un dato:
 senza, l'A-10C non rileva la nave e non lancia.
 """
 
@@ -58,7 +59,7 @@ HARPOON = 'AGM-84A'
 TOR = 'Red-Line/ad0'            # Tor di S19AD (`build`, prefisso 'ad')
 DEPOT_TANK = 'Red-Depot/tank0'
 BUK = 'Red-Depot/sam0'
-SHIP_MODEL = 'FF 1135M Rezky'   # V_I 12 km (SA-N-4), intercettore AK-630 (task 'Anti_Missile')
+SHIP_MODEL = 'FF 1135M Rezky'   # intercettore AK-630 (task 'Anti_Missile', zona L1 di 4 km); V_I 12 km (SA-N-4)
 SHIP = 'Red-Navy/ff0'
 SHIP_X = 60_000.0
 
@@ -271,45 +272,16 @@ class TestS35AirDefenceTargets(F.LoggerSilencer, unittest.TestCase):
                     _, _, replica = run_variant(seed, variant)
                     self.assertEqual(_events(replica), _events(self.runs[variant][index][2]))
 
-
-class TestS35L1Revised(F.LoggerSilencer, unittest.TestCase):
-    """L1 rivista sulle varianti `naval_maverick`: la zona della Rezky e' quella dell'AK-630 (4 km, unica arma
-    'Anti_Missile'), non quella della SA-N-4 (12 km). I Maverick partono a 7,1-14,7 km dalla nave (misura della
-    Proposta): tutti fuori dalla zona, quindi intercettabili anche quando la nave vede l'A-10C e lo ha a portata. Con BI
-    acceso (`naval_maverick_on`) la nave non ferma i Maverick per la classe (filtro prima di L1): l'interruttore L1 non
-    cambia nulla. NON in `Scenario_Baseline`."""
-
-    SEEDS = SEEDS
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.runs = {}
-
-        for variant in ('naval_maverick_off', 'naval_maverick_on'):
-            for switch in (False, True):
-                with patch.object(ER, 'L1_IMMEDIATE_TARGET_RULE', switch):
-                    cls.runs[(variant, switch)] = [run_variant(seed, variant)[2] for seed in cls.SEEDS]
-
-    def test_switch_on_the_ship_intercepts_more_mavericks(self):
-        for seed, off, on in zip(self.SEEDS, self.runs[('naval_maverick_off', False)],
-                                 self.runs[('naval_maverick_off', True)]):
+    def test_naval_maverick_off_the_ship_intercepts_and_holds_in_every_seed(self):
+        """13. Regola L1 (rivista il 2026-11-24): la zona della Rezky e' quella dell'AK-630 (4 km, unica arma
+        'Anti_Missile'), non il V_I della SA-N-4 (12 km); i Maverick partono a 7,1-14,7 km (misura della Proposta di
+        revisione), fuori zona: con BI spento la nave ne ferma in ogni seed e non e' mai distrutta (con la regola del
+        2026-09-28, eliminata, era distrutta in tutti e 4: misura, Rapporti/L1_Esecuzioni_Cambiate.md). Caso migrato
+        da TestS35L1Revised (Proposta_L1_Pulizia_Interruttore.md)."""
+        for seed, outcome in zip(self.SEEDS, self._outcomes('naval_maverick_off')):
             with self.subTest(session=seed):
-                self.assertGreater(_interceptions(on, SHIP), _interceptions(off, SHIP))
-
-    def test_switch_on_the_ship_is_destroyed_less_often(self):
-        def destroyed(outcomes):
-            return sum(1 for o in outcomes if F.force_outcome(o, 'Red-Navy').outcome == 'destroyed')
-
-        self.assertLess(destroyed(self.runs[('naval_maverick_off', True)]),
-                        destroyed(self.runs[('naval_maverick_off', False)]))
-
-    def test_bi_on_makes_the_l1_switch_irrelevant(self):
-        for seed, off, on in zip(self.SEEDS, self.runs[('naval_maverick_on', False)],
-                                 self.runs[('naval_maverick_on', True)]):
-            with self.subTest(session=seed):
-                self.assertEqual(_events(on), _events(off))
-                self.assertEqual(_interceptions(on, SHIP), 0)
+                self.assertGreater(_interceptions(outcome, SHIP), 0)
+                self.assertNotEqual(F.force_outcome(outcome, 'Red-Navy').outcome, 'destroyed')
 
 
 if __name__ == '__main__':

@@ -1278,48 +1278,6 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
         self.assertGreater(saturated, 0)
 
 
-class TestS16L1Revised(F.LoggerSilencer, unittest.TestCase):
-    """L1 rivista sul porto di S16, seme `S16-3` (l'unico seme che cambia): con la regola del 2026-09-28 le Molniya
-    (V_I 12 km della SA-N-4) non fermano 6 salve 'test:anti_ship' lanciate a 2,3-10,7 km da F/A-18C che non hanno
-    rilevato; con la regola rivista la zona e' quella dell'AK-630 (4 km, fino a 3000 m) e gli F/A-18C, a 6000 m, ne sono
-    fuori. Misure della Proposta: intercettazioni 34 -> 44, Molniya perse 2 -> 0. NON in `Scenario_Baseline`."""
-
-    SEED = 'S16-3'
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.off = cls._run(False)
-        cls.on = cls._run(True)
-
-    @classmethod
-    def _run(cls, switch):
-        """`(porto, outcome)` della sessione di `TestS16NavalInstallation` con l'interruttore `switch`."""
-        base = TestS16NavalInstallation
-        strike, port, missions = base._build()
-        blue_ids = frozenset(strike.assets)
-        low_level = (lambda observer, target, ids=blue_ids: base.LOW_LEVEL_FACTOR if target.id in ids else 1.0)
-
-        with patch.object(ER, 'L1_IMMEDIATE_TARGET_RULE', switch):
-            outcome = F.run(cls.SEED, [strike], [port], F.make_fire_control(), duration=3_600.0, missions=missions,
-                            thresholds=BOTH_HOLD, detection_factor=low_level,
-                            order_kwargs={'salvo_window': base.SALVO_WINDOW})
-
-        return port, outcome
-
-    def test_switch_on_the_corvettes_intercept_more(self):
-        ships = TestS16NavalInstallation.SHIPS
-        self.assertGreater(sum(e.interceptions for e in F.interceptions_by(self.on[1], ships)),
-                           sum(e.interceptions for e in F.interceptions_by(self.off[1], ships)))
-
-    def test_switch_on_fewer_corvettes_are_lost(self):
-        def lost(run):
-            port, _ = run
-            return sum(1 for s in TestS16NavalInstallation.SHIPS if port.assets[s].is_destroyed())
-
-        self.assertLess(lost(self.on), lost(self.off))
-
-
 # ── S17 — SWEEP DI SCALA GERARCHICA ───────────────────────────────────────────
 
 class TestS17HierarchicalScaleSweep(F.LoggerSilencer, unittest.TestCase):

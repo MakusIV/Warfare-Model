@@ -7,12 +7,10 @@ difesa aerea a corto raggio, attaccata da A-10C che lanciano AGM-65D da ~16 km.
 Regole verificate (esito QUALITATIVO, non numerico, come chiede il §6 della proposta):
   * **D** (fatta): intercetta solo un'arma che dichiara il task 'Anti_Missile'. Lo Strela-10
     (9M37) non intercetta i Maverick, quindi conserva i missili per gli aerei;
-  * **L** (L1 implementata il 2026-09-28, passo 4; rivista il 2026-11-24, accesa il 2026-11-25): un colpo e'
-    intercettabile salvo che il lanciatore sia un bersaglio immediato dell'intercettore, cioe' il lancio parte
-    da DENTRO la zona di una sua arma intercettrice e il lanciatore e' rilevato all'istante del lancio e a portata
-    di un'arma con scorta: in quel caso si spara a lui e i suoi colpi non si intercettano. Un lanciatore dentro la
-    zona ma non ancora rilevato non e' un bersaglio: i suoi colpi si intercettano (v. TestS19AdL1ImmediateTarget).
-    La regola del 2026-09-28 (interruttore L1_IMMEDIATE_TARGET_RULE spento) escludeva ogni lancio da dentro il V_I.
+  * **L** (L1 implementata il 2026-09-28, passo 4; rivista il 2026-11-24 e accesa il 2026-11-25; interruttore e
+    regola precedente eliminati con Proposta_L1_Pulizia_Interruttore.md): se il lanciatore spara da dentro la zona
+    dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve non si intercettano. Un lanciatore
+    dentro la zona ma non ancora rilevato non e' un bersaglio: i suoi colpi si intercettano.
     Il Tor arretrato (lancio a ~15-19 km, fuori dai suoi 12 km) intercetta; col Tor avanzato e
     gli A-10C che attaccano solo i BMP-2, i lanci partono a ~9,5 km dal Tor (dentro): il Tor spara
     ai lanciatori e intercetta solo i colpi di quelli che non aveva ancora rilevato al lancio.
@@ -20,10 +18,10 @@ Regole verificate (esito QUALITATIVO, non numerico, come chiede il §6 della pro
 Misura del 2026-09-28 (passo 3): nel secondo caso il motore rispettava GIA' la regola per
 tempistica, non per costruzione: il lanciatore entra nei 12 km prima che i suoi Maverick
 arrivino, e il Tor spende gli 8 missili su di lui. Con la regola rivista l'unico seme in cui cambia l'esito
-e' `S19-4` (`cas1` lancia prima di essere rilevato: il Tor intercetta 2 colpi); la verifica resta qui come
-regressione. Il caso a geometria controllata (intercettore con scorta in avanzo e lancio da dentro la zona) e'
-nei test unitari del risolutore: Test_Engagement_Resolver.TestL1ImmediateTarget (regola rivista) e
-TestLauncherInsideInterceptionZone (regola del 2026-09-28).
+e' `S19-4` (`cas1` lancia prima di essere rilevato: il Tor intercetta 2 colpi), verificato qui
+(`TestS19AirDefenceAllocation`, test sul seme S19-4). Il caso a geometria controllata (intercettore con scorta
+in avanzo e lancio da dentro la zona) e' nei test unitari del risolutore:
+Test_Engagement_Resolver.TestL1ImmediateTarget.
 
 Fire control: i registri veri (`Fire_Control.make_registry_fire_control`), senza filtri di test. Con il
 criterio Pk/costo (A5) l'A-10C sceglierebbe la Mk-82AIR del loadout 'Maverick/Gun CAS', che non e'
@@ -130,6 +128,10 @@ class TestS19AirDefenceAllocation(F.LoggerSilencer, unittest.TestCase):
 
     SEEDS = _seeds('S19', 6)
     AD = 'Red-Line/ad0'
+    # Regola L1 (rivista il 2026-11-24): il seme in cui il lanciatore spara da dentro la zona del Tor prima di essere
+    # rilevato (misure della Proposta di revisione: lanci a ~163 e ~164 s, rilevamento a ~184 s).
+    L1_SEED = 'S19-4'
+    L1_LAUNCHER = 'Blue-CAS/cas1'
 
     @classmethod
     def setUpClass(cls):
@@ -249,6 +251,37 @@ class TestS19AirDefenceAllocation(F.LoggerSilencer, unittest.TestCase):
 
         self.assertGreater(inside, 0)      # premessa: almeno un lancio da dentro la zona
 
+    def _tor_forward_of(self, seed):
+        """`(outcome, [EngagementResult, ...])` del Tor avanzato nel seme `seed` (le sessioni di `setUpClass`)."""
+        index = self.SEEDS.index(seed)
+        return self.tor_forward[index][2], self.tor_forward_results[index]
+
+    def test_premise_in_s19_4_the_launcher_fires_before_the_tor_sees_it(self):
+        """Premessa del test seguente: nel seme S19-4 `cas1` lancia AGM-65D prima che il Tor lo rilevi."""
+        _, results = self._tor_forward_of(self.L1_SEED)
+        launches = [s.t_launch for r in results for s in r.salvos
+                    if s.shooter_id == self.L1_LAUNCHER and s.spec.weapon == MAVERICK]
+        seen = [d.time for r in results for d in r.detections
+                if d.observer_id == self.AD and d.target_id == self.L1_LAUNCHER and d.detected]
+        self.assertTrue(launches)
+        self.assertTrue(not seen or min(seen) > min(launches))
+
+    def test_in_s19_4_the_tor_intercepts_the_launcher_it_had_not_seen(self):
+        """Regola L1 (rivista il 2026-11-24): `cas1` lancia da dentro i 12 km del Tor ma non e' un suo bersaglio
+        immediato (non ancora rilevato al lancio): il Tor ne intercetta i colpi. Con la regola del 2026-09-28, eliminata
+        (Proposta_L1_Pulizia_Interruttore.md), non li intercettava. Caso migrato da TestS19AdL1ImmediateTarget."""
+        outcome, results = self._tor_forward_of(self.L1_SEED)
+        self.assertGreater(_interceptions(outcome, self.AD), 0)
+
+        for result in results:
+            shooter_of = {s.salvo_id: s.shooter_id for s in result.salvos}
+
+            for event in result.interception_events:
+                if event.asset_id == self.AD:
+                    with self.subTest(time=event.time):
+                        self.assertTrue(any(shooter_of.get(salvo_id) == self.L1_LAUNCHER
+                                            for salvo_id in event.salvo_ids))
+
 
 class TestS19MissionRulesReplaceTheTestFilters(F.LoggerSilencer, unittest.TestCase):
     """F7a: le regole d'ingaggio di missione fanno cio' che facevano i filtri di test."""
@@ -311,74 +344,6 @@ class TestS19AdTargetRule(F.LoggerSilencer, unittest.TestCase):
         self.assertGreater(sum(e.rounds for e in outcome.ammunition_events if e.weapon == MAVERICK), 0)  # premessa
         self.assertEqual(_interceptions(outcome, self.AD), 0)
         self.assertEqual(outcome.interception_events, ())
-
-
-class TestS19AdL1ImmediateTarget(F.LoggerSilencer, unittest.TestCase):
-    """L1 rivista (Proposta_Revisione_L1_Lanciatore_Bersaglio.md) sul Tor avanzato, seme `S19-4`: l'unico caso della
-    fotografia in cui la regola cambia l'esito. L'A-10C `cas1` lancia AGM-65D a ~9,7 e ~9,5 km dal Tor (dentro i 12 km
-    del 9M331) a ~163 e ~164 s, PRIMA che il Tor lo rilevi (~184 s): misure della sonda della Proposta. Spento (regola
-    del 2026-09-28): il Tor non ferma quei colpi. Acceso: il lanciatore non e' un bersaglio immediato del Tor, che li
-    intercetta. Stessa sessione della fotografia; NON in `Scenario_Baseline` (i metodi di test non sono eseguiti dalla
-    fotografia)."""
-
-    AD = 'Red-Line/ad0'
-    LAUNCHER = 'Blue-CAS/cas1'
-    SEED = 'S19-4'
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.off = cls._run(False)
-        cls.on = cls._run(True)
-
-    @classmethod
-    def _run(cls, switch):
-        """`(outcome, [EngagementResult, ...])` del Tor avanzato con l'interruttore `switch`."""
-        results = []
-        original = ER.resolve_engagement
-
-        def spy(*args, **kwargs):
-            result = original(*args, **kwargs)
-
-            if result is not None:
-                results.append(result)
-
-            return result
-
-        with patch.object(ER, 'L1_IMMEDIATE_TARGET_RULE', switch), \
-                patch.object(ER, 'resolve_engagement', side_effect=spy):
-            _, _, outcome = run_variant(cls.SEED, '9K331-Tor', TOR_FORWARD_X, 300.0, 4, OVERFLIGHT,
-                                        targets_ifv_only=True)
-
-        return outcome, results
-
-    def test_premise_the_launcher_fires_before_the_tor_sees_it(self):
-        for label, (_, results) in (('off', self.off), ('on', self.on)):
-            with self.subTest(switch=label):
-                launches = [s.t_launch for r in results for s in r.salvos
-                            if s.shooter_id == self.LAUNCHER and s.spec.weapon == MAVERICK]
-                seen = [d.time for r in results for d in r.detections
-                        if d.observer_id == self.AD and d.target_id == self.LAUNCHER and d.detected]
-                self.assertTrue(launches)
-                self.assertTrue(not seen or min(seen) > min(launches))
-
-    def test_switch_off_the_tor_does_not_intercept(self):
-        self.assertEqual(_interceptions(self.off[0], self.AD), 0)
-
-    def test_switch_on_the_tor_intercepts_the_unseen_launcher(self):
-        outcome, results = self.on
-        self.assertGreater(_interceptions(outcome, self.AD), 0)
-
-        for result in results:
-            shooter_of = {s.salvo_id: s.shooter_id for s in result.salvos}
-
-            for event in result.interception_events:
-                if event.asset_id == self.AD:
-                    with self.subTest(time=event.time):
-                        self.assertTrue(any(shooter_of.get(salvo_id) == self.LAUNCHER for salvo_id in event.salvo_ids))
-
-    def test_switch_on_the_tor_still_fires_at_the_launchers(self):
-        self.assertGreater(_rounds_fired(self.on[0], self.AD), 0)
 
 
 if __name__ == '__main__':
