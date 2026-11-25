@@ -1484,8 +1484,8 @@ _STORES_MEMBERS = (
     'unmodelled_weapons_from_registry', 'ammunition_from_registry', 'load_stores_from_registry',
     'load_ammunition_from_registry', 'interceptor_weapons', 'interceptor_stock',
     'has_interceptor_stock', 'plan_interceptor_consumption', 'consume_interceptor_stock',
-    'interceptor_weapons_from_registry', 'interceptor_capability', 'interceptor_stock_from_registry',
-    'load_interceptor_stock_from_registry',
+    'interceptor_weapons_from_registry', 'interceptor_envelopes', 'interceptor_capability',
+    'interceptor_stock_from_registry', 'load_interceptor_stock_from_registry',
 )
 
 
@@ -2055,6 +2055,117 @@ class TestInterceptorStockFromRegistry(unittest.TestCase):
                 stub.consume_interceptor_stock(1)
                 self.assertEqual(stub.interceptor_stock, stock - 2)
                 self.assertEqual(stub.ammunition, ammo - 2 * ROUNDS_PER_GUN_INTERCEPT)
+
+
+class TestInterceptorEnvelopes(unittest.TestCase):
+    """Zona di ciascuna arma intercettrice (regola L1 rivista): stessa selezione della scorta, raggio e quote per arma."""
+
+    # Armi di terra finte, stessa forma di TestInterceptorStockFromRegistry (portata 3000 m, quote 0-3000 m).
+    _AD = {'range': {'direct': 3000}, 'min_altitude': 0, 'max_altitude': 3000, 'task': ['Anti_Air', 'Anti_Missile']}
+    _AA_ONLY = {'range': {'direct': 5000}, 'min_altitude': 10, 'max_altitude': 3500, 'task': ['Anti_Air']}
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+        _FAKE_GW.clear()
+        _FAKE_GW['AA_CANNONS'] = {'2A38M-30mm': dict(self._AD)}
+        _FAKE_GW['MISSILES'] = {'9M38-SAM': dict(self._AD), '9M311-SAM': dict(self._AD),
+                                '9M33-SAM': dict(self._AD), '9M37-SAM': dict(self._AA_ONLY)}
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+        _FAKE_GW.clear()
+
+    def _records(self):
+        """I record dei test 1-4: modello -> record (veicoli nel registro finto, nave nel registro vero)."""
+        _FakeVehicleData._registry['buk'] = _WeaponsRecord({'MISSILES': [('9M38-SAM', 4)]})
+        _FakeVehicleData._registry['tunguska'] = _WeaponsRecord({'AA_CANNONS': [('2A38M-30mm', 1904)],
+                                                                 'MISSILES': [('9M311-SAM', 8)]})
+        _FakeVehicleData._registry['strela10'] = _WeaponsRecord({'MISSILES': [('9M37-SAM', 8)]})
+        Ship_Data._registry['test-envelope-ship'] = _ship_record({
+            'MISSILES_SAM': [('RIM-162-ESSM', 32)],
+            'CIWS': [('Mk-15-Phalanx', 3)],
+            'MISSILES_ASM': [('RGM-84-Harpoon', 8)],
+        })
+        return ('buk', 'tunguska', 'strela10', 'test-envelope-ship')
+
+    def test_vehicle_missile_envelope(self):
+        _FakeVehicleData._registry['buk'] = _WeaponsRecord({'MISSILES': [('9M38-SAM', 4)]})
+        self.assertEqual(_InterceptorStub(model='buk').interceptor_envelopes(), (('9M38-SAM', 3000.0, 0.0, 3000.0),))
+
+    def test_gun_and_missile_are_two_envelopes(self):
+        _FakeVehicleData._registry['tunguska'] = _WeaponsRecord({'AA_CANNONS': [('2A38M-30mm', 1904)],
+                                                                 'MISSILES': [('9M311-SAM', 8)]})
+        envelopes = _InterceptorStub(model='tunguska').interceptor_envelopes()
+        self.assertEqual(tuple(e[0] for e in envelopes), ('2A38M-30mm', '9M311-SAM'))
+        self.assertEqual(len(envelopes), 2)
+
+    def test_anti_air_without_anti_missile_has_no_envelope(self):
+        _FakeVehicleData._registry['strela10'] = _WeaponsRecord({'MISSILES': [('9M37-SAM', 8)]})
+        stub = _InterceptorStub(model='strela10')
+        self.assertIsNone(stub.interceptor_envelopes())
+        self.assertIsNone(stub.interceptor_weapons_from_registry())
+
+    def test_ship_sam_and_ciws_in_km(self):
+        """Missili SAM e CIWS navali: raggio del registro in km x 1000; l'antinave non ha zona."""
+        Ship_Data._registry['test-envelope-ship'] = _ship_record({
+            'MISSILES_SAM': [('RIM-162-ESSM', 32)],
+            'CIWS': [('Mk-15-Phalanx', 3)],
+            'MISSILES_ASM': [('RGM-84-Harpoon', 8)],
+        })
+        essm = SHIP_WEAPONS['MISSILES_SAM']['RIM-162-ESSM']
+        phalanx = SHIP_WEAPONS['CIWS']['Mk-15-Phalanx']
+        self.assertEqual(_InterceptorStub(model='test-envelope-ship').interceptor_envelopes(), (
+            ('RIM-162-ESSM', 1000 * essm['range'], essm['min_altitude'], essm['max_altitude']),
+            ('Mk-15-Phalanx', 1000 * phalanx['range'], phalanx['min_altitude'], phalanx['max_altitude']),
+        ))
+
+    def test_same_selection_as_interceptor_weapons(self):
+        """Le armi con zona sono esattamente quelle della selezione che decide chi intercetta e la scorta."""
+        for model in self._records():
+            with self.subTest(model=model):
+                stub = _InterceptorStub(model=model)
+                envelopes = stub.interceptor_envelopes()
+                weapons = stub.interceptor_weapons_from_registry()
+
+                if weapons is None:
+                    self.assertIsNone(envelopes)
+                else:
+                    self.assertEqual({entry[0] for entry in envelopes}, set(weapons))
+
+    def test_unknown_models_and_aircraft_are_none(self):
+        _FakeAircraftData._registry['f16'] = _Record({})
+
+        for model in (None, 'ignoto', 'f16'):
+            with self.subTest(model=model):
+                self.assertIsNone(_InterceptorStub(model=model).interceptor_envelopes())
+
+    def test_malformed_items_and_missing_range_are_skipped(self):
+        _FakeVehicleData._registry['odd'] = _WeaponsRecord({
+            'MISSILES': [('9M33-SAM', 6), ('broken',), ('9M33-SAM', -5)],
+        })
+        envelopes = _InterceptorStub(model='odd').interceptor_envelopes()
+        self.assertEqual(tuple(e[0] for e in envelopes), ('9M33-SAM',))
+
+        # Portata nulla: l'arma e' capace di intercettare (regola D) ma non ha zona.
+        _FAKE_GW['MISSILES']['test-norange'] = dict(self._AD, range={'direct': 0})
+        _FakeVehicleData._registry['norange'] = _WeaponsRecord({'MISSILES': [('test-norange', 2)]})
+        stub = _InterceptorStub(model='norange')
+        self.assertIsNone(stub.interceptor_envelopes())
+        self.assertEqual(stub.interceptor_weapons_from_registry(), {'test-norange': False})
+
+    def test_real_registry_rezky_is_the_ak630(self):
+        """Dati veri: la Rezky ha come sola arma intercettrice l'AK-630 (4 km, 0-3000 m); il Burke arriva a 240 km."""
+        rezky = _InterceptorStub(model='FF 1135M Rezky').interceptor_envelopes()
+        self.assertEqual(rezky, (('AK-630', 4000.0, 0.0, 3000.0),))
+        burke = _InterceptorStub(model='USS Arleigh Burke IIa').interceptor_envelopes()
+        self.assertEqual(max(entry[1] for entry in burke), 240000.0)
 
 
 class TestEngagementChannels(unittest.TestCase):

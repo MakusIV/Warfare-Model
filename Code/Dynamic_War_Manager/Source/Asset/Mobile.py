@@ -207,6 +207,19 @@ INTERCEPTOR_GUN_WEAPON_TYPES = ('AA_CANNONS', 'CIWS')
 # qui sotto e' lo stesso nome in GROUND_WEAPON_TASK e nei registri navali.
 INTERCEPTOR_TASK = 'Anti_Missile'
 
+
+def _is_interceptor_weapon(wdata) -> bool:
+    """Filtro della regola D su un record d'arma del registro: dati di quota (min e max non None), task 'Anti_Air'
+    se il record dichiara `task`, task INTERCEPTOR_TASK dichiarato, quota massima > 0. Una sola selezione per
+    `interceptor_weapons_from_registry` (chi intercetta, scorta) e `interceptor_envelopes` (zona della regola L1)."""
+    if (wdata is None or wdata.get('min_altitude') is None or wdata.get('max_altitude') is None
+            or ('task' in wdata and GROUND_WEAPON_TASK['Anti_Air'] not in wdata['task'])
+            or INTERCEPTOR_TASK not in (wdata.get('task') or ())):
+        return False
+
+    # Forma letterale del controllo precedente (`if float(...) <= 0.0: continue`), negata: differisce da `> 0.0` per NaN.
+    return not float(wdata.get('max_altitude', 0)) <= 0.0
+
 # CIWS navali (D-AM2): il registro della nave dichiara il NUMERO DI IMPIANTI (tipo in
 # UNIT_COUNTED_WEAPON_TYPES); se l'arma dichiara `rounds_per_mount` la scorta diventa
 # impianti x colpi per impianto ed entra in `_stores` come un cannone AD qualunque.
@@ -1110,13 +1123,8 @@ class Mobile(Asset) :
                 wdata = weapon_db.get(valid[0])
 
                 # Filtro di air_defense_volume() (dati di quota, task Anti_Air) piu' la regola D:
-                # task INTERCEPTOR_TASK dichiarato. Senza campo `task` l'arma non e' capace.
-                if (wdata is None or wdata.get('min_altitude') is None or wdata.get('max_altitude') is None
-                        or ('task' in wdata and GROUND_WEAPON_TASK['Anti_Air'] not in wdata['task'])
-                        or INTERCEPTOR_TASK not in (wdata.get('task') or ())):
-                    continue
-
-                if float(wdata.get('max_altitude', 0)) <= 0.0:
+                # task INTERCEPTOR_TASK dichiarato (`_is_interceptor_weapon`). Senza campo `task` l'arma non e' capace.
+                if not _is_interceptor_weapon(wdata):
                     continue
 
                 result[valid[0]] = weapon_type in INTERCEPTOR_GUN_WEAPON_TYPES
@@ -1127,6 +1135,85 @@ class Mobile(Asset) :
             return None
 
         return result
+
+    def interceptor_envelopes(self) -> Optional[Tuple[Tuple[str, float, float, float], ...]]:
+        """Zona di ciascuna arma INTERCETTRICE (regola D) del modello: ((modello, raggio [m], quota min [m], quota max [m]), ...).
+
+        Stessa selezione di `interceptor_weapons_from_registry` (`_is_interceptor_weapon`, CIWS navali compresi), nello
+        stesso ordine (tipi d'arma del registro, poi voci); un modello ripetuto conta una volta (la prima). Raggio: per le
+        navi `range` [km] x 1000, per i veicoli `range['direct']` [m] (le stesse letture di `air_defense_volume`);
+        quote AGL relative all'asset, come la base del cilindro di `air_defense_volume`. Armi con raggio <= 0 escluse.
+        Usata dalla regola L1 rivista (Engagement_Resolver, interruttore L1_IMMEDIATE_TARGET_RULE): un lancio e'
+        "dentro la zona dell'arma che intercetta" se e' nel cilindro di almeno una di queste armi. Non dipende dalla
+        posizione. Dati di registro, nessuna stima nuova.
+
+        Returns:
+            tupla non vuota, oppure None — senza sollevare — se il modello non e' noto o non ha armi intercettrici con
+            portata (stessi casi di `interceptor_weapons_from_registry`, piu' le armi senza portata).
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import GROUND_WEAPONS
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
+
+        model = getattr(self, '_model', None)
+
+        if model is None:
+            logger.debug("interceptor_envelopes: _model not set")
+            return None
+
+        data_record = _VehicleData._registry.get(model) or _ShipData._registry.get(model)
+
+        if data_record is None:
+            logger.debug(f"interceptor_envelopes: no vehicle/ship registry entry for model {model!r}")
+            return None
+
+        weapons = getattr(data_record, 'weapons', None)
+
+        if not isinstance(weapons, dict) or not weapons:
+            logger.debug(f"interceptor_envelopes: model {model!r} declares no weapons")
+            return None
+
+        is_ship = isinstance(data_record, _ShipData)
+        allowed = INTERCEPTOR_WEAPON_TYPES_SHIP if is_ship else INTERCEPTOR_WEAPON_TYPES_VEHICLE
+        result: List[Tuple[str, float, float, float]] = []
+        seen: set = set()
+
+        for weapon_type, weapon_list in weapons.items():
+            if weapon_type not in allowed:
+                continue
+
+            weapon_db = (SHIP_WEAPONS if is_ship else GROUND_WEAPONS).get(weapon_type, {})
+
+            for item in weapon_list or []:
+                valid = self._valid_item(item)
+
+                if valid is None:
+                    continue
+
+                wdata = weapon_db.get(valid[0])
+
+                if not _is_interceptor_weapon(wdata):
+                    continue
+
+                if is_ship:
+                    radius = float(wdata.get('range', 0) or 0) * 1000.0  # km -> m
+                else:
+                    range_data = wdata.get('range')
+                    radius = float((range_data.get('direct', 0) or 0) if isinstance(range_data, dict) else 0.0)  # m
+
+                if radius <= 0.0 or valid[0] in seen:
+                    continue
+
+                seen.add(valid[0])
+                result.append((valid[0], radius, float(wdata['min_altitude']), float(wdata['max_altitude'])))
+
+        if not result:
+            logger.debug(f"interceptor_envelopes: model {model!r} has no interceptor weapons with range, "
+                         f"envelopes not modelled")
+            return None
+
+        return tuple(result)
 
     def interceptor_capability(self) -> Optional[bool]:
         """Regola D: il registro dichiara almeno un'arma capace di intercettare munizioni?

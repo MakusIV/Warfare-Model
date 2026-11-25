@@ -21,7 +21,8 @@ nell'ordine; stesso `session_id` per le 8 varianti di un seed). Fire control dei
     Rezky. Acceso: la nave non ferma piu' i Maverick (`ad_detectable` fisso False).
 
 La Rezky e non l'Arleigh Burke (decisione P-1 del 2026-11-08): con il V_I di 240 km del Burke la regola L1 vieta ogni
-intercettazione dei lanci da aereo. Il sensore `sea` di 20 km dell'A-10C e' un VALORE DI TEST [S] (P-2), non un dato:
+intercettazione dei lanci da aereo. Con L1_IMMEDIATE_TARGET_RULE acceso la zona della Rezky e' quella dell'AK-630
+(4 km): v. TestS35L1Revised. Il sensore `sea` di 20 km dell'A-10C e' un VALORE DI TEST [S] (P-2), non un dato:
 senza, l'A-10C non rileva la nave e non lancia.
 """
 
@@ -268,6 +269,46 @@ class TestS35AirDefenceTargets(F.LoggerSilencer, unittest.TestCase):
                 with self.subTest(variant=variant, session=seed):
                     _, _, replica = run_variant(seed, variant)
                     self.assertEqual(_events(replica), _events(self.runs[variant][index][2]))
+
+
+class TestS35L1Revised(F.LoggerSilencer, unittest.TestCase):
+    """L1 rivista sulle varianti `naval_maverick`: la zona della Rezky e' quella dell'AK-630 (4 km, unica arma
+    'Anti_Missile'), non quella della SA-N-4 (12 km). I Maverick partono a 7,1-14,7 km dalla nave (misura della
+    Proposta): tutti fuori dalla zona, quindi intercettabili anche quando la nave vede l'A-10C e lo ha a portata. Con BI
+    acceso (`naval_maverick_on`) la nave non ferma i Maverick per la classe (filtro prima di L1): l'interruttore L1 non
+    cambia nulla. NON in `Scenario_Baseline`."""
+
+    SEEDS = SEEDS
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.runs = {}
+
+        for variant in ('naval_maverick_off', 'naval_maverick_on'):
+            for switch in (False, True):
+                with patch.object(ER, 'L1_IMMEDIATE_TARGET_RULE', switch):
+                    cls.runs[(variant, switch)] = [run_variant(seed, variant)[2] for seed in cls.SEEDS]
+
+    def test_switch_on_the_ship_intercepts_more_mavericks(self):
+        for seed, off, on in zip(self.SEEDS, self.runs[('naval_maverick_off', False)],
+                                 self.runs[('naval_maverick_off', True)]):
+            with self.subTest(session=seed):
+                self.assertGreater(_interceptions(on, SHIP), _interceptions(off, SHIP))
+
+    def test_switch_on_the_ship_is_destroyed_less_often(self):
+        def destroyed(outcomes):
+            return sum(1 for o in outcomes if F.force_outcome(o, 'Red-Navy').outcome == 'destroyed')
+
+        self.assertLess(destroyed(self.runs[('naval_maverick_off', True)]),
+                        destroyed(self.runs[('naval_maverick_off', False)]))
+
+    def test_bi_on_makes_the_l1_switch_irrelevant(self):
+        for seed, off, on in zip(self.SEEDS, self.runs[('naval_maverick_on', False)],
+                                 self.runs[('naval_maverick_on', True)]):
+            with self.subTest(session=seed):
+                self.assertEqual(_events(on), _events(off))
+                self.assertEqual(_interceptions(on, SHIP), 0)
 
 
 if __name__ == '__main__':
