@@ -45,15 +45,13 @@ attraverso l'RNG di sessione passato dal chiamante.
    Dal 2026-09-28 (Proposta_Regole_Allocazione_SAM.md §7) intercetta solo un asset con armi
    dichiarate 'Anti_Missile' (regola D, v. Military.salvo_interceptors), prima quelli a soli
    cannoni (regola F), e l'allocazione e' PER SALVA (regola L1). Regola L1 (rivista il 2026-11-24,
-   Proposta_Revisione_L1_Lanciatore_Bersaglio.md, accesa il 2026-11-25 con `L1_IMMEDIATE_TARGET_RULE`): se il
-   lanciatore spara da dentro la zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve
-   non si intercettano. "Dentro la zona" = il punto di lancio (posizioni all'istante del lancio) e' nel cilindro,
-   raggio e fascia di quota, di almeno un'arma intercettrice dell'intercettore (`Mobile.interceptor_envelopes`;
-   bordo = dentro). "Puo' gia' colpirlo" = lo ha rilevato all'istante del lancio (come R-INT) e un'arma con scorta
-   lo raggiunge (`_in_range_at`, il controllo del pool prioritario di L2; nessun altro filtro di
-   `_schedule_next`). In ogni altro caso il colpo e' intercettabile (salvo R-INT, canali, scorta, BI). Con
-   l'interruttore spento vale la regola del 2026-09-28: colpo intercettabile solo se il punto di lancio e' fuori dal
-   volume d'intercettazione V_I (`Mobile.air_defense_volume`), e il lanciatore da dentro e' un bersaglio. Nessuna
+   Proposta_Revisione_L1_Lanciatore_Bersaglio.md, accesa il 2026-11-25; l'interruttore temporaneo e la regola del
+   2026-09-28 sono stati eliminati con Proposta_L1_Pulizia_Interruttore.md): se il lanciatore spara da dentro la
+   zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve non si intercettano.
+   "Dentro la zona" = il punto di lancio (posizioni all'istante del lancio) e' nel cilindro, raggio e fascia di
+   quota, di almeno un'arma intercettrice dell'intercettore (`Mobile.interceptor_envelopes`; bordo = dentro).
+   "Puo' gia' colpirlo" = lo ha rilevato all'istante del lancio (come R-INT) e un'arma con scorta lo raggiunge
+   (`_in_range_at`, il controllo del pool prioritario di L2; nessun altro filtro di `_schedule_next`). In ogni altro caso il colpo e' intercettabile (salvo R-INT, canali, scorta, BI). Nessuna
    estrazione.
    Dal 2026-09-30 (regola R-INT, Proposta_Intercettazione_Reazione.md) l'intercettore deve
    anche avere una traccia del colpo e il tempo di reagire prima dell'impatto: se aveva gia'
@@ -641,21 +639,6 @@ BI_AD_TARGET_RULE = False
 #     decisione e' rinviata a quell'istante (VA-2.1 (i)). Spento: chiamate, chiavi e istanti di prima. Nessuna
 #     estrazione nuova ne' spostata in nessuno dei due stati.
 VA_ENGAGEMENT_ALTITUDE_BAND = False
-
-# Regola L1 rivista (Proposta_Revisione_L1_Lanciatore_Bersaglio.md, decisioni dell'utente del 2026-11-24), interruttore
-# dedicato e TEMPORANEO (si elimina dopo l'accensione e la fotografia nuova, se l'utente conferma Q-L1-1):
-#   * `L1_IMMEDIATE_TARGET_RULE` (ACCESO dalla decisione dell'utente del 2026-11-25; prima spento). Se il lanciatore
-#     spara da dentro la zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve non si
-#     intercettano. Acceso: un intercettore NON ferma i colpi di una salva solo se (1) il punto di
-#     lancio e' dentro la zona di almeno una sua arma intercettrice (`Mobile.interceptor_envelopes`: raggio e fascia
-#     di quota della stessa arma; bordo = dentro) E (2) il lanciatore e' un suo bersaglio immediato: rilevato da lui
-#     all'istante del lancio (come R-INT) e ingaggiabile con un'arma con scorta e a portata (solo `_in_range_at`, il
-#     controllo di portata del pool prioritario di L2, senza gli altri filtri di `_schedule_next`: niente ROE a
-#     tempo `_is_deferred`, `not_before`, fine attivita', intercettore a terra, `exhausted`).
-#     Senza zone per arma (dato mancante) nessun vincolo. Spento: la regola del 2026-09-28 (V_I di
-#     `Mobile.air_defense_volume`, nessuna condizione sul lanciatore). Letto all'inizio di ogni run. Nessuna
-#     estrazione in piu' ne' in ordine diverso in nessuno dei due stati; nessuna costante nuova.
-L1_IMMEDIATE_TARGET_RULE = True
 
 # Domini di difesa aerea ammessi in `ShotSpec.intercept_domains` ('land' = intercettore non navale, 'naval' = nave).
 AD_DOMAINS = frozenset({'land', 'naval'})
@@ -2063,7 +2046,6 @@ class _EngagementRun:
         self.class_weights: Dict[tuple, Optional[float]] = {}
         self.surface_weights: Dict[str, float] = {}
         self.legs = legs or {}
-        self.zone_cache: Dict[str, Optional[Tuple[float, float, float]]] = {}
         # Regole L2/L3 (2026-09-28): aerei che hanno lanciato armi aria-superficie contro
         # ciascuna forza, e generazione del lancio programmato di ogni tiratore (prelazione).
         self.launchers_against: Dict[str, set] = {}
@@ -2079,9 +2061,8 @@ class _EngagementRun:
         # di ogni intercettore (memoizzato per id).
         self.ad_target_rule = BI_AD_TARGET_RULE
         self.ad_domain_cache: Dict[str, str] = {}
-        # L1 rivista (2026-11-24): interruttore letto una volta per run e zone delle armi intercettrici per intercettore
-        # ((raggio, quota min, quota max) relativi; None = non modellate), memoizzate per id.
-        self.l1_immediate_target = L1_IMMEDIATE_TARGET_RULE
+        # Regola L1 (rivista il 2026-11-24): zone delle armi intercettrici per intercettore ((raggio, quota min, quota
+        # max) relativi; None = non modellate), memoizzate per id.
         self.envelope_cache: Dict[str, Optional[Tuple[Tuple[float, float, float], ...]]] = {}
         self.reaction_profile_for = reaction_profile_for or RP.profile_for_asset
         self.detection_factor = detection_factor
@@ -3707,30 +3688,9 @@ class _EngagementRun:
         except (AttributeError, TypeError, ValueError):
             return None
 
-    def _interception_zone(self, shadow: "_Shadow") -> Optional[Tuple[float, float, float]]:
-        """V_I dell'intercettore come (raggio, quota base, quota tetto) RELATIVI alla sua
-        posizione, da Mobile.air_defense_volume(); memoizzato. None = zona non modellata.
-        Usata solo con L1_IMMEDIATE_TARGET_RULE spento."""
-        if shadow.id not in self.zone_cache:
-            zone = None
-            volume_of = getattr(shadow.asset, 'air_defense_volume', None)
-            volume = volume_of() if callable(volume_of) else None
-            point = getattr(shadow.asset, 'position', None)
-
-            if volume is not None and type(volume).__name__ == 'Cylinder' and point is not None:
-                try:
-                    base = float(volume.center.z) - float(point.z)
-                    zone = (float(volume.radius), base, base + float(volume.height))
-                except (AttributeError, TypeError, ValueError):
-                    zone = None
-
-            self.zone_cache[shadow.id] = zone
-
-        return self.zone_cache[shadow.id]
-
     def _interceptor_envelopes(self, shadow: "_Shadow") -> Optional[Tuple[Tuple[float, float, float], ...]]:
         """Zone delle armi intercettrici dell'intercettore come ((raggio, quota base, quota tetto), ...) RELATIVE alla
-        sua posizione, da `Mobile.interceptor_envelopes()` (L1 rivista); memoizzato. None = non modellate: metodo
+        sua posizione, da `Mobile.interceptor_envelopes()` (regola L1); memoizzato. None = non modellate: metodo
         assente, None, tupla vuota o voci malformate (nessun ripiego su `air_defense_volume`)."""
         if shadow.id not in self.envelope_cache:
             zones = None
@@ -3763,60 +3723,34 @@ class _EngagementRun:
         return self._ad_domain(shadow) in salvo.spec.intercept_domains
 
     def _may_intercept(self, shadow: "_Shadow", salvo: Salvo) -> bool:
-        """Regola L1: True se l'intercettore puo' fermare i colpi della salva per la geometria del lancio.
+        """Regola L1 (rivista il 2026-11-24, Proposta_Revisione_L1_Lanciatore_Bersaglio.md): se il lanciatore spara da
+        dentro la zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve non si intercettano.
 
-        Con L1_IMMEDIATE_TARGET_RULE acceso (default dal 2026-11-25) la regola rivista del 2026-11-24
-        (`_may_intercept_revised`); spento la regola del 2026-09-28 (`_may_intercept_volume`: lancio fuori dal V_I).
-        Memoizzato per (intercettore, salva): ogni salva e' risolta una volta sola. Nessuna estrazione.
+        False solo se il punto di lancio (posizioni all'istante del lancio) e' nel cilindro di almeno un'arma
+        intercettrice (bordo = dentro) E il lanciatore e' un bersaglio immediato (`_immediate_target`). Senza zone per
+        arma o senza posizioni: True (dato mancante = non modellato; nessun ripiego sul V_I di `air_defense_volume`).
+        Memoizzato per (intercettore, salva): ogni salva e' risolta una volta sola. Nessuna estrazione. La regola del
+        2026-09-28 (lancio dentro il V_I = mai intercettato) e il suo interruttore sono stati eliminati
+        (Proposta_L1_Pulizia_Interruttore.md).
         """
         key = (shadow.id, salvo.salvo_id)
 
         if key not in self.may_intercept_cache:
-            self.may_intercept_cache[key] = (self._may_intercept_revised(shadow, salvo) if self.l1_immediate_target
-                                             else self._may_intercept_volume(shadow, salvo))
+            allowed = True
+            zones = self._interceptor_envelopes(shadow)
+            launch = self._position_at(self.shadows[salvo.shooter_id], salvo.t_launch)
+            here = self._position_at(shadow, salvo.t_launch)
+
+            if zones is not None and launch is not None and here is not None:
+                horizontal = ((launch[0] - here[0]) ** 2 + (launch[1] - here[1]) ** 2) ** 0.5
+                height = launch[2] - here[2]
+
+                if any(horizontal <= radius and bottom <= height <= top for radius, bottom, top in zones):
+                    allowed = not self._immediate_target(shadow, salvo)
+
+            self.may_intercept_cache[key] = allowed
 
         return self.may_intercept_cache[key]
-
-    def _may_intercept_volume(self, shadow: "_Shadow", salvo: Salvo) -> bool:
-        """Regola L1 del 2026-09-28 (L1_IMMEDIATE_TARGET_RULE spento): True se il punto di lancio della salva e' FUORI
-        dal V_I dell'intercettore.
-
-        Posizioni all'istante del lancio (l'intercettore puo' essere in moto, es. una nave).
-        Senza zona, o senza posizione del lanciatore o dell'intercettore, nessun vincolo
-        (dato mancante = non modellato, come per scorte e carburante).
-        """
-        allowed = True
-        zone = self._interception_zone(shadow)
-        launch = self._position_at(self.shadows[salvo.shooter_id], salvo.t_launch)
-        here = self._position_at(shadow, salvo.t_launch)
-
-        if zone is not None and launch is not None and here is not None:
-            radius, bottom, top = zone
-            horizontal = ((launch[0] - here[0]) ** 2 + (launch[1] - here[1]) ** 2) ** 0.5
-            height = launch[2] - here[2]
-            allowed = not (horizontal <= radius and bottom <= height <= top)
-
-        return allowed
-
-    def _may_intercept_revised(self, shadow: "_Shadow", salvo: Salvo) -> bool:
-        """L1 rivista (2026-11-24): lanciatore dentro la zona dell'arma e gia' colpibile = salve non intercettate.
-        False solo se il punto di lancio (posizioni all'istante del lancio) e' nel cilindro
-        di almeno un'arma intercettrice (bordo = dentro) E il lanciatore e' un bersaglio immediato
-        (`_immediate_target`). Senza zone per arma o senza posizioni: True (dato mancante = non modellato)."""
-        zones = self._interceptor_envelopes(shadow)
-        launch = self._position_at(self.shadows[salvo.shooter_id], salvo.t_launch)
-        here = self._position_at(shadow, salvo.t_launch)
-
-        if zones is None or launch is None or here is None:
-            return True
-
-        horizontal = ((launch[0] - here[0]) ** 2 + (launch[1] - here[1]) ** 2) ** 0.5
-        height = launch[2] - here[2]
-
-        if not any(horizontal <= radius and bottom <= height <= top for radius, bottom, top in zones):
-            return True
-
-        return not self._immediate_target(shadow, salvo)
 
     def _detection_time_of(self, observer_id: str, target_id: str, at: float) -> Optional[float]:
         """Istante in cui `observer_id` ha rilevato `target_id`, per la regola R-INT valutata all'istante `at` (il lancio);
@@ -3844,7 +3778,7 @@ class _EngagementRun:
         return _detection_time_in_pass(self.own_passes_of[key], self.detection_times_of.get(key, ()), at)
 
     def _immediate_target(self, shadow: "_Shadow", salvo: Salvo) -> bool:
-        """L1 rivista, condizione (2): il lanciatore della salva e' un bersaglio immediato dell'intercettore.
+        """Regola L1, condizione (2): il lanciatore della salva e' un bersaglio immediato dell'intercettore.
 
         Rilevato da lui all'istante del lancio (come il lancio osservato di R-INT: `_detection_time_of`, nel passaggio
         che contiene il lancio) E ingaggiabile: un suo candidato sul lanciatore, del passaggio del lancio
@@ -4002,15 +3936,13 @@ class _EngagementRun:
                 for interceptor_id, count in by_interceptor.items():
                     spent[interceptor_id] = spent.get(interceptor_id, 0) + count
 
-        # Allocazione PER SALVA (regola L1, 2026-09-28, Proposta_Regole_Allocazione_SAM.md §7):
-        # un colpo intercettabile e' fermato solo da un intercettore per cui il punto di lancio
-        # della salva e' FUORI dal proprio volume d'intercettazione V_I (Mobile.air_defense_volume) — con
-        # L1_IMMEDIATE_TARGET_RULE acceso solo se il lancio e' dentro la zona di una sua arma intercettrice E il
-        # lanciatore e' un suo bersaglio immediato (rilevato e a portata), v. `_may_intercept`:
-        # un lanciatore che ha sparato da dentro la zona e' un bersaglio, non si inseguono i suoi
+        # Allocazione PER SALVA (regola L1, 2026-09-28, Proposta_Regole_Allocazione_SAM.md §7; rivista il 2026-11-24,
+        # Proposta_Revisione_L1_Lanciatore_Bersaglio.md): un intercettore NON ferma i colpi di una salva se il lanciatore
+        # spara da dentro la zona di una sua arma intercettrice e lui puo' gia' colpirlo (rilevato al lancio e a portata
+        # di un'arma con scorta), v. `_may_intercept`: un lanciatore cosi' e' un bersaglio, non si inseguono i suoi
         # colpi. Salve nell'ordine (impatto, salva), intercettori nell'ordine della regola F, ogni
         # intercettore fino a min(canali, scorta) per evento. Senza vincoli geometrici (nessun
-        # dato di volume o di posizione) il risultato coincide con l'allocazione sul totale usata
+        # dato di zona o di posizione) il risultato coincide con l'allocazione sul totale usata
         # fino al 2026-09-28: stessi consumi per intercettore, stesse salve fermate.
         # La capacita' registrata e' la somma delle disponibilita' (stessa formula di
         # Military.salvo_interception_capacity, sugli intercettori del dominio).

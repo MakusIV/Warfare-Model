@@ -1143,7 +1143,7 @@ class Mobile(Asset) :
         stesso ordine (tipi d'arma del registro, poi voci); un modello ripetuto conta una volta (la prima). Raggio: per le
         navi `range` [km] x 1000, per i veicoli `range['direct']` [m] (le stesse letture di `air_defense_volume`);
         quote AGL relative all'asset, come la base del cilindro di `air_defense_volume`. Armi con raggio <= 0 escluse.
-        Usata dalla regola L1 rivista (Engagement_Resolver, interruttore L1_IMMEDIATE_TARGET_RULE): un lancio e'
+        Usata dalla regola L1 del risolutore (Engagement_Resolver._may_intercept): un lancio e'
         "dentro la zona dell'arma che intercetta" se e' nel cilindro di almeno una di queste armi. Non dipende dalla
         posizione. Dati di registro, nessuna stima nuova.
 
