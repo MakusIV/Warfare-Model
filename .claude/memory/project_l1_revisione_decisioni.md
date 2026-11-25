@@ -5,10 +5,18 @@ metadata:
   node_type: memory
   type: project
   originSessionId: db4537e6-f512-41af-b45f-1c8dabc15406
-  modified: 2026-11-24T17:42:49.508Z
+  modified: 2026-11-25T12:05:30.868Z
 ---
 
-## RIPRESA (fine sessione osboxes 2026-11-24, PROSSIMA SESSIONE SUL PROART) — Proposta L1 scritta, in attesa delle scelte dell'utente
+## RIPRESA (ProArt 2026-11-25) — blocchi 1-3 FATTI e VERIFICATI, committati su `ai/des-l1-revisione` (`a1559ad9`); blocco 4 (sonda) in corso
+
+**Fatto il 2026-11-25.** Rilettura della Proposta con agente Claude generico Opus high (il ruolo `des-reviewer` NON esiste in `.claude/agents/`): verdetto ESEGUIBILE CON CORREZIONI, nessun bloccante (`Rapporti/Revisione_L1_des-reviewer.md`). Utente: Q-L1-1 temporaneo, Q-L1-2 accendere dopo il rapporto del blocco 4, Q-L1-3 prima L1 poi BI; SD-1..SD-6 CONFERMATE; **scelta A** sul problema 1 (condizione (2) = SOLO portata e scorta via `_in_range_at`, nessun altro filtro di `_schedule_next`: niente `not_before`, `_is_deferred`, `activity_end`, a terra, `exhausted`). Proposta corretta da des-planner (1312 righe, `f34df409`, test blocco 2 = 15 con il nuovo BI acceso, suite attesa base + 32). Blocchi 1-3 eseguiti da `des-developer` (Sonnet high, 27 min): 7 file, nessuno scostamento; verificati da me: suite 5005 OK (skipped 7), confronto 1219 identiche, 0 CHANGED/NEW/MISSING, stash vuota, codice letto. Commit `a1559ad9` (branch `ai/des-l1-revisione`, NON mergiato, NON pushato).
+
+**Upgrade futuri annotati (Proposta §5.1, NON parte del piano):** UF-1 = variante B: aggiungere `_is_deferred` (ROE a tempo) alla condizione (2) in `_immediate_target`, dietro un interruttore proprio; UF-2 = tipo di guida del missile (nota SD-6 dell'utente: missili a guida radar con radar nell'asset lanciatore perdono la guida se il lanciatore e' messo fuori uso): `guidance` in `Ship_Weapon_Data`, `seeker` in `Aircraft_Weapon_Data`, nulla in `Ground_Weapon_Data`; ordine dottrina (PD-1/PD-2) -> dati -> motore.
+
+**Blocco 4 FATTO il 2026-11-25 (esito conforme all atteso: 6 CHANGED, 1213 identiche, 0 NEW; regola rivista 0 coppie escluse su 414; suite acceso: falliti solo test_switch_is_off_by_default e test_forward_tor S19-4; rapporto `Rapporti/L1_Esecuzioni_Cambiate.md` e script in `Rapporti/Sonde_L1_Revisione/`, NON committati; in attesa della decisione dell utente sull accensione, blocco 5).** Dettaglio originario: script estratti dalle Appendici A/B in `Analysis/Document/Rapporti/Sonde_L1_Revisione/` (`probe_l1.py`, `suite_l1_on.py`, non ancora committati); log in `.ai-run/l1_on*.log`, `.ai-run/l1_suite_on.log`. Atteso: 6 CHANGED (S16-3, S19-4/tor_forward_ifv_only, S35-ADTGT-0..3/naval_maverick_off), 1213 identiche, 0 NEW; suite con interruttore acceso: falliscono solo `test_switch_is_off_by_default` e i test di §4.5 punto 3. Poi: `Rapporti/L1_Esecuzioni_Cambiate.md`, decisione di accensione (SOLO l'utente), blocco 5, fotografia nuova (SOLO l'utente), manuale (des-manual-writer), blocco 6 da ripianificare; BI dopo L1. Le tre cartelle RAW in `Analysis/WIKI_LLM_SIMULATION/RAW/` restano non tracciate (da decidere).
+
+## (superata dalla sezione sopra) RIPRESA (fine sessione osboxes 2026-11-24, PROSSIMA SESSIONE SUL PROART) — Proposta L1 scritta, in attesa delle scelte dell'utente
 
 **Stato di fatto.** Decisioni di design a-e PRESE (sotto); sonda fatta; **Proposta SCRITTA** da des-planner (Opus high, 54 min, 457 mila token, 185 chiamate): `Analysis/Document/Proposta_Revisione_L1_Lanciatore_Bersaglio.md` (1198 righe; committata e pushata a fine sessione). **Letta da me solo la struttura e le sezioni 2-3**: codice, numeri di riga, catture e test dichiarati (provati dall'agente su un prototipo FUORI dal repo) NON sono ancora verificati da me. Nessun codice del progetto cambiato. Pendente dal 2026-11-08 ([[project-bi-blocco3-punti-aperti]]). Documento di stato `Analysis/Document/Stato_Progetto_DES.md` committato (`0c7263cd`, riga 3 = L1 in corso).
 
