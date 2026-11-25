@@ -1,10 +1,15 @@
 # Proposta: revisione della regola L1 del risolutore d'ingaggio (lanciatore bersaglio immediato, zona dell'arma che intercetta)
 
+**Cronologia.** 2026-11-24: scritta (`des-planner`). 2026-11-25: corretta dopo la rilettura
+(`Rapporti/Revisione_L1_des-reviewer.md`); scelta A su condizione (2); B e guida del missile annotati come upgrade
+(§5.1, UF-1 e UF-2).
+
 **Stato: PIANO ESEGUIBILE.** Scritta il 2026-11-24 da `des-planner` sulla VM osboxes, codice letto al commit `0c7263cd`
 (working tree con le sole modifiche di memoria, nessun file di codice modificato). Le decisioni di design sono
 dell'utente (2026-11-24, riportate sotto e **non** rimesse in discussione); il piano di §4 e' un contratto completo per
 l'esecutore (`des-developer` o `oc-developer`) per i blocchi 1-3; il blocco 4 (sonda) e' della sessione principale; il
-blocco 5 (accensione) e il blocco 6 (pulizia) si eseguono **solo** dopo una decisione esplicita dell'utente.
+blocco 5 (accensione) e il blocco 6 (pulizia) si eseguono **solo** dopo una decisione esplicita dell'utente; il blocco 6
+e' **da ripianificare** sul codice di allora (§4.6).
 
 **Convenzioni.** **[V]** = verificato leggendo il codice (`file:riga`, checkout `0c7263cd`) o eseguendolo; **[M]** =
 misurato con una sonda di sola lettura (§1.5); **[C]** = calcolo mostrato; **[I]** = ipotesi o conoscenza generale non
@@ -29,7 +34,7 @@ nella cartella temporanea della sessione: sostituiscono `_may_intercept` **in me
 | regola D | intercetta solo un'arma che dichiara il task `Anti_Missile` nel registro (`Mobile.INTERCEPTOR_TASK`, `Asset/Mobile.py:208`; selezione `interceptor_weapons_from_registry`, `:1059-1129`) |
 | regola F | ordine di consumo: dentro l'asset prima i cannoni poi i missili; fra asset prima quelli a soli cannoni, poi per id |
 | L1 | regola del 2026-09-28: un intercettore non ferma i colpi di una salva lanciata da **dentro** il suo V_I (`_may_intercept`, `Logic/Engagement_Resolver.py:3719-3742`) |
-| L2 | priorita' di bersaglio: un aereo che ha lanciato armi aria-superficie contro la forza del tiratore, gia' a portata, passa davanti agli altri bersagli (`_schedule_next`, `:2901-2903`) |
+| L2 | priorita' di bersaglio: un aereo che ha lanciato armi aria-superficie contro la forza del tiratore, gia' a portata, passa davanti agli altri bersagli (`_schedule_next`: commento `:2901-2903`, pool `priority` `:2904-2906` con `_in_range_at` a `:2906`, sui candidati gia' filtrati da `viable`, `:2860-2896`) |
 | L3 | prelazione: al primo lancio aria-superficie i tiratori che hanno il lanciatore a portata ridecidono dopo il proprio `refire_interval` (`_register_launcher`, `:3325-3375`) |
 | R-INT | regola del 2026-09-30: un intercettore ferma un colpo solo se ne ha una traccia e il tempo di reagire prima dell'impatto (`_in_time`, `:3824-3849`) |
 | BI | regola dei bersagli intercettabili per classe di munizione e dominio della difesa (`_admissible`, `:3711-3717`), interruttore `BI_AD_TARGET_RULE`, **spento** (`:625`) |
@@ -41,6 +46,7 @@ nella cartella temporanea della sessione: sostituiscono `_may_intercept` **in me
 | fire-and-forget | missile che dopo il lancio non ha bisogno del lanciatore per arrivare al bersaglio |
 | fotografia | `Test/baseline/scenario_baseline.json`: gli esiti registrati delle 1219 esecuzioni di scenario; la installa **solo l'utente** |
 | sonda | script di sola lettura che cambia una regola in memoria e rifa' la cattura, per misurare gli effetti |
+| UF-1, UF-2 | upgrade futuri annotati il 2026-11-25 (§5.1), **non** parte del piano: UF-1 = ROE a tempo (`_is_deferred`) nella condizione (2) (scelta B della rilettura); UF-2 = tipo di guida del missile e dipendenza dal lanciatore (nota SD-6 della rilettura) |
 
 ---
 
@@ -113,9 +119,14 @@ Rezky e della Molniya, 12 km, al posto dell'AK-630, 4 km).
 - **Rilevamento per asset, all'istante del lancio**: `_detection_time_of(observer, target, at)` (`:3744-3767`), usato da
   R-INT (`:3840-3842`: lancio osservato se `seen is not None and seen <= t_launch + TIME_EPS`). Nessuna estrazione.
 - **"Il tiratore puo' colpirlo adesso"**: `_in_range_at(shooter, index, candidate, t_fire)` (`:3301-3322`), usato da
-  L2 (`:2903`) e L3 (`:3367`): prima opzione della fire control con scorta (`_first_with_stock`, `:3404-3421`), ripiego
+  L2 (`:2906`) e L3 (`:3367`): prima opzione della fire control con scorta (`_first_with_stock`, `:3404-3421`), ripiego
   VA (`_altitude_deferral`, `:3508-3557`, attivo solo con VA acceso), controllo di portata (`_range_entry`,
-  `:3423-3465`). Richiede un **candidato** del tiratore sul lanciatore e il suo indice.
+  `:3423-3465`). Richiede un **candidato** del tiratore sul lanciatore e il suo indice. **Attenzione**: in L2
+  `_in_range_at` e' solo l'ultimo controllo; i candidati sono prima filtrati dal ciclo `viable` di `_schedule_next`
+  (`:2860-2896`): `exhausted` (`:2861`), bersaglio non `operative` o `_gone` (`:2866`), `t_fire` spostato a
+  `candidate.not_before` (`:2874-2875`) e oltre `t_end` (`:2877`), fine attivita' del tiratore (`:2881`), tiratore a
+  terra a `t_fire` (`:2885`), ROE dipendente dal tempo `_is_deferred` (`:2892`, metodo `:3141-3154`). La condizione (2)
+  della regola rivista riusa **solo** `_in_range_at` e il controllo su `t_end` (§2.1, SD-1).
 - I candidati nascono a ogni rilevamento riuscito (`_detect_direction`, `:2421-2428`; `_detect_passes`, `:2639-2646`),
   per **ogni** osservatore, con `t_ready = istante del rilevamento + total` e `t_end` = fine finestra o del passaggio.
 
@@ -151,14 +162,20 @@ nuove (le quote dei CIWS sono gia' dichiarate "STIMA B" nel registro, `Asset/Shi
 | USS Arleigh Burke IIa, CG-65 | 240; 15-33000 | SM-2ER 240; 25-33000 + ESSM 50; 15-15000 + Phalanx 1,5; 0-1500 | 240 |
 | Type 052C | 200; 25-27000 | HHQ-9 200; 25-27000 + Type-730 3; 0-3000 | 200 |
 | CG 1164 Moskva | 150; 25-27000 | S-300F 150 + AK-630 4; 0-3000 | 150 |
-| CGN 1144.2 Piotr Velikiy, CV 1143.5 Kuznetsov | 150; 10-27000 | S-300F 150 + SA-N-9 15 + AK-630 4 | 150 |
+| CGN 1144.2 Piotr Velikiy, CV 1143.5 Admiral Kuznetsov | 150; 10-27000 | S-300F 150 + SA-N-9 15 + AK-630 4 | 150 |
 | Type 054A | 70; 15-12000 | HHQ-16 70 + Type-730 3 | 70 |
-| CVN-70..75 | 50; 15-15000 | ESSM 50 + Sea Sparrow 19 + Phalanx 1,5 | 50 |
-| CV-59 Forrestal, LHA-1 Tarawa | 19; 15-6000 | Sea Sparrow 19 + Phalanx 1,5 | 19 |
+| CVN-70 Carl Vinson ... CVN-75 Harry S. Truman (sei voci) | 50; 15-15000 | ESSM 50 + Sea Sparrow 19 + Phalanx 1,5 | 50 |
+| CV-59 USS Forrestal, LHA-1 Tarawa | 19; 15-6000 | Sea Sparrow 19 + Phalanx 1,5 | 19 |
 | FFG 11540 Neustrashimy | 15; 10-6000 | SA-N-9 15 + AK-630 4 | 15 |
-| Type 052B, Type 071 | 13; 8-5000 | HHQ-7 13 + Type-730 3 | 13 |
+| Type 052B Guangzhou-class, Type 071 | 13; 8-5000 | HHQ-7 13 + Type-730 3 | 13 |
 | **FF 1135M Rezky, FFL 1124.4 Grisha, FSG 1241.1MP Molniya** | **12; 10-6000** (SA-N-4) | **AK-630 4; 0-3000** | **4** |
 | **FFG-46** | **74; 60-24000** (SM-1) | **Phalanx 1,5; 0-1500** | **1,5** |
+
+Nomi della colonna "Modello" = chiavi esatte dei registri (`'model'` di `Asset/Ship_Data.py` e `Asset/Vehicle_Data.py`,
+verificate il 2026-11-25); i nomi delle **armi** nelle colonne 2-3 sono **abbreviati** (es. SM-2ER = chiave
+`RIM-156-SM-2ER`, ESSM = `RIM-162-ESSM`, Phalanx = `Mk-15-Phalanx`): per controlli o test si leggono le chiavi dai
+record `weapons` del modello e da `Ship_Weapon_Data.SHIP_WEAPONS` / `Ground_Weapon_Data.GROUND_WEAPONS`, non da questa
+tabella.
 
 Per tutte le navi la fascia cambia (il CIWS scende a 0 m); con la zona **per arma** (SD-2) un punto conta "dentro" solo
 se e' nella fascia e nel raggio della **stessa** arma.
@@ -260,16 +277,36 @@ Le decisioni a, c, d, e fissano la regola. Restano tre scelte di realizzazione: 
 **C-pieno (raccomandata).** Lanciatore rilevato dall'intercettore all'istante del lancio (come R-INT:
 `_detection_time_of(intercettore, lanciatore, t_launch)` non None e `<= t_launch + TIME_EPS`) **e** almeno un candidato
 dell'intercettore sul lanciatore, del passaggio del lancio, per cui `_in_range_at` e' vero a
-`t_fire = max(candidate.t_ready, t_launch)`.
-- Pro: e' esattamente la decisione c = 2 (stessa condizione del pool prioritario di L2); riusa codice esistente senza
-  modificarlo; nessuna estrazione; ROE e arma designata della missione dell'intercettore entrano da sole (con
-  `only_designated` e un lanciatore non designato la fire control restituisce None: non e' un bersaglio immediato, i suoi
-  colpi si intercettano).
+`t_fire = max(candidate.t_ready, t_launch)` (entro `candidate.t_end`). Quali filtri di L2 si applicano e quali no:
+riquadro "Scelta dell'utente del 2026-11-25" qui sotto.
+- Pro: realizza la decisione c = 2 (rilevato e ingaggiabile per portata e scorta, con lo stesso controllo che L2 usa
+  per il pool prioritario); riusa codice esistente senza modificarlo; nessuna estrazione; la ROE e l'arma designata
+  della missione dell'intercettore entrano attraverso la fire control (`_fire_control` -> `apply_target_rules`,
+  `:3230-3243`: con `only_designated` e un lanciatore non designato la fire control restituisce None: non e' un
+  bersaglio immediato, i suoi colpi si intercettano); **non** entrano le ROE dipendenti dal tempo di `_is_deferred`
+  (UF-1).
 - Contro: piu' invasiva del ripiego (cerca il candidato per indice; chiama la fire control in fase di risoluzione);
-  valuta la scorta all'istante della risoluzione, non del lancio (§5, R-1).
+  valuta scorta e regole di bersaglio (designati distrutti, ostili noti) all'istante della risoluzione, non del lancio
+  (§5, R-1).
 - Fattibilita' [V]: i candidati sono gia' in `self.candidates[intercettore]` (lista), l'indice e' la posizione nella
   lista; `_in_range_at` non muta il candidato (docstring `:3304-3306`, ramo VA `:3312`). Nessuna struttura nuova oltre a
   una cache.
+
+**Scelta dell'utente del 2026-11-25 (opzione A della rilettura): la condizione (2) usa SOLO portata e scorta.** Oltre al
+rilevamento, conta solo `_in_range_at` sul candidato del passaggio del lancio, con `t_fire = max(candidate.t_ready,
+t_launch)` e `t_fire <= candidate.t_end + TIME_EPS`. **Non** si applicano gli altri filtri del ciclo `viable` di
+`_schedule_next` (`:2860-2896`):
+- `candidate.not_before` (`:2874-2875`; ingresso in portata o rinvio VA: la portata a `t_fire` e' gia' ricontrollata da
+  `_in_range_at`);
+- `_is_deferred`, cioe' le ROE dipendenti dal tempo (`:2892`; aggiungerlo e' l'upgrade futuro UF-1, §5.1);
+- fine attivita' del tiratore (`activity_end`, `:2881`);
+- intercettore a terra a `t_fire` (`self.grounded`, `:2885`);
+- `candidate.exhausted` (`:2861`) e lo stato del bersaglio del candidato, cioe' del lanciatore (`operative`, `_gone`,
+  `:2866`; v. SD-6).
+
+Quindi la condizione (2) **non** e' "la stessa condizione del pool prioritario di L2": L2 filtra prima i candidati
+in `_schedule_next` (`:2860-2896`) e poi applica `_in_range_at` (`:2906`); L1 rivista riusa **solo** il controllo di
+portata e scorta `_in_range_at` (con il controllo su `t_end`), cioe' l'ultimo passo del pool prioritario.
 
 **C-ripiego.** Solo "rilevato all'istante del lancio" (come R-INT per il lancio osservato).
 - Pro: una riga, nessuna chiamata alla fire control.
@@ -316,12 +353,12 @@ veicoli). Scartata.
 
 | Sigla | Scelta | Motivo |
 |---|---|---|
-| SD-1 | C-pieno (§2.1) con `t_fire = max(candidate.t_ready, t_launch)` e candidato del passaggio del lancio: `candidate.t_ready <= seen + total + TIME_EPS` e `t_fire <= candidate.t_end + TIME_EPS`; **non** si guarda `candidate.exhausted` | "Ingaggiabile" e' la condizione di L2 all'istante utile piu' vicino al lancio; il flag `exhausted` riflette decisioni del tiratore prese dopo il lancio (es. finestra superata quando ridecide), mentre portata e scorta sono ricontrollate da `_in_range_at`. Con `t_fire = t_launch + refire_interval` (forma di L3) la sonda da' lo stesso esito sulle esecuzioni fotografate (0 coppie diverse): la scelta non e' misurabile oggi, si preferisce la forma di L2 perche' la decisione c = 2 cita L2 |
+| SD-1 | C-pieno (§2.1) con `t_fire = max(candidate.t_ready, t_launch)` e candidato del passaggio del lancio: `candidate.t_ready <= seen + total + TIME_EPS` e `t_fire <= candidate.t_end + TIME_EPS`, poi `_in_range_at`. **Solo portata e scorta** (scelta A dell'utente, 2026-11-25): **non** si applicano `candidate.not_before`, `_is_deferred` (ROE a tempo; upgrade UF-1, §5.1), fine attivita' (`activity_end`), intercettore a terra (`grounded`), `candidate.exhausted`, `operative`/`_gone` del lanciatore. Il filtro su `t_ready` lascia passare anche candidati di passaggi **precedenti** del lancio; li esclude poi il controllo su `t_end` (un passaggio precedente finisce prima di `t_launch`) | "Ingaggiabile" e' il controllo di portata e scorta che L2 applica al pool prioritario (`_in_range_at`, `:2906`), all'istante utile piu' vicino al lancio, senza i filtri di `_schedule_next` che lo precedono (`:2860-2896`); il flag `exhausted` riflette decisioni del tiratore prese dopo il lancio (es. finestra superata quando ridecide), mentre portata e scorta sono ricontrollate da `_in_range_at`. Con `t_fire = t_launch + refire_interval` (forma di L3) la sonda da' lo stesso esito sulle esecuzioni fotografate (0 coppie diverse): la scelta non e' misurabile oggi, si preferisce la forma di L2 perche' la decisione c = 2 cita L2 |
 | SD-2 | Z-unione (§2.2) | fedele a "la zona dell'arma", nessuna costante, Burke invariato |
 | SD-3 | M-Mobile (§2.3) | una sola selezione delle armi intercettrici, core indipendente dall'adapter |
 | SD-4 | Senza `interceptor_envelopes` (stub, oggetti non `Mobile`) o con risultato None: **nessun vincolo** L1 (si intercetta, salvo R-INT, canali, scorta, BI); **nessun** ripiego su `air_defense_volume` | "dato mancante = non modellato", come L1 di oggi senza V_I (`:3723-3724`); ripiegare sul V_I reintrodurrebbe la zona di armi che non intercettano |
 | SD-5 | Un solo interruttore per le due condizioni (zona per arma e bersaglio immediato) | la regola dell'utente e' unica; le varianti parziali sono misurate dalla sonda (`zoneonly`, `oldzone_full`) senza bisogno di interruttori nel motore |
-| SD-6 | Lo stato del lanciatore **dopo** il lancio (abbattuto, a terra, forza rotta) non entra nella condizione (2) | la regola descrive la scelta del difensore al lancio; il caso "lanciatore abbattuto, missile ancora in volo" e' il punto di dottrina aperto PD-1 (§5) |
+| SD-6 | Lo stato del lanciatore **dopo** il lancio (abbattuto, a terra, forza rotta) non entra nella condizione (2) | la regola descrive la scelta del difensore al lancio; il caso "lanciatore abbattuto, missile ancora in volo" e' il punto di dottrina aperto PD-1 (§5); il tipo di guida del missile come criterio e' l'upgrade futuro UF-2 (§5.1) |
 
 ### 2.5 Interruttore e criterio di permanenza
 
@@ -372,7 +409,12 @@ da ~9 km), in una Proposta separata. Pro: copertura di scenario della regola. Co
 geometria da cercare con una sonda. *Raccomandazione*: **(A)** ora; (B) solo se l'utente vuole la copertura prima di
 accendere.
 
-Punti di **dottrina** aperti (non da decidere qui): PD-1 e PD-2 in §5.
+Punti di **dottrina** aperti (non da decidere qui): PD-1 e PD-2 in §5. Upgrade futuri annotati il 2026-11-25 (non da
+decidere ora, da riconsiderare con PD-1/PD-2): UF-1 (ROE a tempo nella condizione (2)) e UF-2 (guida del missile) in
+§5.1.
+
+Decisione presa il 2026-11-25 dopo la rilettura: condizione (2) = **solo portata e scorta** (opzione A; §2.1, SD-1,
+§4.2 punto 5); l'opzione B (con `_is_deferred`) e' l'upgrade UF-1.
 
 ---
 
@@ -389,7 +431,7 @@ osboxes `python3`; sul ProArt `.direnv/python-3.12/bin/python3`). Comandi dalla 
 | 3 | esecutore | test di scenario con l'interruttore acceso (fuori dalla fotografia), docstring; rapporto | **suite e confronto completi** |
 | 4 | sessione principale | sonda con l'interruttore vero acceso in memoria; rapporto delle esecuzioni cambiate e dei test che falliscono | sola lettura |
 | 5 | esecutore, **solo dopo la decisione dell'utente** | accensione: default `True`, test adeguati | suite e confronto completi |
-| 6 | esecutore, **solo dopo la fotografia nuova e Q-L1-1 = A** | eliminazione dell'interruttore e della regola di oggi | suite e confronto completi |
+| 6 | esecutore, **solo dopo la fotografia nuova e Q-L1-1 = A**; **da ripianificare** (§4.6) | eliminazione dell'interruttore e della regola di oggi | suite e confronto completi |
 
 ### 4.1 Blocco 1 — Zona per arma in `Asset/Mobile.py` (nessun cambio di comportamento)
 
@@ -406,9 +448,12 @@ osboxes `python3`; sul ProArt `.direnv/python-3.12/bin/python3`). Comandi dalla 
                or INTERCEPTOR_TASK not in (wdata.get('task') or ())):
            return False
 
-       return float(wdata.get('max_altitude', 0)) > 0.0
+       return not float(wdata.get('max_altitude', 0)) <= 0.0
    ```
-   (`GROUND_WEAPON_TASK` e' gia' importato a livello di modulo, `:13-20`.)
+   (`GROUND_WEAPON_TASK` e' gia' importato a livello di modulo, `:13-21`.) L'ultima riga e' la forma **letterale**
+   del controllo di oggi `if float(wdata.get('max_altitude', 0)) <= 0.0: continue` (`:1119-1120`), negata: **non**
+   scriverla come `> 0.0`, che differisce per `NaN` (oggi un'arma con quota massima `NaN` resta capace, perche'
+   `NaN <= 0.0` e' falso; con `> 0.0` uscirebbe). Cosi' "comportamento identico" vale anche per quel caso.
 
 2. **`interceptor_weapons_from_registry`** (`:1059-1129`): le righe `:1112-1120` (commento del filtro su due righe, `if`
    composto, `continue`, riga vuota, controllo `max_altitude <= 0.0`, `continue`) diventano
@@ -420,7 +465,8 @@ osboxes `python3`; sul ProArt `.direnv/python-3.12/bin/python3`). Comandi dalla 
                        continue
    ```
    seguite dalla riga `result[valid[0]] = weapon_type in INTERCEPTOR_GUN_WEAPON_TYPES` invariata. Comportamento
-   identico (stesse condizioni, stesso ordine; `wdata` None e' gia' gestito dalla funzione).
+   identico (stesse condizioni, stesso ordine, stessa forma del confronto sulla quota massima, anche per `NaN`; `wdata`
+   None e' gia' gestito dalla funzione).
 
 3. **Nuovo metodo** subito dopo `interceptor_weapons_from_registry` (prima di `interceptor_capability`, `:1131`):
 
@@ -454,7 +500,7 @@ osboxes `python3`; sul ProArt `.direnv/python-3.12/bin/python3`). Comandi dalla 
 4. Nient'altro cambia in `Mobile` (`air_defense_volume`, `interceptor_capability`, scorte, `Military`).
 
 **Test del blocco 1** — `Test/Test_Mobile.py`:
-- aggiungere `'interceptor_envelopes'` a `_STORES_MEMBERS` (`:1484-1491`), cosi' `_InterceptorStub` lo porta;
+- aggiungere `'interceptor_envelopes'` a `_STORES_MEMBERS` (`:1481-1491`), cosi' `_InterceptorStub` lo porta;
 - nuova classe `TestInterceptorEnvelopes(unittest.TestCase)` subito dopo `TestInterceptorStockFromRegistry`
   (`:1903-2057`), con **lo stesso** `setUp`/`tearDown` (registri finti `_FAKE_GW`, logger mockato):
 
@@ -493,7 +539,9 @@ degli intercettori e' coperta da `Test_Mobile.TestInterceptorStockFromRegistry` 
    #   * `L1_IMMEDIATE_TARGET_RULE` (SPENTO). Acceso: un intercettore NON ferma i colpi di una salva solo se (1) il punto di
    #     lancio e' dentro la zona di almeno una sua arma intercettrice (`Mobile.interceptor_envelopes`: raggio e fascia
    #     di quota della stessa arma; bordo = dentro) E (2) il lanciatore e' un suo bersaglio immediato: rilevato da lui
-   #     all'istante del lancio (come R-INT) e ingaggiabile con un'arma con scorta e a portata (`_in_range_at`, come L2).
+   #     all'istante del lancio (come R-INT) e ingaggiabile con un'arma con scorta e a portata (solo `_in_range_at`, il
+   #     controllo di portata del pool prioritario di L2, senza gli altri filtri di `_schedule_next`: niente ROE a
+   #     tempo `_is_deferred`, `not_before`, fine attivita', intercettore a terra, `exhausted`).
    #     Senza zone per arma (dato mancante) nessun vincolo. Spento: la regola del 2026-09-28 (V_I di
    #     `Mobile.air_defense_volume`, nessuna condizione sul lanciatore). Letto all'inizio di ogni run. Nessuna
    #     estrazione in piu' ne' in ordine diverso in nessuno dei due stati; nessuna costante nuova.
@@ -543,10 +591,13 @@ degli intercettori e' coperta da `Test_Mobile.TestInterceptorStockFromRegistry` 
 
            Rilevato da lui all'istante del lancio (come il lancio osservato di R-INT: `_detection_time_of`, nel passaggio
            che contiene il lancio) E ingaggiabile: un suo candidato sul lanciatore, del passaggio del lancio
-           (`t_ready <= rilevamento + total`), con `t_fire = max(t_ready, t_launch)` entro la fine del candidato, per cui
-           `_in_range_at` e' vero (prima opzione della fire control con scorta, portata; la stessa condizione del pool
-           prioritario di L2). Il flag `exhausted` non conta (riflette decisioni prese dopo il lancio). Scorta allo stato
-           della risoluzione. Deterministico, nessuna estrazione; non muta i candidati.
+           (`t_ready <= rilevamento + total`; i candidati di passaggi precedenti passano questo filtro ma sono esclusi da
+           `t_end`, che cade prima del lancio), con `t_fire = max(t_ready, t_launch)` entro la fine del candidato, per cui
+           `_in_range_at` e' vero (prima opzione della fire control con scorta, portata: il controllo che L2 applica al
+           pool prioritario). SOLO portata e scorta: NON si applicano gli altri filtri di `_schedule_next` (`not_before`,
+           ROE a tempo `_is_deferred`, fine attivita', intercettore a terra, `exhausted`, stato del lanciatore).
+           Scorta e regole di bersaglio allo stato della risoluzione. Deterministico, nessuna estrazione; non muta i
+           candidati.
            """
            seen = self._detection_time_of(shadow.id, salvo.shooter_id, salvo.t_launch)
 
@@ -569,6 +620,17 @@ degli intercettori e' coperta da `Test_Mobile.TestInterceptorStockFromRegistry` 
 
            return False
    ```
+
+   **Elenco vincolante (scelta A dell'utente, 2026-11-25).** Il corpo di `_immediate_target` contiene **solo** i
+   controlli scritti sopra: rilevamento (`_detection_time_of`), bersaglio del candidato, `t_ready <= latest_ready`,
+   `t_fire <= t_end + TIME_EPS`, `_in_range_at`. L'esecutore **non** aggiunge: `candidate.not_before` (`:2874-2875`),
+   `self._is_deferred(...)` (`:2892`; e' l'upgrade UF-1, §5.1), `activity_end` / `_activity_end_time` (`:2881`),
+   `self.grounded.at(shadow.id, t_fire)` (`:2885`), `candidate.exhausted` (`:2861`), `operative` / `_gone` del
+   lanciatore (`:2866`). Sul filtro `t_ready`: `latest_ready = seen + total + TIME_EPS` lascia passare anche i candidati
+   dei passaggi **precedenti** a quello del lancio; li esclude il controllo `t_fire > candidate.t_end + TIME_EPS`, perche'
+   un passaggio precedente finisce prima di `t_launch` e `t_fire >= t_launch`. Nel ripiego senza tratti (coppia assente
+   da `own_passes_of`) `_detection_time_of` restituisce l'**ultimo** rilevamento (`:3757-3758`) e tutti i candidati
+   precedenti passano il filtro su `t_ready`: anche qui decide `t_end` (fine della finestra del candidato).
 
 6. **`_may_intercept`** (`:3719-3742`): il corpo di oggi diventa il metodo privato `_may_intercept_volume(self, shadow,
    salvo) -> bool` **senza** la cache (stesse righe `:3729-3738`, stesso ordine delle chiamate, `return allowed`), e
@@ -619,8 +681,8 @@ degli intercettori e' coperta da `Test_Mobile.TestInterceptorStockFromRegistry` 
    - docstring del modulo, punto 4 (`:44-52`): dopo "...i suoi colpi non si intercettano." aggiungere "Con
      `L1_IMMEDIATE_TARGET_RULE` acceso (SPENTO di default, Proposta_Revisione_L1_Lanciatore_Bersaglio.md) la zona e'
      quella delle armi intercettrici (`Mobile.interceptor_envelopes`) e l'esclusione vale solo se il lanciatore e' un
-     bersaglio immediato dell'intercettore (rilevato all'istante del lancio e a portata di un'arma con scorta, come L2);
-     nessuna estrazione."
+     bersaglio immediato dell'intercettore (rilevato all'istante del lancio e a portata di un'arma con scorta, con il
+     controllo `_in_range_at` del pool prioritario di L2; nessun altro filtro di `_schedule_next`); nessuna estrazione."
 
 **Ordine delle estrazioni RNG**: invariato per costruzione. `_may_intercept_revised`, `_interceptor_envelopes`,
 `_immediate_target`, `_detection_time_of`, `_in_range_at` non chiamano `_draw` ne' `rng`/`pass_rng`/`breakpoint_rng`
@@ -702,11 +764,19 @@ l'intercettore spara anche a b1, quindi ci sono risoluzioni della forza `blue`).
 | 12 | `test_rule_draws_nothing_from_the_rng` | x = 8000, `observers=()`, `rng` passato esplicitamente (due istanze): acceso intercetta, spento no | le liste `[(d.observer_id, d.target_id, d.draw) for d in result.detections]` sono uguali nei due stati; le estrazioni in piu' dello stato spento sono solo quelle di danno: `rng_off.calls - rng_on.calls == 3` (tre colpi in meno arrivano al danno da acceso) |
 | 13 | `test_rule_is_per_interceptor` | `interceptors=[_ArmedInterceptor('r2', (0.0, 0.0, 0.0), ZONES), _ArmedInterceptor('r3', (0.0, 300.0, 0.0), ZONES)]`, `observers=('r2',)` (r3 non rileva b1); x = 8000 | acceso: `intercepted == 3`, `interceptions_consumed() == {'r3': 3}` (r2 escluso, r3 no: Q1 resta per intercettore) |
 | 14 | `test_non_interceptable_rounds_are_unaffected` | x = 15_000, `spec=_miss(rounds=5, interceptable=False)` | acceso: `intercepted == 0`, nessun `InterceptionEvent` |
+| 15 | `test_bi_admitted_round_then_the_revised_l1_applies` | BI **acceso** e colpo ammesso: ogni chiamata a `self._run(...)` dentro `with patch.object(ER, 'BI_AD_TARGET_RULE', True):` (BI e' letto all'inizio della run, `:2058`, quindi il `patch` esterno basta); x = 8000; `spec=_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF, intercept_domains=frozenset({'land'}))` (lo stub e' un intercettore terrestre, come `_ZonedInterceptor` in `TestAirDefenceTargetRule`, `:4783`); due casi con `subTest`: rilevato (`observers` di default) e non rilevato (`observers=()`) | L1 accesa: rilevato -> `intercepted == 0` (BI ammette il colpo, poi la L1 rivista lo esclude: bersaglio immediato dentro la zona); non rilevato -> `intercepted == 3`, `interceptions_consumed() == {'r2': 3}`. Fissa l'ordine BI -> L1 rivista con un colpo **ammesso** (lo scenario S35 (B) n. 3 copre solo il colpo non ammesso) |
 
 Gli attesi dei test 2-14 sono stati **provati** fuori dal repository con un prototipo che realizza §4.2 punti 4-6 alla
 lettera e lo stub `_ArmedInterceptor` (script
 `/tmp/claude-1000/-home-marco-Sviluppo-Warfare-Model/db4537e6-f512-41af-b45f-1c8dabc15406/scratchpad/l1rev/verifica_test_unitari.py`):
-tutti come in tabella (test 11: 5 estrazioni in entrambi gli stati; test 12: 3 estrazioni di differenza) [M].
+tutti come in tabella (test 11: 5 estrazioni in entrambi gli stati; test 12: 3 estrazioni di differenza) [M]. Il test 15
+e' stato aggiunto il 2026-11-25 dopo la rilettura e **non** e' stato provato col prototipo: gli attesi derivano dalla
+regola (BI ammette `land` per un intercettore terrestre, poi si comporta come i test 2 e 3). Se l'esito differisce,
+l'esecutore **si ferma** e riferisce.
+
+Test facoltativi suggeriti dalla rilettura e **non inclusi** in questo piano (decisione dell'utente del 2026-11-25): due
+passaggi dell'intercettore sul lanciatore con rilevamento solo nel primo e lancio nel secondo (FP-5 (d)); intercettore
+di un'altra forza dello stesso dominio (difesa di dominio, `_on_resolve`, `:3872-3880`).
 
 Per il test 12 l'esecutore passa due istanze di `_ScriptedRng([0.0] * 40)` (`rng=`) e legge `.calls`; se la differenza misurata non e' 3, **si
 ferma** e riferisce (indicherebbe un'estrazione nella regola).
@@ -720,7 +790,7 @@ con `patch(_ER_LOGGER)` (`:46`).
 <python> -m unittest Code.Dynamic_War_Manager.Source.Test.Test_Mobile
 <python> -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare Code/Dynamic_War_Manager/Source/Test/baseline/scenario_baseline.json --only '^(S6|S11|S16|S19AD|S35-ADTGT)/' --quiet --summary
 ```
-Atteso: OK (14 test nuovi in `Test_Engagement_Resolver`); confronto parziale IDENTICAL.
+Atteso: OK (15 test nuovi in `Test_Engagement_Resolver`); confronto parziale IDENTICAL.
 
 ### 4.3 Blocco 3 — Test di scenario con l'interruttore acceso (fuori dalla fotografia) e verifiche complete
 
@@ -877,7 +947,7 @@ L1_IMMEDIATE_TARGET_RULE acceso la zona della Rezky e' quella dell'AK-630 (4 km)
 bash tools/ai/verifica.sh suite start      # poi: bash tools/ai/verifica.sh suite wait  (ripetere fino a ESITO)
 bash tools/ai/verifica.sh confronto start  # SOLO dopo l'ESITO della suite; poi: confronto wait
 ```
-Atteso: suite `OK` con `Ran` = base + 8 (blocco 1) + 14 (blocco 2) + 9 (blocco 3) — la base si legge
+Atteso: suite `OK` con `Ran` = base + 32 = base + 8 (blocco 1) + 15 (blocco 2) + 9 (blocco 3) — la base si legge
 dall'ESITO di una suite sul commit di partenza (al 2026-11-20 era `Ran 4973`), non da qui; confronto **1219 IDENTICHE,
 0 CHANGED, 0 NEW, 0 MISSING** (interruttore spento).
 
@@ -940,7 +1010,9 @@ Si elimina la regola di oggi: `L1_IMMEDIATE_TARGET_RULE` e `self.l1_immediate_ta
 tetto n. 9, dato mancante n. 10, colpi non intercettabili n. 14, fuori zona n. 11);
 i test che fissavano lo stato (`patch.object(..., False/True)`) perdono il `patch`; i test di §4.5 punto 3 restano.
 Atteso: suite OK, confronto con la fotografia nuova **IDENTICO**. Piano di dettaglio da riscrivere al momento (riga
-per riga sul codice di allora), come per la pulizia FP.
+per riga sul codice di allora), come per la pulizia FP. **Il blocco 6 resta "da ripianificare"**: questa sezione ne
+fissa solo il contenuto, non e' un contratto eseguibile oggi; prima di eseguirlo serve una Proposta nuova (o
+un'integrazione di questa) scritta sul codice di allora.
 
 ### 4.6bis Vincoli per l'esecutore (tutti i blocchi)
 
@@ -1030,7 +1102,8 @@ Dopo il blocco 3 (interruttore spento) e di nuovo dopo il blocco 5:
     e' ora letto anche da L1 (stessa funzione, `_detection_time_of`); tabella iniziale (`:59`) e §4.5 (`:305`, `:314`);
   - `10_Limiti_Estensioni_Divergenze.md` §9.1: "Limiti introdotti dalle estensioni del 2026-09-28/30" (`:299`), "Bersagli
     intercettabili" (`:316`, `:364-367`: "S35 dipende da L1 ... se L1 cambia", da riscrivere con §4.7), i limiti nuovi di
-    §5 (R-1..R-5); §9.3 punti di estensione (C2: bersaglio immediato per dominio invece che per asset); tabella di stato
+    §5 (R-1..R-5); §9.3 punti di estensione (C2: bersaglio immediato per dominio invece che per asset; UF-1 e UF-2 di
+    §5.1); tabella di stato
     (`:860`, `:890`); §9.6 solo se il manual-writer trova divergenze nuove;
   - `08_Supporto_Trasversale.md:287` (riferimento a L1).
 - Commenti nel codice: quelli di §4.2 punto 7 (gia' nel blocco 2).
@@ -1039,10 +1112,14 @@ Dopo il blocco 3 (interruttore spento) e di nuovo dopo il blocco 5:
 
 ## 5. Rischi e limiti
 
-- **R-1 — Scorta allo stato della risoluzione.** La condizione (2) guarda la scorta dell'arma con cui l'intercettore
-  colpirebbe il lanciatore quando la salva si risolve (dopo `salvo_window` e il tempo di volo), non al lancio. Un
-  intercettore che nel frattempo ha finito i missili sul lanciatore intercetta i colpi rimasti. Coerente con canali e
-  scorta di intercettazione, gia' letti alla risoluzione (`:3906-3911`).
+- **R-1 — Scorta e regole di bersaglio allo stato della risoluzione.** La condizione (2) guarda la scorta dell'arma con
+  cui l'intercettore colpirebbe il lanciatore quando la salva si risolve (dopo `salvo_window` e il tempo di volo), non
+  al lancio. Un intercettore che nel frattempo ha finito i missili sul lanciatore intercetta i colpi rimasti. Allo
+  stesso stato della risoluzione sono letti anche gli altri dati che la fire control consulta tramite le regole di
+  bersaglio di missione: i bersagli designati distrutti (`_designated_destroyed`, `:3119-3130`, tramite `_attack_over`
+  in `_fire_control`, `:3240-3243`) e gli ostili noti del dominio (`hostile_by_domain`, letti da `_is_hostile`,
+  `:3086-3090`), che possono essere cambiati fra il lancio e la risoluzione. Deterministico, nessuna estrazione.
+  Coerente con canali e scorta di intercettazione, gia' letti alla risoluzione (`:3906-3911`).
 - **R-2 — Rilevamento per asset, non per dominio.** Come R-INT: il lanciatore visto da un'altra unita' dello stesso
   dominio non rende la salva "esclusa" per un intercettore che non lo vede (nessun quadro condiviso fino alla Fase 0
   C2). E' la decisione c = 2 (per asset).
@@ -1067,9 +1144,46 @@ Dopo il blocco 3 (interruttore spento) e di nuovo dopo il blocco 5:
   separata se lo chiede.
 - **PD-2 (dottrina, aperto) — Lanciatore abbattuto prima della risoluzione.** Con SD-6 lo stato del lanciatore dopo il
   lancio non conta: se il Tor abbatte l'A-10C prima che i Maverick arrivino, i Maverick restano esclusi per il Tor.
-  Lega con PD-1.
+  Lega con PD-1 e con l'upgrade UF-2 (§5.1).
 - **R-6 — Copie di righe nel manuale** gia' disallineate (`:3019-3042` contro `:3719-3742`): il blocco del manuale le
   riallinea; il piano usa le righe del commit `0c7263cd`.
+
+### 5.1 Upgrade futuri (annotati il 2026-11-25, NON parte del piano)
+
+Due varianti emerse dalla rilettura (`Rapporti/Revisione_L1_des-reviewer.md`). Nessuna implementazione ora: l'esecutore
+dei blocchi 1-5 **non** le realizza. Da riconsiderare insieme a PD-1 e PD-2.
+
+**UF-1 — ROE a tempo nella condizione (2) (variante B della rilettura, problema n. 1).** Aggiungere `_is_deferred`
+(`:3141-3154`, regole di bersaglio che dipendono dal tempo: `return_fire`, `priority_designated`) alla condizione (2):
+un lanciatore che la ROE vieta al difensore di colpire in quel momento **non** e' un bersaglio immediato, e i suoi colpi
+restano intercettabili.
+- Pro: piu' fedele a L2, che scarta i candidati rimandati prima del pool prioritario (`:2892`).
+- Contro: un ramo e almeno un test unitario in piu' (stub con `target_rules` e ROE a tempo); oggi nessuna esecuzione
+  della fotografia lo esercita, quindi l'effetto non e' misurabile.
+- Aggancio: solo in `_immediate_target`, dopo il calcolo di `t_fire` e prima di `_in_range_at`, con una riga della forma
+  `if self.target_rules and self._is_deferred(shadow, self.shadows[salvo.shooter_id], t_fire): continue`; nient'altro
+  cambia (stessa forma di `_schedule_next`, `:2892`). Nessuna estrazione. Se adottata dopo l'accensione, va dietro un
+  interruttore proprio spento (regola di progetto).
+
+**UF-2 — Tipo di guida del missile e dipendenza dal lanciatore (nota SD-6 della rilettura, §4).** Oggi tutti i colpi
+sono trattati come autonomi dopo il lancio (payload congelato al lancio, danno all'impatto senza guardare il
+lanciatore). Per le armi la cui guida dipende ancora dal lanciatore, mettere fuori uso il lanciatore potrebbe far
+perdere la guida al colpo.
+- Dati gia' presenti [V 2026-11-25]: campo `'guidance'` sulle voci missilistiche di `Asset/Ship_Weapon_Data.py` (25
+  occorrenze, es. `'Active_Radar'`, `'Semi_Active_Radar'`, `:1053`, `:1069`); campo `"seeker"` in
+  `Asset/Aircraft_Weapon_Data.py` (es. `"radar"`, letto a `:524-526`), che descrive il sensore terminale ma non dice in
+  modo esplicito se il colpo dipende dal lanciatore; **nulla** in `Asset/Ground_Weapon_Data.py`. Nessun registro ha un
+  campo diretto "dipende dal lanciatore": andrebbe derivato con una tabella di corrispondenza dichiarata come scelta
+  di progetto [S] o aggiunto come campo nuovo, con fonte o stima dichiarata.
+- Aggancio: un campo opzionale in coda alla `ShotSpec` (default None = "ignoto = autonomo", il comportamento di oggi),
+  riempito da chi conosce l'arma (`Logic/Fire_Control.shot_spec_for`, `:824`), come `intercept_domains` della BI; la
+  regola nel risolutore dietro un interruttore nuovo **spento** di default.
+- Ordine consigliato: dottrina (PD-1/PD-2, Proposta separata con esempi) -> dati di guida nei registri -> regola nel
+  motore.
+- Legame con PD-1/PD-2: per un colpo dipendente dal lanciatore, abbattere il lanciatore ferma anche la salva in volo
+  (PD-2 si risolve da solo e l'esclusione L1 e' coerente); per un colpo autonomo protegge solo dalla salva successiva
+  (PD-1: intercettare comunque con la capacita' che avanza torna un'alternativa ragionevole). Un upgrade potrebbe
+  rendere l'esclusione L1 condizionata anche alla guida. Dettaglio nella rilettura, §4.
 
 ---
 
