@@ -60,6 +60,17 @@ meccanismi, descritti nelle sezioni nuove §4.21-4.26 e integrati nelle sezioni 
 | Dottrina di tiro contro l'overkill (saturazione, "due missili, poi guarda") | `22cbe91e` | §4.25 |
 | Intercettazione con traccia del colpo e tempo di reazione (regola R-INT) | `a500fdf3` | §4.26 |
 
+**Regola L1 rivista (2026-11-24/25; aggiunta il 2026-11-25).** La riga «regole L1/L2/L3» di questa tabella descrive la
+regola L1 **del 2026-09-28** (colpo intercettabile solo da fuori dal volume d'intercettazione V_I). Dal 2026-11-25
+(decisione dell'utente) il motore applica la regola rivista, dietro l'interruttore temporaneo
+`L1_IMMEDIATE_TARGET_RULE`, ora **acceso** (blocchi 1-3 a `a1559ad9`, interruttore spento; accensione a `3bd4058b`):
+**«Se il lanciatore spara da dentro la zona dell'arma e l'intercettore può già colpirlo, è un bersaglio: le sue salve non
+si intercettano.»** Il testo completo, con le righe di codice, è in §4.24 «Regola L1»; l'effetto sulla fotografia
+(6 esecuzioni cambiate, nessuna esclusione esercitata) in §4.24 e nel capitolo 9 (§9.1, «Regola L1 rivista»). I numeri di
+riga di questo capitolo che riguardano L1 sono riverificati sul working tree del branch `ai/des-l1-revisione` dopo
+`3bd4058b` (con alcuni ritocchi di soli commenti in `Engagement_Resolver.py` non ancora committati: le righe possono
+slittare di poco).
+
 **Aggiornamento a `84a47670` (fase F4 della Missione, 2026-10-05/11).** Il risolutore **non cambia
 contratto di fondo** — resta un DES a stato ombra, con la stessa catena Pd → latenza → fire control → salva →
 danno → disingaggio e lo stesso ordine delle estrazioni — ma cambia **che cosa è una "forza"** e acquisisce
@@ -147,9 +158,9 @@ Per due o più forze in contatto, la catena è (`:12-75`, docstring del modulo):
 4. **Salva e saturazione — modello di Hughes** (§4.5). I colpi che arrivano su una forza nello
    stesso evento-salva sono prima confrontati con `Military.salvo_interceptors`: i colpi
    intercettabili sono fermati **salva per salva** dagli intercettori che ne hanno titolo
-   (arma `Anti_Missile`, regola D; lancio da fuori dal proprio volume, regola L1; traccia del
-   colpo e tempo di reagire, regola R-INT; §4.24, §4.26), il surplus raggiunge integralmente il
-   modello di danno.
+   (arma `Anti_Missile`, regola D; lanciatore che non è un bersaglio immediato dentro la zona dell'arma,
+   regola L1; traccia del colpo e tempo di reagire, regola R-INT; §4.24, §4.26), il surplus raggiunge
+   integralmente il modello di danno.
 5. **Danno per singolo colpo** (§4.6). Ogni colpo superstite passa da
    `Damage_Model.build_damage_event`, con un `draw` estratto qui dall'RNG iniettato.
 6. **Disingaggio — P1 + R2 con soglia di rottura stocastica** (§4.7, §4.21). Dopo ogni
@@ -295,14 +306,14 @@ capacity = Σ_i min(canali_i − spesi_i, scorta_i)     sugli intercettori opera
 
 **Cambio della F4b++ (2026-10-11): `_capacity` non esiste più.** Fino a `533cd1f5` un metodo
 `_EngagementRun._capacity(state)` sommava `min(canali, scorta)` sugli intercettori *della forza colpita*
-(`state.interceptors`). Dalla F4b++ il calcolo è in linea dentro `_on_resolve` (`:3856-3865`) e gli intercettori
+(`state.interceptors`). Dalla F4b++ il calcolo è in linea dentro `_on_resolve` (`:3998-4026`) e gli intercettori
 sono quelli del **dominio di coordinamento** della forza colpita (`domain_interceptors`, §4.29); `spesi_i` sono
 i canali già impegnati *nello stesso istante* per altre forze del dominio (§4.29). Senza `coordination_of` il
 dominio è la forza stessa, `spesi_i` è sempre 0, e la formula coincide con la vecchia `_capacity`.
 
 **Dal 2026-09-28 `capacity` è un tetto, non più il numero di colpi fermabili.** Fino a quella data
 `intercepted = min(interceptable_rounds, capacity)`: tutti gli intercettori della forza potevano
-fermare ogni colpo. Oggi l'allocazione è **per salva** (`:3846-3892`, regola L1 della proposta SAM,
+fermare ogni colpo. Oggi l'allocazione è **per salva** (`:4005-4051`, regola L1 della proposta SAM,
 `Analysis/Document/Proposta_Regole_Allocazione_SAM.md` §7.9): le salve dell'evento, nell'ordine
 `(impatto, salva)`, scorrono gli intercettori del dominio nell'ordine della regola F (soli cannoni
 prima, poi per id, v. §4.24); ogni intercettore può fermare i colpi di una salva solo se
@@ -310,27 +321,30 @@ prima, poi per id, v. §4.24); ogni intercettore può fermare i colpi di una sal
 1. la salva è intercettabile (`ShotSpec.interceptable`), e
 2. ha ancora canali e scorta liberi nell'evento (`min(canali, scorta)` totale per evento, non per
    salva), e
-3. il punto di lancio della salva è **fuori** dal suo volume d'intercettazione (`_may_intercept`,
-   `:3671-3694`, regola L1), e
-4. ha una traccia del colpo e il tempo di reagire prima dell'impatto (`_in_time`, `:3776-3801`,
+3. il lanciatore **non** è un suo bersaglio immediato dentro la zona dell'arma (`_may_intercept`,
+   `:3765-3778`, regola L1 rivista, §4.24): il colpo è escluso solo se il punto di lancio è nel cilindro di
+   almeno una sua arma `Anti_Missile` **e** lui ha già rilevato il lanciatore e può già colpirlo; in ogni altro
+   caso il colpo è intercettabile. Con `L1_IMMEDIATE_TARGET_RULE` spento (regola del 2026-09-28) la condizione è
+   invece «il punto di lancio è **fuori** dal suo V_I» (`:3780-3799`), e
+4. ha una traccia del colpo e il tempo di reagire prima dell'impatto (`_in_time`, `:3935-3960`,
    regola R-INT, §4.26).
 
 **Dalla BI (2026-11-08) c'è una condizione in più, valutata subito dopo (2) e prima di (3)**, ma **solo con
 `BI_AD_TARGET_RULE` acceso** (spento di default: la lista sopra è allora esattamente quella di prima): il dominio
 dell'intercettore (`'land'` | `'naval'`) deve essere fra gli `intercept_domains` della salva (`_admissible`,
-`Logic/Engagement_Resolver.py:3196-3202`, §4.24). Nella condizione del ciclo di allocazione l'ordine è
-`free <= 0 or not _admissible or not _may_intercept or not _in_time` (`:3881-3882`); con la regola accesa anche il
-conteggio di `SalvoResolution.interceptable_rounds` non include le salve a domini vuoti (`:3818-3822`), mentre
+`Logic/Engagement_Resolver.py:3757-3763`, §4.24). Nella condizione del ciclo di allocazione l'ordine è
+`free <= 0 or not _admissible or not _may_intercept or not _in_time` (`:4042-4043`); con la regola accesa anche il
+conteggio di `SalvoResolution.interceptable_rounds` non include le salve a domini vuoti (`:3978-3981`), mentre
 `capacity` resta la somma delle disponibilità di **tutti** gli intercettori del dominio, non filtrata per dominio.
 
 I colpi fermati sono quindi `Σ_salve (colpi − residuo)`, mai più di `min(interceptable_rounds,
-capacity)` — e **senza estrazione**: ogni canale disponibile ferma un colpo con certezza (Pk dell'intercettore = 1 per canale, capitolo 7 §7.5), l'allocazione non usa l'RNG e l'unica estrazione di `_on_resolve` è quella del danno (`self._draw()`, `:3977`) (*aggiunto il 2026-11-20, voce 38 di §9.6*). Coincide con quel minimo solo se nessun intercettore è escluso da (3) e (4) (v. il
-commento a `:3851-3856`: senza vincoli geometrici il risultato coincide con l'allocazione sul totale
+capacity)` — e **senza estrazione**: ogni canale disponibile ferma un colpo con certezza (Pk dell'intercettore = 1 per canale, capitolo 7 §7.5), l'allocazione non usa l'RNG e l'unica estrazione di `_on_resolve` è quella del danno (`self._draw()`, `:4090`) (*aggiunto il 2026-11-20, voce 38 di §9.6*). Coincide con quel minimo solo se nessun intercettore è escluso da (3) e (4) (v. il
+commento a `:4005-4014`: senza vincoli geometrici il risultato coincide con l'allocazione sul totale
 usata fino al 2026-09-28). Il *quale* intercettore ferma *quale* salva è ora tracciato internamente
 (`used` per intercettore, `stopped` per salva), ma l'`InterceptionEvent` resta per intercettore e
 arma, e la sua `salvo_ids` referenzia **tutte** le salve dell'evento (non quella specifica, v. §4.13). Dalla
 F4b++ l'`InterceptionEvent` porta come `asset_id` l'intercettore (che può appartenere a un'altra forza del
-dominio) e come `force_id` la forza **difesa**, cioè quella colpita (`:3912-3914`, §4.29).
+dominio) e come `force_id` la forza **difesa**, cioè quella colpita (`:4073-4075`, §4.29).
 
 Ogni intercettazione consuma la scorta di **intercettori** dell'asset che intercetta
 (`Mobile.interceptor_stock`), un contatore **distinto per scopo** dalle munizioni offensive
@@ -508,7 +522,7 @@ per arma, per ogni asset che ha armi AD modellate.
   `morale_for`, `enemy_estimate_for`, `fire_doctrine`, `rwr_catalogue`; nuovo stato di percezione
   (`seen_by`, `identified_by`, `rwr_class`, `class_weights`, `surface_weights`: §4.21, §4.23), della prelazione
   (`launchers_against`, `launch_generation`, `pending_decide`, `may_intercept_cache`: §4.24) e dell'R-INT
-  (`detected_at`, `air_range_cache`, `in_time_cache`, `zone_cache`: §4.26). **Dalla F4b+/F4b++/F4c** il
+  (`detected_at`, `air_range_cache`, `in_time_cache`, `zone_cache`: §4.26). **Dal 2026-11-25** (L1 rivista, §4.24) si aggiungono `l1_immediate_target` (l'interruttore `L1_IMMEDIATE_TARGET_RULE`, letto una volta per run, `:2084`) e `envelope_cache` (zone per arma degli intercettori, `:2085`); `zone_cache` serve ora solo con l'interruttore spento. **Dalla F4b+/F4b++/F4c** il
   costruttore riceve anche `coordination_of` e `grounded` (`:1437-1440`) e porta lo stato del dominio di
   coordinamento (`domain_of`, `domain_interceptors`, `instant_interceptions`, `:1677-1685`: §4.28-4.29) e degli
   aerei a terra (`grounded`, `fire_control_knows_grounded`, `:1964-1967`: §4.30); `seen_by`, `identified_by` e
@@ -836,7 +850,7 @@ sequenceDiagram
     Q->>Run: pop (t_resolve, RISOLUZIONE, force_id)
     Run->>Run: intercettori = domain_interceptors del dominio della forza colpita, e i canali gia' spesi nello stesso istante per altre forze del dominio si sottraggono
     Run->>Run: tetto capacity = somma delle disponibilita' (canali meno spesi, scorta) — §4.5
-    Run->>Run: per salva, per intercettore (ordine F): BI _admissible (solo con BI_AD_TARGET_RULE acceso), L1 _may_intercept e R-INT _in_time (§4.24, §4.26)
+    Run->>Run: per salva, per intercettore (ordine F): BI _admissible (solo con BI_AD_TARGET_RULE acceso), L1 _may_intercept (bersaglio immediato dentro la zona dell'arma) e R-INT _in_time (§4.24, §4.26)
     Note over Run: colpi fermati per salva, nell'ordine (impatto, salva), con intercepted <= min(interceptable_rounds, capacity)
 
     loop per ogni colpo non intercettato
@@ -1755,10 +1769,11 @@ per missili, bombe plananti e droni). Un Strela-10 o uno Shilka restano armi ant
   6 armi terrestri (9M331 del Tor, 9M38 del Buk, 5V55R dell'S-300PS, 9M311 e 2A38M del Tunguska,
   Oerlikon-KDA-35mm del Gepard) e già presente su 12 armi navali (9 SAM e i 3 CIWS: Phalanx, AK-630,
   Type-730); Osa e Stinger restano esclusi (D-AM1, proposta §4).
-- Codice: `Mobile.INTERCEPTOR_TASK = 'Anti_Missile'` (`Asset/Mobile.py:207`),
-  `interceptor_weapons_from_registry` (`:1047-1117`, filtro: dati di quota, task `Anti_Air` **e**
-  `Anti_Missile`) e `interceptor_capability()` (`:1119-1131`: `True`/`False`, o `None` se il registro
-  non descrive armi del modello); `Military.salvo_interceptors` (`Block/Military.py:652-715`) include
+- Codice: `Mobile.INTERCEPTOR_TASK = 'Anti_Missile'` (`Asset/Mobile.py:208`),
+  `interceptor_weapons_from_registry` (`:1072-1137`, filtro: dati di quota, task `Anti_Air` **e**
+  `Anti_Missile`; dal 2026-11-24 il filtro è la funzione di modulo `_is_interceptor_weapon`, `:211-221`, condivisa con
+  `interceptor_envelopes`, la zona per arma della regola L1 rivista, `:1139-1216`) e `interceptor_capability()`
+  (`:1218-1230`: `True`/`False`, o `None` se il registro non descrive armi del modello); `Military.salvo_interceptors` (`Block/Military.py:652-715`) include
   gli asset con capacità `True` e, per quelli con capacità `None` (stub, modelli ignoti), ricade sulla
   regola precedente (esiste una `ThreatAA`). I CIWS entrano come cannoni AD con scorta
   `impianti × rounds_per_mount` (D-AM2, §4.19).
@@ -1778,29 +1793,123 @@ della forza colpita, riordinati globalmente da `_build_domains` con la stessa ch
 (`:1898-1901`), indipendentemente dall'ordine di passaggio delle forze (§4.29). Un aereo a terra non è mai un
 intercettore (`_interceptors_of` lo scarta, `:1945`).
 
-### Regola L1 — idoneità del colpo (`_may_intercept`, `:3019-3042`)
+### Regola L1 — idoneità del colpo (`_may_intercept`, `:3765-3778`); rivista il 2026-11-24, accesa il 2026-11-25
 
-Un colpo è intercettabile da un intercettore `i` solo se (a) la salva è intercettabile
-(`ShotSpec.interceptable`), (b) `i` ha un'arma capace (regola D), (c) il **punto di lancio** della
-salva è **fuori** dal volume d'intercettazione V_I di `i`. V_I è quello dichiarato da
-`Mobile.air_defense_volume` (cilindro: raggio orizzontale e fascia di quota relativa), la stessa
-definizione di "zona d'intercettazione" usata dal pianificatore di rotta (capitolo 7 §7.8);
-`_interception_zone` (`:2999-3017`) lo legge in forma `(raggio, quota base, quota tetto)` relativa
-all'intercettore. Le posizioni (lanciatore a `t_launch`, intercettore a `t_launch`) vengono dai tratti di
-rotta o, in mancanza, dalla posizione ferma (`_position_at`, `:2984-2997`). Il **bordo conta come
-dentro** (`horizontal <= radius and bottom <= height <= top`, `:3038`). Senza zona, o senza una delle
-due posizioni, nessun vincolo (dato mancante = non modellato, come per scorte e carburante).
-Decisioni Q1 (zona valutata sul V_I del **singolo** intercettore: un Tor lontano dal lanciatore
-intercetta anche se il Buk della stessa forza ha il lanciatore a tiro) e Q2 (i colpi lanciati
-dentro la zona **non si intercettano mai**: il lanciatore è un bersaglio, non si inseguono i suoi
-colpi). L'allocazione per salva e il ruolo di tetto di `capacity` sono in §4.5.
+**Enunciato (decisione dell'utente, 2026-11-25).** *«Se il lanciatore spara da dentro la zona dell'arma e
+l'intercettore può già colpirlo, è un bersaglio: le sue salve non si intercettano.»* In ogni altro caso il colpo è
+intercettabile da `i`, salvo gli altri vincoli (salva intercettabile, regola D, canali e scorta, BI, R-INT).
+Documento: `Analysis/Document/Proposta_Revisione_L1_Lanciatore_Bersaglio.md` (decisioni dell'utente del 2026-11-24:
+a = 2, c = 2, d = 2, e = 1; scelta A sulla condizione (2), 2026-11-25). Il difetto della regola precedente (§4.26 e
+Proposta §1.2): il lanciatore era un «bersaglio» per la sola geometria, anche se l'intercettore non lo vedeva o non
+poteva colpirlo, e la zona era quella di armi che non intercettano.
 
-### Regola L2 — priorità di bersaglio (`_schedule_next`, `:2356-2367`)
+**Interruttore.** `L1_IMMEDIATE_TARGET_RULE` (`Logic/Engagement_Resolver.py:658`, commento `:645-657`), **True dal
+2026-11-25** (decisione dell'utente; prima False), letto **una volta per run** in `_EngagementRun.__init__`
+(`self.l1_immediate_target`, `:2084`). È un interruttore **temporaneo**: la Proposta (§2.5, blocco 6, domanda Q-L1-1)
+prevede di eliminarlo, con la regola precedente, dopo l'installazione della fotografia nuova da parte dell'utente.
+`_may_intercept` (`:3765-3778`) sceglie fra `_may_intercept_revised` (`:3801-3819`, interruttore acceso) e
+`_may_intercept_volume` (`:3780-3799`, spento) e memoizza per `(intercettore, salva)` in `may_intercept_cache`
+(`:2072`): ogni coppia è risolta una volta sola. **Nessuna estrazione RNG**, in nessuno dei due stati.
+
+**Le due condizioni (entrambe necessarie per escludere il colpo).** La coppia (intercettore `i`, salva `S`) è
+**esclusa** (`_may_intercept` restituisce `False`) solo se:
+
+1. **Dentro la zona.** Il punto di lancio di `S` è nel cilindro (raggio **e** fascia di quota) di **almeno una** arma
+   `Anti_Missile` di `i` (unione delle zone per arma, non un involucro unico). Le zone sono quelle di
+   `Mobile.interceptor_envelopes` (`Asset/Mobile.py:1139-1216`): per ogni arma intercettrice del modello la tupla
+   `(modello d'arma, raggio [m], quota minima [m], quota massima [m])`, **relative** all'asset (quote AGL come la base
+   del cilindro di `air_defense_volume`), con la **stessa selezione** di `interceptor_weapons_from_registry` (funzione
+   di modulo `_is_interceptor_weapon`, `:211-221`: dati di quota, task `Anti_Air` se il record lo dichiara, task
+   `Anti_Missile`, quota massima > 0; CIWS navali compresi); raggio per le navi `range` [km] × 1000, per i veicoli
+   `range['direct']` [m]; armi con raggio ≤ 0 escluse; un modello d'arma ripetuto conta una volta. Dati di registro,
+   nessuna stima nuova (le quote dei CIWS sono già dichiarate «STIMA B» nel registro). Il risolutore le legge con
+   `_interceptor_envelopes` (`:3731-3748`, memoizzato in `envelope_cache`, `:2085`) e confronta
+   `horizontal <= radius and bottom <= height <= top` (`:3816`): **il bordo conta come dentro**, nessun margine,
+   nessuna fascia di transizione (decisione e = 1). Posizioni di lanciatore e intercettore **all'istante del lancio**
+   (`_position_at`, `:3695`; l'intercettore può essere in moto, come una nave).
+2. **Bersaglio immediato** (`_immediate_target`, `:3846-3878`): «può già colpirlo» significa due cose insieme.
+   * **Rilevato** dall'intercettore all'istante del lancio, **come R-INT**: `_detection_time_of(i, lanciatore, t_L)`
+     (`:3821-3844`, la stessa funzione di R-INT, §4.26, FP-5 (d): conta il rilevamento nel passaggio che contiene il
+     lancio) non è `None` ed è `<= t_L + TIME_EPS`; altrimenti il lanciatore non è un bersaglio. Rilevamento **per
+     asset** (come R-INT), non per forza né per dominio.
+   * **Ingaggiabile con un'arma con scorta a portata**: esiste un candidato di `i` sul lanciatore, del passaggio del
+     lancio (`t_ready <= rilevamento + total + TIME_EPS`; i candidati di passaggi precedenti passano questo filtro ma
+     li esclude il controllo successivo su `t_end`), con `t_fire = max(t_ready, t_L)` entro `t_end + TIME_EPS`, per cui
+     `_in_range_at(i, indice, candidato, t_fire)` (`:3327-3349`) è vero. `_in_range_at` è lo stesso controllo che L2
+     applica al pool prioritario (`_schedule_next`, `:2930-2932`): prima opzione della fire control **con scorta**
+     (`_first_with_stock`, `:3430-3447`, sulla fire control iniettata ristretta dalle regole di bersaglio di missione
+     di `i`, `_fire_control`, `:3256-3270`) e controllo di portata (`_range_entry`, `:3449`); senza portata dichiarata
+     (`spec.max_range is None`) l'arma è ingaggiabile.
+
+**Che cosa NON entra nella condizione (2)** (scelta A dell'utente, SD-1; Proposta §2.1). Si riusa **solo**
+`_in_range_at` (con il controllo su `t_end`), cioè l'ultimo passo del pool prioritario di L2; **non** si applicano gli
+altri filtri del ciclo `viable` di `_schedule_next` (`:2886-2922`): `candidate.exhausted` (`:2887`), bersaglio non
+operativo o disingaggiato (`:2892`), `candidate.not_before` (`:2900-2901`), fine attività del tiratore (`:2907`),
+intercettore a terra (`:2911`) e **ROE dipendente dal tempo** `_is_deferred` (`:2918`). Quindi la condizione (2) **non**
+coincide con «lo stesso pool prioritario di L2». Né entra lo stato del lanciatore **dopo** il lancio (abbattuto, a terra,
+forza rotta: SD-6). Scorta e regole di bersaglio sono lette allo stato della **risoluzione**, non del lancio (R-1, v.
+capitolo 9 §9.1).
+
+**Dato mancante = non modellato** (SD-4). Se `interceptor_envelopes` manca (metodo assente: stub, oggetti non `Mobile`),
+restituisce `None` o vuoto o voci malformate, oppure manca una posizione, `_may_intercept_revised` restituisce `True`
+(si intercetta, salvo gli altri vincoli) — `:3810-3811`. **Nessun ripiego** su `air_defense_volume`: reintrodurrebbe la
+zona di armi che non intercettano.
+
+**Posizione nel ciclo di allocazione.** L'ordine non cambia: nella condizione di `_on_resolve`
+`free <= 0 or not _admissible or not _may_intercept or not _in_time` (`:4042-4043`) la regola L1 è dopo canali/scorta e
+BI e prima di R-INT; per una coppia già scartata prima, L1 non è nemmeno valutata (con BI acceso e colpo non ammesso
+l'interruttore L1 non cambia nulla). Una coppia esclusa da L1 non consuma né canali né scorta: il colpo passa al
+successivo intercettore nell'ordine F.
+
+**Regola del 2026-09-28 (interruttore spento: `_may_intercept_volume`, `:3780-3799`).** Il colpo è intercettabile da `i`
+solo se il punto di lancio è **fuori** dal volume d'intercettazione V_I di `i`, quello di
+`Mobile.air_defense_volume` (cilindro con raggio = portata massima di **tutte** le armi antiaeree dell'asset e fascia
+fra la quota minima e massima di quelle armi; capitolo 7 §7.5, e la stessa «zona d'intercettazione» del pianificatore di
+rotta, capitolo 7 §7.8); `_interception_zone` (`:3710-3729`, `zone_cache`, `:2066`) lo legge in forma `(raggio, quota
+base, quota tetto)` relativa. Bordo = dentro (`allowed = not (horizontal <= radius and bottom <= height <= top)`,
+`:3797`); senza zona o senza una posizione, nessun vincolo. **Nessuna condizione sul lanciatore.** Il V_I include armi
+che non intercettano (per una nave `air_defense_volume` legge solo i `MISSILES_SAM`, per un veicolo ogni arma `Anti_Air`
+anche senza `Anti_Missile`): la corvetta Molniya e la fregata Rezky avevano 12 km (SA-N-4) invece dei 4 km dell'AK-630,
+l'unica loro arma `Anti_Missile`. È il comportamento che l'interruttore spento riproduce, a parità di esiti, nei test
+(`TestLauncherInsideInterceptionZone`, `Test/Test_Engagement_Resolver.py:1811`, interruttore fissato spento).
+
+**Che cosa resta delle decisioni del 2026-09-28.** Q1 (zona valutata sull'**intercettore singolo**: un Tor lontano dal
+lanciatore intercetta anche se il Buk della stessa forza ha il lanciatore a tiro) **resta**: la regola è per coppia
+(intercettore, salva). Q2 («i colpi lanciati dentro la zona **non si intercettano mai**: il lanciatore è un bersaglio,
+non si inseguono i suoi colpi») è **sostituita**: non si intercettano solo i colpi di un lanciatore che l'intercettore
+vede e può già colpire; se è dentro la zona ma non ancora rilevato (o rilevato ma fuori portata, senza scorta, senza
+arma adatta, vietato dalla fire control), i suoi colpi si intercettano. L'allocazione per salva e il ruolo di tetto di
+`capacity` sono in §4.5.
+
+**Due esempi dalle esecuzioni.** (a) *S19AD, seme `S19-4`, Tor avanzato.* L'A-10C `cas1` lancia due AGM-65D a ~9,7 e ~9,5
+km dal Tor, dentro i 12 km del 9M331 (la zona per arma coincide con il V_I: è l'unica arma antiaerea del Tor), a ~163 s,
+**prima** che il Tor lo rilevi (~184 s): la condizione (1) c'è, la (2) no; con la regola rivista il Tor intercetta 2 colpi
+(0 prima). (b) *S35, `naval_maverick_off`, fregata Rezky.* I Maverick partono a 7,1-14,7 km dalla nave; le 7 coppie escluse dalla
+regola precedente avevano lanci a 7,1-11,1 km, dentro i 12 km del V_I della SA-N-4. La Rezky vede e ha a portata
+l'A-10C (la condizione (2) c'è), ma la zona è quella dell'AK-630, 4 km e fascia 0-3000 m: la condizione (1) manca e i
+colpi si intercettano. Nei due casi la direzione è una sola: **più intercettazioni, meno perdite del difensore**.
+
+**Effetto sulla fotografia installata (1219 esecuzioni; `Rapporti/L1_Esecuzioni_Cambiate.md`, sonda del blocco 4,
+2026-11-25).** Su 414 coppie (intercettore, salva) valutate, la regola rivista non ne esclude **nessuna**; la regola
+del 2026-09-28, valutata sulla stessa traiettoria, ne avrebbe escluse 14 (S16 6, S19AD 1, S35-ADTGT 7), tutte con R-INT
+che avrebbe lasciato intercettare (sulla traiettoria della regola precedente, 412 coppie, le escluse erano 13: la
+Proposta §1.2 e §1.5; le due traiettorie divergono dopo le prime intercettazioni diverse). Con
+l'interruttore acceso cambiano **6 esecuzioni su 1219** (1213 identiche, 0 nuove, 0 mancanti): `S16/S16-3`,
+`S19AD/S19-4/tor_forward_ifv_only`, `S35-ADTGT/S35-ADTGT-0..3/naval_maverick_off`; in tutte più intercettazioni e meno
+perdite per il difensore (es. Red-Port di `S16-3` e Red-Navy delle 4 di S35 da `destroyed` a `held`). **La fotografia
+nuova non è ancora installata** (la installa solo l'utente): con l'interruttore acceso nel codice il confronto con la
+fotografia installata (1219) dà quindi 6 CHANGED. **Limite**: nessuna delle 1219 esecuzioni fotografate esercita il
+ramo «bersaglio immediato dentro la zona = non si intercetta» (accesa, la fotografia coincide con «nessuna L1»): è
+provato solo da test unitari (`Test_Engagement_Resolver.TestL1ImmediateTarget`, `:1891`, con zone, rilevamento, portata,
+scorta, ROE, bordo, dato mancante e «nessuna estrazione») e di scenario fuori fotografia
+(`TestS16L1Revised`, `TestS19AdL1ImmediateTarget`, `TestS35L1Revised`); v. capitolo 9 §9.1.
+
+### Regola L2 — priorità di bersaglio (`_schedule_next`, pool prioritario `:2930-2932`)
 
 Nella scelta del bersaglio, i candidati che hanno **lanciato un'arma aria-superficie contro la forza
-del tiratore** (`launchers_against`, `_is_launcher_against`, `:2719-2721`) e sono ingaggiabili a
-portata al loro istante di tiro (`_in_range_at`, `:2723-2741`) formano il pool **prioritario**:
-la scelta si fa solo fra loro, anche se non sono al primo istante utile (`:2380`), con la copertura di
+del tiratore** (`launchers_against`, `_is_launcher_against`, `:3323-3325`) e sono ingaggiabili a
+portata al loro istante di tiro (`_in_range_at`, `:3327-3349`) formano il pool **prioritario**:
+la scelta si fa solo fra loro, anche se non sono al primo istante utile (`:2948`), con la copertura di
 sempre (`_engaged_shooters`: più lanciatori → il lavoro si ripartisce fra le difese; uno solo → tutti
 su di lui). Non c'è un numero di colpi maggiorato: la salva è quella della `fire_control` (Q3).
 Come per le altre regole, il lanciatore deve essere già un **candidato** del tiratore, cioè già
@@ -1901,7 +2010,7 @@ flowchart TD
    memoizzato per id in `ad_domain_cache` (`:2011`). `_admissible(shadow, salvo)` (`:3663-3669`) è vero se l'interruttore è
    spento o se `salvo.spec.intercept_domains is None`; altrimenti solo se il dominio dell'intercettore è fra quelli della
    salva. È chiamata nel ciclo di allocazione di `_on_resolve` **dopo** il controllo di canali e scorta e **prima** di L1 e
-   R-INT (`:3881-3882`): per una coppia (salva, intercettore) esclusa L1 e R-INT non sono nemmeno valutate (nessun effetto
+   R-INT (`:4042-4043`): per una coppia (salva, intercettore) esclusa L1 e R-INT non sono nemmeno valutate (nessun effetto
    sugli esiti: né l'una né l'altra estrae). Nessuna estrazione, in entrambi gli stati dell'interruttore: cambia **chi** ferma
    un colpo, e dove cambia cambia il numero di colpi che arrivano al danno (e quindi le estrazioni di danno successive, come
    per L1 e R-INT).
@@ -1928,10 +2037,17 @@ registri: `land_tactical` (4 A-10C con AGM-65D contro 3 BMP-2 e un Tor arretrato
 Maverick lanciati, per seme), `land_cruise` (2 Su-34 con Kh-59 contro un deposito difeso da un Buk: acceso = spento), `naval`
 (2 F/A-18C con AGM-84A contro la fregata `FF 1135M Rezky`: acceso = spento) e `naval_maverick` (2 A-10C con AGM-65D contro la
 stessa nave: acceso, nessuna intercettazione della nave; spento, la nave ferma Maverick). Due scelte di costruzione da
-conoscere (decisioni P-1 e P-2 del 2026-11-08): la nave è la **Rezky** (V_I di 12 km) e non l'Arleigh Burke, perché con il V_I
-di 240 km del Burke la regola L1 vieta ogni intercettazione di un lancio da aereo; e il sensore `sea` di 20 km dell'A-10C
+conoscere (decisioni P-1 e P-2 del 2026-11-08): la nave è la **Rezky** e non l'Arleigh Burke, perché con il V_I di 240 km del
+Burke la regola L1 **del 2026-09-28** vietava ogni intercettazione di un lancio da aereo (con la Rezky, V_I di 12 km, i lanci a
+distanza maggiore restavano intercettabili); e il sensore `sea` di 20 km dell'A-10C
 (`DECLARED_SEA_RANGE_M`, `Test/Test_Session_Scenarios_S35.py:65`) è un **valore di test [S]**, non un dato del registro (che
-non ha un sensore marittimo per l'A-10C). S35 **dipende da L1** (v. capitolo 9).
+non ha un sensore marittimo per l'A-10C). **S35 dipende ancora da L1** (v. capitolo 9 §9.1), ma con la regola **rivista**
+(accesa il 2026-11-25) per una ragione diversa: la zona della Rezky è quella dell'**AK-630**, 4 km e fascia 0-3000 m (la sua
+unica arma `Anti_Missile`), non i 12 km della SA-N-4, e il Burke resterebbe escluso (zona dell'SM-2, 240 km) solo per i
+lanciatori che vede e può già colpire, mentre i colpi di un lanciatore non visto diventano intercettabili. La scelta della Rezky
+resta valida. Dipendono da L1 solo le 4 varianti `naval_maverick_off` (con BI acceso il filtro di classe viene **prima** di L1:
+la nave non considera i Maverick bersagli e l'interruttore L1 non cambia nulla): con l'interruttore acceso la nave
+intercetta più Maverick e sopravvive in tutti e 4 i semi (`TestS35L1Revised`, fuori fotografia).
 
 ### Verifica: lo scenario S19AD
 
@@ -1940,17 +2056,22 @@ difesa a corto raggio, 1-4 A-10C con i soli AGM-65D, dottrina ad oltranza. Esiti
 (proposta §7.8): Strela-10 in sorvolo, 0 intercettazioni, lo Strela spara i propri missili sugli
 A-10C; Strela-10 in standoff, 0 intercettazioni e 0 lanci (conserva gli 8 missili); Tor arretrato
 (lanci a 15-19 km, fuori dai 12 km della zona) intercetta; Tor avanzato (lanci a ~9,5 km, dentro)
-spara ai lanciatori senza intercettare. La proposta registra una **scoperta**: nell'ultimo caso il
+spara ai lanciatori senza intercettare (**con la regola L1 del 2026-09-28**; con la regola rivista il Tor avanzato spara ai
+lanciatori e intercetta solo i colpi di quelli che non aveva ancora rilevato al lancio: nel seme `S19-4` l'A-10C `cas1` lancia a
+~163 s e il Tor lo rileva a ~184 s, quindi ne ferma 2 colpi, 0 prima; negli altri 5 semi nulla cambia, v. §4.24).
+La proposta registra una **scoperta**: nell'ultimo caso il
 motore rispetta la regola per tempistica, non per costruzione (il lanciatore entra nei 12 km prima
-che i suoi Maverick arrivino); il caso che solo L1 distingue (intercettore con scorta in avanzo e
-lancio da dentro) è coperto da test unitari a geometria controllata
-(`Test_Engagement_Resolver.TestLauncherInsideInterceptionZone`).
+che i suoi Maverick arrivino): resta vera per 5 semi su 6. Il caso a geometria controllata (intercettore con scorta in
+avanzo e lancio da dentro la zona) è coperto da test unitari: `Test_Engagement_Resolver.TestL1ImmediateTarget` per la
+regola rivista (il lanciatore **rilevato e a portata** dentro la zona non si intercetta, quello non rilevato sì) e
+`TestLauncherInsideInterceptionZone` per la regola del 2026-09-28 (interruttore fissato spento); per il seme `S19-4`,
+`TestS19AdL1ImmediateTarget` (`Test/Test_Session_Scenarios_S19_Air_Defence.py:316`).
 
 **Limite**: il legame C2 fra le unità non è modellato: una batteria integrata assegna più in
 fretta di unità indipendenti, qui ogni tiratore usa il proprio profilo di reazione (da riprendere
 con la Fase 0 della gerarchia C2).
 
-*Diagramma D24 — allocazione delle intercettazioni per salva: ordine F, filtro BI (`_admissible`, solo con `BI_AD_TARGET_RULE` acceso), regola L1 e regola R-INT (§4.5, §4.24); dalla F4b++ gli intercettori sono quelli del dominio della forza colpita (§4.29).*
+*Diagramma D24 — allocazione delle intercettazioni per salva: ordine F, filtro BI (`_admissible`, solo con `BI_AD_TARGET_RULE` acceso), regola L1 rivista (dal 2026-11-25; con `L1_IMMEDIATE_TARGET_RULE` spento: «lancio fuori dal V_I dell'intercettore?») e regola R-INT (§4.5, §4.24); dalla F4b++ gli intercettori sono quelli del dominio della forza colpita (§4.29).*
 
 ```mermaid
 flowchart TD
@@ -1961,9 +2082,9 @@ flowchart TD
     F -->|no| L
     F -->|si| B{"BI: dominio dell'intercettore<br/>fra gli intercept_domains di s?<br/>(sempre si se interruttore spento<br/>o domini non dichiarati)"}
     B -->|no| L
-    B -->|si| G{"L1: lancio fuori dal V_I<br/>dell'intercettore?"}
-    G -->|no, lancio da dentro| L
-    G -->|si| T{"R-INT: traccia del colpo<br/>e tempo di reagire?"}
+    B -->|si| G{"L1: lancio dentro la zona di una sua arma<br/>E lanciatore rilevato e a portata<br/>(bersaglio immediato)?"}
+    G -->|"si: il lanciatore e un bersaglio,<br/>le sue salve non si intercettano"| L
+    G -->|"no: colpo intercettabile"| T{"R-INT: traccia del colpo<br/>e tempo di reagire?"}
     T -->|no| L
     T -->|si| K["take = min(liberi, colpi residui)<br/>colpi fermati su s"]
     K --> L
@@ -2074,32 +2195,38 @@ flowchart TD
 ## 4.26 Intercettazione con traccia del colpo e tempo di reazione: regola R-INT (2026-09-30, commit `a500fdf3`)
 
 Documento: `Analysis/Document/Proposta_Intercettazione_Reazione.md` (decisioni Q1-Q3 dell'utente,
-2026-09-30). Il difetto (§5.4 della proposta SAM): con la sola regola L1 un intercettore fermava un
+2026-09-30). Il difetto (§5.4 della proposta SAM): con la sola regola L1 (quella del 2026-09-28) un intercettore fermava un
 colpo purché operativo, con canali e scorta e con il lancio fuori dalla sua zona, **senza** che avesse
 rilevato né il colpo né il lanciatore e senza il tempo di reagire. Un Tor che non aveva ancora
 finito il proprio ciclo RIV+VAL+COM+ATT sul lanciatore (5-8 s) fermava comunque un Maverick in
 arrivo; con `time_of_flight = 0` si intercettava un colpo che non aveva mai volato.
 
-### La regola (`_in_time`, `:3776-3801`)
+### La regola (`_in_time`, `:3935-3960`)
 
 Un intercettore `I` può fermare i colpi della salva `S` (lanciata a `t_L`, impatto a `t_I`) solo se,
 **oltre a L1**: `t_traccia(I, S) + tau(I, S) <= t_I`.
 
 | Caso | `t_traccia` | `tau` |
 |---|---|---|
-| **Lancio osservato**: `I` aveva già rilevato il lanciatore a `t_L`; **dalla FP (§4.35), con i tratti delle rotte**, vale solo un rilevamento di `I` sul lanciatore **nel passaggio** del lanciatore nel volume di `I` che contiene `t_L` (`_detection_time_of(observer, target, at)`, `:3696-3719`); senza tratti, l'ultimo rilevamento in ordine di lista | `t_L` | `refire_interval` (VAL+COM+ATT) del profilo di reazione di `I` |
-| **Colpo scoperto dalla geometria** (lancio non osservato) | primo istante in cui il colpo entra nel raggio di rilevamento aereo di `I` (`_round_track_time`, `:3738-3774`) | `total` (RIV+VAL+COM+ATT) |
+| **Lancio osservato**: `I` aveva già rilevato il lanciatore a `t_L`; **dalla FP (§4.35), con i tratti delle rotte**, vale solo un rilevamento di `I` sul lanciatore **nel passaggio** del lanciatore nel volume di `I` che contiene `t_L` (`_detection_time_of(observer, target, at)`, `:3821-3844`); senza tratti, l'ultimo rilevamento in ordine di lista | `t_L` | `refire_interval` (VAL+COM+ATT) del profilo di reazione di `I` |
+| **Colpo scoperto dalla geometria** (lancio non osservato) | primo istante in cui il colpo entra nel raggio di rilevamento aereo di `I` (`_round_track_time`, `:3897-3933`) | `total` (RIV+VAL+COM+ATT) |
 
 Il rilevamento geometrico è **deterministico** (decisione Q2): nessuna estrazione, il flusso RNG non
 cambia. Il colpo vola in linea retta a velocità costante dal punto di lancio (posizione del
 lanciatore a `t_L`) alla posizione del bersaglio a `t_I`; l'intercettore è fermo nella posizione di
 `t_L`; la soluzione è analitica (equazione di secondo grado dell'ingresso del segmento nella sfera
-di raggio `detection_range('air')`, `_air_detection_range`, `:3721-3736`). Se il colpo non entra mai
+di raggio `detection_range('air')`, `_air_detection_range`, `:3880-3895`). Se il colpo non entra mai
 nel raggio, `I` non lo vede e non può fermarlo (`None`). Dato mancante (raggio o posizioni non noti) e
 lancio non osservato: `t_traccia = t_L`, `tau = total`. Il vincolo di tempo è **sempre** attivo: un
 colpo con tempo di volo nullo non si intercetta mai. Il risultato è memoizzato per
-`(intercettore, salva)` (`in_time_cache`, `:2007`). Un intercettore che non soddisfa R-INT è saltato
+`(intercettore, salva)` (`in_time_cache`, `:2077`). Un intercettore che non soddisfa R-INT è saltato
 come uno escluso da L1: il colpo passa al successivo nell'ordine F (§4.24).
+
+**Lettura condivisa con L1 (dal 2026-11-25).** La funzione `_detection_time_of(i, lanciatore, t_L)` non è più usata solo da R-INT:
+la regola L1 rivista (§4.24) la legge allo stesso modo per decidere se il lanciatore è un **bersaglio immediato** (condizione
+«rilevato all'istante del lancio», `_immediate_target`, `:3859-3862`), con lo stesso significato di «lancio visto» (rilevamento
+nel passaggio che contiene il lancio, FP-5 (d), qui sotto) e lo stesso rilevamento per asset. Nessuna estrazione, nessuna
+mutazione: chiamarla da L1 non cambia gli esiti.
 
 ### Semplificazioni dichiarate (proposta §4)
 
@@ -2112,25 +2239,25 @@ come uno escluso da L1: il colpo passa al successivo nell'ordine F (§4.24).
 4. **Rilevamento per asset, non per forza né per dominio**: la traccia del lanciatore ottenuta da un altro asset
    della stessa forza non basta (nessun collegamento dati, Fase 0 C2 non fatta). Vale **anche dopo la F4b+**:
    la percezione condivisa del dominio (§4.28) alimenta `seen_by` e `identified_by`, ma R-INT legge i
-   rilevamenti del *singolo intercettore* (`_detection_time_of`, `:3696-3719`, dalle `Detection` di
+   rilevamenti del *singolo intercettore* (`_detection_time_of`, `:3821-3844`, dalle `Detection` di
    quell'asset), quindi non anticipa la traccia.
 
 ### Dal 2026-11-11: il lancio è «visto» solo dentro il passaggio (FP-5 (d))
 
 Prima del rilevamento per passaggio, «`I` aveva già rilevato il lanciatore» voleva dire: **l'ultimo** rilevamento in ordine di lista di `I` su quel lanciatore, da qualunque finestra
-e in qualunque momento (`detected_at`, `:2005`). Con una traccia persa e ripresa quel rilevamento poteva appartenere a un passaggio precedente, già concluso al momento del lancio.
+e in qualunque momento (`detected_at`, `:2075`). Con una traccia persa e ripresa quel rilevamento poteva appartenere a un passaggio precedente, già concluso al momento del lancio.
 Ora, con i tratti delle rotte, la regola ha un **significato legato al passaggio** (decisione FP-5 = (d)):
 
-1. `_detect_direction` registra, per ogni coppia `(osservatore, bersaglio)`, i **passaggi** (uniti, FP-10) del bersaglio nel volume dell'osservatore, `own_passes_of` (`:2021`, riempito a `:2329-2330`);
-   i tempi di rilevamento della coppia stanno in `detection_times_of` (`:2022`, costruito alla prima richiesta, `:3712-3717`).
+1. `_detect_direction` registra, per ogni coppia `(osservatore, bersaglio)`, i **passaggi** (uniti, FP-10) del bersaglio nel volume dell'osservatore, `own_passes_of` (`:2095`, riempito a `:2402-2404`);
+   i tempi di rilevamento della coppia stanno in `detection_times_of` (`:2096`, costruito alla prima richiesta, `:3837-3842`).
 2. `_detection_time_of(observer_id, target_id, at)` (`at` = l'istante del lancio, **obbligatorio**) trova il **primo passaggio che contiene `at`** (estremi entro `TIME_EPS`) e restituisce il **primo rilevamento
-   dentro quel passaggio** (`_detection_time_in_pass`, `:1344-1362`); `None` se nessun passaggio contiene `at` o se in quel passaggio non c'è rilevamento.
+   dentro quel passaggio** (`_detection_time_in_pass`, `:1414-1430`); `None` se nessun passaggio contiene `at` o se in quel passaggio non c'è rilevamento.
 3. `_in_time` considera il lancio **osservato** solo se il risultato non è `None` ed è `<= t_L` (più `TIME_EPS`): `t_traccia = t_L`, `tau = refire_interval`. Altrimenti il colpo è una traccia nuova (`_round_track_time`, `tau = total`).
 
 Un lancio che cade **fuori da ogni passaggio** dell'intercettore sul lanciatore è quindi «non visto», anche se l'intercettore aveva rilevato il lanciatore in un passaggio precedente (traccia persa all'uscita dal volume).
-**Ripiego senza tratti** (chiamate dirette a `resolve_engagement` senza `legs`: i passaggi non sono calcolati, `key not in own_passes_of`, `:3709`): l'ultimo rilevamento in lista, la regola precedente. **Nessuna estrazione**:
+**Ripiego senza tratti** (chiamate dirette a `resolve_engagement` senza `legs`: i passaggi non sono calcolati, `key not in own_passes_of`, `:3834-3835`): l'ultimo rilevamento in lista, la regola precedente. **Nessuna estrazione**:
 la funzione legge solo `Detection` già prodotte. Con `BI_AD_TARGET_RULE` acceso R-INT conta solo per i colpi che il filtro BI ammette. Effetto misurato (sonda P-1, 2026-11-11, da `F4_Differenze_Scenari.md`): **0 decisioni R-INT cambiate su 407** nelle esecuzioni
-della fotografia di allora; FP-5 (d) non è esercitata da nessuno scenario in sessione (nessuno ha un intercettore che rileva un lanciatore in rientro), ma da test unitari (`TestDetectionPerPass`, `Test/Test_Engagement_Resolver.py:3987`).
+della fotografia di allora; FP-5 (d) non è esercitata da nessuno scenario in sessione (nessuno ha un intercettore che rileva un lanciatore in rientro), ma da test unitari (`TestDetectionPerPass`, `Test/Test_Engagement_Resolver.py:4312`).
 
 *Diagramma D134 — la regola R-INT con il rilevamento per passaggio: `_detection_time_of` e `_in_time` (§4.26, livello L4, verificato a `a389cadb`).*
 
@@ -2307,8 +2434,9 @@ la ripristina estendendo la difesa al dominio (deviazione 8c del piano, conferma
   **indipendente dall'ordine di passaggio delle forze**; con un dominio di una sola forza coincide con l'ordine
   di `_interceptors_of` (§4.24);
 - `_on_resolve` (`:3803-3978`) usa questa lista al posto di `state.interceptors` (`:3831-3832`);
-- restano **per intercettore** e invariati: la geometria L1 (`_may_intercept`, `:3671-3694`), i tempi R-INT
-  (`_in_time`, `:3776-3801`, sul rilevamento del singolo intercettore: la percezione condivisa non anticipa la
+- restano **per intercettore** e invariati: la regola L1 (`_may_intercept`, `:3765-3778`, zona e bersaglio immediato
+  dell'intercettore singolo, §4.24), i tempi R-INT
+  (`_in_time`, `:3935-3960`, sul rilevamento del singolo intercettore: la percezione condivisa non anticipa la
   traccia), il numero di canali, la scorta di intercettori (R3) e l'ordine di consumo;
 - l'`InterceptionEvent` porta come `asset_id` l'intercettore (anche di un'altra forza) e come `force_id` la
   forza *difesa* (`:3237-3239`); `SalvoResolution.capacity` è la somma delle disponibilità degli intercettori
@@ -2346,7 +2474,7 @@ flowchart TD
     C --> E{"altre forze di D risolte<br/>nello stesso istante?"}
     E -->|si| F["canali gia' spesi per loro<br/>in quell'istante sottratti<br/>instant_interceptions"]
     E -->|no| G["canali pieni"]
-    F --> H["allocazione per salva<br/>L1 geometria, R-INT tempi, canali, scorta"]
+    F --> H["allocazione per salva<br/>L1 zona e bersaglio immediato, R-INT tempi, canali, scorta"]
     G --> H
     H --> I["InterceptionEvent<br/>asset_id = intercettore, force_id = X"]
     I --> J["scorta scalata nell'ombra<br/>poi riapplicata da apply_engagement_result"]

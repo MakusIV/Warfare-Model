@@ -1,5 +1,7 @@
 # Capitolo 9 — Limiti noti, punti di estensione, divergenze codice/wiki
 
+> **Aggiornamento 2026-11-25 (regola L1 rivista, ACCESA; branch `ai/des-l1-revisione`, codice `3bd4058b` più ritocchi di soli commenti non ancora committati in `Engagement_Resolver.py`; fotografia nuova NON ancora installata).** La regola L1 del 2026-09-28 («i colpi lanciati da dentro il V_I dell'intercettore non si intercettano mai») è **sostituita** dalla regola rivista, dietro l'interruttore temporaneo `L1_IMMEDIATE_TARGET_RULE`, **`True` dal 2026-11-25** (decisione dell'utente; era `False` dal 2026-11-24, blocchi 1-3 a `a1559ad9`): **«Se il lanciatore spara da dentro la zona dell'arma e l'intercettore può già colpirlo, è un bersaglio: le sue salve non si intercettano.»** (capitolo 4 §4.24, «Regola L1»). In questo capitolo: nuova sezione **«Regola L1 rivista»** di §9.1 (limiti R-1..R-6, punti di dottrina aperti **PD-1** e **PD-2**, upgrade futuri **UF-1** e **UF-2**, stato della fotografia), riscritti il punto «S35 dipende da L1» (BI) e il paragrafo «Difesa dai missili A6», una riga nuova in §9.3, un aggiornamento in §9.4 e le voci **42-43** di §9.6. **Gli interruttori del risolutore sono ora cinque** (`PD_EDGE_RECALIBRATION` e `D5_DWELL_TIME` `True`, `BI_AD_TARGET_RULE` e `VA_ENGAGEMENT_ALTITUDE_BAND` `False`, `L1_IMMEDIATE_TARGET_RULE` `True`). **Con l'interruttore acceso nel codice cambiano 6 esecuzioni su 1219 rispetto alla fotografia installata (1219 esecuzioni): `S16/S16-3`, `S19AD/S19-4/tor_forward_ifv_only`, `S35-ADTGT/S35-ADTGT-0..3/naval_maverick_off`, tutte con più intercettazioni e meno perdite per il difensore; la fotografia nuova la installa solo l'utente.** Suite `Ran 5005 tests` OK e confronto 6 CHANGED / 1213 identiche / 0 NEW (messaggio del commit `3bd4058b` e `Rapporti/L1_Esecuzioni_Cambiate.md`, **non rieseguiti** per questo aggiornamento).
+>
 > **Aggiornamento 2026-11-20 (Pd sul bordo della portata ricalibrata e accesa; divergenze manuale/codice, §9.6 voci 34-37 e, a seguire, 39-41; codice `fd2af921`, fotografia `a910dc15`).** (1) La voce «**Pd sul bordo della portata**» di §9.1 (nella sezione «Permanenza nel volume (D-5)») **non è più «da ricalibrare, in attesa di una Proposta»**: la `Proposta_Pd_Bordo_Portata.md` (PB-1..PB-6) è stata eseguita e **l'interruttore `PD_EDGE_RECALIBRATION` è acceso dal 2026-11-20** (decisione dell'utente, `fd2af921`): la Pd al bordo vale **0,2, STIMA senza fonte** (prima 0,5, anch'essa stima), una costante per tutti i sensori. La riga della tabella di §9.4/§9.3 (voce (0ter)) è riscritta. La fotografia nuova da 1219 (`a910dc15`) ha **716 esecuzioni cambiate e 503 identiche** rispetto alla precedente (capitolo 8 §8.7). (2) **Quattro divergenze fra manuale e codice**, emerse dalla stesura della guida concettuale e verificate sul codice attuale, sono corrette o dichiarate: il motore **ricalcola** gittata e tempo di caduta delle bombe invece di leggere il profilo del pianificatore (§9.6 voce 34; capitolo 7 §7.9, D15); il **relitto non è mai riparato** (voce 35; capitolo 5 §5.1); meteo e nebbia di guerra **non sono collegati di default** in nessun percorso di produzione (voce 36; §9.1 «Fog-of-war reale» e tabella di §9.3); la tabella tipo di missione/postura **è letta** da `Mission_Adapter.final_posture` e l'esito d'Operazione **è calcolato** (voce 37; capitolo 2 §2.7, capitolo 6 §6.16, qui sotto). Una quinta (intercettazione certa) **non è una divergenza**: il manuale lo dice già (capitolo 7 §7.5, §9.6 voce 38). **Suite e confronto non rieseguiti** per questo aggiornamento (solo testo; i numeri sono quelli del capitolo 8 §8.7). **I `:riga` di `Engagement_Resolver.py` di questo capitolo** sono quelli di `a389cadb` (le voci storiche), di `a99bb3d4` (la D-5 del 2026-11-18/19) o di `34c4cefd` (la voce Pd del 2026-11-19, `:556`): per ricondurli a `fd2af921` si usa la tabella dello spostamento in capitolo 4 (aggiornamento del 2026-11-20); sono **ricalcolati** solo quelli scritti o ritoccati qui.
 >
 > **Aggiornamento 2026-11-19 (§9.6, voci 30-33; solo testo, codice `31f81967`).** Dopo il commit `dad7c66f` («commenti stantii», 2026-11-14) le voci **30 e 32 sono CHIUSE**, la **33 è CHIUSA** (docstring di test corretto nel working tree, commit da indicare) e la **31 è chiusa in parte** ((a) chiusa, (b) il docstring di `_Candidate` resta aperto); verificato leggendo il codice attuale. Le voci 1-29 non sono state ricontrollate.
@@ -296,8 +298,10 @@ registro, non l'inventario del nemico (serve la corrispondenza lato → paesi).
 **Difesa dai missili A6** (capitolo 4 §4.24): il **legame C2 fra unità non è modellato** (ogni tiratore usa il
 proprio profilo di reazione: una batteria integrata assegnerebbe più in fretta di unità indipendenti); Osa e
 Stinger non sono intercettori (D-AM1, in attesa di una verifica in DCS di quali unità l'IA fa sparare contro
-missili); la regola L1 valuta il volume del **singolo** intercettore (Q1); i colpi lanciati da dentro la zona
-non si intercettano mai (Q2); il lanciatore deve essere già rilevato dal tiratore (Q5).
+missili); la regola L1 valuta il **singolo** intercettore (Q1, resta); **dal 2026-11-25** i colpi lanciati da dentro la
+zona **non** si intercettano più «mai» (Q2, sostituita): non si intercettano solo se il lanciatore, dentro la zona di una
+arma `Anti_Missile` dell'intercettore, è già un suo bersaglio immediato (rilevato e a portata), v. la sezione «Regola L1
+rivista» più sotto; il lanciatore deve essere già rilevato dal tiratore per L2/L3 (Q5).
 
 **Dottrina di tiro** (capitolo 4 §4.25): le intercettazioni possibili sono ignorate nella stima di copertura
 (stima ottimistica); il tetto "due missili" conta solo i colpi **in volo** dello stesso tiratore; i valori
@@ -312,7 +316,7 @@ difesa, dichiarate nella proposta §4).
 Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabili_Difesa_Aerea.md` §7-§8 e da `Proposta_Dati_Bersagli_Intercettabili.md`; qui verificati sul codice il 2026-11-10 dove si può (**righe riverificate il 2026-11-13 a `a389cadb`**, spostate dalla VA e dalla FP), e segnati come **non verificati** dove dipendono da fonti esterne o da misure già fatte dalla Proposta.
 
 - **La regola è spenta di default e nessun codice di produzione la accende.** `Engagement_Resolver.BI_AD_TARGET_RULE = False`
-  (`Logic/Engagement_Resolver.py:597`): con il default il motore si comporta come prima della BI (ogni missile e ogni bomba
+  (`Logic/Engagement_Resolver.py:632`): con il default il motore si comporta come prima della BI (ogni missile e ogni bomba
   guidata è un bersaglio per ogni intercettore `Anti_Missile`, salvo L1 e R-INT: un Tor ferma ancora i Maverick, come in S19AD
   `tor_rear`). La accendono solo i test (`patch.object`), fra cui S35 (ricerca nei sorgenti il 2026-11-10: nessuna
   occorrenza dell'interruttore fuori da `Engagement_Resolver`, `Fire_Control` e `Test/`). La regola dell'utente del 2026-09-28
@@ -351,29 +355,126 @@ Capitolo 4 §4.24 («Regola BI»). Dichiarati da `Proposta_Bersagli_Intercettabi
 - **Armi non a registro e bersagli a tabella.** Una `ShotSpec` senza `intercept_domains` (armi `test:*` di `SHOTS`, o una
   classe di munizione non classificabile) non ha vincoli (decisione BI-8): gli scenari a tabella non vedono mai la regola, nemmeno
   con l'interruttore acceso.
-- **Dominio dell'intercettore, non del bersaglio (BI-5).** `_ad_domain` (`Logic/Engagement_Resolver.py:3656`) classifica
+- **Dominio dell'intercettore, non del bersaglio (BI-5).** `_ad_domain` (`Logic/Engagement_Resolver.py:3750-3755`) classifica
   per classe dell'intercettore (`Ship` → navale, ogni altro → terrestre): nella **difesa di dominio mista** (una nave che
   difende truppe a terra, un Tor che difende un trasporto navale in porto) conta chi intercetta, non che cosa è attaccato.
 - **`capacity` non è filtrata per dominio.** Con la regola accesa il conteggio `SalvoResolution.interceptable_rounds` esclude
-  le salve a domini vuoti (`:3818-3821`), ma `capacity` (tetto di Hughes, capitolo 4 §4.5) resta la somma delle disponibilità di
+  le salve a domini vuoti (`:3978-3981`), ma `capacity` (tetto di Hughes, capitolo 4 §4.5) resta la somma delle disponibilità di
   **tutti** gli intercettori del dominio, anche di quelli che non possono fermare quel colpo.
 - **Tempo di volo dei cruise a lungo raggio** (limite **precedente**, reso più visibile dalla regola): `time_of_flight` =
   `ENGAGEMENT_RANGE_FRACTION` (0,5, stima) × portata / velocità (`Logic/Fire_Control.py:238`, `:853`) dà per Kh-55 e Kh-101
   circa 5200 e 11000 s (calcolo dai valori di registro, non eseguito tramite `shot_spec_for`: portata 2500 e 5500 km, velocità 240 e 250 m/s); la Proposta
   dice che R-INT li vede sempre «in tempo» (**non riverificato qui**). Per questo S35 usa il Kh-59 (portata 90 km).
-- **S35 dipende da L1** (regola dell'utente del 2026-09-28, `Proposta_Regole_Allocazione_SAM.md` §7.7, Q2: i colpi lanciati
-  dentro il V_I dell'intercettore non si intercettano mai). Le varianti navali funzionano solo perché la **Rezky** ha un V_I di
-  12 km, minore della distanza di lancio (con l'Arleigh Burke, V_I di 240 km, L1 vieta ogni intercettazione di un lancio da
-  aereo: decisione P-1). **Se L1 cambia** (l'utente prevede di rivederla in una Proposta separata), S35 — come S19AD — va
-  rivisto insieme alla fotografia. **Margine stretto** in `naval_maverick`: nel seme `S35-ADTGT-2` il primo Maverick parte a
-  circa 12,2 km dalla nave, circa 200 m fuori dal V_I (misura della Proposta, sonda S-e, **non rifatta qui**): uno
-  spostamento di pochi secondi del lancio (VA, FP, rilevamento) potrebbe portarlo dentro; per questo l'asserzione 10 è sul
-  totale dei semi. Il sensore `sea` di 20 km dell'A-10C (`DECLARED_SEA_RANGE_M`, `Test/Test_Session_Scenarios_S35.py:65`) è un
-  **valore di test [S]**, non un dato del registro.
+- **S35 dipende ancora da L1, ma per una ragione diversa** (riscritto il 2026-11-25). *Prima* (regola del 2026-09-28,
+  `Proposta_Regole_Allocazione_SAM.md` §7.7, Q2: i colpi lanciati dentro il V_I dell'intercettore non si intercettano mai) le
+  varianti navali funzionavano solo perché la **Rezky** ha un V_I di 12 km, minore della distanza di lancio (con l'Arleigh
+  Burke, V_I di 240 km, L1 vietava ogni intercettazione di un lancio da aereo: decisione P-1), con un **margine stretto** in
+  `naval_maverick` (nel seme `S35-ADTGT-2` il primo Maverick a circa 12,2 km dalla nave, circa 200 m fuori dal V_I: misura
+  della Proposta di allora). *Ora* (regola rivista, accesa il 2026-11-25) la zona della Rezky è quella dell'**AK-630**, 4 km e
+  fascia 0-3000 m (la sua unica arma `Anti_Missile`; i 12 km della SA-N-4 non contano): i Maverick partono a 7,1-14,7 km, nessuno
+  dentro la zona e nessuno vicino al bordo (il più vicino a 1,78 volte il raggio, Proposta §1.5 L-2), quindi il **margine
+  stretto è sparito**; il **Burke** (zona dell'SM-2, 240 km) sarebbe escluso solo per i lanciatori che vede e può già colpire
+  (limite R-4, sotto), mentre i colpi di un lanciatore non visto diventano intercettabili: la scelta della Rezky al posto del
+  Burke resta valida. Dipendono da L1 le 4 varianti `naval_maverick_off` (con BI acceso il filtro di classe viene prima di L1:
+  l'interruttore L1 non cambia nulla); le altre varianti sono fuori da ogni zona in entrambe le regole. Il sensore `sea` di 20
+  km dell'A-10C (`DECLARED_SEA_RANGE_M`, `Test/Test_Session_Scenarios_S35.py:65`) è un **valore di test [S]**, non un dato del
+  registro.
 - **Commenti di testa dei registri superati — CORRETTI il 2026-11-14 (`dad7c66f`), verificato il 2026-11-19.** I commenti sopra `'MISSILES_ASM'` (`Asset/Aircraft_Weapon_Data.py:2115`,
   `Asset/Ship_Weapon_Data.py:1239`) dicevano che nessuno dei quattro campi «è ancora letto dal motore»: dal blocco 2 il
   motore legge `munition_class` e `ad_detectable` (`Logic/Fire_Control.py:766`, `:818`), non `diameter_mm` né `mass_kg`. Ora i
   commenti lo dicono (§9.6, voce 30).
+
+### Regola L1 rivista (2026-11-24/25; interruttore `L1_IMMEDIATE_TARGET_RULE` ACCESO il 2026-11-25)
+
+Capitolo 4 §4.24 («Regola L1»). Dichiarata da `Proposta_Revisione_L1_Lanciatore_Bersaglio.md` (§1.5, §2, §4.2, §5, §5.1) e dal
+rapporto `Rapporti/L1_Esecuzioni_Cambiate.md`; qui verificata sul codice del working tree del branch `ai/des-l1-revisione` dopo
+`3bd4058b` (con ritocchi di soli commenti non ancora committati: le righe possono slittare di poco), e segnata come **non
+verificata** dove dipende da misure già fatte dalla Proposta o dalla sonda. **Enunciato (decisione dell'utente, 2026-11-25):**
+«Se il lanciatore spara da dentro la zona dell'arma e l'intercettore può già colpirlo, è un bersaglio: le sue salve non si
+intercettano.»
+
+- **Interruttore temporaneo, ora `True`.** `L1_IMMEDIATE_TARGET_RULE` (`Logic/Engagement_Resolver.py:658`), letto una volta per
+  run (`:2084`). Spento (stato fino al 2026-11-24 e dei blocchi 1-3, `a1559ad9`) = regola del 2026-09-28 (`_may_intercept_volume`,
+  `:3780-3799`: colpo intercettabile solo da fuori dal V_I di `Mobile.air_defense_volume`, nessuna condizione sul lanciatore).
+  Per il criterio di progetto sugli interruttori (si eliminano se lo stato precedente non è un'alternativa valida) la
+  Proposta lo dà per **temporaneo** (domanda Q-L1-1, blocco 6: eliminazione dell'interruttore, di `_may_intercept_volume`, di
+  `_interception_zone` e di `zone_cache` dopo la fotografia nuova installata dall'utente); il **blocco 6 non è fatto e va
+  ripianificato** sul codice di allora. **Nessuna estrazione RNG, nessuna costante nuova**, in nessuno dei due stati.
+- **Che cosa è e che cosa non è «bersaglio immediato».** Condizione (2) = rilevato dall'intercettore all'istante del lancio
+  **e** ingaggiabile con un'arma con scorta e a portata (`_in_range_at`, scorta e portata, `:3327-3349`). **Non** si applicano gli
+  altri filtri di `_schedule_next`: `not_before`, ROE dipendente dal tempo `_is_deferred`, fine attività, intercettore a terra,
+  `exhausted`, stato del lanciatore dopo il lancio (capitolo 4 §4.24).
+- **Stato della fotografia (sonda del blocco 4, `Rapporti/L1_Esecuzioni_Cambiate.md`).** Fotografia **installata: 1219
+  esecuzioni** (`a910dc15`). Con l'interruttore acceso nel codice, **6 esecuzioni cambiate** (1213 identiche, 0 `NEW`, 0
+  `MISSING`): `S16/S16-3` (intercettazioni 34 → 44; Red-Port `destroyed` → `held`), `S19AD/S19-4/tor_forward_ifv_only` (il Tor
+  intercetta 2 colpi, 0 prima; 1 BMP-2 distrutto in meno), `S35-ADTGT/S35-ADTGT-0..3/naval_maverick_off` (intercettazioni della
+  Rezky 2 → 6, 2 → 6, 0 → 4, 2 → 4; Red-Navy `destroyed` → `held` in tutte e 4): **tutte con più intercettazioni e meno
+  perdite per il difensore, nessuna peggiora**. Sono le stesse 6 di una sonda con L1 spenta del tutto (Proposta §1.5, L-2: per
+  le 60 esecuzioni di S16, S19AD e S35 la cattura con la regola rivista è identica a quella senza L1; il rapporto del blocco 4
+  dichiara di **non** aver ricontrollato l'identità dei valori riga per riga). **La fotografia nuova non è ancora installata**:
+  la installa solo l'utente; finché non lo fa, il confronto con la fotografia installata dà 6 `CHANGED`. Suite `Ran 5005 tests`,
+  OK (messaggio del commit `3bd4058b`, **non rieseguita** per questo aggiornamento).
+- **Limite: nessuna delle 1219 esecuzioni fotografate esercita il ramo «bersaglio immediato dentro la zona = non si
+  intercetta».** Su 414 coppie (intercettore, salva) valutate, la regola rivista **non ne esclude nessuna**: delle 14 che la
+  regola del 2026-09-28 escludeva (sulla traiettoria della regola rivista: S16 6, S19AD 1, S35-ADTGT 7), 6 sono fuori zona e il
+  lanciatore non è un bersaglio immediato, 1 è dentro la zona ma il lanciatore non era rilevato, 7 sono bersagli immediati ma fuori
+  zona. Accesa, la fotografia coincide quindi con «nessuna L1»: l'esclusione vera (lanciatore rilevato, a portata e dentro la zona)
+  è provata **solo** da test unitari (`Test_Engagement_Resolver.TestL1ImmediateTarget`) e di scenario **fuori fotografia**
+  (`TestS16L1Revised`, `TestS19AdL1ImmediateTarget`, `TestS35L1Revised`; i metodi di test non sono eseguiti dalla fotografia). Uno
+  scenario che la eserciti (Proposta, Q-L1-4 opzione B: un «S37», ad esempio un Tor con scorta abbondante che vede l'A-10C prima
+  del lancio da ~9 km) **non esiste**: la «scoperta per tempistica» di S19AD (il Tor spende i missili sui lanciatori prima)
+  lo impedisce negli scenari attuali. La differenza fra «rilevato e a portata» e «solo rilevato» è nulla sulla fotografia.
+- **R-1 — Scorta e regole di bersaglio allo stato della risoluzione, non del lancio.** La condizione (2) legge la scorta e le
+  regole di bersaglio di missione (designati distrutti, ostili noti) quando la salva si risolve (dopo `salvo_window` e il tempo di
+  volo): un intercettore che nel frattempo ha finito i missili sul lanciatore intercetta i colpi rimasti. Coerente con canali e
+  scorta di intercettazione, già letti alla risoluzione (`:3998-4026`). Deterministico.
+- **R-2 — Rilevamento per asset, non per dominio.** Come R-INT (capitolo 4 §4.26): il lanciatore visto da un'altra unità dello
+  stesso dominio non basta per un intercettore che non lo vede (nessun quadro condiviso fino alla Fase 0 C2); è la decisione c = 2.
+  Punto di estensione in §9.3 (bersaglio immediato per dominio).
+- **R-3 — La regola rivista non è esercitata dalla fotografia**: v. il limite sopra.
+- **R-4 — Il caso Burke non è esercitato** da nessuna esecuzione (né prima né dopo): un'esclusione a 240 km (zona dell'SM-2)
+  resta possibile per un lanciatore rilevato e alla portata dell'SM-2. Per le navi la cui arma `Anti_Missile` più lunga è anche la
+  loro arma antiaerea più lunga (Arleigh Burke, CG-65, Type 052C, Kuznetsov, …) la zona resta quella di prima: conseguenza
+  accettata dall'utente (decisione d = 2, Proposta §1.4). Cambia invece per la Rezky, la Grisha, la Molniya (da 12 km, SA-N-4, a 4
+  km, AK-630) e per la FFG-46 (da 74 km a 1,5 km, Phalanx): `Mobile.interceptor_envelopes` (`Asset/Mobile.py:1139-1216`).
+- **R-5 — Fascia dei CIWS: quote massime di registro marcate «STIMA B».** Phalanx 1500 m, AK-630 e Type-730 3000 m
+  (`Asset/Ship_Weapon_Data.py:1564`, `:1580`, `:1596`: «STIMA B: non oltre la portata») decidono se un aereo sopra la nave è
+  «dentro» (S16: gli F/A-18C a 6000 m sopra la Molniya, anche entro i 4 km in orizzontale, sono **fuori** dalla zona dell'AK-630).
+  Nessuna stima nuova introdotta dalla revisione: le quote sono dati di registro già dichiarati stime.
+- **R-6 — Righe di codice del manuale riallineate.** Le citazioni di riga della regola L1 nel capitolo 4 (§4.5, §4.24, §4.26) erano
+  già disallineate prima della revisione (`:3019-3042` contro `:3719-3742` al commit `0c7263cd`); sono riallineate ora per i
+  passi toccati. **Non** tutte le citazioni del capitolo 4 sono state riverificate (v. §9.6, voce 43).
+- **Dato mancante = non modellato.** Senza `interceptor_envelopes` (stub, oggetti non `Mobile`, modello ignoto o senza armi
+  intercettrici con portata) o senza una posizione, l'intercettore non ha alcun vincolo L1 (`_may_intercept_revised`, `:3810-3811`):
+  **nessun ripiego** su `air_defense_volume` (reintrodurrebbe la zona di armi che non intercettano).
+- **PD-1 (dottrina, APERTO, non deciso) — missile fire-and-forget già in volo.** Uccidere il lanciatore non ferma un missile
+  autonomo già partito (Maverick, Harpoon): la priorità al lanciatore ha senso per la salva **successiva**, non per quella in volo.
+  Oggi (e con la revisione) un intercettore che ha il lanciatore come bersaglio immediato lascia passare la salva in volo anche
+  con canali e scorta liberi. La lettura alternativa (intercettare comunque con la capacità che avanza dopo aver servito il
+  lanciatore) era l'opzione scartata di Q2 del 2026-09-28 (`Proposta_Regole_Allocazione_SAM.md` §7.6). Da riportare all'utente con
+  esempi, in una Proposta separata, se lo chiede.
+- **PD-2 (dottrina, APERTO) — lanciatore abbattuto prima della risoluzione.** Lo stato del lanciatore **dopo** il lancio non entra
+  nella condizione (2) (scelta SD-6): se il Tor abbatte l'A-10C prima che i Maverick arrivino, i Maverick restano esclusi per il
+  Tor. Lega con PD-1 e con UF-2.
+- **UF-1 — upgrade futuro (annotato il 2026-11-25, NON fatto): ROE a tempo nella condizione (2).** Aggiungere `_is_deferred`
+  (`Logic/Engagement_Resolver.py:3167`; regole di bersaglio che dipendono dal tempo: `return_fire`, `priority_designated`)
+  a `_immediate_target`: un lanciatore che la ROE vieta al difensore di colpire in quel momento **non** sarebbe un bersaglio
+  immediato e i suoi colpi resterebbero intercettabili. Più fedele a L2 (che scarta i candidati rimandati prima del pool
+  prioritario, `:2918`), ma richiede un ramo e almeno un test in più, e nessuna esecuzione fotografata lo esercita; se adottata
+  dopo l'accensione va dietro un interruttore proprio **spento** (regola di progetto). Oggi la ROE entra solo attraverso la fire
+  control (con `only_designated` e un lanciatore non designato la fire control non restituisce niente: non è un bersaglio
+  immediato).
+- **UF-2 — upgrade futuro (annotato il 2026-11-25, NON fatto): tipo di guida del missile e dipendenza dal lanciatore.** Oggi tutti
+  i colpi sono autonomi dopo il lancio (payload congelato, danno all'impatto senza guardare il lanciatore). Per le armi la cui
+  guida dipende ancora dal lanciatore, metterlo fuori uso potrebbe far perdere la guida al colpo (e l'esclusione L1 sarebbe allora
+  coerente anche per la salva in volo, risolvendo PD-2 da solo; per un colpo autonomo resterebbe PD-1). Dati già presenti
+  [verificati il 2026-11-25 dalla Proposta, non rifatti qui]: il campo `'guidance'` sulle voci missilistiche navali
+  (`Asset/Ship_Weapon_Data.py`, 25 occorrenze, es. `:1053`, `:1069`); il campo `"seeker"` in `Asset/Aircraft_Weapon_Data.py`
+  (43 occorrenze, es. `:991`), che descrive il sensore terminale ma non dice se il colpo dipende dal lanciatore; **nulla** in
+  `Asset/Ground_Weapon_Data.py`. Nessun registro ha un campo «dipende dal lanciatore»: andrebbe derivato con una tabella
+  dichiarata come scelta di progetto [S] o aggiunto come dato nuovo con fonte o stima dichiarata. Ordine consigliato dalla
+  Proposta: dottrina (PD-1/PD-2) → dati di guida nei registri → regola nel motore dietro un interruttore nuovo spento.
+
 
 ### Rilevamento per passaggio nella portata propria (FP, 2026-11-11; regola senza interruttore dal 2026-11-13)
 
@@ -857,7 +958,8 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 | Fuoco su posizione (salva su area) | **Fatto** (F7b, `dcedc541`): `Logic/Area_Fire.py`, evento di sessione `AREA_FIRE_EVENT`, arma da `Fire_Control.area_fire_weapon` (capitolo 6 §6.23, capitolo 4 §4.34). Punti di aggancio per estenderlo: costanti STIMATE da tarare (`AREA_FIRE_*`), tiratori aerei (bombardamento di un punto), armi `missile`, intercettazione, effetti dottrinali sul colpito, fuoco amico. |
 | Alimentazione di morale e stima del nemico | Fornire `morale_for`/`enemy_estimate_for` a `run_session` da `Block.morale` corretto (decisione D9) e dalla ricognizione/C2 (capitolo 4 §4.21). |
 | Settori RWR, `ewr`, `confidence` | Consumo nel modulo rotte/evasione e in un futuro SEAD (`Asset/Aircraft_Rwr_Data.py`, capitolo 7 §7.10). |
-| Bersagli intercettabili dalle difese aeree (BI) | **Fatti** (blocchi 1-3, `61df9437`, `0f275d55`, `8ac1b0f7`): classi e flag nei `MISSILES_ASM`, `Fire_Control.munition_class`/`intercept_domains_for`, `ShotSpec.intercept_domains`, filtro `_admissible` dietro `BI_AD_TARGET_RULE` (spento), S35-ADTGT (capitolo 4 §4.24). Resta da fare: decidere se accendere l'interruttore di default (nuova fotografia), un'RCS o una soglia di dimensione al posto del flag, il criterio di dimensione anche per le difese terrestri (BI-12 (b): una riga in `intercept_domains_for`), un missile balistico a registro, la revisione di S35 se cambia L1. Limiti in §9.1 «Bersagli intercettabili dalle difese aeree». |
+| Bersagli intercettabili dalle difese aeree (BI) | **Fatti** (blocchi 1-3, `61df9437`, `0f275d55`, `8ac1b0f7`): classi e flag nei `MISSILES_ASM`, `Fire_Control.munition_class`/`intercept_domains_for`, `ShotSpec.intercept_domains`, filtro `_admissible` dietro `BI_AD_TARGET_RULE` (spento), S35-ADTGT (capitolo 4 §4.24). Resta da fare: decidere se accendere l'interruttore di default (nuova fotografia), un'RCS o una soglia di dimensione al posto del flag, il criterio di dimensione anche per le difese terrestri (BI-12 (b): una riga in `intercept_domains_for`), un missile balistico a registro (la revisione di S35 per la L1 rivista è **fatta**: v. la riga seguente). Limiti in §9.1 «Bersagli intercettabili dalle difese aeree». |
+| Regola L1 rivista (bersaglio immediato dentro la zona dell'arma) | **Fatta e ACCESA il 2026-11-25** (blocchi 1-3 `a1559ad9`, accensione `3bd4058b`; capitolo 4 §4.24): `Mobile.interceptor_envelopes` (`Asset/Mobile.py:1139-1216`), `_may_intercept_revised`/`_immediate_target` (`Logic/Engagement_Resolver.py:3801-3819`, `:3846-3878`), interruttore temporaneo `L1_IMMEDIATE_TARGET_RULE` (`True`). Resta da fare: **(1) installare la fotografia nuova** (solo l'utente; 6 esecuzioni cambiate rispetto a quella installata da 1219: `S16-3`, `S19-4/tor_forward_ifv_only`, `S35-ADTGT-0..3/naval_maverick_off`); **(2) blocco 6**: eliminare l'interruttore e la regola del 2026-09-28 (`_may_intercept_volume`, `_interception_zone`, `zone_cache`), **da ripianificare** sul codice di allora; **(3) punti di dottrina PD-1 e PD-2** (missile già in volo, lanciatore abbattuto prima della risoluzione); **(4) upgrade UF-1** (ROE a tempo `_is_deferred` nella condizione (2), dietro un interruttore proprio spento) **e UF-2** (tipo di guida del missile: campo opzionale in `ShotSpec`, dati di guida nei registri, interruttore nuovo spento); **(5)** bersaglio immediato per **dominio** invece che per asset (richiede il quadro condiviso della Fase 0 C2, R-2); **(6)** uno scenario che eserciti il ramo «rilevato, a portata, dentro la zona» (Q-L1-4 opzione B, «S37», in una Proposta separata). Limiti in §9.1 «Regola L1 rivista». |
 | Permanenza nel volume (D-5) | **Fatti la legge** (`Engagement_Resolver.dwell_factor`, capitolo 4 §4.36), la metrica del pianificatore (`Air_Route_Manager`, capitolo 7 §7.8), i **dati `dwell_time_s` per 53 modelli** (DW-9 rivista: SAM/AAA, TVD e vista, EWR, navi, AWACS; 24 dei 43 nuovi sono stime [S]; aerei non AWACS esclusi) e **l'accensione dell'interruttore `D5_DWELL_TIME`** (2026-11-18, `ef8f657e`; fotografia allora installata, di 1103 esecuzioni, che non mette alla prova la legge con i dwell reali) e la **serie S36** (2026-11-18, `e107da28`, `72cd0d5a`, `e824d9eb`: 116 esecuzioni `NEW` e 29 + 2 + 5 test che la provano sulle `Detection` con i dwell reali; **la fotografia da 1219 è stata installata il 2026-11-19**, `fdb78b86`, su richiesta dell'utente, e **sostituita il 2026-11-20** da una nuova da 1219 con la Pd al bordo a 0,2, `a910dc15`). Resta da fare: (0) se si vuole, **estendere la voce `detections` ad altre unità** o provare con i dwell reali i sensori oggi fuori dalla fotografia (Shilka, Gepard, Osa, Tunguska, Roland, Kub, M163, Strela-1, Chaparral, M6, gli altri EWR, le altre navi, E-2D, A-50); (0bis) i **tre limiti residui** di S36 (`range_type`, taglio di sessione, pianificatore insensibile alla D-5: v. §9.1; il terzo, se si vuole cambiarlo, è una Proposta separata); **il taglio di sessione è verificato con sonde il 2026-11-19** (due estrazioni indipendenti per un passaggio a cavallo di due sessioni, la legge non è additiva; il rilevamento non passa da una sessione alla successiva; **nessuna regola proposta**: una memoria del passaggio fra sessioni sarebbe una Proposta separata con interruttore; numeri di sonde temporanee non rieseguibili dalla suite, v. §9.1 «Taglio di sessione e sessioni concatenate»); (0ter) **Pd sul bordo della portata: FATTA e ACCESA il 2026-11-20** (`Proposta_Pd_Bordo_Portata.md`, blocchi `598af98e`, `4fbf8b4b`, `fd2af921`; `PD_EDGE_RECALIBRATION = True`, Pd al bordo **0,2, stima senza fonte**, prima 0,5; fotografia nuova `a910dc15`, 716 esecuzioni cambiate su 1219: v. §9.1 «Pd sul bordo della portata»); **resta da fare**: una **fonte** per il valore (oggi è il centro dell'intervallo atteso dall'utente), una costante **per sensore** o la dipendenza dalla **sezione radar** del bersaglio (ipotesi (b) e (c), rinviate), eventualmente l'eliminazione dell'interruttore (criterio degli interruttori, capitolo 6 §6.21: non deciso); (1) rivedere **vista e TVD** (3,2 s, approssimazione) e le stime [S] del registro `Registro_Dwell_Stimati.md` quando c'è una fonte, (2) il **dwell dipendente da distanza, modo e carico del radar**, da fare insieme all'orizzonte radar nel DES e a una legge cumulativa (rinvio dichiarato), (3) il **blocco C** (attraversamento a corda limitata nel pianificatore) e l'**orizzonte radar nel DES** (DW-7, attività separate). |
 | Quota nel volume d'ingaggio (VA) | **Fatta** dietro `VA_ENGAGEMENT_ALTITUDE_BAND` (spento): `engagement_intervals(..., band)`, `_altitude_deferral`, `Contact_Scheduler.altitude_intervals`/`intersect_intervals` (capitolo 4 §4.37). Resta da fare: **decidere se accendere l'interruttore**; dare portata e fascia alle `ShotSpec` di test (attività separata); inviluppo con portata ridotta a bassa quota, portata minima e cono di silenzio (volumi non convessi: due intervalli per tratto, Attività D). |
 | Rilevamento per passaggio (FP) | **Fatto, senza interruttore** (capitolo 4 §4.35): `_own_passes`, `_detect_passes`, `pass_rng`. **Punto di aggancio per un volume di rilevamento non sferico**: `_own_intervals` è l'**unico** punto di chiamata del volume proprio nel risolutore (decisione VA-6 (a)); un volume diverso dalla sfera si sostituisce lì, restando contenuto nella sfera di raggio `own_range`. Resta da fare: la metrica **cumulativa** del pianificatore (nome proposto `cumulative_detection_probability`, **non esiste nel codice**: v. `Proposta_Finestre_Per_Passaggio_Portata_Propria.md`; si aggiungerà quando ci sarà un consumatore), l'allineamento delle finestre dello scheduler all'unione FP-10 (oggi solo tolleranza numerica). |
@@ -967,6 +1069,8 @@ sgancio, la cui balistica il DES riusa per avere una gittata e un tempo di cadut
 3163 a 3198 (`pass_event_id`), `Mobile` e i registri per i dati (`dwell_time_s`, campi BI). **Tre interruttori nuovi, tutti spenti a `a389cadb`** (capitolo 6 §6.21; **dal 2026-11-18 `D5_DWELL_TIME` è acceso**, v. la nota in testa; **dal 2026-11-20 se ne aggiunge un quarto, `PD_EDGE_RECALIBRATION`, acceso**): con essi spenti nessuna esecuzione preesistente cambia (1009 identiche a ogni passo); la FP, regola sempre attiva, cambiò **44** esecuzioni (FP-3 (a)) alla sua accensione (2026-11-12) ed è ora nella fotografia. Quattro scenari nuovi (S32-S35, capitolo 8 §8.14). Suite **4914 test, OK (skipped=7)**,
 fotografia **1103 esecuzioni** (numeri dichiarati dal messaggio del merge `f46e3982`, dalla Proposta della pulizia e da `F4_Differenze_Scenari.md`, **non rieseguiti** per questo aggiornamento; il numero di esecuzioni è invece contato sul file; le righe dei moduli sono contate con `wc -l`). *Stato al 2026-11-18: suite 4961 dopo la S36; fotografia **installata** sempre di 1103, una cattura con le cinque unità S36 ne ha 1219 (116 `NEW`), **non ancora installata** allora: nota in testa e capitolo 8 §8.7; dal 2026-11-19 la fotografia installata è quella da **1219** (`fdb78b86`).* *Stato al 2026-11-19: nessuna riga di motore cambia; il limite «taglio di sessione» della D-5 è verificato con sonde temporanee (§9.1 «Taglio di sessione e sessioni concatenate»), non rieseguibili dalla suite.*
 
+**Aggiornamento 2026-11-24/25: regola L1 rivista (blocchi 1-3 `a1559ad9`, sonda del blocco 4 `ae98b03d`, accensione `3bd4058b`; branch `ai/des-l1-revisione`)**: una regola nuova del risolutore, dietro l'interruttore `L1_IMMEDIATE_TARGET_RULE`, **spento** fino ai blocchi 1-4 (suite `Ran 5005`, confronto con la fotografia di 1219 esecuzioni: 1219 identiche, come da messaggio del commit `a1559ad9`) e **acceso il 2026-11-25** (decisione dell'utente dopo la lettura di `Rapporti/L1_Esecuzioni_Cambiate.md`). Tocca `Asset/Mobile.py` (`interceptor_envelopes` e la funzione di modulo `_is_interceptor_weapon`, che unifica la selezione delle armi intercettrici; `Mobile.py` 1960 righe a oggi), `Logic/Engagement_Resolver.py` (4730 righe a oggi: `_may_intercept` ora sceglie fra due regole, nuovi `_may_intercept_revised`, `_immediate_target`, `_interceptor_envelopes`, `envelope_cache`) e i test (+32 test: 4973 → 5005; `TestL1ImmediateTarget`, `TestInterceptorEnvelopes`, `TestS16L1Revised`, `TestS19AdL1ImmediateTarget`, `TestS35L1Revised`; il test sul seme `S19-4` è riscritto e quello sul default invertito). **Nessuna unità, variante o chiave nuova in `Scenario_Baseline`.** Con l'interruttore acceso **6 esecuzioni su 1219 cambiano** rispetto alla fotografia installata (1213 identiche, 0 `NEW`); **la fotografia nuova non è ancora installata** (solo l'utente). Numeri di suite e confronto dichiarati dai messaggi dei commit e da `Rapporti/L1_Esecuzioni_Cambiate.md`, **non rieseguiti** per questo aggiornamento; le righe di codice sono lette sul working tree (con ritocchi di soli commenti non ancora committati).
+
 I seguiti possibili restano quelli di §9.3: i limiti "minori ma non corretti" già presenti (bug di
 `get_blocks_by_criteria`; ~~le tre KGBU senza dati di rilascio~~, risolte il 2026-09-28) più quelli aggiunti
 (filtro missione/bersaglio assente — decisione A4, **fatto dalla F7a**; scelta per scorta che precede
@@ -1043,7 +1147,7 @@ flowchart LR
     F8 -.->|"non fatta"| F8D["F8d logistica<br/>(limite dichiarato)"]
 ```
 
-## 9.6 Incoerenze trovate fra documenti di progetto e codice a `fa5fbf1e` (stato delle voci aggiornato al 2026-10-29; voci 28-29 chiuse il 2026-11-05; voci 30-33 aggiornate il 2026-11-19: 30, 32 e 33 chiuse, 31 chiusa in parte con il punto (b) aperto; voci 34-38 aggiunte il 2026-11-20: divergenze manuale/codice, 34-37 corrette nel testo, 38 non divergente)
+## 9.6 Incoerenze trovate fra documenti di progetto e codice a `fa5fbf1e` (stato delle voci aggiornato al 2026-10-29; voci 28-29 chiuse il 2026-11-05; voci 30-33 aggiornate il 2026-11-19: 30, 32 e 33 chiuse, 31 chiusa in parte con il punto (b) aperto; voci 34-38 aggiunte il 2026-11-20: divergenze manuale/codice, 34-37 corrette nel testo, 38 non divergente; voci 39-41 aggiunte il 2026-11-20, seconda; voci 42-43 aggiunte il 2026-11-25: 42 corretta nel testo, 43 aperta, minore)
 
 Il codice prevale; qui sono **riportate, non corrette**. **Righe di codice:** i riferimenti `:riga` di questa sezione verso `Engagement_Resolver.py`, `Session_Simulator.py`, `Fire_Control.py` e gli altri file toccati dal 2026-11 sono quelli di `fa5fbf1e` quando è dichiarato (le voci sono uno storico); dove il testo dice «oggi» sono stati riportati al codice di `a389cadb`. Dopo `fa5fbf1e` `Engagement_Resolver.py` è passato da 3872 a 4569 righe (D-5, BI, VA, FP), quindi le righe di quel file sono tutte più alte. Letti: `Piano_Implementazione_Missione.md`,
 `F4_Differenze_Scenari.md`, `Proposta_F8_Sessione_Campagna.md`, `Ricerca_Turnaround_Riparazione.md`, `Rapporti/Rapporto_F8a_oc-developer.md` … `Rapporto_F8c3_oc-developer.md`,
@@ -1086,8 +1190,8 @@ CHIUSA parzialmente 8. (A `fa5fbf1e`: CHIUSE 1, 2, 3, 4, 7, 11, 12, 13, 14, 15, 
    resta l'An-30M Recon con `tasks` vuoto (`Asset/Aircraft_Loadouts.py:3620-3625`); la riga F2 della tabella di §5
    del piano riporta «**13** loadout su 14 con task assegnati (An-30M Recon lasciato vuoto)».
 5. **`Salvo.launch_position`** (proposta SAM §7.5) — **APERTA**: il campo opzionale non esiste in `Salvo`
-   (`Logic/Engagement_Resolver.py:791-810`); L1 ricava le posizioni all'istante del lancio dai tratti di rotta
-   (`_position_at`, `:3621-3634`).
+   (`class Salvo`, `Logic/Engagement_Resolver.py:842-860`); L1 ricava le posizioni all'istante del lancio dai tratti di rotta
+   (`_position_at`, `:3695-3708`), sia con la regola del 2026-09-28 sia con la rivista.
 6. **Regola L2 come "primo elemento della chiave"** (proposta SAM §7.7 Q3) — **APERTA**: nel codice è una
    selezione di pool (`pool = priority or self._designated_first(shooter, viable) or viable`, `Logic/Engagement_Resolver.py:2863`;
    fino a `a784a9e7` era `priority or viable`: la F7a vi ha inserito, **dopo** la priorità L2, la precedenza al designato di
@@ -1283,5 +1387,12 @@ sessione successiva; riparazione a gradino; aereo `off_scene` che non cambia pos
 39. **«Senza RWR un aereo non percepisce mai i SAM»: falso** — **CORRETTA nel testo il 2026-11-20** (era APERTA). Il limite «Soglia di rottura stocastica» di questo capitolo (punto «Fuoco senza risposta») diceva che nei registri aerei non c'è nessun sensore in modo `ground`. **Nel codice** un SAM (`Vehicle`) è un bersaglio in modo `ground` (`DETECTION_MODE_BY_CLASS`, `Logic/Contact_Scheduler.py:104-109`; `mutual_detection_ranges`, `:1083`, `:1096`) e `Mobile.detection_range` (`Asset/Mobile.py:1592`; `_sensor_range_km`, `:1534`) restituisce il massimo fra radar, TVD e visivo con capacità `ground` del modello. **Contati sui registri** (interprete `.direnv/python-3.12/bin/python3` con `PYTHONPATH` sulla root del repo, `Mobile._sensor_range_km(record, sensore, 'ground', 'acquisition_range')` su ogni record di `Aircraft_Data._registry`): **35 dei 65 modelli d'aereo** hanno almeno un sensore `ground` con portata > 0 (**27 radar, 24 TVD**, alcuni hanno entrambi); per esempio l'F-16C Block 52d ha radar 55 km e TVD 95 km. Gli altri 30 modelli non hanno un sensore proprio che veda un SAM (resta l'RWR, capitolo 4 §4.23). Il testo ora dice «un aereo rileva un SAM con un proprio sensore verso terra (35 modelli su 65) o lo percepisce con l'RWR».
 40. **«Nessun sensore `ground` per carri, corazzati, artiglieria e per le navi»: vero ma con eccezioni non dichiarate** — **CORRETTA nel testo il 2026-11-20** (era APERTA, minore). Il limite «Sensori 'ground' assenti nei registri» di questo capitolo (primo elenco dei limiti) e la sezione «Sensori dichiarati di test» del capitolo 8 (`09_Validazione.md`, §8.1) non nominavano le eccezioni. **Contati sui registri** con lo stesso comando della voce 39 su `Vehicle_Data._registry` e `Ship_Data._registry`: dei **79 veicoli** solo **4** hanno un sensore `ground` (tutti `SAM_Small`, tutti TVD: Strela-1-9P31 8 km, MIM-72G Chaparral 10 km, 9K35 Strela-10 10 km, M6 Linebacker 12 km di `acquisition_range`; `Asset/Vehicle_Data.py:4070`, `:4135`, `:4262`, `:4456`); per le categorie `Tank` (18), `Armored` (19), `Artillery_Semovent` (12), `AAA` (4), `EWR` (15), `SAM_Medium` (2), `SAM_Big` (1) nessun record ha portata `ground`. Le **23 navi** hanno `'ground': (False, {})` (nessuna capacità, `Asset/Ship_Data.py`) e il radar in modo `sea` in **23 su 23**: non hanno un `ground`, hanno il `sea`. Per i carri, i corazzati e l'artiglieria la conclusione resta quella di prima: due forze terrestri non si vedono mai senza un sensore dichiarato di test.
 41. **`air_self_defence` «vale per le missioni aria-suolo»: troppo stretto** — **CORRETTA nel testo il 2026-11-20** (era APERTA). Il capitolo 4 §4.32 (tabella dei campi di `TargetRules`) e il capitolo 6 §6.10 (riga di `target_rules`, `07_Orchestratore_Session_Simulator.md`) dicevano che il flag vale per le sole missioni aria-suolo; lo stesso docstring di `TargetRules` (`Logic/Engagement_Resolver.py:1004-1006`) dice «vale per le missioni aria-suolo». **Nel codice** il flag è `True` quando la politica d'armi della missione dà alla classe aria la regola `self_defence` (`Logic/Mission_Adapter.py:1991-1992`) e la tabella `MISSION_WEAPON_POLICY` (`Context/Context.py:662-680`) la dà a CAS, Strike, Pinpoint_Strike, SEAD, Anti_Ship **e** a Recon, AWACS, Tanker, Transport; non la dà a CAP, Fighter_Sweep, Intercept, Escort (regola `any`) né a terra e mare (politica `None`). La tabella dello stesso capitolo 4 §4.33 era già giusta: la frase della tabella dei campi la contraddiceva. **Il docstring del codice resta com'è** (il codice è sola lettura per questo lavoro): è una discrepanza di commento nello stile delle voci 30-33, da segnalare a chi può toccare il codice.
+
+**Aggiunta del 2026-11-25 (voci 42-43: divergenze fra manuale e codice dopo l'accensione della regola L1 rivista; verificate sul codice del branch `ai/des-l1-revisione` dopo `3bd4058b`; correzioni **solo nel testo del manuale**, il codice e i test non sono toccati).**
+
+42. **Regola L1 descritta come «lancio dentro il V_I = non si intercetta mai»** — **CORRETTA nel testo il 2026-11-25** (era APERTA: divergenza **creata dall'accensione dell'interruttore**, non un errore della stesura). Il manuale (capitolo 4 §4.5, §4.24 «Regola L1», il diagramma D24, la sezione S35, §4.26; capitolo 7 §7.5 in `08_Supporto_Trasversale.md`; questo capitolo, §9.1 «S35 dipende da L1» e il paragrafo «Difesa dai missili A6») descriveva la regola del 2026-09-28 (colpo intercettabile solo da fuori dal V_I di `Mobile.air_defense_volume`, nessuna condizione sul lanciatore). **Nel codice**, con `L1_IMMEDIATE_TARGET_RULE = True` (`Logic/Engagement_Resolver.py:658`), `_may_intercept` (`:3765-3778`) esclude un colpo solo se il punto di lancio è nel cilindro di almeno una arma `Anti_Missile` dell'intercettore (`Mobile.interceptor_envelopes`) **e** il lanciatore è un bersaglio immediato (rilevato all'istante del lancio e a portata di un'arma con scorta, `_immediate_target`, `:3846-3878`); la regola precedente (`_may_intercept_volume`, `:3780-3799`) è raggiungibile solo spegnendo l'interruttore. Correzioni: il testo nuovo in §4.24, le citazioni di riga riallineate in §4.5/§4.24/§4.26/§4.29, il diagramma D24 (condizione a due parti), la sezione S35 («dipende ancora da L1, per una ragione diversa»: zona dell'AK-630 della Rezky a 4 km), la sezione S19AD, la riga sugli interruttori di capitolo 6 §6.21 e l'Atlante del risolutore. Il margine stretto «12,2 km» di `S35-ADTGT-2` non compare più nelle coppie valutate (Proposta §1.5, L-2).
+43. **Citazioni di riga del capitolo 4 riallineate solo per i passi toccati** — **APERTA (minore)**. Le righe `:riga` verso `Engagement_Resolver.py` nel capitolo 4 erano già disallineate prima della revisione (esempio: `_may_intercept` citata a `:3019-3042` e `:3671-3694` contro `:3719-3742` al commit `0c7263cd`, Proposta R-6). Il 2026-11-25 sono state riverificate e aggiornate **solo** quelle dei passi che riguardano L1, R-INT, il ciclo di allocazione di `_on_resolve` (§4.5, §4.24, §4.26, §4.29), L2 (`:2930-2932`, `:3323-3349`) e `Asset/Mobile.py` per le armi intercettrici; le altre (per esempio quelle di L3, `:2743-2793`, e `_on_decide`, `:2795-2801`, nella sezione «Regola L3» del §4.24) sono quelle di una stesura precedente e **non sono state ricontrollate**: vanno lette come indicative e verificate per nome di simbolo (`grep`).
+
+**Stato aggiornato al 2026-11-25 delle voci 42-43**: **42 CORRETTA nel testo; 43 APERTA (minore)**. Le voci 1-41 non sono state ricontrollate in questo aggiornamento (salvo la 5, ritoccata per le righe di `Salvo` e `_position_at`).
 
 **Stato aggiornato al 2026-11-20 delle voci 30-41**: chiuse 28, 29, 30, 32, 33, 34, 35, 36, 37, 39, 40, 41 (le ultime sette nel testo, non nel codice; per la 41 il docstring di `TargetRules` nel codice resta con la frase vecchia); chiusa parzialmente 31 (aperto il punto (b)); 38 non è una voce aperta. Le voci 1-27 non sono state ricontrollate.

@@ -13,6 +13,11 @@
 > acceso: la probabilità al bordo è 0,2 (stima senza fonte, decisione dell'utente) invece di 0,5. Manuale e fotografia
 > installata descrivono lo stato con 0,2; la legge di prima si ottiene spegnendo l'interruttore.
 >
+> **Aggiornamento 2026-11-25 (solo §6.5, il glossario e §11, nessun'altra sezione riletta).** La regola L1 della difesa dai missili è
+> stata rivista e accesa (`3bd4058b`, branch `ai/des-l1-revisione`): v. §6.5, condizione 3. Il resto della guida descrive ancora lo
+> stato del 2026-11-20; la fotografia installata (1219 esecuzioni) non coincide più con l'esito del codice in 6 esecuzioni (la
+> fotografia nuova la installa solo l'utente).
+>
 > **Nessuna suite e nessun confronto sono stati rieseguiti per questa guida.** I numeri delle esecuzioni cambiate e
 > identiche fra le due fotografie (716 e 503) sono stati contati confrontando i due file chiave per chiave; i conteggi di
 > suite sono quelli dichiarati dai messaggi di commit. Il motore cambia spesso: ciò che la guida dice vale a questa data.
@@ -1332,8 +1337,13 @@ gli altri; dentro un'unità prima i cannoni, poi i missili). Un intercettore fer
 
 1. il colpo è **intercettabile**: missili e bombe guidate sì, proiettili d'artiglieria e di carro no;
 2. ha un'arma dichiarata **antimissile** (oggi 6 armi terrestri e 12 navali) e canali e scorta ancora liberi;
-3. il **punto di lancio** della salva è **fuori** dal suo volume d'intercettazione: i colpi lanciati da dentro non si intercettano
-   mai (il lanciatore è un bersaglio, non si inseguono i suoi colpi);
+3. il lanciatore **non è un suo bersaglio immediato**. Regola (rivista il 2026-11-24, **accesa il 2026-11-25**): *se il lanciatore
+   spara da dentro la zona dell'arma e l'intercettore può già colpirlo, è un bersaglio: le sue salve non si intercettano.* «Dentro la
+   zona» significa che il **punto di lancio** sta nel cilindro (raggio e fascia di quota) di almeno una arma antimissile
+   dell'intercettore; «può già colpirlo» significa che l'intercettore ha **già rilevato** il lanciatore all'istante del lancio e ha
+   un'arma con scorta che lo raggiunge. In ogni altro caso il colpo si può intercettare. Fino al 2026-11-24 la regola era più
+   rozza: ogni colpo lanciato da dentro il volume d'intercettazione di tutte le armi antiaeree dell'intercettore non si intercettava
+   mai, anche se l'intercettore non vedeva il lanciatore [V];
 4. ha una **traccia del colpo e il tempo di reagire**: se aveva scoperto il lanciatore nel passaggio che contiene il lancio, gli
    basta l'intervallo di ripetizione del tiro a partire dal lancio; altrimenti scopre il colpo quando entra nella sua portata di
    scoperta e gli serve l'intero ritardo di reazione. In entrambi i casi deve fare in tempo prima dell'impatto.
@@ -1346,9 +1356,9 @@ colpi fermati sono **min(colpi intercettabili, C)**; altrimenti meno [V].
 
 **Esempio ILLUSTRATIVO.** Otto missili arrivano insieme su una forza. Nel suo dominio ci sono due intercettori: A con 3 canali e
 10 missili (disponibili 3), B con 4 canali ma un solo missile rimasto (disponibile 1): **C = 4**. Se tutte le condizioni sono
-soddisfatte, 4 missili sono fermati e **4 passano**, ciascuno risolto con un'estrazione (§6.6). Se invece tutti gli otto fossero
-partiti da dentro il volume d'intercettazione di A, A non potrebbe fermarne nessuno: ne fermerebbe uno soltanto B, e ne
-passerebbero 7.
+soddisfatte, 4 missili sono fermati e **4 passano**, ciascuno risolto con un'estrazione (§6.6). Se invece il lanciatore di tutti
+gli otto avesse sparato da dentro la zona di un'arma di A e A lo avesse già rilevato e potesse già colpirlo, A non potrebbe fermarne
+nessuno: ne fermerebbe uno soltanto B, e ne passerebbero 7 (se A non lo avesse ancora rilevato, li fermerebbe come gli altri).
 
 Due regole facoltative esistono nel codice e sono **spente** di default, senza alcun chiamante che le accenda: una che limita
 quali munizioni una difesa considera bersagli secondo la classe e la taglia del colpo, e una che aggiunge la **fascia di quota**
@@ -1360,7 +1370,7 @@ al volume d'ingaggio delle armi, valutata nel tempo [V].
 ```mermaid
 flowchart TD
     S["Evento-salva: 8 missili<br/>arrivano insieme sulla forza"] --> C["Capacità del dominio:<br/>A, 3 canali e 10 missili: 3<br/>B, 4 canali e 1 missile: 1<br/>totale 4"]
-    C --> V{"Per ogni colpo e intercettore:<br/>colpo intercettabile, arma antimissile,<br/>lancio fuori dal suo volume,<br/>traccia e tempo di reagire?"}
+    C --> V{"Per ogni colpo e intercettore:<br/>colpo intercettabile, arma antimissile,<br/>lanciatore non bersaglio immediato<br/>dentro la zona della sua arma,<br/>traccia e tempo di reagire?"}
     V -->|"sì, fino alla capacità"| I["4 colpi fermati,<br/>con certezza"]
     V -->|"il resto"| P["4 colpi passano"]
     P --> D["Danno colpo per colpo:<br/>una estrazione per colpo"]
@@ -2433,6 +2443,10 @@ un'alternativa pronta. Il principio ha **eccezioni dichiarate**, che il responsa
   il comportamento precedente in assoluto, lo riproduce solo sulle esecuzioni fotografate;
 - la ricalibrazione della probabilità di scoperta al bordo della portata, introdotta spenta il 2026-11-19, è accesa dal
   2026-11-20 per decisione dell'utente (valore 0,2 invece di 0,5); spegnendola si torna alla legge di prima;
+- la regola L1 rivista (§6.5: il lanciatore dentro la zona dell'arma e già colpibile è un bersaglio, le sue salve non si intercettano)
+  è accesa dal 2026-11-25 per decisione dell'utente; il suo interruttore è **temporaneo** e spegnendolo si torna alla regola del
+  2026-09-28. Con l'interruttore acceso cambiano 6 esecuzioni sulle 1219 fotografate; la fotografia nuova non è ancora installata
+  (la installa solo l'utente), e nessuna esecuzione fotografata esercita il caso «lanciatore già colpibile dentro la zona» [V];
 - una regola (una scoperta per ogni passaggio nel volume) è stata resa permanente e il suo interruttore **eliminato**;
 - due regole sono costruite e provate ma **spente di default** (quali armi le difese aeree possono intercettare; la quota nel
   volume d'ingaggio): con questi interruttori spenti, quelle regole **non** agiscono nelle sessioni.
@@ -2970,7 +2984,7 @@ Queste attività **non** sono fasi del piano della Missione: il cap. 9 §9.5 lo 
 | D1-D9, D4a-D4e | le decisioni della proposta sulla **soglia di rottura casuale** (D4a-D4e per l'efficacia contraerea e i pesi di minaccia). **Non sono** i diagrammi D1-D9, né le divergenze D1-D2 del cap. 9 §9.2 | §6.7 | cap. 4 §4.21-§4.22 |
 | E(N) | l'**efficacia difensiva antiaerea**: il numero atteso di aerei abbattuti da un sistema contraereo, usato per pesare la minaccia percepita | §6.7 (rapporto di forze percepito) | cap. 4 §4.22; cap. 7 §7.11 |
 | R-CLS | la minaccia riconosciuta dal ricevitore d'allarme radar **solo per classe** pesa con il valore della classe | §5.8 | cap. 4 §4.23 |
-| A6 con le regole D, F, L1, L2, L3 | la **difesa dai missili**: D = capacità antimissile dichiarata per arma; F = ordine di consumo (prima gli intercettori a soli cannoni); L1 = i colpi lanciati da dentro il volume dell'intercettore non si intercettano; L2 = priorità a chi attacca la propria forza; L3 = rinuncia e nuova decisione dopo il tempo di assegnazione. **La sigla A6 non è spiegata nel manuale** | §6.3, §6.5 | cap. 4 §4.24 (D24, D25); cap. 7 §7.5 |
+| A6 con le regole D, F, L1, L2, L3 | la **difesa dai missili**: D = capacità antimissile dichiarata per arma; F = ordine di consumo (prima gli intercettori a soli cannoni); L1 = i colpi di un lanciatore che spara da dentro la zona dell'arma dell'intercettore, e che questo può già colpire, non si intercettano (regola rivista, accesa il 2026-11-25; prima: ogni colpo lanciato da dentro il volume dell'intercettore); L2 = priorità a chi attacca la propria forza; L3 = rinuncia e nuova decisione dopo il tempo di assegnazione. **La sigla A6 non è spiegata nel manuale** | §6.3, §6.5 | cap. 4 §4.24 (D24, D25); cap. 7 §7.5 |
 | O1-O6 | le decisioni sulla **dottrina contro lo spreco** di colpi (bersaglio saturato, due colpi in volo); O3 è la soglia 0,9 | §6.3 | cap. 4 §4.25 (D26); cap. 7 §7.2 |
 | R-INT | la regola per cui un intercettore deve avere **la traccia del colpo e il tempo di reagire** | §6.5 (condizione 4) | cap. 4 §4.26 (D27, D134) |
 | A1/A3, A2, A5 | A1/A3: la **scorta per modello d'arma**; A2: il **cannone di bordo** come arma candidata; A5: il compromesso fra efficacia e costo nella scelta dell'arma | §7.4, §6.4 | cap. 4 §4.19, §4.16bis, §4.16; cap. 7 §7.6 |
@@ -3384,8 +3398,9 @@ testo delle sezioni; in caso di dubbio prevale la sezione citata. Le sigle di pr
   (6 km [S]; tempo di rivisita 3,2 s [S]). → §5.2, §5.7, §5.8
 - **Volume di scoperta** — nel motore, la sfera con raggio pari alla portata di scoperta; nel pianificatore, un cilindro alla quota
   della rotta, tagliato dall'orizzonte. → §5.2, §9.2
-- **Volume d'intercettazione** — la zona in cui un'arma può colpire (nel pianificatore, un cilindro con fascia di quota); i colpi
-  lanciati da dentro non sono intercettati da quella difesa. → §6.5, §9.2
+- **Volume d'intercettazione** — la zona in cui un'arma può colpire (nel pianificatore, un cilindro con fascia di quota). Per la
+  regola L1 conta la zona **della singola arma antimissile** (dal 2026-11-25): i colpi di un lanciatore che spara da dentro quella
+  zona e che l'intercettore può già colpire non sono intercettati. → §6.5, §9.2
 
 ---
 

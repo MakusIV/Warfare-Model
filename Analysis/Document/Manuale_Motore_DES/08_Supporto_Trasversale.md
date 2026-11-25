@@ -283,8 +283,11 @@ sugli asset di `salvo_interceptors()`. **STIMA DI PARTENZA DICHIARATA**: ogni ca
 primo candidato alla ricalibrazione). La formula non è cambiata dal 2026-09-26: cambia solo
 **cosa** legge `scorta_i` (`asset.interceptor_stock`), ora una vista sulla scorta per arma per
 chi la ha modellata (v. §7.6 e capitolo 4 §4.19). **Dal 2026-09-28 è un TETTO**, non il numero di colpi
-fermabili: il risolutore esclude, salva per salva, gli intercettori dentro il cui volume è partito il
-lancio (regola L1) e quelli senza traccia o tempo di reagire (R-INT), capitolo 4 §4.5. Nota: il
+fermabili: il risolutore esclude, salva per salva, gli intercettori per cui il lanciatore è un **bersaglio immediato dentro
+la zona di una loro arma** (regola L1 rivista, accesa il 2026-11-25: il lancio parte dal cilindro di almeno una loro arma
+`Anti_Missile` **e** loro hanno già rilevato il lanciatore e possono già colpirlo; fino al 2026-11-24, e con
+`L1_IMMEDIATE_TARGET_RULE` spento, gli intercettori dentro il cui V_I era partito il lancio) e quelli senza traccia o tempo
+di reagire (R-INT), capitolo 4 §4.5 e §4.24. Nota: il
 risolutore d'ingaggio **non chiama direttamente** questo metodo per calcolare la capacità durante la run
 (ricalcola con `_capacity`, capitolo 4, §4.5, che replica la stessa formula sullo stato **ombra**, non
 sull'asset reale) — questo metodo resta la funzione di lettura pubblica per chi consulta lo stato reale
@@ -332,16 +335,24 @@ applicazione consumati da `apply_engagement_result` (capitolo 4, §4.12): con `w
 casuale, mai sotto zero.
 
 **Regola D e CIWS navali (2026-09-28, commit `37ca477e`)**. Le armi "intercettrici" di un asset
-(`Mobile.interceptor_weapons_from_registry`, `Asset/Mobile.py:1059-1129`) sono ora quelle AD di
-`air_defense_volume` che dichiarano il task `Mobile.INTERCEPTOR_TASK = 'Anti_Missile'` (`:197`), e
-`Mobile.interceptor_capability()` (`:1120-1132`) dice se un asset ne ha almeno una (`True`/`False`, o
+(`Mobile.interceptor_weapons_from_registry`, `Asset/Mobile.py:1072-1137`) sono ora quelle AD di
+`air_defense_volume` che dichiarano il task `Mobile.INTERCEPTOR_TASK = 'Anti_Missile'` (`:208`), e
+`Mobile.interceptor_capability()` (`:1218-1230`) dice se un asset ne ha almeno una (`True`/`False`, o
 `None` se il registro non descrive armi del modello). I **CIWS navali** (Phalanx, AK-630, Type-730) sono
 inclusi come cannoni AD (`INTERCEPTOR_WEAPON_TYPES_SHIP = ('MISSILES_SAM', 'CIWS')`,
-`INTERCEPTOR_GUN_WEAPON_TYPES = ('AA_CANNONS', 'CIWS')`, `:188-190`) e, se l'arma dichiara
-`rounds_per_mount`, la loro scorta è `impianti × colpi per impianto` (`_mount_rounds`, `:205-217`;
-`stores_from_registry`, `:860-904`) invece di restare "non modellati" contati a unità: Phalanx 1550, AK-630
+`INTERCEPTOR_GUN_WEAPON_TYPES = ('AA_CANNONS', 'CIWS')`, `:199-201`) e, se l'arma dichiara
+`rounds_per_mount`, la loro scorta è `impianti × colpi per impianto` (`_mount_rounds`, `:229-241`;
+`stores_from_registry`, `:884-928`) invece di restare "non modellati" contati a unità: Phalanx 1550, AK-630
 2000, Type-730 1280 colpi per impianto (`Asset/Ship_Weapon_Data.py`). Un CIWS senza `rounds_per_mount`
-resta fra le armi non modellate (`unmodelled_weapons_from_registry`, `:906-922`).
+resta fra le armi non modellate (`unmodelled_weapons_from_registry`, `:930-946`).
+
+**Zona per arma degli intercettori (2026-11-24/25, regola L1 rivista, capitolo 4 §4.24).** `Mobile.interceptor_envelopes()`
+(`Asset/Mobile.py:1139-1216`) restituisce, per ogni arma intercettrice del modello, `(modello d'arma, raggio [m], quota minima [m],
+quota massima [m])`, relative all'asset, con la **stessa selezione** di `interceptor_weapons_from_registry` (funzione di modulo
+`_is_interceptor_weapon`, `:211-221`: chi intercetta e scorta non possono divergere dalla zona). Raggio: per le navi `range` [km] × 1000,
+per i veicoli `range['direct']` [m]; armi con raggio ≤ 0 escluse; modello ripetuto una volta sola; `None` (senza sollevare) se il
+modello non è noto, non ha armi o non ha armi intercettrici con portata. Dati di registro, nessuna stima nuova, nessuna
+dipendenza dall'adapter DCS; non dipende dalla posizione. Lo consuma solo il risolutore, con `L1_IMMEDIATE_TARGET_RULE` acceso.
 
 ### Carburante (`Asset/Mobile.py:230-269`)
 
