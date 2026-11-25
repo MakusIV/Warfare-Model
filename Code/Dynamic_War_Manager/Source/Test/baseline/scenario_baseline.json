@@ -56541,29 +56541,29 @@
      "stores": null
     },
     "Red-Port/fsg0": {
-     "ammunition": 2308,
-     "destroyed": true,
+     "ammunition": 1908,
+     "destroyed": false,
      "fuel": 1.0,
-     "health": 0,
-     "interceptor_stock": 20,
-     "operative": false,
+     "health": 100,
+     "interceptor_stock": 16,
+     "operative": true,
      "stores": {
       "AK-176-76mm": 288,
-      "AK-630": 2000,
+      "AK-630": 1600,
       "P-270-Moskit": 4,
       "SA-N-4-Gecko": 16
      }
     },
     "Red-Port/fsg1": {
-     "ammunition": 2911,
-     "destroyed": true,
+     "ammunition": 2311,
+     "destroyed": false,
      "fuel": 1.0,
-     "health": 0,
-     "interceptor_stock": 26,
-     "operative": false,
+     "health": 100,
+     "interceptor_stock": 20,
+     "operative": true,
      "stores": {
       "AK-176-76mm": 291,
-      "AK-630": 2600,
+      "AK-630": 2000,
       "P-270-Moskit": 4,
       "SA-N-4-Gecko": 16
      }
@@ -56618,13 +56618,13 @@
     }
    },
    "counts": {
-    "damage_events": 20,
-    "destroyed_events": 13,
+    "damage_events": 15,
+    "destroyed_events": 11,
     "engagements": 1,
     "fuel_events": 32,
     "fuel_exhausted": 0,
-    "interception_events": 13,
-    "interceptions": 34,
+    "interception_events": 16,
+    "interceptions": 44,
     "rounds": 78,
     "salvos": 56
    },
@@ -56778,56 +56778,6 @@
      100,
      0,
      true
-    ],
-    [
-     636.545963,
-     "Red-Port/fsg0",
-     "Blue-Naval-Strike/fa1",
-     "test:anti_ship",
-     "miss",
-     100,
-     100,
-     false
-    ],
-    [
-     636.545963,
-     "Red-Port/fsg0",
-     "Blue-Naval-Strike/fa1",
-     "test:anti_ship",
-     "damage",
-     100,
-     40,
-     false
-    ],
-    [
-     636.545963,
-     "Red-Port/fsg0",
-     "Blue-Naval-Strike/fa4",
-     "test:anti_ship",
-     "damage",
-     40,
-     0,
-     true
-    ],
-    [
-     685.937929,
-     "Red-Port/fsg1",
-     "Blue-Naval-Strike/fa0",
-     "test:anti_ship",
-     "miss",
-     100,
-     100,
-     false
-    ],
-    [
-     685.937929,
-     "Red-Port/fsg1",
-     "Blue-Naval-Strike/fa0",
-     "test:anti_ship",
-     "kill",
-     100,
-     0,
-     true
     ]
    ],
    "engagements": [
@@ -56852,19 +56802,17 @@
      {
       "breakpoint": 1.0,
       "committed": 5,
-      "erosion": 1.0,
+      "erosion": 0.6,
       "force_id": "Red-Port",
       "force_ratio": null,
-      "lost": 5,
+      "lost": 3,
       "max_shock": 0.6,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Red",
       "temper": null,
-      "time": 685.937929,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      }
     ]
@@ -56874,7 +56822,7 @@
      "held"
     ],
     "Red-Port": [
-     "destroyed"
+     "held"
     ]
    },
    "fuel": {
@@ -57376,21 +57324,57 @@
      636.545963,
      "Red-Port/fsg0",
      "AK-630",
-     2,
+     3,
      "Red-Port",
      [
       50,
       51,
       52
      ]
+    ],
+    [
+     636.545963,
+     "Red-Port/fsg1",
+     "AK-630",
+     3,
+     "Red-Port",
+     [
+      50,
+      51,
+      52
+     ]
+    ],
+    [
+     685.937929,
+     "Red-Port/fsg0",
+     "AK-630",
+     3,
+     "Red-Port",
+     [
+      53,
+      54,
+      55
+     ]
+    ],
+    [
+     685.937929,
+     "Red-Port/fsg1",
+     "AK-630",
+     3,
+     "Red-Port",
+     [
+      53,
+      54,
+      55
+     ]
     ]
    ],
    "interceptions": {
     "Red-Port/fsg0": {
-     "AK-630": 20
+     "AK-630": 24
     },
     "Red-Port/fsg1": {
-     "AK-630": 14
+     "AK-630": 20
     }
    },
    "postures": {
@@ -57412,8 +57396,8 @@
     "Blue-Naval-Strike/fa9": "off_scene",
     "Red-Port/aaa0": "destroyed",
     "Red-Port/dock0": "destroyed",
-    "Red-Port/fsg0": "destroyed",
-    "Red-Port/fsg1": "destroyed",
+    "Red-Port/fsg0": "Defense",
+    "Red-Port/fsg1": "Defense",
     "Red-Port/fuel0": "destroyed"
    },
    "session": {
@@ -93857,7 +93841,7 @@
      "AGM-65D": 4
     },
     "Red-Line/ad0": {
-     "9M331-SAM": 8
+     "9M331-SAM": 6
     }
    },
    "ammunition_events": [
@@ -93889,12 +93873,6 @@
      164.164726,
      "Blue-CAS/cas1",
      "AGM-65D",
-     2
-    ],
-    [
-     190.344983,
-     "Red-Line/ad0",
-     "9M331-SAM",
      2
     ]
    ],
@@ -93992,11 +93970,11 @@
     },
     "Red-Line/ifv2": {
      "ammunition": 504,
-     "destroyed": true,
+     "destroyed": false,
      "fuel": 1.0,
-     "health": 0,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "2A42-30mm": 500,
       "9M113-Konkurs": 4
@@ -94030,15 +94008,15 @@
     }
    },
    "counts": {
-    "damage_events": 10,
-    "destroyed_events": 5,
+    "damage_events": 6,
+    "destroyed_events": 4,
     "engagements": 1,
     "fuel_events": 8,
     "fuel_exhausted": 0,
-    "interception_events": 0,
-    "interceptions": 0,
-    "rounds": 12,
-    "salvos": 6
+    "interception_events": 1,
+    "interceptions": 2,
+    "rounds": 10,
+    "salvos": 5
    },
    "damage_events": [
     [
@@ -94092,26 +94070,6 @@
      true
     ],
     [
-     186.102226,
-     "Red-Line/ifv2",
-     "Blue-CAS/cas1",
-     "AGM-65D",
-     "kill",
-     100,
-     0,
-     true
-    ],
-    [
-     187.602226,
-     "Red-Line/ifv0",
-     "Blue-CAS/cas1",
-     "AGM-65D",
-     "miss",
-     100,
-     100,
-     false
-    ],
-    [
      187.602226,
      "Red-Line/ifv0",
      "Blue-CAS/cas1",
@@ -94120,26 +94078,6 @@
      100,
      0,
      true
-    ],
-    [
-     197.403807,
-     "Blue-CAS/cas1",
-     "Red-Line/ad0",
-     "9M331-SAM",
-     "miss",
-     100,
-     100,
-     false
-    ],
-    [
-     197.403807,
-     "Blue-CAS/cas1",
-     "Red-Line/ad0",
-     "9M331-SAM",
-     "miss",
-     100,
-     100,
-     false
     ]
    ],
    "engagements": [
@@ -94164,10 +94102,10 @@
      {
       "breakpoint": 1.0,
       "committed": 4,
-      "erosion": 0.5,
+      "erosion": 0.25,
       "force_id": "Red-Line",
       "force_ratio": null,
-      "lost": 2,
+      "lost": 1,
       "max_shock": 0.25,
       "morale": null,
       "outcome": "held",
@@ -94277,8 +94215,23 @@
      }
     ]
    },
-   "interception_events": [],
-   "interceptions": {},
+   "interception_events": [
+    [
+     186.102226,
+     "Red-Line/ad0",
+     "9M331-SAM",
+     2,
+     "Red-Line",
+     [
+      3
+     ]
+    ]
+   ],
+   "interceptions": {
+    "Red-Line/ad0": {
+     "9M331-SAM": 2
+    }
+   },
    "postures": {
     "Blue-CAS/cas0": "destroyed",
     "Blue-CAS/cas1": "off_scene",
@@ -94287,7 +94240,7 @@
     "Red-Line/ad0": "Defense",
     "Red-Line/ifv0": "destroyed",
     "Red-Line/ifv1": "Defense",
-    "Red-Line/ifv2": "destroyed"
+    "Red-Line/ifv2": "Defense"
    },
    "session": {
     "order_t_end": 1800.0,
@@ -642633,6 +642586,9 @@
     "Blue-CAS/cas0": {
      "AGM-65D": 4
     },
+    "Blue-CAS/cas1": {
+     "AGM-65D": 2
+    },
     "Red-Navy/ff0": {
      "SA-N-4-Gecko": 6
     }
@@ -642667,6 +642623,12 @@
      "Red-Navy/ff0",
      "SA-N-4-Gecko",
      2
+    ],
+    [
+     595.251824,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
     ]
    ],
    "assets": {
@@ -642685,29 +642647,29 @@
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1183,
+     "ammunition": 1181,
      "destroyed": true,
      "fuel": 0.878718,
      "health": 0,
      "interceptor_stock": null,
      "operative": false,
      "stores": {
-      "AGM-65D": 4,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Red-Navy/ff0": {
-     "ammunition": 4166,
-     "destroyed": true,
+     "ammunition": 3766,
+     "destroyed": false,
      "fuel": 1.0,
-     "health": 0,
-     "interceptor_stock": 38,
-     "operative": false,
+     "health": 100,
+     "interceptor_stock": 34,
+     "operative": true,
      "stores": {
       "AK-100-100mm": 320,
-      "AK-630": 3800,
+      "AK-630": 3400,
       "SA-N-4-Gecko": 34,
       "URK-5-Rastrub": 4,
       "USET-80": 8
@@ -642739,15 +642701,15 @@
     }
    },
    "counts": {
-    "damage_events": 5,
-    "destroyed_events": 3,
+    "damage_events": 4,
+    "destroyed_events": 2,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
-    "interception_events": 1,
-    "interceptions": 2,
-    "rounds": 10,
-    "salvos": 5
+    "interception_events": 3,
+    "interceptions": 6,
+    "rounds": 12,
+    "salvos": 6
    },
    "damage_events": [
     [
@@ -642779,16 +642741,6 @@
      100,
      100,
      false
-    ],
-    [
-     595.251824,
-     "Red-Navy/ff0",
-     "Blue-CAS/cas0",
-     "AGM-65D",
-     "kill",
-     100,
-     0,
-     true
     ],
     [
      597.422716,
@@ -642825,19 +642777,17 @@
      {
       "breakpoint": 1.0,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Red-Navy",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Red",
       "temper": null,
-      "time": 595.251824,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      }
     ]
@@ -642847,7 +642797,7 @@
      "destroyed"
     ],
     "Red-Navy": [
-     "destroyed"
+     "held"
     ]
    },
    "fuel": {
@@ -642906,17 +642856,37 @@
      [
       0
      ]
+    ],
+    [
+     595.251824,
+     "Red-Navy/ff0",
+     "AK-630",
+     2,
+     "Red-Navy",
+     [
+      2
+     ]
+    ],
+    [
+     618.689324,
+     "Red-Navy/ff0",
+     "AK-630",
+     2,
+     "Red-Navy",
+     [
+      5
+     ]
     ]
    ],
    "interceptions": {
     "Red-Navy/ff0": {
-     "AK-630": 2
+     "AK-630": 6
     }
    },
    "postures": {
     "Blue-CAS/cas0": "destroyed",
     "Blue-CAS/cas1": "destroyed",
-    "Red-Navy/ff0": "destroyed"
+    "Red-Navy/ff0": "Defense"
    },
    "session": {
     "order_t_end": 1800.0,
@@ -645315,6 +645285,9 @@
     "Blue-CAS/cas0": {
      "AGM-65D": 4
     },
+    "Blue-CAS/cas1": {
+     "AGM-65D": 2
+    },
     "Red-Navy/ff0": {
      "SA-N-4-Gecko": 6
     }
@@ -645349,6 +645322,12 @@
      "Red-Navy/ff0",
      "SA-N-4-Gecko",
      2
+    ],
+    [
+     595.251824,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
     ]
    ],
    "assets": {
@@ -645367,29 +645346,29 @@
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1183,
+     "ammunition": 1181,
      "destroyed": true,
      "fuel": 0.878718,
      "health": 0,
      "interceptor_stock": null,
      "operative": false,
      "stores": {
-      "AGM-65D": 4,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Red-Navy/ff0": {
-     "ammunition": 4166,
-     "destroyed": true,
+     "ammunition": 3766,
+     "destroyed": false,
      "fuel": 1.0,
-     "health": 0,
-     "interceptor_stock": 38,
-     "operative": false,
+     "health": 100,
+     "interceptor_stock": 34,
+     "operative": true,
      "stores": {
       "AK-100-100mm": 320,
-      "AK-630": 3800,
+      "AK-630": 3400,
       "SA-N-4-Gecko": 34,
       "URK-5-Rastrub": 4,
       "USET-80": 8
@@ -645421,15 +645400,15 @@
     }
    },
    "counts": {
-    "damage_events": 6,
-    "destroyed_events": 3,
+    "damage_events": 4,
+    "destroyed_events": 2,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
-    "interception_events": 1,
-    "interceptions": 2,
-    "rounds": 10,
-    "salvos": 5
+    "interception_events": 3,
+    "interceptions": 6,
+    "rounds": 12,
+    "salvos": 6
    },
    "damage_events": [
     [
@@ -645463,32 +645442,12 @@
      false
     ],
     [
-     595.251824,
+     597.422716,
+     "Blue-CAS/cas1",
      "Red-Navy/ff0",
-     "Blue-CAS/cas0",
-     "AGM-65D",
+     "SA-N-4-Gecko",
      "kill",
      100,
-     0,
-     true
-    ],
-    [
-     597.422716,
-     "Blue-CAS/cas1",
-     "Red-Navy/ff0",
-     "SA-N-4-Gecko",
-     "damage",
-     100,
-     37,
-     false
-    ],
-    [
-     597.422716,
-     "Blue-CAS/cas1",
-     "Red-Navy/ff0",
-     "SA-N-4-Gecko",
-     "damage",
-     37,
      0,
      true
     ]
@@ -645517,19 +645476,17 @@
      {
       "breakpoint": 1.0,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Red-Navy",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Red",
       "temper": null,
-      "time": 595.251824,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      }
     ]
@@ -645539,7 +645496,7 @@
      "destroyed"
     ],
     "Red-Navy": [
-     "destroyed"
+     "held"
     ]
    },
    "fuel": {
@@ -645598,17 +645555,37 @@
      [
       0
      ]
+    ],
+    [
+     595.251824,
+     "Red-Navy/ff0",
+     "AK-630",
+     2,
+     "Red-Navy",
+     [
+      2
+     ]
+    ],
+    [
+     618.689324,
+     "Red-Navy/ff0",
+     "AK-630",
+     2,
+     "Red-Navy",
+     [
+      5
+     ]
     ]
    ],
    "interceptions": {
     "Red-Navy/ff0": {
-     "AK-630": 2
+     "AK-630": 6
     }
    },
    "postures": {
     "Blue-CAS/cas0": "destroyed",
     "Blue-CAS/cas1": "destroyed",
-    "Red-Navy/ff0": "destroyed"
+    "Red-Navy/ff0": "Defense"
    },
    "session": {
     "order_t_end": 1800.0,
@@ -648079,8 +648056,11 @@
     "Blue-CAS/cas0": {
      "AGM-65D": 2
     },
+    "Blue-CAS/cas1": {
+     "AGM-65D": 2
+    },
     "Red-Navy/ff0": {
-     "SA-N-4-Gecko": 6
+     "SA-N-4-Gecko": 8
     }
    },
    "ammunition_events": [
@@ -648107,6 +648087,18 @@
      "Red-Navy/ff0",
      "SA-N-4-Gecko",
      2
+    ],
+    [
+     597.261954,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ],
+    [
+     608.361954,
+     "Red-Navy/ff0",
+     "SA-N-4-Gecko",
+     2
     ]
    ],
    "assets": {
@@ -648125,30 +648117,30 @@
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1183,
+     "ammunition": 1181,
      "destroyed": true,
      "fuel": 0.878718,
      "health": 0,
      "interceptor_stock": null,
      "operative": false,
      "stores": {
-      "AGM-65D": 4,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Red-Navy/ff0": {
-     "ammunition": 4366,
-     "destroyed": true,
+     "ammunition": 3964,
+     "destroyed": false,
      "fuel": 1.0,
-     "health": 0,
-     "interceptor_stock": 40,
-     "operative": false,
+     "health": 100,
+     "interceptor_stock": 36,
+     "operative": true,
      "stores": {
       "AK-100-100mm": 320,
-      "AK-630": 4000,
-      "SA-N-4-Gecko": 34,
+      "AK-630": 3600,
+      "SA-N-4-Gecko": 32,
       "URK-5-Rastrub": 4,
       "USET-80": 8
      }
@@ -648180,14 +648172,14 @@
    },
    "counts": {
     "damage_events": 6,
-    "destroyed_events": 3,
+    "destroyed_events": 2,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
-    "interception_events": 0,
-    "interceptions": 0,
-    "rounds": 8,
-    "salvos": 4
+    "interception_events": 2,
+    "interceptions": 4,
+    "rounds": 12,
+    "salvos": 6
    },
    "damage_events": [
     [
@@ -648221,14 +648213,14 @@
      false
     ],
     [
-     597.261954,
+     603.083277,
+     "Blue-CAS/cas1",
      "Red-Navy/ff0",
-     "Blue-CAS/cas0",
-     "AGM-65D",
-     "kill",
+     "SA-N-4-Gecko",
+     "miss",
      100,
-     0,
-     true
+     100,
+     false
     ],
     [
      603.083277,
@@ -648241,7 +648233,7 @@
      false
     ],
     [
-     603.083277,
+     615.420777,
      "Blue-CAS/cas1",
      "Red-Navy/ff0",
      "SA-N-4-Gecko",
@@ -648266,28 +648258,26 @@
       "outcome": "destroyed",
       "side": "Blue",
       "temper": null,
-      "time": 603.083277,
+      "time": 615.420777,
       "triggers": [
        "annihilation"
       ],
       "unanswered_fraction": 0.0
      },
      {
-      "breakpoint": null,
+      "breakpoint": 1.0,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Red-Navy",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Red",
       "temper": null,
-      "time": 597.261954,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      }
     ]
@@ -648297,7 +648287,7 @@
      "destroyed"
     ],
     "Red-Navy": [
-     "destroyed"
+     "held"
     ]
    },
    "fuel": {
@@ -648346,12 +648336,37 @@
      }
     ]
    },
-   "interception_events": [],
-   "interceptions": {},
+   "interception_events": [
+    [
+     597.261954,
+     "Red-Navy/ff0",
+     "AK-630",
+     2,
+     "Red-Navy",
+     [
+      1
+     ]
+    ],
+    [
+     620.699454,
+     "Red-Navy/ff0",
+     "AK-630",
+     2,
+     "Red-Navy",
+     [
+      4
+     ]
+    ]
+   ],
+   "interceptions": {
+    "Red-Navy/ff0": {
+     "AK-630": 4
+    }
+   },
    "postures": {
     "Blue-CAS/cas0": "destroyed",
     "Blue-CAS/cas1": "destroyed",
-    "Red-Navy/ff0": "destroyed"
+    "Red-Navy/ff0": "Defense"
    },
    "session": {
     "order_t_end": 1800.0,
@@ -650836,15 +650851,15 @@
      }
     },
     "Red-Navy/ff0": {
-     "ammunition": 4168,
-     "destroyed": true,
+     "ammunition": 3968,
+     "destroyed": false,
      "fuel": 1.0,
-     "health": 0,
-     "interceptor_stock": 38,
-     "operative": false,
+     "health": 100,
+     "interceptor_stock": 36,
+     "operative": true,
      "stores": {
       "AK-100-100mm": 320,
-      "AK-630": 3800,
+      "AK-630": 3600,
       "SA-N-4-Gecko": 36,
       "URK-5-Rastrub": 4,
       "USET-80": 8
@@ -650876,13 +650891,13 @@
     }
    },
    "counts": {
-    "damage_events": 5,
-    "destroyed_events": 3,
+    "damage_events": 4,
+    "destroyed_events": 2,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
-    "interception_events": 1,
-    "interceptions": 2,
+    "interception_events": 2,
+    "interceptions": 4,
     "rounds": 8,
     "salvos": 4
    },
@@ -650926,16 +650941,6 @@
      100,
      0,
      true
-    ],
-    [
-     595.251824,
-     "Red-Navy/ff0",
-     "Blue-CAS/cas0",
-     "AGM-65D",
-     "kill",
-     100,
-     0,
-     true
     ]
    ],
    "engagements": [
@@ -650962,19 +650967,17 @@
      {
       "breakpoint": 1.0,
       "committed": 1,
-      "erosion": 1.0,
+      "erosion": 0.0,
       "force_id": "Red-Navy",
       "force_ratio": null,
-      "lost": 1,
-      "max_shock": 1.0,
+      "lost": 0,
+      "max_shock": 0.0,
       "morale": null,
-      "outcome": "destroyed",
+      "outcome": "held",
       "side": "Red",
       "temper": null,
-      "time": 595.251824,
-      "triggers": [
-       "annihilation"
-      ],
+      "time": null,
+      "triggers": [],
       "unanswered_fraction": 0.0
      }
     ]
@@ -650984,7 +650987,7 @@
      "destroyed"
     ],
     "Red-Navy": [
-     "destroyed"
+     "held"
     ]
    },
    "fuel": {
@@ -651043,17 +651046,27 @@
      [
       0
      ]
+    ],
+    [
+     595.251824,
+     "Red-Navy/ff0",
+     "AK-630",
+     2,
+     "Red-Navy",
+     [
+      2
+     ]
     ]
    ],
    "interceptions": {
     "Red-Navy/ff0": {
-     "AK-630": 2
+     "AK-630": 4
     }
    },
    "postures": {
     "Blue-CAS/cas0": "destroyed",
     "Blue-CAS/cas1": "destroyed",
-    "Red-Navy/ff0": "destroyed"
+    "Red-Navy/ff0": "Defense"
    },
    "session": {
     "order_t_end": 1800.0,
