@@ -20,9 +20,10 @@ nell'ordine; stesso `session_id` per le 8 varianti di un seed). Fire control dei
   * `naval_maverick`: 2 A-10C con AGM-65D designato (missione CAS, sensore `sea` dichiarato di test) contro la stessa
     Rezky. Acceso: la nave non ferma piu' i Maverick (`ad_detectable` fisso False).
 
-La Rezky e non l'Arleigh Burke (decisione P-1 del 2026-11-08): con il V_I di 240 km del Burke la regola L1 vieta ogni
-intercettazione dei lanci da aereo. Con L1_IMMEDIATE_TARGET_RULE acceso la zona della Rezky e' quella dell'AK-630
-(4 km): v. TestS35L1Revised. Il sensore `sea` di 20 km dell'A-10C e' un VALORE DI TEST [S] (P-2), non un dato:
+La Rezky e non l'Arleigh Burke (decisione P-1 del 2026-11-08): con il V_I di 240 km del Burke la regola L1 del
+2026-09-28 vieta ogni intercettazione dei lanci da aereo. Con la regola rivista (L1_IMMEDIATE_TARGET_RULE, acceso dal
+2026-11-25) la zona della Rezky e' quella dell'AK-630 (4 km) e il Burke resterebbe escluso solo per i lanciatori che
+vede e puo' colpire: v. TestS35L1Revised. Il sensore `sea` di 20 km dell'A-10C e' un VALORE DI TEST [S] (P-2), non un dato:
 senza, l'A-10C non rileva la nave e non lancia.
 """
 

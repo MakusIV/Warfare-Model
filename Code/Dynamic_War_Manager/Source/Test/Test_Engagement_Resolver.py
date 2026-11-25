@@ -1938,8 +1938,8 @@ class TestL1ImmediateTarget(unittest.TestCase):
         """Risoluzione della salva di b1 (la forza `red` e' quella difesa; `blue` spara anche r2 a b1, con `fire`)."""
         return [r for r in result.resolutions if r.force_id == 'red'][0]
 
-    def test_switch_is_off_by_default(self):
-        self.assertIs(ER.L1_IMMEDIATE_TARGET_RULE, False)
+    def test_switch_is_on_by_default(self):
+        self.assertIs(ER.L1_IMMEDIATE_TARGET_RULE, True)
 
     def test_seen_launcher_in_range_inside_the_zone_is_not_intercepted(self):
         result = self._run(x=8_000.0)

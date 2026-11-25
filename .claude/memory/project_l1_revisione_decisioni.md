@@ -5,10 +5,12 @@ metadata:
   node_type: memory
   type: project
   originSessionId: db4537e6-f512-41af-b45f-1c8dabc15406
-  modified: 2026-11-25T12:05:30.868Z
+  modified: 2026-11-25T12:56:37.771Z
 ---
 
-## RIPRESA (ProArt 2026-11-25) — blocchi 1-3 FATTI e VERIFICATI, committati su `ai/des-l1-revisione` (`a1559ad9`); blocco 4 (sonda) in corso
+## RIPRESA (ProArt 2026-11-25) — blocchi 1-3 FATTI e VERIFICATI, committati su `ai/des-l1-revisione` (`a1559ad9`); blocco 4 FATTO (`ae98b03d`); blocco 5 (accensione, decisa dall'utente il 2026-11-25) affidato a des-developer
+
+**FORMULAZIONE DA USARE (utente, 2026-11-25, strada 1: comportamento invariato, solo testo):** "Se il lanciatore spara da dentro la zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve non si intercettano." (rilevato + scorta + portata = significato di "puo' gia' colpirlo"). La regola "zona = salve non intercettate" senza la condizione (2) sarebbe a=1: scartata (reintroduce il difetto: lanciatore non rilevato -> ne' si intercetta ne' si spara). TODO dopo il blocco 5: ritoccare docstring/commenti di `Engagement_Resolver` (modulo, `_may_intercept`, commento dell'interruttore), docstring dei test e manuale DES (des-manual-writer) con questa formulazione; poi ricontrollare che sia solo testo (AST identico, come per i ritocchi del 2026-11-20).
 
 **Fatto il 2026-11-25.** Rilettura della Proposta con agente Claude generico Opus high (il ruolo `des-reviewer` NON esiste in `.claude/agents/`): verdetto ESEGUIBILE CON CORREZIONI, nessun bloccante (`Rapporti/Revisione_L1_des-reviewer.md`). Utente: Q-L1-1 temporaneo, Q-L1-2 accendere dopo il rapporto del blocco 4, Q-L1-3 prima L1 poi BI; SD-1..SD-6 CONFERMATE; **scelta A** sul problema 1 (condizione (2) = SOLO portata e scorta via `_in_range_at`, nessun altro filtro di `_schedule_next`: niente `not_before`, `_is_deferred`, `activity_end`, a terra, `exhausted`). Proposta corretta da des-planner (1312 righe, `f34df409`, test blocco 2 = 15 con il nuovo BI acceso, suite attesa base + 32). Blocchi 1-3 eseguiti da `des-developer` (Sonnet high, 27 min): 7 file, nessuno scostamento; verificati da me: suite 5005 OK (skipped 7), confronto 1219 identiche, 0 CHANGED/NEW/MISSING, stash vuota, codice letto. Commit `a1559ad9` (branch `ai/des-l1-revisione`, NON mergiato, NON pushato).
 
