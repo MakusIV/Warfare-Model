@@ -44,15 +44,17 @@ attraverso l'RNG di sessione passato dal chiamante.
    (v. "Scorta per arma"): un missile AD che intercetta e' lo stesso della salva offensiva.
    Dal 2026-09-28 (Proposta_Regole_Allocazione_SAM.md §7) intercetta solo un asset con armi
    dichiarate 'Anti_Missile' (regola D, v. Military.salvo_interceptors), prima quelli a soli
-   cannoni (regola F), e l'allocazione e' PER SALVA (regola L1): un colpo e' intercettabile
-   da un intercettore solo se il punto di lancio della salva e' fuori dal suo volume
-   d'intercettazione V_I (`Mobile.air_defense_volume`, posizioni all'istante del lancio). Il
-   lanciatore che spara da dentro la zona e' un bersaglio: i suoi colpi non si intercettano.
-   Con `L1_IMMEDIATE_TARGET_RULE` acceso (ACCESO di default dalla decisione dell'utente del 2026-11-25,
-   Proposta_Revisione_L1_Lanciatore_Bersaglio.md; spento, la regola del 2026-09-28 appena descritta) la zona e'
-   quella delle armi intercettrici (`Mobile.interceptor_envelopes`) e l'esclusione vale solo se il lanciatore e' un
-   bersaglio immediato dell'intercettore (rilevato all'istante del lancio e a portata di un'arma con scorta, con il
-   controllo `_in_range_at` del pool prioritario di L2; nessun altro filtro di `_schedule_next`); nessuna estrazione.
+   cannoni (regola F), e l'allocazione e' PER SALVA (regola L1). Regola L1 (rivista il 2026-11-24,
+   Proposta_Revisione_L1_Lanciatore_Bersaglio.md, accesa il 2026-11-25 con `L1_IMMEDIATE_TARGET_RULE`): se il
+   lanciatore spara da dentro la zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve
+   non si intercettano. "Dentro la zona" = il punto di lancio (posizioni all'istante del lancio) e' nel cilindro,
+   raggio e fascia di quota, di almeno un'arma intercettrice dell'intercettore (`Mobile.interceptor_envelopes`;
+   bordo = dentro). "Puo' gia' colpirlo" = lo ha rilevato all'istante del lancio (come R-INT) e un'arma con scorta
+   lo raggiunge (`_in_range_at`, il controllo del pool prioritario di L2; nessun altro filtro di
+   `_schedule_next`). In ogni altro caso il colpo e' intercettabile (salvo R-INT, canali, scorta, BI). Con
+   l'interruttore spento vale la regola del 2026-09-28: colpo intercettabile solo se il punto di lancio e' fuori dal
+   volume d'intercettazione V_I (`Mobile.air_defense_volume`), e il lanciatore da dentro e' un bersaglio. Nessuna
+   estrazione.
    Dal 2026-09-30 (regola R-INT, Proposta_Intercettazione_Reazione.md) l'intercettore deve
    anche avere una traccia del colpo e il tempo di reagire prima dell'impatto: se aveva gia'
    rilevato il lanciatore vede il lancio e reagisce in VAL+COM+ATT, altrimenti scopre il colpo
@@ -642,7 +644,9 @@ VA_ENGAGEMENT_ALTITUDE_BAND = False
 
 # Regola L1 rivista (Proposta_Revisione_L1_Lanciatore_Bersaglio.md, decisioni dell'utente del 2026-11-24), interruttore
 # dedicato e TEMPORANEO (si elimina dopo l'accensione e la fotografia nuova, se l'utente conferma Q-L1-1):
-#   * `L1_IMMEDIATE_TARGET_RULE` (ACCESO dalla decisione dell'utente del 2026-11-25; prima spento). Acceso: un intercettore NON ferma i colpi di una salva solo se (1) il punto di
+#   * `L1_IMMEDIATE_TARGET_RULE` (ACCESO dalla decisione dell'utente del 2026-11-25; prima spento). Se il lanciatore
+#     spara da dentro la zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio: le sue salve non si
+#     intercettano. Acceso: un intercettore NON ferma i colpi di una salva solo se (1) il punto di
 #     lancio e' dentro la zona di almeno una sua arma intercettrice (`Mobile.interceptor_envelopes`: raggio e fascia
 #     di quota della stessa arma; bordo = dentro) E (2) il lanciatore e' un suo bersaglio immediato: rilevato da lui
 #     all'istante del lancio (come R-INT) e ingaggiabile con un'arma con scorta e a portata (solo `_in_range_at`, il
@@ -3795,7 +3799,8 @@ class _EngagementRun:
         return allowed
 
     def _may_intercept_revised(self, shadow: "_Shadow", salvo: Salvo) -> bool:
-        """L1 rivista (2026-11-24): False solo se il punto di lancio (posizioni all'istante del lancio) e' nel cilindro
+        """L1 rivista (2026-11-24): lanciatore dentro la zona dell'arma e gia' colpibile = salve non intercettate.
+        False solo se il punto di lancio (posizioni all'istante del lancio) e' nel cilindro
         di almeno un'arma intercettrice (bordo = dentro) E il lanciatore e' un bersaglio immediato
         (`_immediate_target`). Senza zone per arma o senza posizioni: True (dato mancante = non modellato)."""
         zones = self._interceptor_envelopes(shadow)

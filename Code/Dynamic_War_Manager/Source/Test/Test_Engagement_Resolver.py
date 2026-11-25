@@ -1889,7 +1889,9 @@ class _ArmedInterceptor(_ZonedInterceptor):
 
 
 class TestL1ImmediateTarget(unittest.TestCase):
-    """Regola L1 rivista (2026-11-24, Proposta_Revisione_L1_Lanciatore_Bersaglio.md): un intercettore NON ferma i colpi
+    """Regola L1 rivista (2026-11-24, Proposta_Revisione_L1_Lanciatore_Bersaglio.md): se il lanciatore spara da dentro
+    la zona dell'arma e l'intercettore puo' gia' colpirlo, e' un bersaglio e le sue salve non si intercettano.
+    Nel dettaglio un intercettore NON ferma i colpi
     di una salva solo se il lancio e' dentro la zona di una sua arma intercettrice E il lanciatore e' un suo bersaglio
     immediato (rilevato da lui al lancio e ingaggiabile per portata e scorta). Altrimenti il colpo e' intercettabile.
 
